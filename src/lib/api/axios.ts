@@ -1,5 +1,4 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { authService, type RefreshTokenRequest } from '@/services/authService';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -83,17 +82,22 @@ api.interceptors.response.use(
         throw new Error('No refresh token available');
       }
 
-      const response = await authService.refreshToken({ refreshToken } as RefreshTokenRequest);
-      
-      // Atualiza tokens no localStorage
-      localStorage.setItem('access_token', response.accessToken);
-      localStorage.setItem('refresh_token', response.refreshToken);
+      // Usa axios puro para evitar import circular e recursão de interceptors
+      const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
+        `${API_BASE_URL}/auth/refresh`,
+        { refreshToken },
+        { headers: { 'Content-Type': 'application/json' } },
+      );
 
-      processQueue(null, response.accessToken);
+      // Atualiza tokens no localStorage
+      localStorage.setItem('access_token', data.accessToken);
+      localStorage.setItem('refresh_token', data.refreshToken);
+
+      processQueue(null, data.accessToken);
 
       // Repete a requisição original com novo token
       if (originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${response.accessToken}`;
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
       }
       return api(originalRequest);
     } catch (refreshError) {

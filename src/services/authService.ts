@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+import { api } from '@/lib/api/axios';
 
 export interface LoginRequest {
   email: string;
@@ -36,13 +34,6 @@ export interface UserProfile {
   permissions: string[];
 }
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
 export const authService = {
   async login(data: LoginRequest): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>('/auth/login', data);
@@ -54,12 +45,8 @@ export const authService = {
     return response.data;
   },
 
-  async getProfile(accessToken: string): Promise<UserProfile> {
-    const response = await api.get<UserProfile>('/auth/me', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  async getProfile(): Promise<UserProfile> {
+    const response = await api.get<UserProfile>('/auth/me');
     return response.data;
   },
 };

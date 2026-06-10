@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth-context';
 import trigoLogo from '@/assets/logo.png';
 
 // Flag para controlar o texto do painel esquerdo
@@ -14,6 +16,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -28,15 +31,19 @@ const LoginPage = () => {
 
     try {
       await login({ email, password });
-      // Redirecionamento é feito pelo AuthContext
-    } catch (err: any) {
+      navigate('/', { replace: true });
+    } catch (err: unknown) {
       console.error('[Login] Erro:', err);
-      if (err.response?.status === 401) {
-        setError('E-mail ou senha inválidos');
-      } else if (err.message?.includes('timeout')) {
-        setError('Tempo de conexão esgotado. Tente novamente.');
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          setError('E-mail ou senha inválidos');
+        } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+          setError('Tempo de conexão esgotado. Tente novamente.');
+        } else {
+          setError('Erro ao conectar com a API');
+        }
       } else {
-        setError('Erro ao conectar com a API');
+        setError('Erro inesperado. Tente novamente.');
       }
     } finally {
       setLoading(false);

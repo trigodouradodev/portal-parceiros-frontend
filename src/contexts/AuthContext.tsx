@@ -1,49 +1,32 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { authService, type LoginRequest, type UserProfile } from '@/services/authService';
+import { useState, type ReactNode } from 'react';
+import { authService, type LoginRequest } from '@/services/authService';
+import { AuthContext, type User } from '@/contexts/auth-context';
 
-interface User extends UserProfile {
-  full_name: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-  loading: boolean;
-  authenticated: boolean;
-  login: (data: LoginRequest) => Promise<void>;
-  logout: () => void;
-  refreshAccessToken: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const readStoredUser = (): User | null => {
+  const raw = localStorage.getItem('user');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as User;
+  } catch (error) {
+    console.error('Error parsing stored user:', error);
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+    return null;
+  }
+};
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(readStoredUser);
+  const [accessToken, setAccessToken] = useState<string | null>(() =>
+    localStorage.getItem('access_token'),
+  );
+  const [refreshToken, setRefreshToken] = useState<string | null>(() =>
+    localStorage.getItem('refresh_token'),
+  );
+  const [loading] = useState(false);
 
   const authenticated = !!user && !!accessToken;
-
-  useEffect(() => {
-    // Verificar autenticação ao carregar
-    const storedToken = localStorage.getItem('access_token');
-    const storedRefreshToken = localStorage.getItem('refresh_token');
-    const storedUser = localStorage.getItem('user');
-
-    if (storedToken && storedRefreshToken && storedUser) {
-      try {
-        setAccessToken(storedToken);
-        setRefreshToken(storedRefreshToken);
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        logout();
-      }
-    }
-    setLoading(false);
-  }, []);
 
   const login = async (data: LoginRequest) => {
     try {
@@ -56,8 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('access_token', response.accessToken);
       localStorage.setItem('refresh_token', response.refreshToken);
       localStorage.setItem('user', JSON.stringify(response.user));
-
-      window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -72,33 +53,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
-
-    window.location.href = '/login';
-  };
-
-  const refreshAccessToken = async () => {
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
-
-    try {
-      const response = await authService.refreshToken({ refreshToken });
-      
-      setAccessToken(response.accessToken);
-      setRefreshToken(response.refreshToken);
-
-      localStorage.setItem('access_token', response.accessToken);
-      localStorage.setItem('refresh_token', response.refreshToken);
-
-      // Atualizar user profile com o novo token
-      const profile = await authService.getProfile(response.accessToken);
-      setUser(profile);
-      localStorage.setItem('user', JSON.stringify(profile));
-    } catch (error) {
-      console.error('Refresh token error:', error);
-      logout();
-      throw error;
-    }
   };
 
   return (
@@ -111,18 +65,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         authenticated,
         login,
         logout,
-        refreshAccessToken,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };
