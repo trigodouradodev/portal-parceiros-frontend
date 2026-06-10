@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/contexts/toast-context';
 import trigoLogo from '@/assets/logo.png';
 
 // Flag para controlar o texto do painel esquerdo
@@ -14,16 +15,15 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const { login } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!email || !password) {
-      setError('Preencha o e-mail e a senha');
+      showToast('Preencha o e-mail e a senha');
       return;
     }
 
@@ -36,14 +36,14 @@ const LoginPage = () => {
       console.error('[Login] Erro:', err);
       if (axios.isAxiosError(err)) {
         if (err.response?.status === 401) {
-          setError('E-mail ou senha inválidos');
+          showToast('E-mail ou senha inválidos');
         } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-          setError('Tempo de conexão esgotado. Tente novamente.');
+          showToast('Tempo de conexão esgotado. Tente novamente.');
         } else {
-          setError('Erro ao conectar com a API');
+          showToast('Erro ao conectar com a API');
         }
       } else {
-        setError('Erro inesperado. Tente novamente.');
+        showToast('Erro inesperado. Tente novamente.');
       }
     } finally {
       setLoading(false);
@@ -109,12 +109,6 @@ const LoginPage = () => {
               <h2 className="text-2xl xl:text-3xl font-bold text-[hsl(var(--foreground))]">Entrar</h2>
               <p className="text-[hsl(var(--muted-foreground))] mt-2">Insira seu e-mail para acessar</p>
             </div>
-
-            {error && (
-              <div className="bg-[hsl(var(--destructive))]/10 border border-[hsl(var(--destructive))] text-[hsl(var(--destructive))] px-4 py-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
