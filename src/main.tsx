@@ -5,11 +5,17 @@ import { RouterProvider } from "react-router-dom";
 import "./index.css";
 import { queryClient } from "@/lib/query-client.ts";
 import { router } from "@/routes";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

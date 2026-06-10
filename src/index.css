@@ -1,11 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  /* Trigo Dourado Theme - Light (Default) */
+  --background: 0 0% 100%;
+  --foreground: 13 10% 12%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 13 10% 12%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 13 10% 12%;
+
+  /* Gold/Yellow Primary #f2b705 = 45 96% 48% */
+  --primary: 45 96% 48%;
+  --primary-foreground: 0 0% 0%;
+
+  /* Light Secondary - subtle gold tint */
+  --secondary: 45 70% 95%;
+  --secondary-foreground: 45 96% 28%;
+
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 40%;
+
+  --accent: 45 70% 92%;
+  --accent-foreground: 13 10% 12%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 88%;
+  --input: 0 0% 92%;
+  --ring: 45 96% 48%;
+
+  --radius: 0.75rem;
+
+  /* Sidebar - keeps dark/gold branding */
+  --sidebar-background: 0 0% 4%;
+  --sidebar-foreground: 48 100% 90%;
+  --sidebar-primary: 45 96% 48%;
+  --sidebar-primary-foreground: 0 0% 0%;
+  --sidebar-accent: 0 0% 10%;
+  --sidebar-accent-foreground: 48 100% 95%;
+  --sidebar-border: 0 0% 15%;
+  --sidebar-ring: 45 96% 48%;
+
+  /* Status Colors */
+  --status-excellent: 142 70% 40%;
+  --status-good: 142 50% 45%;
+  --status-regular: 45 95% 45%;
+  --status-bad: 0 72% 50%;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px 0 rgb(0 0 0 / 0.08), 0 1px 3px -1px rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 8px 16px -2px rgb(0 0 0 / 0.12), 0 4px 8px -2px rgb(0 0 0 / 0.08);
+  --shadow-elevated: 0 12px 24px -4px rgb(0 0 0 / 0.14), 0 8px 12px -4px rgb(0 0 0 / 0.1);
+
+  font-family: 'Inter', system-ui, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
-  color-scheme: light dark;
+  color-scheme: light;
+}
+
+.dark {
+  /* Trigo Dourado Theme - Black & Gold (Dark) */
+  --background: 13 10% 5%;
+  --foreground: 48 100% 95%;
+
+  --card: 0 0% 8%;
+  --card-foreground: 48 100% 95%;
+
+  --popover: 0 0% 10%;
+  --popover-foreground: 48 100% 95%;
+
+  --primary: 45 96% 48%;
+  --primary-foreground: 0 0% 0%;
+
+  --secondary: 0 0% 12%;
+  --secondary-foreground: 45 96% 70%;
+
+  --muted: 0 0% 14%;
+  --muted-foreground: 45 20% 60%;
+
+  --accent: 0 0% 16%;
+  --accent-foreground: 48 100% 95%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 18%;
+  --input: 0 0% 14%;
+  --ring: 45 96% 48%;
+
+  --sidebar-background: 0 0% 4%;
+  --sidebar-foreground: 48 100% 90%;
+  --sidebar-primary: 45 96% 48%;
+  --sidebar-primary-foreground: 0 0% 0%;
+  --sidebar-accent: 0 0% 10%;
+  --sidebar-accent-foreground: 48 100% 95%;
+  --sidebar-border: 0 0% 15%;
+  --sidebar-ring: 45 96% 48%;
+
+  --status-excellent: 142 70% 45%;
+  --status-good: 142 50% 55%;
+  --status-regular: 45 95% 55%;
+  --status-bad: 0 72% 55%;
+
+  --shadow-card: 0 2px 8px 0 rgb(0 0 0 / 0.4), 0 1px 3px -1px rgb(0 0 0 / 0.3);
+  --shadow-card-hover: 0 8px 16px -2px rgb(0 0 0 / 0.5), 0 4px 8px -2px rgb(0 0 0 / 0.3);
+  --shadow-elevated: 0 12px 24px -4px rgb(0 0 0 / 0.5), 0 8px 12px -4px rgb(0 0 0 / 0.3);
+
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
