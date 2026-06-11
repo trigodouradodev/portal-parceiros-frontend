@@ -40,10 +40,16 @@ const LoginPage = () => {
         } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
           showToast('Tempo de conexão esgotado. Tente novamente.');
         } else {
-          showToast('Erro ao conectar com a API');
+          showToast('Erro ao conectar com a API', {
+            variant: 'destructive',
+            duration: 5000,
+          });
         }
       } else {
-        showToast('Erro inesperado. Tente novamente.');
+        showToast('Erro inesperado. Tente novamente.', {
+          variant: 'destructive',
+          duration: 5000,
+        });
       }
     } finally {
       setLoading(false);
