@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { LoginRequest, UserProfile } from '@/services/authService';
+import type { LoginRequest, UserProfile } from '@/services/auth/types';
 
 export type User = UserProfile;
 

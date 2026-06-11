@@ -1,38 +1,11 @@
 import { api } from '@/lib/api/axios';
-
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  user: {
-    id: string;
-    email: string;
-    full_name: string;
-    role: string;
-    permissions: string[];
-  };
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface RefreshTokenRequest {
-  refreshToken: string;
-}
-
-export interface RefreshTokenResponse {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  full_name: string;
-  role: string;
-  permissions: string[];
-}
+import type {
+  LoginRequest,
+  LoginResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
+  UserProfile,
+} from '@/services/auth/types';
 
 export const authService = {
   async login(data: LoginRequest): Promise<LoginResponse> {

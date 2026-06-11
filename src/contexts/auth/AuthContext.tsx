@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { authService, type LoginRequest } from '@/services/authService';
-import { AuthContext, type User } from '@/contexts/auth-context';
+import { authService } from '@/services/auth/auth.service';
+import type { LoginRequest } from '@/services/auth/types';
+import { AuthContext, type User } from '@/contexts/auth/auth-context';
 import {
   AUTH_LOGOUT_EVENT,
   AUTH_TOKEN_REFRESHED_EVENT,

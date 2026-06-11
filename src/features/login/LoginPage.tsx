@@ -1,72 +1,61 @@
-import { useState, type FormEvent } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { useAuth } from '@/contexts/auth-context';
-import { useToast } from '@/contexts/toast-context';
+import { useAuth } from '@/contexts/auth/auth-context';
+import { useToast } from '@/contexts/toast/toast-context';
 import trigoLogo from '@/assets/logo.png';
 
-// Flag para controlar o texto do painel esquerdo
-const SHOW_DASHBOARD_BRANDING = false;
+const loginSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Informe o e-mail')
+    .email('Informe um e-mail válido'),
+  password: z.string().min(1, 'Informe a senha'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
+const branding = {
+  subtitle: 'Portal do Parceiro',
+  title: 'Acesse o\nPortal do\nParceiro',
+  description:
+    'Gerencie suas cotações, contratos e pagamentos de forma simples e eficiente.',
+};
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
 
-    if (!email || !password) {
-      showToast('Preencha o e-mail e a senha');
-      return;
-    }
-
-    setLoading(true);
-
+  const onSubmit = async (values: LoginFormValues) => {
     try {
-      await login({ email, password });
+      await login(values);
       navigate('/', { replace: true });
     } catch (err: unknown) {
-      console.error('[Login] Erro:', err);
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 401) {
-          showToast('E-mail ou senha inválidos');
-        } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-          showToast('Tempo de conexão esgotado. Tente novamente.');
-        } else {
-          showToast('Erro ao conectar com a API', {
-            variant: 'destructive',
-            duration: 5000,
-          });
-        }
-      } else {
-        showToast('Erro inesperado. Tente novamente.', {
-          variant: 'destructive',
-          duration: 5000,
-        });
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        showToast('E-mail ou senha inválidos', { variant: 'destructive' });
+        return;
       }
-    } finally {
-      setLoading(false);
+
+      showToast('Erro inesperado. Tente novamente em alguns instantes.', {
+        variant: 'destructive',
+      });
     }
   };
-
-  const brandingText = SHOW_DASHBOARD_BRANDING
-    ? {
-        subtitle: 'Dashboard BI',
-        title: 'Acompanhe sua\nperformance em\ntempo real',
-        description: 'Dashboard completo para análise de originação e cobrança com visões personalizadas por cargo.',
-      }
-    : {
-        subtitle: 'Portal do Parceiro',
-        title: 'Acesse o\nPortal do\nParceiro',
-        description: 'Gerencie suas cotações, contratos e pagamentos de forma simples e eficiente.',
-      };
 
   return (
     <div className="min-h-screen flex bg-[hsl(var(--background))]">
@@ -81,16 +70,16 @@ const LoginPage = () => {
             />
             <div>
               <h1 className="text-xl 2xl:text-2xl font-bold text-[hsl(var(--foreground))]">Trigo Dourado</h1>
-              <p className="text-sm 2xl:text-base text-[hsl(var(--muted-foreground))]">{brandingText.subtitle}</p>
+              <p className="text-sm 2xl:text-base text-[hsl(var(--muted-foreground))]">{branding.subtitle}</p>
             </div>
           </div>
 
           <div className="space-y-6">
             <h2 className="text-4xl xl:text-5xl 2xl:text-6xl font-extrabold leading-[1.1] tracking-tight whitespace-pre-line text-[hsl(var(--foreground))]">
-              {brandingText.title}
+              {branding.title}
             </h2>
             <p className="text-[hsl(var(--muted-foreground))] text-base xl:text-lg 2xl:text-xl max-w-md 2xl:max-w-lg leading-relaxed">
-              {brandingText.description}
+              {branding.description}
             </p>
           </div>
 
@@ -116,17 +105,24 @@ const LoginPage = () => {
               <p className="text-[hsl(var(--muted-foreground))] mt-2">Insira seu e-mail para acessar</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="usuario@empresa.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={loading}
+                  autoComplete="email"
+                  disabled={isSubmitting}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? 'email-error' : undefined}
+                  {...register('email')}
                 />
+                {errors.email && (
+                  <p id="email-error" className="text-sm text-[hsl(var(--destructive))]">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -135,14 +131,21 @@ const LoginPage = () => {
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
+                  autoComplete="current-password"
+                  disabled={isSubmitting}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? 'password-error' : undefined}
+                  {...register('password')}
                 />
+                {errors.password && (
+                  <p id="password-error" className="text-sm text-[hsl(var(--destructive))]">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Entrando...' : 'Entrar'}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
           </div>

@@ -5,8 +5,8 @@ import { RouterProvider } from "react-router-dom";
 import "./index.css";
 import { queryClient } from "@/lib/query-client.ts";
 import { router } from "@/routes";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ToastProvider } from "@/contexts/ToastContext";
+import { AuthProvider } from "@/contexts/auth/AuthContext";
+import { ToastProvider } from "@/contexts/toast/ToastContext";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

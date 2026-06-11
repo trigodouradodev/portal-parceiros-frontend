@@ -4,7 +4,7 @@ import {
   ToastContext,
   type ToastOptions,
   type ToastVariant,
-} from '@/contexts/toast-context';
+} from '@/contexts/toast/toast-context';
 
 interface ToastItem {
   id: number;
