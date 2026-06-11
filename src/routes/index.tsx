@@ -4,11 +4,16 @@ import { NotFound } from "@/components/NotFound";
 import { HomePage } from "@/features/home/HomePage";
 import LoginPage from "@/features/login/LoginPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PublicRoute } from "@/components/PublicRoute";
 
 export const router = createBrowserRouter([
   {
     path: "/login",
-    element: <LoginPage />,
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
   },
   {
     element: (

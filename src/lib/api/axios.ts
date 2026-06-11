@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { emitAuthLogout, emitTokenRefreshed } from '@/lib/api/auth-events';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -93,6 +94,12 @@ api.interceptors.response.use(
       localStorage.setItem('access_token', data.accessToken);
       localStorage.setItem('refresh_token', data.refreshToken);
 
+      // Sincroniza o estado do AuthContext com os novos tokens.
+      emitTokenRefreshed({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+      });
+
       processQueue(null, data.accessToken);
 
       // Repete a requisição original com novo token
@@ -103,16 +110,14 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null);
       
-      // Se o refresh falhar, limpa tokens e redireciona para login
+      // Se o refresh falhar, limpa tokens e notifica o AuthContext para
+      // encerrar a sessão (a navegação para /login fica a cargo do Router).
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
-      
-      // Redireciona para login se não estiver já na página de login
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-      
+
+      emitAuthLogout();
+
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

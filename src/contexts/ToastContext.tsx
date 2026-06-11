@@ -24,7 +24,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const showToast = useCallback(
     (message: string, options?: ToastOptions) => {
       const id = Date.now() + Math.random();
-      const variant = options?.variant ?? 'destructive';
+      const variant = options?.variant ?? 'info';
       const duration = options?.duration ?? DEFAULT_DURATION;
 
       setToasts((prev) => [...prev, { id, message, variant }]);

@@ -56,7 +56,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         ref={ref}
         role="alert"
         aria-live="assertive"
-        className={`flex items-start gap-3 rounded-md px-4 py-3 text-sm ${variantStyles[variant]} ${className}`}
+        className={`flex items-start gap-3 rounded-md border px-4 py-3 text-sm ${variantStyles[variant]} ${className}`}
         {...props}
       >
         <AlertIcon variant={variant} />
