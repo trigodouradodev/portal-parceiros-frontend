@@ -1,10 +1,6 @@
 import { Search } from "lucide-react";
 import { useAuth } from "@/contexts/auth/auth-context";
-import {
-  getFirstName,
-  getGreeting,
-  getInitials,
-} from "@/lib/user-display";
+import { getFirstName, getGreeting, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
@@ -19,7 +15,9 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
   const firstName = getFirstName(displayName);
 
   return (
-    <div className={cn("bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8", className)}>
+    <div
+      className={cn("bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8", className)}
+    >
       <div className="mb-1 flex items-start justify-between md:mb-3">
         <div>
           <h1 className="font-fraunces text-2xl font-bold text-white md:text-3xl">
