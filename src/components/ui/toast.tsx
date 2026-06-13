@@ -13,11 +13,7 @@ const variantStyles: Record<ToastVariant, string> = {
   destructive: "bg-[#1A1D2E] text-white",
 };
 
-export function Toast({
-  children,
-  variant = "info",
-  className,
-}: ToastProps) {
+export function Toast({ children, variant = "info", className }: ToastProps) {
   const Icon = variant === "destructive" ? AlertCircle : CheckCircle2;
 
   return (

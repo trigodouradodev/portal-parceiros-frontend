@@ -30,8 +30,9 @@ const sheetVariants = {
     "inset-y-0 right-0 h-full w-full max-w-md border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
 };
 
-interface SheetContentProps
-  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content> {
+interface SheetContentProps extends React.ComponentPropsWithoutRef<
+  typeof SheetPrimitive.Content
+> {
   side?: keyof typeof sheetVariants;
 }
 
@@ -73,7 +74,10 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Title
     ref={ref}
-    className={cn("font-fraunces text-lg font-semibold text-foreground", className)}
+    className={cn(
+      "font-fraunces text-lg font-semibold text-foreground",
+      className,
+    )}
     {...props}
   />
 ));
