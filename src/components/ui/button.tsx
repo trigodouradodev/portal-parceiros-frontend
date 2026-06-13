@@ -14,8 +14,7 @@ const buttonVariants = cva(
         amber: "bg-warning-bg text-warning hover:bg-[#f5e4b8]",
         teal: "bg-brand-yellow/20 text-brand-navy hover:bg-brand-yellow/30",
         red: "bg-destructive-bg text-destructive hover:bg-[#fdd4d4]",
-        outline:
-          "border border-input bg-white text-foreground hover:bg-muted",
+        outline: "border border-input bg-white text-foreground hover:bg-muted",
         ghost: "text-muted-foreground hover:bg-muted hover:text-foreground",
         yellow:
           "bg-brand-yellow text-brand-navy font-semibold hover:bg-brand-yellow/90",
@@ -37,7 +36,8 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
