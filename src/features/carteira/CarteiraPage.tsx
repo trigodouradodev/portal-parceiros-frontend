@@ -2,7 +2,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable } from "@/components/data-table/DataTable";
 import { fmtBRL } from "@/lib/utils";
-import { cobrClients } from "@/features/dashboard/mocks/tasks";
+import { carteiraClients } from "@/features/carteira/mocks/clients";
 
 export function CarteiraPage() {
   return (
@@ -26,7 +26,7 @@ export function CarteiraPage() {
               render: (row) => `${row.overdueDays as number}d`,
             },
           ]}
-          data={cobrClients as unknown as Record<string, unknown>[]}
+          data={carteiraClients as unknown as Record<string, unknown>[]}
           emptyLabel="Nenhum contrato na carteira."
         />
       </div>
