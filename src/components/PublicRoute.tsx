@@ -1,14 +1,13 @@
-import { Navigate } from "react-router-dom";
-import type { ReactNode } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/auth/auth-context";
 
-export const PublicRoute = ({ children }: { children: ReactNode }) => {
+export function PublicRoute() {
   const { authenticated, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--background))]">
-        <div className="text-[hsl(var(--foreground))]">Carregando...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-foreground">Carregando...</p>
       </div>
     );
   }
@@ -17,5 +16,5 @@ export const PublicRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/" replace />;
   }
 
-  return <>{children}</>;
-};
+  return <Outlet />;
+}
