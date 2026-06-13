@@ -1,30 +1,30 @@
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/Label';
-import { useAuth } from '@/contexts/auth/auth-context';
-import { useToast } from '@/contexts/toast/toast-context';
-import trigoLogo from '@/assets/logo.png';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/Label";
+import { useAuth } from "@/contexts/auth/auth-context";
+import { useToast } from "@/contexts/toast/toast-context";
+import trigoLogo from "@/assets/logo.png";
 
 const loginSchema = z.object({
   email: z
     .string()
-    .min(1, 'Informe o e-mail')
-    .email('Informe um e-mail válido'),
-  password: z.string().min(1, 'Informe a senha'),
+    .min(1, "Informe o e-mail")
+    .email("Informe um e-mail válido"),
+  password: z.string().min(1, "Informe a senha"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const branding = {
-  subtitle: 'Portal do Parceiro',
-  title: 'Acesse o\nPortal do\nParceiro',
+  subtitle: "Portal do Parceiro",
+  title: "Acesse o\nPortal do\nParceiro",
   description:
-    'Gerencie suas cotações, contratos e pagamentos de forma simples e eficiente.',
+    "Gerencie suas cotações, contratos e pagamentos de forma simples e eficiente.",
 };
 
 const LoginPage = () => {
@@ -38,21 +38,21 @@ const LoginPage = () => {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
       await login(values);
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
-        showToast('E-mail ou senha inválidos', { variant: 'destructive' });
+        showToast("E-mail ou senha inválidos", { variant: "destructive" });
         return;
       }
 
-      showToast('Erro inesperado. Tente novamente em alguns instantes.', {
-        variant: 'destructive',
+      showToast("Erro inesperado. Tente novamente em alguns instantes.", {
+        variant: "destructive",
       });
     }
   };
@@ -69,8 +69,12 @@ const LoginPage = () => {
               className="w-12 h-12 2xl:w-14 2xl:h-14 object-contain"
             />
             <div>
-              <h1 className="text-xl 2xl:text-2xl font-bold text-[hsl(var(--foreground))]">Trigo Dourado</h1>
-              <p className="text-sm 2xl:text-base text-[hsl(var(--muted-foreground))]">{branding.subtitle}</p>
+              <h1 className="text-xl 2xl:text-2xl font-bold text-[hsl(var(--foreground))]">
+                Trigo Dourado
+              </h1>
+              <p className="text-sm 2xl:text-base text-[hsl(var(--muted-foreground))]">
+                {branding.subtitle}
+              </p>
             </div>
           </div>
 
@@ -97,15 +101,25 @@ const LoginPage = () => {
                 alt="Trigo Dourado"
                 className="w-10 h-10 object-contain"
               />
-              <h1 className="text-xl font-bold text-[hsl(var(--foreground))]">Acesso</h1>
+              <h1 className="text-xl font-bold text-[hsl(var(--foreground))]">
+                Acesso
+              </h1>
             </div>
 
             <div className="text-center lg:text-left">
-              <h2 className="text-2xl xl:text-3xl font-bold text-[hsl(var(--foreground))]">Entrar</h2>
-              <p className="text-[hsl(var(--muted-foreground))] mt-2">Insira seu e-mail para acessar</p>
+              <h2 className="text-2xl xl:text-3xl font-bold text-[hsl(var(--foreground))]">
+                Entrar
+              </h2>
+              <p className="text-[hsl(var(--muted-foreground))] mt-2">
+                Insira seu e-mail para acessar
+              </p>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-5"
+              noValidate
+            >
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
                 <Input
@@ -115,11 +129,14 @@ const LoginPage = () => {
                   autoComplete="email"
                   disabled={isSubmitting}
                   aria-invalid={!!errors.email}
-                  aria-describedby={errors.email ? 'email-error' : undefined}
-                  {...register('email')}
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                  {...register("email")}
                 />
                 {errors.email && (
-                  <p id="email-error" className="text-sm text-[hsl(var(--destructive))]">
+                  <p
+                    id="email-error"
+                    className="text-sm text-[hsl(var(--destructive))]"
+                  >
                     {errors.email.message}
                   </p>
                 )}
@@ -134,18 +151,23 @@ const LoginPage = () => {
                   autoComplete="current-password"
                   disabled={isSubmitting}
                   aria-invalid={!!errors.password}
-                  aria-describedby={errors.password ? 'password-error' : undefined}
-                  {...register('password')}
+                  aria-describedby={
+                    errors.password ? "password-error" : undefined
+                  }
+                  {...register("password")}
                 />
                 {errors.password && (
-                  <p id="password-error" className="text-sm text-[hsl(var(--destructive))]">
+                  <p
+                    id="password-error"
+                    className="text-sm text-[hsl(var(--destructive))]"
+                  >
                     {errors.password.message}
                   </p>
                 )}
               </div>
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Entrando...' : 'Entrar'}
+                {isSubmitting ? "Entrando..." : "Entrar"}
               </Button>
             </form>
           </div>

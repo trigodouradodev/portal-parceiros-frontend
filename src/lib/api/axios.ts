@@ -1,7 +1,7 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { emitAuthLogout, emitTokenRefreshed } from '@/lib/api/auth-events';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { emitAuthLogout, emitTokenRefreshed } from "@/lib/api/auth-events";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // Flag para evitar múltiplas tentativas de refresh simultâneas
 let isRefreshing = false;
@@ -24,14 +24,14 @@ const processQueue = (error: unknown, token: string | null = null) => {
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Request interceptor - adiciona token de acesso
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem("access_token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -46,7 +46,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
 
     // Se o erro não for 401 ou já tentamos refresh, rejeita
     if (error.response?.status !== 401 || originalRequest._retry) {
@@ -54,7 +56,10 @@ api.interceptors.response.use(
     }
 
     // Se for uma requisição de login ou refresh, não tenta refresh
-    if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
+    if (
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/refresh")
+    ) {
       return Promise.reject(error);
     }
 
@@ -78,21 +83,24 @@ api.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = localStorage.getItem("refresh_token");
       if (!refreshToken) {
-        throw new Error('No refresh token available');
+        throw new Error("No refresh token available");
       }
 
       // Usa axios puro para evitar import circular e recursão de interceptors
-      const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
+      const { data } = await axios.post<{
+        accessToken: string;
+        refreshToken: string;
+      }>(
         `${API_BASE_URL}/auth/refresh`,
         { refreshToken },
-        { headers: { 'Content-Type': 'application/json' } },
+        { headers: { "Content-Type": "application/json" } },
       );
 
       // Atualiza tokens no localStorage
-      localStorage.setItem('access_token', data.accessToken);
-      localStorage.setItem('refresh_token', data.refreshToken);
+      localStorage.setItem("access_token", data.accessToken);
+      localStorage.setItem("refresh_token", data.refreshToken);
 
       // Sincroniza o estado do AuthContext com os novos tokens.
       emitTokenRefreshed({
@@ -109,12 +117,12 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      
+
       // Se o refresh falhar, limpa tokens e notifica o AuthContext para
       // encerrar a sessão (a navegação para /login fica a cargo do Router).
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user");
 
       emitAuthLogout();
 

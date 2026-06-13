@@ -1,23 +1,23 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { authService } from '@/services/auth/auth.service';
-import type { LoginRequest } from '@/services/auth/types';
-import { AuthContext, type User } from '@/contexts/auth/auth-context';
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { authService } from "@/services/auth/auth.service";
+import type { LoginRequest } from "@/services/auth/types";
+import { AuthContext, type User } from "@/contexts/auth/auth-context";
 import {
   AUTH_LOGOUT_EVENT,
   AUTH_TOKEN_REFRESHED_EVENT,
   type AuthTokenRefreshedDetail,
-} from '@/lib/api/auth-events';
+} from "@/lib/api/auth-events";
 
 const readStoredUser = (): User | null => {
-  const raw = localStorage.getItem('user');
+  const raw = localStorage.getItem("user");
   if (!raw) return null;
   try {
     return JSON.parse(raw) as User;
   } catch (error) {
-    console.error('Error parsing stored user:', error);
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+    console.error("Error parsing stored user:", error);
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
     return null;
   }
 };
@@ -25,10 +25,10 @@ const readStoredUser = (): User | null => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(readStoredUser);
   const [accessToken, setAccessToken] = useState<string | null>(() =>
-    localStorage.getItem('access_token'),
+    localStorage.getItem("access_token"),
   );
   const [refreshToken, setRefreshToken] = useState<string | null>(() =>
-    localStorage.getItem('refresh_token'),
+    localStorage.getItem("refresh_token"),
   );
   const [loading, setLoading] = useState(true);
 
@@ -42,11 +42,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setRefreshToken(response.refreshToken);
       setUser(response.user);
 
-      localStorage.setItem('access_token', response.accessToken);
-      localStorage.setItem('refresh_token', response.refreshToken);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      localStorage.setItem("access_token", response.accessToken);
+      localStorage.setItem("refresh_token", response.refreshToken);
+      localStorage.setItem("user", JSON.stringify(response.user));
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       throw error;
     }
   };
@@ -56,9 +56,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAccessToken(null);
     setRefreshToken(null);
 
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
   }, []);
 
   // Valida a sessão na inicialização: confirma o token via /auth/me.
@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let active = true;
 
     const bootstrap = async () => {
-      if (!localStorage.getItem('access_token')) {
+      if (!localStorage.getItem("access_token")) {
         if (active) setLoading(false);
         return;
       }
@@ -75,10 +75,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const profile = await authService.getProfile();
         if (!active) return;
         setUser(profile);
-        localStorage.setItem('user', JSON.stringify(profile));
+        localStorage.setItem("user", JSON.stringify(profile));
       } catch (error) {
         // Se o token (e o refresh) forem inválidos, encerra a sessão.
-        console.error('Session validation error:', error);
+        console.error("Session validation error:", error);
         if (active) logout();
       } finally {
         if (active) setLoading(false);
@@ -106,7 +106,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.addEventListener(AUTH_LOGOUT_EVENT, logout);
 
     return () => {
-      window.removeEventListener(AUTH_TOKEN_REFRESHED_EVENT, handleTokenRefreshed);
+      window.removeEventListener(
+        AUTH_TOKEN_REFRESHED_EVENT,
+        handleTokenRefreshed,
+      );
       window.removeEventListener(AUTH_LOGOUT_EVENT, logout);
     };
   }, [logout]);

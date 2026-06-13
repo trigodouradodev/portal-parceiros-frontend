@@ -87,8 +87,8 @@
   --radius: 0.5rem;
 
   --shadow-card-value: 0 1px 3px 0 rgb(0 0 0 / 0.06);
-  --shadow-elevated-value: 0 12px 24px -4px rgb(0 0 0 / 0.14),
-    0 8px 12px -4px rgb(0 0 0 / 0.1);
+  --shadow-elevated-value:
+    0 12px 24px -4px rgb(0 0 0 / 0.14), 0 8px 12px -4px rgb(0 0 0 / 0.1);
 
   font-family: "DM Sans", system-ui, sans-serif;
   line-height: 1.5;
