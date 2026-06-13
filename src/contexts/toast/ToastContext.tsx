@@ -1,5 +1,5 @@
 import { useCallback, useState, type ReactNode } from "react";
-import { Toast } from "@/components/ui/Toast";
+import { Toast } from "@/components/ui/toast";
 import {
   ToastContext,
   type ToastOptions,
@@ -39,15 +39,10 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2 pointer-events-none">
+      <div className="pointer-events-none fixed bottom-20 left-1/2 z-40 flex w-full max-w-sm -translate-x-1/2 flex-col items-center gap-2 md:bottom-6">
         {toasts.map((toast) => (
           <div key={toast.id} className="pointer-events-auto">
-            <Toast
-              variant={toast.variant}
-              onClose={() => removeToast(toast.id)}
-            >
-              {toast.message}
-            </Toast>
+            <Toast variant={toast.variant}>{toast.message}</Toast>
           </div>
         ))}
       </div>
