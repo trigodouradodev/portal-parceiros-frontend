@@ -1,15 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useAuth } from "@/contexts/auth/auth-context";
 
 export function ProtectedRoute() {
   const { authenticated, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <p className="text-foreground">Carregando...</p>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!authenticated) {
