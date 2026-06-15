@@ -50,7 +50,10 @@ const AlertIcon = ({ variant }: { variant: "destructive" | "info" }) => {
 };
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
-  ({ className = "", variant = "destructive", onClose, children, ...props }, ref) => {
+  (
+    { className = "", variant = "destructive", onClose, children, ...props },
+    ref,
+  ) => {
     return (
       <div
         ref={ref}

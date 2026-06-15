@@ -1,5 +1,5 @@
-import { createContext, useContext } from 'react';
-import type { LoginRequest, UserProfile } from '@/services/auth/types';
+import { createContext, useContext } from "react";
+import type { LoginRequest, UserProfile } from "@/services/auth/types";
 
 export type User = UserProfile;
 
@@ -13,12 +13,14 @@ export interface AuthContextType {
   logout: () => void;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
