@@ -1,45 +1,37 @@
-const PERF_CARDS = [
-  {
-    icon: "↗",
-    label: "Originação",
-    value: "R$ 168k",
-    sub: "Meta R$ 250k · 67% no ritmo",
-    progress: 67,
-    status: "ok" as const,
-    chip: "5 cotações suas aguardando análise",
-    chipVariant: "green" as const,
-  },
-  {
-    icon: "%",
-    label: "Taxa média",
-    value: "9,8%",
-    sub: "Piso 10,4% · abaixo do mínimo",
-    progress: 55,
-    status: "warn" as const,
-    chip: "Evite taxas abaixo de 10,4%",
-    chipVariant: "red" as const,
-  },
-  {
-    icon: "!",
-    label: "Inadimplência",
-    value: "3,1%",
-    sub: "Limite 3,5% · dentro do limite",
-    progress: 89,
-    status: "ok" as const,
-    chip: "Carteira saudável · siga acompanhando",
-    chipVariant: "green" as const,
-  },
-  {
-    icon: "↺",
-    label: "Renovações",
-    value: "75%",
-    sub: "9 de 12 encerrando · meta 70%",
-    progress: 100,
-    status: "ok" as const,
-    chip: "3 contratos elegíveis para renovação",
-    chipVariant: "green" as const,
-  },
-];
+import { fmtBRL } from "@/lib/utils";
+import type { MonthPerformance } from "@/services/dashboard/dashboard.types";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface PerformanceSectionProps {
+  data?: MonthPerformance;
+  isLoading?: boolean;
+}
+
+const ORIGINATION_TARGET = 250000; // Meta de originação em reais
+const RATE_FLOOR = 10.4; // Piso de taxa média em percentual
+const DELINQUENCY_LIMIT = 3.5; // Limite de inadimplência em percentual
+
+function formatCurrency(value: number): string {
+  if (value >= 1000) {
+    return `R$ ${(value / 1000).toFixed(0)}k`;
+  }
+  return fmtBRL(value);
+}
+
+function formatPercent(value: number): string {
+  return `${value.toFixed(1).replace('.', ',')}%`;
+}
+
+interface PerfCardProps {
+  icon: string;
+  label: string;
+  value: string;
+  sub: string;
+  progress: number;
+  status: "ok" | "warn";
+  chip: string;
+  chipVariant: "green" | "red" | "amber";
+}
 
 function PerfCard({
   icon,
@@ -50,7 +42,7 @@ function PerfCard({
   status,
   chip,
   chipVariant,
-}: (typeof PERF_CARDS)[number]) {
+}: PerfCardProps) {
   const barColor =
     status === "warn"
       ? "bg-[#D84040]"
@@ -99,10 +91,75 @@ function PerfCard({
   );
 }
 
-export function PerformanceSection() {
+export function PerformanceSection({ data, isLoading }: PerformanceSectionProps) {
   const now = new Date();
   const day = now.getDate();
   const month = now.toLocaleDateString("pt-BR", { month: "long" });
+
+  if (isLoading || !data) {
+    return (
+      <div className="px-5 pt-6 md:px-8">
+        <div className="mb-3 flex items-baseline gap-2">
+          <span className="text-base font-semibold text-foreground md:text-lg">
+            Meu desempenho do mês
+          </span>
+          <span className="text-xs text-muted-foreground/80">
+            1 a {day} de {month}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <Skeleton className="h-52 rounded-2xl" />
+          <Skeleton className="h-52 rounded-2xl" />
+          <Skeleton className="h-52 rounded-2xl" />
+          <Skeleton className="h-52 rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate performance cards from real data
+  const perfCards = [
+    {
+      icon: "↗",
+      label: "Originação",
+      value: formatCurrency(data.origination.amount),
+      sub: `Meta ${formatCurrency(ORIGINATION_TARGET)} · ${formatPercent((data.origination.amount / ORIGINATION_TARGET) * 100)} no ritmo`,
+      progress: Math.min((data.origination.amount / ORIGINATION_TARGET) * 100, 100),
+      status: (data.origination.amount / ORIGINATION_TARGET) >= 0.5 ? ("ok" as const) : ("warn" as const),
+      chip: `${data.origination.count} contrato(s) originado(s)`,
+      chipVariant: "green" as const,
+    },
+    {
+      icon: "%",
+      label: "Taxa média",
+      value: data.averageRate !== null ? formatPercent(data.averageRate) : "N/A",
+      sub: `Piso ${formatPercent(RATE_FLOOR)} · ${data.averageRate !== null && data.averageRate >= RATE_FLOOR ? "acima do mínimo" : "abaixo do mínimo"}`,
+      progress: data.averageRate !== null ? Math.min((data.averageRate / RATE_FLOOR) * 100, 100) : 0,
+      status: data.averageRate !== null && data.averageRate >= RATE_FLOOR ? ("ok" as const) : ("warn" as const),
+      chip: data.averageRate !== null && data.averageRate < RATE_FLOOR ? `Evite taxas abaixo de ${formatPercent(RATE_FLOOR)}` : "Taxa dentro do esperado",
+      chipVariant: data.averageRate !== null && data.averageRate < RATE_FLOOR ? ("red" as const) : ("green" as const),
+    },
+    {
+      icon: "!",
+      label: "Inadimplência",
+      value: formatPercent(data.delinquency.rate),
+      sub: `Limite ${formatPercent(DELINQUENCY_LIMIT)} · ${data.delinquency.rate <= DELINQUENCY_LIMIT ? "dentro do limite" : "acima do limite"}`,
+      progress: Math.min((data.delinquency.rate / DELINQUENCY_LIMIT) * 100, 100),
+      status: data.delinquency.rate <= DELINQUENCY_LIMIT ? ("ok" as const) : ("warn" as const),
+      chip: data.delinquency.rate <= DELINQUENCY_LIMIT ? "Carteira saudável · siga acompanhando" : "Atenção à inadimplência",
+      chipVariant: data.delinquency.rate <= DELINQUENCY_LIMIT ? ("green" as const) : ("red" as const),
+    },
+    {
+      icon: "↺",
+      label: "Renovações",
+      value: `${data.renewals}`,
+      sub: `${data.renewals} renovação(ões) no mês`,
+      progress: Math.min((data.renewals / (data.origination.count || 1)) * 100, 100),
+      status: "ok" as const,
+      chip: "Continue focando na retenção",
+      chipVariant: "green" as const,
+    },
+  ];
 
   return (
     <div className="px-5 pt-6 md:px-8">
@@ -116,7 +173,7 @@ export function PerformanceSection() {
       </div>
 
       <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
-        {PERF_CARDS.map((card) => (
+        {perfCards.map((card) => (
           <PerfCard key={card.label} {...card} />
         ))}
       </div>
