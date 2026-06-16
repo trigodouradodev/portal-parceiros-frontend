@@ -13,6 +13,8 @@ export const dashboardKeys = {
   overdue: (page: number, limit: number) =>
     [...dashboardKeys.all, "overdue", page, limit] as const,
   overdueInfinite: () => [...dashboardKeys.all, "overdue", "infinite"] as const,
+  preventiveInfinite: () =>
+    [...dashboardKeys.all, "preventive", "infinite"] as const,
 };
 
 /**
@@ -64,5 +66,27 @@ export function useOverdueContracts(page: number = 1, limit: number = 30) {
     queryKey: dashboardKeys.overdue(page, limit),
     queryFn: () => dashboardService.getOverdueContracts(page, limit),
     staleTime: 30 * 1000, // 30 seconds - more frequent refresh for overdue list
+  });
+}
+
+/**
+ * Hook to fetch paginated preventive contracts with infinite scroll
+ */
+export function usePreventiveContractsInfinite(
+  limit: number = 30,
+  withinDays: number = 15,
+) {
+  return useInfiniteQuery({
+    queryKey: dashboardKeys.preventiveInfinite(),
+    queryFn: ({ pageParam = 1 }) =>
+      dashboardService.getPreventiveContracts(pageParam, limit, withinDays),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.hasNextPage) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
+    staleTime: 30 * 1000, // 30 seconds - more frequent refresh for preventive list
   });
 }

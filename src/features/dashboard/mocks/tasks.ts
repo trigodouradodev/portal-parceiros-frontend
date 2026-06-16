@@ -35,58 +35,7 @@ export interface CobrClient {
   lastAction: string | null;
 }
 
-export const prevClients: PrevClient[] = [
-  {
-    id: "p1",
-    name: "Carlos Mendes",
-    contract: "Contrato #0043",
-    parcela: "Parc 2/6",
-    value: 1250,
-    daysUntilDue: 5,
-    phone: "(11) 99432-1870",
-    activityType: "phone",
-  },
-  {
-    id: "p2",
-    name: "Ana Beatriz Souza",
-    contract: "Contrato #0081",
-    parcela: "Parc 1/6",
-    value: 890,
-    daysUntilDue: 5,
-    phone: "(21) 98811-4400",
-    activityType: "phone",
-  },
-  {
-    id: "p3",
-    name: "Roberto Lima",
-    contract: "Contrato #0027",
-    parcela: "Parc 5/6",
-    value: 3400,
-    daysUntilDue: 2,
-    phone: "(31) 99100-2230",
-    activityType: "visit",
-  },
-  {
-    id: "p4",
-    name: "Mariana Santos",
-    contract: "Contrato #0059",
-    parcela: "Parc 3/6",
-    value: 650,
-    daysUntilDue: 0,
-    phone: "(41) 98765-1199",
-    activityType: "phone",
-  },
-  {
-    id: "p5",
-    name: "Paulo Ferreira",
-    contract: "Contrato #0014",
-    parcela: "Parc 7/7",
-    value: 2100,
-    daysUntilDue: 0,
-    phone: "(61) 99203-5588",
-    activityType: "phone",
-  },
-];
+// prevClients array removed - now using API data via usePreventiveContractsInfinite
 
 export const cobrClients: CobrClient[] = [
   {

@@ -9,13 +9,17 @@ import { PerformanceSection } from "@/features/dashboard/components/PerformanceS
 import { CommissionSection } from "@/features/dashboard/components/CommissionSection";
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
 import { TasksTabs } from "@/features/dashboard/components/tasks/TasksTabs";
-import { prevClients, type CobrStage } from "@/features/dashboard/mocks/tasks";
-import { mapFollowupStatusToStage } from "@/features/dashboard/utils/task-mappers";
+import { type CobrStage } from "@/features/dashboard/mocks/tasks";
+import {
+  mapFollowupStatusToStage,
+  mapPreventiveContractToPrevClient,
+} from "@/features/dashboard/utils/task-mappers";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   useDashboard,
   usePerformance,
   useOverdueContractsInfinite,
+  usePreventiveContractsInfinite,
 } from "@/hooks/useDashboard";
 import type { OverdueContract } from "@/services/dashboard/dashboard.types";
 
@@ -43,6 +47,8 @@ export function DashboardPage() {
     isFetchingNextPage,
   } = useOverdueContractsInfinite(30);
 
+  const { data: preventiveData } = usePreventiveContractsInfinite(30, 15);
+
   const loadMoreRef = useInfiniteScroll({
     hasNextPage,
     isFetchingNextPage,
@@ -52,6 +58,8 @@ export function DashboardPage() {
   // Flatten all pages into a single array of contracts
   const overdueContracts =
     overdueData?.pages.flatMap((page) => page.contracts) ?? [];
+  const preventiveContracts =
+    preventiveData?.pages.flatMap((page) => page.contracts) ?? [];
 
   const getCobrStage = (contract: OverdueContract): CobrStage =>
     cobrStages[contract.contractId] ??
@@ -59,9 +67,12 @@ export function DashboardPage() {
       contract.firstOverdueInstallment.latestFollowupStatus,
     );
 
-  // Preventive tasks (still using mock data - no backend endpoint)
-  const prevPending = prevClients.filter((c) => !prevDone[c.id]);
-  const prevDoneList = prevClients
+  // Preventive tasks from API
+  const preventivePending = preventiveContracts
+    .map((contract) => mapPreventiveContractToPrevClient(contract))
+    .filter((c) => !prevDone[c.id]);
+  const preventiveDoneList = preventiveContracts
+    .map((contract) => mapPreventiveContractToPrevClient(contract))
     .filter((c) => prevDone[c.id])
     .map((client) => ({
       client,
@@ -73,7 +84,7 @@ export function DashboardPage() {
     (c) => getCobrStage(c) !== "paid",
   );
 
-  const totalActions = cobrPending.length + prevPending.length;
+  const totalActions = cobrPending.length + preventivePending.length;
 
   // KPIs from API
   const ativos = dashboardData?.activeContracts ?? 0;
@@ -164,7 +175,7 @@ export function DashboardPage() {
 
           <TasksTabs
             cobrCount={cobrPending.length}
-            prevCount={prevPending.length}
+            prevCount={preventivePending.length}
             cobr={{
               isLoading: isLoadingOverdue,
               contracts: overdueContracts,
@@ -175,8 +186,8 @@ export function DashboardPage() {
               loadMoreRef,
             }}
             prev={{
-              pending: prevPending,
-              done: prevDoneList,
+              pending: preventivePending,
+              done: preventiveDoneList,
               onAction: handleAction,
               onReopen: handlePrevReopen,
             }}

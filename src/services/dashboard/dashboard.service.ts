@@ -3,6 +3,7 @@ import type {
   PortfolioDashboard,
   MonthPerformance,
   OverdueCollectionPage,
+  PreventiveCollectionPage,
 } from "./dashboard.types";
 
 /**
@@ -39,6 +40,22 @@ export const dashboardService = {
     const { data } = await api.get<OverdueCollectionPage>(
       "/collections/overdue",
       { params: { page, limit } },
+    );
+    return data;
+  },
+
+  /**
+   * Get paginated preventive contracts (contracts with installment due within N days)
+   * GET /collections/preventive?page=1&limit=30&withinDays=15
+   */
+  async getPreventiveContracts(
+    page: number = 1,
+    limit: number = 30,
+    withinDays: number = 15,
+  ): Promise<PreventiveCollectionPage> {
+    const { data } = await api.get<PreventiveCollectionPage>(
+      "/collections/preventive",
+      { params: { page, limit, withinDays } },
     );
     return data;
   },
