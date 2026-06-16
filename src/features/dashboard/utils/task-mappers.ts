@@ -2,8 +2,12 @@ import type {
   ActivityType,
   CobrClient,
   CobrStage,
+  PrevClient,
 } from "@/features/dashboard/mocks/tasks";
-import type { OverdueContract } from "@/services/dashboard/dashboard.types";
+import type {
+  OverdueContract,
+  PreventiveContract,
+} from "@/services/dashboard/dashboard.types";
 
 /**
  * Maps backend's latestFollowupStatus to frontend's CobrStage
@@ -59,5 +63,27 @@ export function mapOverdueContractToCobrClient(
     lastAction: installment.latestFollowupStatus
       ? `${installment.followupCount} follow-up(s) · ${installment.latestFollowupStatus}`
       : null,
+  };
+}
+
+/**
+ * Maps backend PreventiveContract to frontend PrevClient
+ */
+export function mapPreventiveContractToPrevClient(
+  contract: PreventiveContract,
+): PrevClient {
+  const installment = contract.nextInstallment;
+  const activityType: ActivityType =
+    installment.daysUntilDue > 7 ? "visit" : "phone"; // Business rule: > 7 days = visit, ≤ 7 days = phone
+
+  return {
+    id: contract.contractId,
+    name: contract.clientName,
+    contract: contract.contractNumber,
+    parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
+    value: installment.pendingAmount,
+    daysUntilDue: installment.daysUntilDue,
+    phone: "", // Not provided by backend - will need to be fetched separately or left empty
+    activityType,
   };
 }

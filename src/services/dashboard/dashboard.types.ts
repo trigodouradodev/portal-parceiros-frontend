@@ -81,3 +81,40 @@ export interface OverdueCollectionPage {
   contracts: OverdueContract[];
   pagination: OverduePagination;
 }
+
+export interface UpcomingInstallmentSummary {
+  id: string;
+  installmentNumber: number;
+  dueDate: string; // ISO date string
+  daysUntilDue: number;
+  pendingAmount: number;
+  totalAmount: number;
+  status: string;
+  followupCount: number;
+  latestFollowupStatus?: string;
+}
+
+export interface PreventiveContract {
+  contractId: string;
+  contractNumber: string;
+  totalInstallments: number;
+  clientName: string;
+  clientTaxId: string;
+  consultantName?: string;
+  companyName?: string;
+  collectionAgent?: CollectionAgentRef;
+  nextInstallment: UpcomingInstallmentSummary;
+}
+
+export interface PreventivePagination {
+  page: number;
+  limit: number;
+  totalContracts: number;
+  totalPages: number;
+  hasNextPage: boolean;
+}
+
+export interface PreventiveCollectionPage {
+  contracts: PreventiveContract[];
+  pagination: PreventivePagination;
+}
