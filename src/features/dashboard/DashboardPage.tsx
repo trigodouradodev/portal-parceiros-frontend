@@ -19,7 +19,11 @@ import {
   type CobrStage,
   type ActivityType,
 } from "@/features/dashboard/mocks/tasks";
-import { useDashboard, usePerformance, useOverdueContractsInfinite } from "@/hooks/useDashboard";
+import {
+  useDashboard,
+  usePerformance,
+  useOverdueContractsInfinite,
+} from "@/hooks/useDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { OverdueContract } from "@/services/dashboard/dashboard.types";
 
@@ -40,7 +44,8 @@ export function DashboardPage() {
 
   // Fetch real data from API
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
-  const { data: performanceData, isLoading: isLoadingPerformance } = usePerformance();
+  const { data: performanceData, isLoading: isLoadingPerformance } =
+    usePerformance();
   const {
     data: overdueData,
     isLoading: isLoadingOverdue,
@@ -50,7 +55,8 @@ export function DashboardPage() {
   } = useOverdueContractsInfinite(30);
 
   // Flatten all pages into a single array of contracts
-  const overdueContracts = overdueData?.pages.flatMap((page) => page.contracts) ?? [];
+  const overdueContracts =
+    overdueData?.pages.flatMap((page) => page.contracts) ?? [];
 
   // Intersection Observer for infinite scroll
   useEffect(() => {
@@ -61,7 +67,7 @@ export function DashboardPage() {
             fetchNextPage();
           }
         },
-        { threshold: 0.1 }
+        { threshold: 0.1 },
       );
       observerRef.current.observe(loadMoreRef.current);
     }
@@ -81,7 +87,13 @@ export function DashboardPage() {
 
   // Collection tasks from API
   const cobrPending = overdueContracts.filter(
-    (c) => getCobrStage(c.contractId, mapFollowupStatusToStage(c.firstOverdueInstallment.latestFollowupStatus)) !== "paid",
+    (c) =>
+      getCobrStage(
+        c.contractId,
+        mapFollowupStatusToStage(
+          c.firstOverdueInstallment.latestFollowupStatus,
+        ),
+      ) !== "paid",
   );
 
   const totalActions = cobrPending.length + prevPending.length;
@@ -100,10 +112,7 @@ export function DashboardPage() {
   if (isLoadingDashboard) {
     return (
       <PageContainer>
-        <PageHeader
-          subtitle="Carregando..."
-          onLogout={onMobileLogout}
-        />
+        <PageHeader subtitle="Carregando..." onLogout={onMobileLogout} />
         <div className="-mt-4 px-5 md:-mt-5 md:px-8">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <Skeleton className="h-32 rounded-2xl" />
@@ -152,7 +161,10 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <PerformanceSection data={performanceData} isLoading={isLoadingPerformance} />
+      <PerformanceSection
+        data={performanceData}
+        isLoading={isLoadingPerformance}
+      />
       <CommissionSection />
 
       <div className="flex-1 pt-5">
@@ -215,7 +227,12 @@ export function DashboardPage() {
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {cobrPending.map((c) => {
                     const client = mapOverdueContractToCobrClient(c);
-                    const stage = getCobrStage(c.contractId, mapFollowupStatusToStage(c.firstOverdueInstallment.latestFollowupStatus));
+                    const stage = getCobrStage(
+                      c.contractId,
+                      mapFollowupStatusToStage(
+                        c.firstOverdueInstallment.latestFollowupStatus,
+                      ),
+                    );
                     return (
                       <CobrTaskCard
                         key={c.contractId}
@@ -226,7 +243,15 @@ export function DashboardPage() {
                     );
                   })}
                   {overdueContracts
-                    .filter((c) => getCobrStage(c.contractId, mapFollowupStatusToStage(c.firstOverdueInstallment.latestFollowupStatus)) === "paid")
+                    .filter(
+                      (c) =>
+                        getCobrStage(
+                          c.contractId,
+                          mapFollowupStatusToStage(
+                            c.firstOverdueInstallment.latestFollowupStatus,
+                          ),
+                        ) === "paid",
+                    )
                     .map((c) => (
                       <DoneCard
                         key={c.contractId}
@@ -234,14 +259,20 @@ export function DashboardPage() {
                         contract={c.contractNumber}
                         label="Pagamento confirmado"
                         onReopen={() => {
-                          setCobrStages((s) => ({ ...s, [c.contractId]: "initial" }));
+                          setCobrStages((s) => ({
+                            ...s,
+                            [c.contractId]: "initial",
+                          }));
                           showToast("Tarefa reaberta.");
                         }}
                       />
                     ))}
                   {hasNextPage && (
                     <>
-                      <div ref={loadMoreRef} className="rounded-2xl border border-border bg-card p-4">
+                      <div
+                        ref={loadMoreRef}
+                        className="rounded-2xl border border-border bg-card p-4"
+                      >
                         <div className="mb-3 flex items-start justify-between">
                           <Skeleton className="h-5 w-32" />
                           <Skeleton className="h-6 w-6 rounded-full" />
@@ -359,9 +390,9 @@ export function DashboardPage() {
  */
 function mapFollowupStatusToStage(status: string | undefined): CobrStage {
   if (!status) return "initial";
-  
+
   const statusLower = status.toLowerCase();
-  
+
   // Simple mapping - can be refined based on actual backend statuses
   if (statusLower.includes("promise") || statusLower.includes("promessa")) {
     return "promise";
@@ -372,10 +403,13 @@ function mapFollowupStatusToStage(status: string | undefined): CobrStage {
   if (statusLower.includes("fup") || statusLower.includes("followup")) {
     return "fup";
   }
-  if (statusLower.includes("no_return") || statusLower.includes("sem retorno")) {
+  if (
+    statusLower.includes("no_return") ||
+    statusLower.includes("sem retorno")
+  ) {
     return "no_return_1";
   }
-  
+
   return "initial";
 }
 
@@ -384,8 +418,9 @@ function mapFollowupStatusToStage(status: string | undefined): CobrStage {
  */
 function mapOverdueContractToCobrClient(contract: OverdueContract) {
   const installment = contract.firstOverdueInstallment;
-  const activityType: ActivityType = installment.daysOverdue > 30 ? "visit" : "phone"; // Business rule as per plan
-  
+  const activityType: ActivityType =
+    installment.daysOverdue > 30 ? "visit" : "phone"; // Business rule as per plan
+
   return {
     id: contract.contractId,
     name: contract.clientName,
@@ -396,6 +431,8 @@ function mapOverdueContractToCobrClient(contract: OverdueContract) {
     phone: "", // Not provided by backend - will need to be fetched separately or left empty
     activityType,
     stage: mapFollowupStatusToStage(installment.latestFollowupStatus),
-    lastAction: installment.latestFollowupStatus ? `${installment.followupCount} follow-up(s) · ${installment.latestFollowupStatus}` : null,
+    lastAction: installment.latestFollowupStatus
+      ? `${installment.followupCount} follow-up(s) · ${installment.latestFollowupStatus}`
+      : null,
   };
 }

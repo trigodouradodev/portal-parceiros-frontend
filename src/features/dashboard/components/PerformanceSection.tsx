@@ -19,7 +19,7 @@ function formatCurrency(value: number): string {
 }
 
 function formatPercent(value: number): string {
-  return `${value.toFixed(1).replace('.', ',')}%`;
+  return `${value.toFixed(1).replace(".", ",")}%`;
 }
 
 interface PerfCardProps {
@@ -91,7 +91,10 @@ function PerfCard({
   );
 }
 
-export function PerformanceSection({ data, isLoading }: PerformanceSectionProps) {
+export function PerformanceSection({
+  data,
+  isLoading,
+}: PerformanceSectionProps) {
   const now = new Date();
   const day = now.getDate();
   const month = now.toLocaleDateString("pt-BR", { month: "long" });
@@ -124,37 +127,71 @@ export function PerformanceSection({ data, isLoading }: PerformanceSectionProps)
       label: "Originação",
       value: formatCurrency(data.origination.amount),
       sub: `Meta ${formatCurrency(ORIGINATION_TARGET)} · ${formatPercent((data.origination.amount / ORIGINATION_TARGET) * 100)} no ritmo`,
-      progress: Math.min((data.origination.amount / ORIGINATION_TARGET) * 100, 100),
-      status: (data.origination.amount / ORIGINATION_TARGET) >= 0.5 ? ("ok" as const) : ("warn" as const),
+      progress: Math.min(
+        (data.origination.amount / ORIGINATION_TARGET) * 100,
+        100,
+      ),
+      status:
+        data.origination.amount / ORIGINATION_TARGET >= 0.5
+          ? ("ok" as const)
+          : ("warn" as const),
       chip: `${data.origination.count} contrato(s) originado(s)`,
       chipVariant: "green" as const,
     },
     {
       icon: "%",
       label: "Taxa média",
-      value: data.averageRate !== null ? formatPercent(data.averageRate) : "N/A",
+      value:
+        data.averageRate !== null ? formatPercent(data.averageRate) : "N/A",
       sub: `Piso ${formatPercent(RATE_FLOOR)} · ${data.averageRate !== null && data.averageRate >= RATE_FLOOR ? "acima do mínimo" : "abaixo do mínimo"}`,
-      progress: data.averageRate !== null ? Math.min((data.averageRate / RATE_FLOOR) * 100, 100) : 0,
-      status: data.averageRate !== null && data.averageRate >= RATE_FLOOR ? ("ok" as const) : ("warn" as const),
-      chip: data.averageRate !== null && data.averageRate < RATE_FLOOR ? `Evite taxas abaixo de ${formatPercent(RATE_FLOOR)}` : "Taxa dentro do esperado",
-      chipVariant: data.averageRate !== null && data.averageRate < RATE_FLOOR ? ("red" as const) : ("green" as const),
+      progress:
+        data.averageRate !== null
+          ? Math.min((data.averageRate / RATE_FLOOR) * 100, 100)
+          : 0,
+      status:
+        data.averageRate !== null && data.averageRate >= RATE_FLOOR
+          ? ("ok" as const)
+          : ("warn" as const),
+      chip:
+        data.averageRate !== null && data.averageRate < RATE_FLOOR
+          ? `Evite taxas abaixo de ${formatPercent(RATE_FLOOR)}`
+          : "Taxa dentro do esperado",
+      chipVariant:
+        data.averageRate !== null && data.averageRate < RATE_FLOOR
+          ? ("red" as const)
+          : ("green" as const),
     },
     {
       icon: "!",
       label: "Inadimplência",
       value: formatPercent(data.delinquency.rate),
       sub: `Limite ${formatPercent(DELINQUENCY_LIMIT)} · ${data.delinquency.rate <= DELINQUENCY_LIMIT ? "dentro do limite" : "acima do limite"}`,
-      progress: Math.min((data.delinquency.rate / DELINQUENCY_LIMIT) * 100, 100),
-      status: data.delinquency.rate <= DELINQUENCY_LIMIT ? ("ok" as const) : ("warn" as const),
-      chip: data.delinquency.rate <= DELINQUENCY_LIMIT ? "Carteira saudável · siga acompanhando" : "Atenção à inadimplência",
-      chipVariant: data.delinquency.rate <= DELINQUENCY_LIMIT ? ("green" as const) : ("red" as const),
+      progress: Math.min(
+        (data.delinquency.rate / DELINQUENCY_LIMIT) * 100,
+        100,
+      ),
+      status:
+        data.delinquency.rate <= DELINQUENCY_LIMIT
+          ? ("ok" as const)
+          : ("warn" as const),
+      chip:
+        data.delinquency.rate <= DELINQUENCY_LIMIT
+          ? "Carteira saudável · siga acompanhando"
+          : "Atenção à inadimplência",
+      chipVariant:
+        data.delinquency.rate <= DELINQUENCY_LIMIT
+          ? ("green" as const)
+          : ("red" as const),
     },
     {
       icon: "↺",
       label: "Renovações",
       value: `${data.renewals}`,
       sub: `${data.renewals} renovação(ões) no mês`,
-      progress: Math.min((data.renewals / (data.origination.count || 1)) * 100, 100),
+      progress: Math.min(
+        (data.renewals / (data.origination.count || 1)) * 100,
+        100,
+      ),
       status: "ok" as const,
       chip: "Continue focando na retenção",
       chipVariant: "green" as const,

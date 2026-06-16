@@ -32,6 +32,7 @@ Onde `XXX` é o número da PR (ex: `/pr-review #2`).
    - `npm run lint`
    - Corrigir falhas automaticamente (quando seguro) ou reportar
 8. **Gerar respostas** — Para cada comentário, no formato:
+
    ```
    ### Comentário
    [texto do comentário]
@@ -45,6 +46,7 @@ Onde `XXX` é o número da PR (ex: `/pr-review #2`).
    ### Resposta para o Reviewer
    [mensagem profissional pronta para colar no GitHub]
    ```
+
 9. **Gerar relatório final** — Contendo:
    - Resumo das alterações realizadas (na análise)
    - Comentários resolvidos

@@ -7,6 +7,4 @@ export const NAV_ITEMS: {
   icon: React.ReactNode;
   label: string;
   path: string;
-}[] = [
-  { key: "home", icon: <Home size={20} />, label: "Home", path: "/" },
-];
+}[] = [{ key: "home", icon: <Home size={20} />, label: "Home", path: "/" }];

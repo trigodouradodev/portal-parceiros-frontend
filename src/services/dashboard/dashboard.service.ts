@@ -34,11 +34,11 @@ export const dashboardService = {
    */
   async getOverdueContracts(
     page: number = 1,
-    limit: number = 30
+    limit: number = 30,
   ): Promise<OverdueCollectionPage> {
     const { data } = await api.get<OverdueCollectionPage>(
       "/collections/overdue",
-      { params: { page, limit } }
+      { params: { page, limit } },
     );
     return data;
   },
