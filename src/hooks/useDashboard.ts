@@ -13,7 +13,8 @@ export const dashboardKeys = {
   overdue: (page: number, limit: number) =>
     [...dashboardKeys.all, "overdue", page, limit] as const,
   overdueInfinite: () => [...dashboardKeys.all, "overdue", "infinite"] as const,
-  preventiveInfinite: () => [...dashboardKeys.all, "preventive", "infinite"] as const,
+  preventiveInfinite: () =>
+    [...dashboardKeys.all, "preventive", "infinite"] as const,
 };
 
 /**

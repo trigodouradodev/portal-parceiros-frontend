@@ -10,7 +10,10 @@ import { CommissionSection } from "@/features/dashboard/components/CommissionSec
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
 import { TasksTabs } from "@/features/dashboard/components/tasks/TasksTabs";
 import { type CobrStage } from "@/features/dashboard/mocks/tasks";
-import { mapFollowupStatusToStage, mapPreventiveContractToPrevClient } from "@/features/dashboard/utils/task-mappers";
+import {
+  mapFollowupStatusToStage,
+  mapPreventiveContractToPrevClient,
+} from "@/features/dashboard/utils/task-mappers";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   useDashboard,
