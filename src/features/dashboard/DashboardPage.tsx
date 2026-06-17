@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { AlertTriangle, Clock, RefreshCw, FileText } from "lucide-react";
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/contexts/toast/toast-context";
+import { useActionContext, type ActionResult } from "@/contexts/action";
 import { SummaryCard } from "@/features/dashboard/components/SummaryCards";
 import { PerformanceSection } from "@/features/dashboard/components/PerformanceSection";
 import { CommissionSection } from "@/features/dashboard/components/CommissionSection";
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
 import { TasksTabs } from "@/features/dashboard/components/tasks/TasksTabs";
-import { type CobrStage } from "@/features/dashboard/mocks/tasks";
+import { type CobrStage, type PrevClient } from "@/features/dashboard/mocks/tasks";
 import {
   mapFollowupStatusToStage,
   mapPreventiveContractToPrevClient,
 } from "@/features/dashboard/utils/task-mappers";
+import { fmtBRL } from "@/lib/utils";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   useDashboard,
@@ -29,6 +31,8 @@ interface ShellContext {
 
 export function DashboardPage() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const { setActionData } = useActionContext();
   const { onMobileLogout } = useOutletContext<ShellContext>();
   const [prevDone, setPrevDone] = useState<
     Record<string, { at: number; status: string }>
@@ -92,8 +96,64 @@ export function DashboardPage() {
   const emAtraso = dashboardData?.overdueContracts ?? 0;
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
-  const handleAction = (name: string) => {
-    showToast(`Registro de ação para ${name} — em breve.`);
+  const handleCobrAction = (contract: OverdueContract) => {
+    const installment = contract.firstOverdueInstallment;
+    const stage = getCobrStage(contract);
+    const overdueDays = installment.daysOverdue;
+    setActionData({
+      mode: "cobr",
+      cobrStage: stage,
+      client: {
+        id: contract.contractId,
+        name: contract.clientName,
+        contract: contract.contractNumber,
+        parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
+        value: fmtBRL(installment.pendingAmount),
+        currentStep: stage,
+        daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
+      },
+      onComplete: (result: ActionResult) => {
+        if (result.nextStage) {
+          setCobrStages((s) => ({
+            ...s,
+            [contract.contractId]: result.nextStage as CobrStage,
+          }));
+        }
+        showToast("Ação registrada.");
+      },
+    });
+    navigate("/register/cobr");
+  };
+
+  const handlePrevAction = (client: PrevClient) => {
+    const daysInfo =
+      client.daysUntilDue === 0
+        ? "Vence hoje"
+        : `Vence em ${client.daysUntilDue} dias`;
+    setActionData({
+      mode: "prev",
+      client: {
+        id: client.id,
+        name: client.name,
+        contract: client.contract,
+        parcela: client.parcela,
+        value: fmtBRL(client.value),
+        currentStep: "Contato preventivo",
+        daysInfo,
+        phone: client.phone,
+      },
+      onComplete: (result: ActionResult) => {
+        setPrevDone((d) => ({
+          ...d,
+          [client.id]: {
+            at: Date.now(),
+            status: result.status ?? "Concluído",
+          },
+        }));
+        showToast("Contato preventivo registrado!");
+      },
+    });
+    navigate("/register/prev");
   };
 
   const handleCobrReopen = (contractId: string) => {
@@ -180,7 +240,7 @@ export function DashboardPage() {
               isLoading: isLoadingOverdue,
               contracts: overdueContracts,
               getStage: getCobrStage,
-              onAction: handleAction,
+              onAction: handleCobrAction,
               onReopen: handleCobrReopen,
               hasNextPage,
               loadMoreRef,
@@ -188,7 +248,7 @@ export function DashboardPage() {
             prev={{
               pending: preventivePending,
               done: preventiveDoneList,
-              onAction: handleAction,
+              onAction: handlePrevAction,
               onReopen: handlePrevReopen,
             }}
           />

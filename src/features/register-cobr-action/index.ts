@@ -1,0 +1,1 @@
+export { RegisterCobrActionPage } from "./RegisterCobrActionPage";

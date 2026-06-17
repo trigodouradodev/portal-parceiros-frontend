@@ -7,13 +7,16 @@ import { queryClient } from "@/lib/query-client.ts";
 import { router } from "@/routes";
 import { AuthProvider } from "@/contexts/auth/AuthContext";
 import { ToastProvider } from "@/contexts/toast/ToastContext";
+import { ActionProvider } from "@/contexts/action";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <ActionProvider>
+            <RouterProvider router={router} />
+          </ActionProvider>
         </AuthProvider>
       </ToastProvider>
     </QueryClientProvider>

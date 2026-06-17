@@ -16,7 +16,7 @@ interface PrevDoneClient {
 interface PrevTasksTabProps {
   pending: PrevClient[];
   done: PrevDoneClient[];
-  onAction: (name: string) => void;
+  onAction: (client: PrevClient) => void;
   onReopen: (id: string) => void;
 }
 
@@ -29,7 +29,7 @@ export function PrevTasksTab({
   return (
     <div className={GRID_CLASS}>
       {pending.map((c) => (
-        <PrevTaskCard key={c.id} client={c} onAction={() => onAction(c.name)} />
+        <PrevTaskCard key={c.id} client={c} onAction={() => onAction(c)} />
       ))}
 
       {done.map(({ client, label }) => (
