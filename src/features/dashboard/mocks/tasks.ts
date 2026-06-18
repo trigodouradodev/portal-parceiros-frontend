@@ -18,6 +18,8 @@ export interface PrevClient {
   parcela: string;
   value: number;
   daysUntilDue: number;
+  installmentNumber: number;
+  followupCount: number;
   phone: string;
   activityType: ActivityType;
 }

@@ -8,47 +8,63 @@ import type {
   OverdueContract,
   PreventiveContract,
 } from "@/services/dashboard/dashboard.types";
+import { getFollowUpStatusLabel } from "@/services/followup/followup-labels";
 
 /**
- * Maps backend's latestFollowupStatus to frontend's CobrStage
- * This is a simplified mapping since the backend only returns the latest status as a string
+ * Maps backend latestFollowupStatus + followupCount to frontend CobrStage.
  */
 export function mapFollowupStatusToStage(
   status: string | undefined,
+  followupCount = 0,
 ): CobrStage {
-  if (!status) return "initial";
+  if (!status) {
+    return "initial";
+  }
 
   const statusLower = status.toLowerCase();
 
-  // Simple mapping - can be refined based on actual backend statuses
-  if (statusLower.includes("promise") || statusLower.includes("promessa")) {
-    return "promise";
+  if (
+    statusLower === "promise_to_pay" ||
+    statusLower.includes("promise") ||
+    statusLower.includes("promessa")
+  ) {
+    return followupCount > 1 ? "fup" : "promise";
   }
-  if (statusLower.includes("paid") || statusLower.includes("pago")) {
+
+  if (
+    statusLower === "no_forecast" ||
+    statusLower.includes("sem previsão")
+  ) {
+    return "sem_previsao";
+  }
+
+  if (statusLower === "no_answer" || statusLower.includes("sem retorno")) {
+    if (followupCount >= 2) return "third_attempt";
+    if (followupCount >= 1) return "second_attempt";
+    return "initial";
+  }
+
+  if (
+    statusLower === "contacted" ||
+    statusLower.includes("paid") ||
+    statusLower.includes("pago")
+  ) {
     return "paid";
   }
+
   if (statusLower.includes("fup") || statusLower.includes("followup")) {
     return "fup";
-  }
-  if (
-    statusLower.includes("no_return") ||
-    statusLower.includes("sem retorno")
-  ) {
-    return "no_return_1";
   }
 
   return "initial";
 }
 
-/**
- * Maps backend OverdueContract to frontend CobrClient
- */
 export function mapOverdueContractToCobrClient(
   contract: OverdueContract,
 ): CobrClient {
   const installment = contract.firstOverdueInstallment;
   const activityType: ActivityType =
-    installment.daysOverdue > 30 ? "visit" : "phone"; // Business rule as per plan
+    installment.daysOverdue > 30 ? "visit" : "phone";
 
   return {
     id: contract.contractId,
@@ -57,24 +73,24 @@ export function mapOverdueContractToCobrClient(
     parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
     value: installment.pendingAmount,
     overdueDays: installment.daysOverdue,
-    phone: "", // Not provided by backend - will need to be fetched separately or left empty
+    phone: "",
     activityType,
-    stage: mapFollowupStatusToStage(installment.latestFollowupStatus),
+    stage: mapFollowupStatusToStage(
+      installment.latestFollowupStatus,
+      installment.followupCount,
+    ),
     lastAction: installment.latestFollowupStatus
-      ? `${installment.followupCount} follow-up(s) · ${installment.latestFollowupStatus}`
+      ? `${installment.followupCount} follow-up(s) · ${getFollowUpStatusLabel(installment.latestFollowupStatus)}`
       : null,
   };
 }
 
-/**
- * Maps backend PreventiveContract to frontend PrevClient
- */
 export function mapPreventiveContractToPrevClient(
   contract: PreventiveContract,
 ): PrevClient {
   const installment = contract.nextInstallment;
   const activityType: ActivityType =
-    installment.daysUntilDue > 7 ? "visit" : "phone"; // Business rule: > 7 days = visit, ≤ 7 days = phone
+    installment.daysUntilDue > 7 ? "visit" : "phone";
 
   return {
     id: contract.contractId,
@@ -83,7 +99,18 @@ export function mapPreventiveContractToPrevClient(
     parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
     value: installment.pendingAmount,
     daysUntilDue: installment.daysUntilDue,
-    phone: "", // Not provided by backend - will need to be fetched separately or left empty
+    installmentNumber: installment.installmentNumber,
+    followupCount: installment.followupCount,
+    phone: "",
     activityType,
   };
+}
+
+/** Normaliza daysInfo para templates WhatsApp do fluxo preventivo. */
+export function formatPreventiveDaysInfo(daysUntilDue: number): string {
+  if (daysUntilDue === 0) return "Vence hoje";
+  if (daysUntilDue === 1) return "Vence amanhã";
+  if (daysUntilDue === 2) return "Vence em 2 dias";
+  if (daysUntilDue <= 5) return "Vence em 5 dias";
+  return `Vence em ${daysUntilDue} dias`;
 }
