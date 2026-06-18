@@ -5,6 +5,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { LoginPage } from "@/features/login/LoginPage";
+import {
+  RegisterChargeActionPage,
+  RegisterPreventiveActionPage,
+} from "@/features/register-action";
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +19,8 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      { path: "/register/cobr", element: <RegisterChargeActionPage /> },
+      { path: "/register/prev", element: <RegisterPreventiveActionPage /> },
       {
         element: <Layout />,
         children: [
