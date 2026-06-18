@@ -6,13 +6,14 @@ import {
   type ActionMode,
   type ActionResult,
   type SetActionDataPayload,
+  type PreventiveContactType,
 } from "@/contexts/action/action-context";
 
 export function ActionProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ActionClient | null>(null);
   const [mode, setMode] = useState<ActionMode | null>(null);
   const [cobrStage, setCobrStage] = useState<CobrStage | undefined>(undefined);
-  const [contactType, setContactType] = useState<"phone" | "visit" | undefined>(
+  const [contactType, setContactType] = useState<PreventiveContactType | undefined>(
     undefined,
   );
   const [onComplete, setOnComplete] = useState<(result: ActionResult) => void>(

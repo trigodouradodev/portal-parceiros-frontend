@@ -1,7 +1,9 @@
 import { createContext, useContext } from "react";
 import type { CobrStage } from "@/features/dashboard/mocks/tasks";
 
-export type ActionMode = "cobr" | "prev" | "contact";
+export type ActionMode = "cobr" | "prev";
+
+export type PreventiveContactType = "phone" | "visit" | "whatsapp";
 
 export interface ActionClient {
   /** contractId */
@@ -28,7 +30,7 @@ export interface SetActionDataPayload {
   client: ActionClient;
   mode: ActionMode;
   cobrStage?: CobrStage;
-  contactType?: "phone" | "visit";
+  contactType?: PreventiveContactType;
   onComplete: (result: ActionResult) => void;
 }
 
@@ -36,7 +38,7 @@ export interface ActionContextType {
   client: ActionClient | null;
   mode: ActionMode | null;
   cobrStage?: CobrStage;
-  contactType?: "phone" | "visit";
+  contactType?: PreventiveContactType;
   onComplete: (result: ActionResult) => void;
   setActionData: (data: SetActionDataPayload) => void;
   clearActionData: () => void;
