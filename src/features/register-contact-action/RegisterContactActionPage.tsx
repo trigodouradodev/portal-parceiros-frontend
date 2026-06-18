@@ -45,7 +45,8 @@ export function RegisterContactActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, contactType, onComplete, clearActionData } = useActionContext();
+  const { client, contactType, onComplete, clearActionData } =
+    useActionContext();
   const [contactDate, setContactDate] = useState(
     () => new Date().toISOString().split("T")[0],
   );

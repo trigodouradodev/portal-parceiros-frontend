@@ -1,9 +1,4 @@
-import {
-  Calendar,
-  CheckCircle2,
-  Handshake,
-  PhoneOff,
-} from "lucide-react";
+import { Calendar, CheckCircle2, Handshake, PhoneOff } from "lucide-react";
 import type { OutcomeOption } from "@/features/register-action/components/OutcomeOptionList";
 
 export const PREV_OUTCOMES: OutcomeOption[] = [

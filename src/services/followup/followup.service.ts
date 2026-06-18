@@ -1,8 +1,5 @@
 import api from "@/lib/api/axios";
-import type {
-  CreateFollowUpPayload,
-  FollowUpResponse,
-} from "./followup.types";
+import type { CreateFollowUpPayload, FollowUpResponse } from "./followup.types";
 
 export const followupService = {
   async createFollowUp(
