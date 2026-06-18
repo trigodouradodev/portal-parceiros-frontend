@@ -108,13 +108,10 @@ export function PrevVisitLocationPanel({
             <ExternalLink size={14} className="opacity-70" />
           </button>
           <div className="flex items-start gap-2 rounded-2xl border border-warning/40 bg-warning-bg p-3.5">
-            <AlertTriangle
-              size={15}
-              className="mt-0.5 shrink-0 text-warning"
-            />
+            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-warning" />
             <p className="text-xs text-muted-foreground">
-              Se o cliente está <strong>visitando você</strong>, confirme abaixo.
-              Esta ação fica registrada para auditoria.
+              Se o cliente está <strong>visitando você</strong>, confirme
+              abaixo. Esta ação fica registrada para auditoria.
             </p>
           </div>
           <button

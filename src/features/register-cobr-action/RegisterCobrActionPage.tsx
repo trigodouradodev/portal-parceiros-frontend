@@ -131,7 +131,10 @@ export function RegisterCobrActionPage() {
         activeIndex={3}
       />
     ) : (
-      <RegisterStagePills steps={["Promessa", "Boleto", "FUP"]} activeIndex={1} />
+      <RegisterStagePills
+        steps={["Promessa", "Boleto", "FUP"]}
+        activeIndex={1}
+      />
     );
 
   return (

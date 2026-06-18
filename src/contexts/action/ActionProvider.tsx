@@ -15,9 +15,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
   const [contactType, setContactType] = useState<"phone" | "visit" | undefined>(
     undefined,
   );
-  const [onComplete, setOnComplete] = useState<
-    (result: ActionResult) => void
-  >(() => () => {});
+  const [onComplete, setOnComplete] = useState<(result: ActionResult) => void>(
+    () => () => {},
+  );
 
   function setActionData(data: SetActionDataPayload) {
     setClient(data.client);

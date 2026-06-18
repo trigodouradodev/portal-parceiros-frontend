@@ -31,10 +31,7 @@ export function mapFollowupStatusToStage(
     return followupCount > 1 ? "fup" : "promise";
   }
 
-  if (
-    statusLower === "no_forecast" ||
-    statusLower.includes("sem previsão")
-  ) {
+  if (statusLower === "no_forecast" || statusLower.includes("sem previsão")) {
     return "sem_previsao";
   }
 
