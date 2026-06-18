@@ -132,7 +132,7 @@ export function DashboardPage() {
         showToast("Ação registrada.");
       },
     });
-    navigate("/register/cobr");
+    navigate("/register/charge");
   };
 
   const handlePrevAction = (client: PrevClient) => {
@@ -154,7 +154,7 @@ export function DashboardPage() {
         showToast("Contato preventivo registrado!");
       },
     });
-    navigate("/register/prev");
+    navigate("/register/preventive");
   };
 
   const handleCobrReopen = () => {

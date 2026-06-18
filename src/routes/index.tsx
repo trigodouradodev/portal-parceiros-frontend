@@ -17,8 +17,8 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
-      { path: "/register/cobr", element: <RegisterChargeActionPage /> },
-      { path: "/register/prev", element: <RegisterPreventiveActionPage /> },
+      { path: "/register/charge", element: <RegisterChargeActionPage /> },
+      { path: "/register/preventive", element: <RegisterPreventiveActionPage /> },
       {
         element: <Layout />,
         children: [
