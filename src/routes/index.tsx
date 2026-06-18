@@ -18,7 +18,10 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       { path: "/register/charge", element: <RegisterChargeActionPage /> },
-      { path: "/register/preventive", element: <RegisterPreventiveActionPage /> },
+      {
+        path: "/register/preventive",
+        element: <RegisterPreventiveActionPage />,
+      },
       {
         element: <Layout />,
         children: [
