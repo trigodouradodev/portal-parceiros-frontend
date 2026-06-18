@@ -8,6 +8,7 @@ export type PreventiveContactType = "phone" | "visit" | "whatsapp";
 export interface ActionClient {
   /** contractId */
   id: string;
+  installmentNumber: number;
   name: string;
   contract: string;
   parcela: string;

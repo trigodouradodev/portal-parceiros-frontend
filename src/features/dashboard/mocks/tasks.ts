@@ -18,6 +18,8 @@ export interface PrevClient {
   parcela: string;
   value: number;
   daysUntilDue: number;
+  installmentNumber: number;
+  followupCount: number;
   phone: string;
   activityType: ActivityType;
 }
@@ -143,4 +145,71 @@ export const STAGE_INFO: Record<
     color: "green",
     journeyPath: ["Ligação", "Promessa", "Boleto", "FUP", "Pago"],
   },
+};
+
+export const CALL_OUTCOMES: Partial<
+  Record<CobrStage, { value: string; label: string; desc: string }[]>
+> = {
+  initial: [
+    {
+      value: "no_return_1",
+      label: "Sem retorno",
+      desc: "Não atendeu a ligação",
+    },
+    {
+      value: "sem_previsao",
+      label: "Sem Previsão",
+      desc: "Atendeu mas sem data de pagamento",
+    },
+    {
+      value: "promise",
+      label: "Promessa de pagamento",
+      desc: "Confirmou que irá pagar",
+    },
+  ],
+  second_attempt: [
+    {
+      value: "no_return_2",
+      label: "Sem retorno",
+      desc: "Não atendeu novamente",
+    },
+    {
+      value: "sem_previsao",
+      label: "Sem Previsão",
+      desc: "Atendeu mas sem data de pagamento",
+    },
+    {
+      value: "promise",
+      label: "Promessa de pagamento",
+      desc: "Confirmou que irá pagar",
+    },
+  ],
+  third_attempt: [
+    {
+      value: "sem_previsao",
+      label: "Sem Previsão",
+      desc: "Atendeu mas sem data de pagamento",
+    },
+    {
+      value: "promise",
+      label: "Promessa de pagamento",
+      desc: "Confirmou que irá pagar",
+    },
+  ],
+  sem_previsao: [
+    {
+      value: "sem_previsao",
+      label: "Ainda sem previsão",
+      desc: "Cliente não tem data definida",
+    },
+    {
+      value: "promise",
+      label: "Promessa de pagamento",
+      desc: "Confirmou que irá pagar",
+    },
+  ],
+  fup: [
+    { value: "paid", label: "Pagou ✓", desc: "Cliente efetuou o pagamento" },
+    { value: "not_paid", label: "Não pagou", desc: "Não efetuou o pagamento" },
+  ],
 };

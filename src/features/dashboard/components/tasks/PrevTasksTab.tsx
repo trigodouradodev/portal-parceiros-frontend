@@ -1,4 +1,5 @@
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DoneCard,
   PrevTaskCard,
@@ -14,22 +15,33 @@ interface PrevDoneClient {
 }
 
 interface PrevTasksTabProps {
+  isLoading: boolean;
   pending: PrevClient[];
   done: PrevDoneClient[];
-  onAction: (name: string) => void;
-  onReopen: (id: string) => void;
+  onAction: (client: PrevClient) => void;
 }
 
 export function PrevTasksTab({
+  isLoading,
   pending,
   done,
   onAction,
-  onReopen,
 }: PrevTasksTabProps) {
+  if (isLoading) {
+    return (
+      <div className={GRID_CLASS}>
+        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-40 rounded-2xl" />
+      </div>
+    );
+  }
+
   return (
     <div className={GRID_CLASS}>
       {pending.map((c) => (
-        <PrevTaskCard key={c.id} client={c} onAction={() => onAction(c.name)} />
+        <PrevTaskCard key={c.id} client={c} onAction={() => onAction(c)} />
       ))}
 
       {done.map(({ client, label }) => (
@@ -38,7 +50,6 @@ export function PrevTasksTab({
           name={client.name}
           contract={client.contract}
           label={label}
-          onReopen={() => onReopen(client.id)}
         />
       ))}
 

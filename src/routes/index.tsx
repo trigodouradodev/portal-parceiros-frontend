@@ -5,10 +5,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { LoginPage } from "@/features/login/LoginPage";
-import {
-  RegisterChargeActionPage,
-  RegisterPreventiveActionPage,
-} from "@/features/register-action";
+import { RegisterChargeActionPage } from "@/features/register-action/charge";
+import { RegisterPreventiveActionPage } from "@/features/register-action/preventive";
 
 export const router = createBrowserRouter([
   {
