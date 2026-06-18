@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronRight, MapPinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActionContext } from "@/contexts/action";
+import { devPrevActionPayload } from "@/contexts/action/dev-action-mock";
 import {
   OutcomeOptionList,
   PREV_OUTCOMES,
@@ -47,7 +48,8 @@ export function RegisterPrevActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, onComplete, clearActionData } = useActionContext();
+  const { client, onComplete, clearActionData, setActionData } =
+    useActionContext();
   const [step, setStep] = useState<Step>("channel");
   const [channel, setChannel] = useState<PrevChannel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
@@ -63,7 +65,11 @@ export function RegisterPrevActionPage() {
 
   const ready = Boolean(client);
 
-  useRegisterActionGuard({ ready });
+  const devSeed = useCallback(() => {
+    setActionData(devPrevActionPayload(() => {}));
+  }, [setActionData]);
+
+  useRegisterActionGuard({ ready, devSeed });
 
   const handleBack = useCallback(() => {
     clearActionData();

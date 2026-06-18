@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActionContext } from "@/contexts/action";
+import { devCobrActionPayload } from "@/contexts/action/dev-action-mock";
 import {
   COBR_TITLES,
   getCobrOutcomeOptions,
@@ -38,7 +39,8 @@ export function RegisterCobrActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, cobrStage, onComplete, clearActionData } = useActionContext();
+  const { client, cobrStage, onComplete, clearActionData, setActionData } =
+    useActionContext();
   const [step, setStep] = useState<Step>(
     cobrStage === "promise" ? "boleto" : "outcome",
   );
@@ -49,7 +51,11 @@ export function RegisterCobrActionPage() {
 
   const ready = Boolean(client && cobrStage);
 
-  useRegisterActionGuard({ ready });
+  const devSeed = useCallback(() => {
+    setActionData(devCobrActionPayload(() => {}));
+  }, [setActionData]);
+
+  useRegisterActionGuard({ ready, devSeed });
 
   const handleBack = useCallback(() => {
     clearActionData();

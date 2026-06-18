@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useActionContext } from "@/contexts/action";
+import { devContactActionPayload } from "@/contexts/action/dev-action-mock";
 import {
   RegisterActionFooter,
   RegisterActionLayout,
@@ -45,7 +46,8 @@ export function RegisterContactActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, contactType, onComplete, clearActionData } = useActionContext();
+  const { client, contactType, onComplete, clearActionData, setActionData } =
+    useActionContext();
   const [contactDate, setContactDate] = useState(
     () => new Date().toISOString().split("T")[0],
   );
@@ -57,7 +59,11 @@ export function RegisterContactActionPage() {
 
   const ready = Boolean(client && contactType);
 
-  useRegisterActionGuard({ ready });
+  const devSeed = useCallback(() => {
+    setActionData(devContactActionPayload(() => {}, "phone"));
+  }, [setActionData]);
+
+  useRegisterActionGuard({ ready, devSeed });
 
   const handleBack = useCallback(() => {
     clearActionData();
