@@ -19,7 +19,10 @@ import {
   RegisterSaveButton,
   useRegisterActionGuard,
 } from "@/features/register-action";
+import { buildContactFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
+import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
+import { getApiErrorMessage } from "@/lib/api/errors";
 
 const PHONE_STATUS_OPTIONS = [
   "Sem retorno",
@@ -41,6 +44,7 @@ const VISIT_STATUS_OPTIONS = [
 export function RegisterContactActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const createFollowUp = useCreateFollowUp();
   const { client, contactType, onComplete, clearActionData } = useActionContext();
   const [contactDate, setContactDate] = useState(
     () => new Date().toISOString().split("T")[0],
@@ -50,7 +54,6 @@ export function RegisterContactActionPage() {
   );
   const [contactStatus, setContactStatus] = useState("");
   const [note, setNote] = useState("");
-  const [saving, setSaving] = useState(false);
 
   const ready = Boolean(client && contactType);
 
@@ -67,26 +70,43 @@ export function RegisterContactActionPage() {
 
   const isPhone = contactType === "phone";
   const title = isPhone ? "Registrar Ligação" : "Registrar Visita";
+  const saving = createFollowUp.isPending;
   const statusOptions = isPhone ? PHONE_STATUS_OPTIONS : VISIT_STATUS_OPTIONS;
 
   async function handleSave() {
+    const currentClient = client;
+    const currentContactType = contactType;
+    if (!currentClient || !currentContactType) return;
+
     if (!contactStatus) {
       showToast("Selecione um status.", { variant: "destructive" });
       return;
     }
 
-    setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    onComplete({
-      channel: isPhone ? "phone" : "visit",
-      outcome: contactStatus,
-      note,
-      status: contactStatus,
-    });
-    showToast("Ação registrada.");
-    clearActionData();
-    navigate(-1);
-    setSaving(false);
+    try {
+      const payload = buildContactFollowUpPayload({
+        contractId: currentClient.id,
+        installmentNumber: currentClient.installmentNumber,
+        contactType: currentContactType,
+        statusLabel: contactStatus,
+        note,
+        contactDate,
+        contactTime,
+      });
+      await createFollowUp.mutateAsync(payload);
+      onComplete({
+        channel: isPhone ? "phone" : "visit",
+        outcome: contactStatus,
+        note,
+        status: contactStatus,
+      });
+      clearActionData();
+      navigate(-1);
+    } catch (err) {
+      showToast(getApiErrorMessage(err, "Erro ao registrar contato."), {
+        variant: "destructive",
+      });
+    }
   }
 
   return (

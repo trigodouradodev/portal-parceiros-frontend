@@ -27,13 +27,17 @@ import {
   RegisterStepIndicator,
   useRegisterActionGuard,
 } from "@/features/register-action";
+import { buildCobrFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
+import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
+import { getApiErrorMessage } from "@/lib/api/errors";
 
 type Step = "outcome" | "boleto";
 
 export function RegisterCobrActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const createFollowUp = useCreateFollowUp();
   const { client, cobrStage, onComplete, clearActionData } = useActionContext();
   const [step, setStep] = useState<Step>(
     cobrStage === "promise" ? "boleto" : "outcome",
@@ -42,7 +46,6 @@ export function RegisterCobrActionPage() {
   const [boletoValue, setBoletoValue] = useState(client?.value ?? "");
   const [boletoDate, setBoletoDate] = useState("");
   const [note, setNote] = useState("");
-  const [saving, setSaving] = useState(false);
 
   const ready = Boolean(client && cobrStage);
 
@@ -58,6 +61,7 @@ export function RegisterCobrActionPage() {
   }
 
   const title = COBR_TITLES[cobrStage] ?? "Registrar ação";
+  const saving = createFollowUp.isPending;
   const outcomeOptions = getCobrOutcomeOptions(cobrStage, {
     no_return_1: <PhoneOff size={18} />,
     no_return_2: <PhoneOff size={18} />,
@@ -69,14 +73,27 @@ export function RegisterCobrActionPage() {
   const canSaveOutcome = step === "outcome" && outcome !== null;
   const canSaveBoleto = step === "boleto" && boletoDate !== "";
 
-  async function completeSave() {
-    setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    onComplete({ note });
-    showToast("Ação registrada.");
-    clearActionData();
-    navigate(-1);
-    setSaving(false);
+  async function submitFollowUp(outcomeValue: string, boletoDueDate?: string) {
+    const currentClient = client;
+    if (!currentClient) return;
+
+    try {
+      const payload = buildCobrFollowUpPayload({
+        contractId: currentClient.id,
+        installmentNumber: currentClient.installmentNumber,
+        outcome: outcomeValue,
+        note,
+        boletoDate: boletoDueDate,
+      });
+      await createFollowUp.mutateAsync(payload);
+      onComplete({ note });
+      clearActionData();
+      navigate(-1);
+    } catch (err) {
+      showToast(getApiErrorMessage(err, "Erro ao registrar ação."), {
+        variant: "destructive",
+      });
+    }
   }
 
   async function handleSave() {
@@ -86,13 +103,13 @@ export function RegisterCobrActionPage() {
         setStep("boleto");
         return;
       }
-      await completeSave();
+      await submitFollowUp(outcome);
       return;
     }
 
     if (step === "boleto") {
       if (!boletoDate) return;
-      await completeSave();
+      await submitFollowUp("promise", boletoDate);
     }
   }
 

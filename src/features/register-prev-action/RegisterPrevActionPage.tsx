@@ -21,8 +21,11 @@ import {
   type PrevChannel,
   type VisitLocationStatus,
 } from "@/features/register-action/components/prev";
+import { buildPrevFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { getPrevWaTemplates } from "@/features/register-action/utils/prev-wa-templates";
+import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import { getFirstName } from "@/lib/user-display";
 
 type Step = "channel" | "channel_action" | "outcome";
@@ -43,6 +46,7 @@ function channelActionTitle(channel: PrevChannel | null): string {
 export function RegisterPrevActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const createFollowUp = useCreateFollowUp();
   const { client, onComplete, clearActionData } = useActionContext();
   const [step, setStep] = useState<Step>("channel");
   const [channel, setChannel] = useState<PrevChannel | null>(null);
@@ -52,7 +56,10 @@ export function RegisterPrevActionPage() {
   const [selectedMsg, setSelectedMsg] = useState(0);
   const [locationStatus, setLocationStatus] =
     useState<VisitLocationStatus>("idle");
-  const [saving, setSaving] = useState(false);
+  const [geoCoords, setGeoCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const ready = Boolean(client);
 
@@ -76,6 +83,7 @@ export function RegisterPrevActionPage() {
     step === "channel_action" ? channelActionTitle(channel) : STEP_TITLES[step];
   const currentStepIndex =
     step === "channel" ? 0 : step === "channel_action" ? 1 : 2;
+  const saving = createFollowUp.isPending;
   const locationOk =
     locationStatus === "confirmed" || locationStatus === "manual";
   const canSaveOutcome = step === "outcome" && outcome !== null;
@@ -90,7 +98,11 @@ export function RegisterPrevActionPage() {
     setLocationStatus("checking");
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        () => {
+        (position) => {
+          setGeoCoords({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
           setLocationStatus("confirmed");
         },
         () => {
@@ -102,6 +114,7 @@ export function RegisterPrevActionPage() {
     }
 
     setTimeout(() => {
+      setGeoCoords({ latitude: -23.5505, longitude: -46.6333 });
       setLocationStatus(Math.random() > 0.5 ? "confirmed" : "not_found");
     }, 1800);
   }
@@ -109,13 +122,33 @@ export function RegisterPrevActionPage() {
   async function handleSave() {
     if (!channel || !outcome) return;
 
-    setSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    onComplete({ channel, outcome, note, status: outcome });
-    showToast("Contato preventivo registrado!");
-    clearActionData();
-    navigate(-1);
-    setSaving(false);
+    const currentClient = client;
+    if (!currentClient) return;
+
+    const includeGeo =
+      channel === "visit" &&
+      locationStatus === "confirmed" &&
+      geoCoords !== null;
+
+    try {
+      const payload = buildPrevFollowUpPayload({
+        contractId: currentClient.id,
+        installmentNumber: currentClient.installmentNumber,
+        channel,
+        outcome,
+        note,
+        latitude: includeGeo ? geoCoords.latitude : undefined,
+        longitude: includeGeo ? geoCoords.longitude : undefined,
+      });
+      await createFollowUp.mutateAsync(payload);
+      onComplete({ channel, outcome, note, status: outcome });
+      clearActionData();
+      navigate(-1);
+    } catch (err) {
+      showToast(getApiErrorMessage(err, "Erro ao registrar contato."), {
+        variant: "destructive",
+      });
+    }
   }
 
   return (
