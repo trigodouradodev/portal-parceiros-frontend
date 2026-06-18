@@ -5,7 +5,10 @@ interface PrevPhonePanelProps {
   clientFirstName: string;
 }
 
-export function PrevPhonePanel({ phone, clientFirstName }: PrevPhonePanelProps) {
+export function PrevPhonePanel({
+  phone,
+  clientFirstName,
+}: PrevPhonePanelProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-4 rounded-2xl bg-background p-4">
