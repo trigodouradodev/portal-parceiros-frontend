@@ -5,6 +5,9 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { LoginPage } from "@/features/login/LoginPage";
+import { RegisterCobrActionPage } from "@/features/register-cobr-action";
+import { RegisterPrevActionPage } from "@/features/register-prev-action";
+import { RegisterContactActionPage } from "@/features/register-contact-action";
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +18,9 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      { path: "/register/cobr", element: <RegisterCobrActionPage /> },
+      { path: "/register/prev", element: <RegisterPrevActionPage /> },
+      { path: "/register/contact", element: <RegisterContactActionPage /> },
       {
         element: <Layout />,
         children: [
