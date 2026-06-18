@@ -1,4 +1,10 @@
-import { AlertTriangle, ExternalLink, MapPin, MapPinOff, Navigation } from "lucide-react";
+import {
+  AlertTriangle,
+  ExternalLink,
+  MapPin,
+  MapPinOff,
+  Navigation,
+} from "lucide-react";
 
 interface NotFoundStatusProps {
   onConfirmManual: () => void;

@@ -39,9 +39,7 @@ export function PrevVisitLocationPanel({
         </div>
       </div>
 
-      {status === "idle" && (
-        <IdleStatus onVerifyLocation={onVerifyLocation} />
-      )}
+      {status === "idle" && <IdleStatus onVerifyLocation={onVerifyLocation} />}
       {status === "checking" && <CheckingStatus />}
       {status === "confirmed" && <ConfirmedStatus />}
       {status === "manual" && <ManualStatus />}
