@@ -23,9 +23,11 @@ import { PREV_OUTCOMES } from "@/features/register-action/preventive/constants/p
 import { buildPrevFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { getPrevWaTemplates } from "@/features/register-action/preventive/utils/prev-wa-templates";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
+import { useVerifyLocation } from "@/hooks/useVerifyLocation";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getFirstName } from "@/lib/user-display";
+import type { LocationCheckResult } from "@/services/location-check/location-check.types";
 
 type Step = "channel" | "channel_action" | "outcome";
 
@@ -46,6 +48,7 @@ export function RegisterPreventiveActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
+  const verifyLocation = useVerifyLocation();
   const { client, onComplete } = useActionContext();
   const [step, setStep] = useState<Step>("channel");
   const [channel, setChannel] = useState<PrevChannel | null>(null);
@@ -59,6 +62,8 @@ export function RegisterPreventiveActionPage() {
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [locationCheckResult, setLocationCheckResult] =
+    useState<LocationCheckResult | null>(null);
 
   const handleBack = () => {
     navigate(-1);
@@ -70,7 +75,7 @@ export function RegisterPreventiveActionPage() {
 
   const waTemplates = getPrevWaTemplates(client);
   const clientPhone = client.phone ?? "";
-  const mockAddress = client.address ?? "Rua das Flores, 42 – Centro";
+  const clientAddress = client.address;
   const clientFirstName = getFirstName(client.name);
 
   const pageTitle =
@@ -88,29 +93,66 @@ export function RegisterPreventiveActionPage() {
     setTimeout(() => setCopied(null), 2000);
   }
 
-  function simulateLocationCheck() {
+  function verifyLocationCheck() {
+    const currentClient = client;
+    if (!currentClient) return;
+
     setLocationStatus("checking");
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setGeoCoords({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          setLocationStatus("confirmed");
-        },
-        () => {
-          setLocationStatus("not_found");
-        },
-        { timeout: 5000 },
-      );
+    setLocationCheckResult(null);
+
+    if (!navigator.geolocation) {
+      showToast("Geolocalização não disponível neste dispositivo.", {
+        variant: "destructive",
+      });
+      setLocationStatus("idle");
       return;
     }
 
-    setTimeout(() => {
-      setGeoCoords({ latitude: -23.5505, longitude: -46.6333 });
-      setLocationStatus(Math.random() > 0.5 ? "confirmed" : "not_found");
-    }, 1800);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        verifyLocation
+          .mutateAsync({
+            contractId: currentClient.id,
+            installmentNumber: currentClient.installmentNumber,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          })
+          .then((result) => {
+            setGeoCoords(coords);
+            setLocationCheckResult(result);
+            setLocationStatus(result.withinRadius ? "confirmed" : "not_found");
+
+            if (result.partialMatch) {
+              showToast(
+                "Endereço geolocalizado de forma aproximada. Confirme manualmente se necessário.",
+                { variant: "info" },
+              );
+            }
+          })
+          .catch((err) => {
+            showToast(
+              getApiErrorMessage(
+                err,
+                "Não foi possível verificar a localização.",
+              ),
+              { variant: "destructive" },
+            );
+            setLocationStatus("idle");
+          });
+      },
+      () => {
+        showToast("Não foi possível obter sua localização.", {
+          variant: "destructive",
+        });
+        setLocationStatus("idle");
+      },
+      { timeout: 10000, enableHighAccuracy: true },
+    );
   }
 
   async function handleSave() {
@@ -240,9 +282,10 @@ export function RegisterPreventiveActionPage() {
 
         {step === "channel_action" && channel === "visit" && (
           <PrevVisitLocationPanel
-            address={mockAddress}
+            address={clientAddress}
             status={locationStatus}
-            onVerifyLocation={simulateLocationCheck}
+            locationCheckResult={locationCheckResult}
+            onVerifyLocation={verifyLocationCheck}
             onConfirmManual={() => setLocationStatus("manual")}
           />
         )}

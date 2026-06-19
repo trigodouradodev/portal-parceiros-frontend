@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type { CobrStage } from "@/features/dashboard/mocks/tasks";
 import type { TaskTab } from "@/features/dashboard/constants/task-tab";
+import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 
 export type ActionMode = TaskTab;
 
@@ -17,7 +18,7 @@ export interface ActionClient {
   currentStep: string;
   daysInfo: string;
   phone?: string;
-  address?: string;
+  address?: ClientAddress;
 }
 
 export interface ActionResult {

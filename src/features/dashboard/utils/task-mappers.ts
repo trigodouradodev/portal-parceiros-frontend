@@ -99,6 +99,7 @@ export function mapPreventiveContractToPrevClient(
     installmentNumber: installment.installmentNumber,
     followupCount: installment.followupCount,
     phone: contract.clientPhone ?? "",
+    address: contract.address,
     activityType,
   };
 }

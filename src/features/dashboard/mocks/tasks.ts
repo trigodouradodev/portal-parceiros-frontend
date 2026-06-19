@@ -9,6 +9,8 @@ export type CobrStage =
   | "fup"
   | "paid";
 
+import type { ClientAddress } from "@/services/dashboard/dashboard.types";
+
 export type ActivityType = "phone" | "visit";
 
 export interface PrevClient {
@@ -21,6 +23,7 @@ export interface PrevClient {
   installmentNumber: number;
   followupCount: number;
   phone: string;
+  address?: ClientAddress;
   activityType: ActivityType;
 }
 

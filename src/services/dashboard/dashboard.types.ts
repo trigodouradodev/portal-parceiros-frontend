@@ -57,6 +57,16 @@ export interface CollectionAgentRef {
   name: string;
 }
 
+export interface ClientAddress {
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state?: string;
+  zipCode: string;
+}
+
 export interface OverdueContract {
   contractId: string;
   contractNumber: string;
@@ -64,6 +74,7 @@ export interface OverdueContract {
   clientName: string;
   clientTaxId: string;
   clientPhone?: string;
+  address?: ClientAddress;
   consultantName?: string;
   companyName?: string;
   collectionAgent?: CollectionAgentRef;
@@ -102,6 +113,7 @@ export interface PreventiveContract {
   clientName: string;
   clientTaxId: string;
   clientPhone?: string;
+  address?: ClientAddress;
   consultantName?: string;
   companyName?: string;
   collectionAgent?: CollectionAgentRef;

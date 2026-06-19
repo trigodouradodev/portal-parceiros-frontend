@@ -1,3 +1,5 @@
+import type { ClientAddress } from "@/services/dashboard/dashboard.types";
+
 const BRAZIL_COUNTRY_CODE = "55";
 const MIN_LOCAL_DIGITS = 10;
 const MAX_LOCAL_DIGITS = 11;
@@ -59,4 +61,73 @@ export function openPhoneCall(phone: string): void {
 
 export function openWhatsApp(phone: string, message?: string): void {
   window.open(toWhatsAppUrl(phone, message), "_blank", "noopener,noreferrer");
+}
+
+function formatZipCode(zipCode: string): string {
+  const digits = zipCode.replace(/\D/g, "");
+  if (digits.length === 8) {
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  }
+  return zipCode;
+}
+
+export function formatClientAddress(address: ClientAddress): string {
+  const streetLine = [address.street, address.number].filter(Boolean).join(", ");
+  const cityLine = [address.neighborhood, address.city, address.state]
+    .filter(Boolean)
+    .join(" – ");
+  const parts = [streetLine];
+
+  if (address.complement) {
+    parts.push(address.complement);
+  }
+
+  if (cityLine) {
+    parts.push(cityLine);
+  }
+
+  if (address.zipCode) {
+    parts.push(`CEP ${formatZipCode(address.zipCode)}`);
+  }
+
+  return parts.join(" – ");
+}
+
+export function hasValidAddress(address?: ClientAddress | null): boolean {
+  if (!address) return false;
+
+  return Boolean(
+    address.street?.trim() &&
+      address.number?.trim() &&
+      address.neighborhood?.trim() &&
+      address.city?.trim(),
+  );
+}
+
+export function toMapsNavigationUrl(
+  address?: ClientAddress,
+  destinationCoordinates?: { latitude: number; longitude: number },
+): string {
+  if (destinationCoordinates) {
+    const destination = `${destinationCoordinates.latitude},${destinationCoordinates.longitude}`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+  }
+
+  if (!hasValidAddress(address)) {
+    throw new Error("Invalid address");
+  }
+
+  const destination = encodeURIComponent(formatClientAddress(address!));
+  return `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+}
+
+export function openMapsNavigation(
+  address?: ClientAddress,
+  destinationCoordinates?: { latitude: number; longitude: number },
+): void {
+  window.open(
+    toMapsNavigationUrl(address, destinationCoordinates),
+    "_blank",
+    "noopener,noreferrer",
+  );
 }

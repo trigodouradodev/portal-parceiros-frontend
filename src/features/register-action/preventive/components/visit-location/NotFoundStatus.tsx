@@ -5,12 +5,30 @@ import {
   MapPinOff,
   Navigation,
 } from "lucide-react";
+import {
+  hasValidAddress,
+  openMapsNavigation,
+} from "@/lib/contact-actions";
+import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 
 interface NotFoundStatusProps {
+  address?: ClientAddress;
+  destinationCoordinates?: { latitude: number; longitude: number };
+  distanceMeters?: number;
+  radiusMeters?: number;
   onConfirmManual: () => void;
 }
 
-export function NotFoundStatus({ onConfirmManual }: NotFoundStatusProps) {
+export function NotFoundStatus({
+  address,
+  destinationCoordinates,
+  distanceMeters,
+  radiusMeters,
+  onConfirmManual,
+}: NotFoundStatusProps) {
+  const navigable =
+    hasValidAddress(address) || destinationCoordinates !== undefined;
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-start gap-3 rounded-2xl border border-destructive/40 bg-destructive-bg p-4">
@@ -20,6 +38,9 @@ export function NotFoundStatus({ onConfirmManual }: NotFoundStatusProps) {
             Você não está no endereço do cliente
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
+            {distanceMeters !== undefined && radiusMeters !== undefined
+              ? `Distância: ${distanceMeters.toLocaleString("pt-BR")}m (raio permitido: ${radiusMeters}m). `
+              : ""}
             Para registrar a visita, vá ao endereço ou confirme presença
             manualmente.
           </p>
@@ -27,8 +48,9 @@ export function NotFoundStatus({ onConfirmManual }: NotFoundStatusProps) {
       </div>
       <button
         type="button"
-        onClick={() => window.alert("Abrirá o GPS com rota para o cliente.")}
-        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-navy py-3.5 font-semibold text-white transition-colors hover:bg-brand-navy/90"
+        disabled={!navigable}
+        onClick={() => openMapsNavigation(address, destinationCoordinates)}
+        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-navy py-3.5 font-semibold text-white transition-colors hover:bg-brand-navy/90 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Navigation size={18} />
         Ir até o cliente (GPS)

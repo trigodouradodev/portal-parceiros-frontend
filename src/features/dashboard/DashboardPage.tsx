@@ -135,6 +135,7 @@ export function DashboardPage() {
         currentStep: "Contato preventivo",
         daysInfo: formatPreventiveDaysInfo(client.daysUntilDue),
         phone: client.phone,
+        address: client.address,
       },
       onComplete: () => {
         showToast("Contato preventivo registrado!");
