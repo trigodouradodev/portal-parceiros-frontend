@@ -1,4 +1,5 @@
 import type { CobrStage } from "@/features/dashboard/mocks/tasks";
+import { TaskTab } from "@/features/dashboard/constants/task-tab";
 import type { ActionClient, SetActionDataPayload } from "./action-context";
 
 export const DEV_MOCK_CLIENT: ActionClient = {
@@ -19,7 +20,7 @@ export function devCobrActionPayload(
   cobrStage: CobrStage = "initial",
 ): SetActionDataPayload {
   return {
-    mode: "cobr",
+    mode: TaskTab.Charge,
     cobrStage,
     client: {
       ...DEV_MOCK_CLIENT,
@@ -34,7 +35,7 @@ export function devPrevActionPayload(
   onComplete: SetActionDataPayload["onComplete"],
 ): SetActionDataPayload {
   return {
-    mode: "prev",
+    mode: TaskTab.Preventive,
     client: DEV_MOCK_CLIENT,
     onComplete,
   };

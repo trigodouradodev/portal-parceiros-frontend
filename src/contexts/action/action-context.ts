@@ -1,7 +1,8 @@
 import { createContext, useContext } from "react";
 import type { CobrStage } from "@/features/dashboard/mocks/tasks";
+import type { TaskTab } from "@/features/dashboard/constants/task-tab";
 
-export type ActionMode = "cobr" | "prev";
+export type ActionMode = TaskTab;
 
 export type PreventiveContactType = "phone" | "visit" | "whatsapp";
 

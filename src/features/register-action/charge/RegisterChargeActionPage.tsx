@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -26,7 +26,6 @@ import {
   RegisterSaveButton,
   RegisterStagePills,
   RegisterStepIndicator,
-  useRegisterActionGuard,
 } from "@/features/register-action";
 import { buildCobrFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
@@ -39,7 +38,7 @@ export function RegisterChargeActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, cobrStage, onComplete, clearActionData, setActionData } =
+  const { client, cobrStage, onComplete, setActionData } =
     useActionContext();
   const [step, setStep] = useState<Step>(
     cobrStage === "promise" ? "boleto" : "outcome",
@@ -49,18 +48,15 @@ export function RegisterChargeActionPage() {
   const [boletoDate, setBoletoDate] = useState("");
   const [note, setNote] = useState("");
 
-  const ready = Boolean(client && cobrStage);
+  useEffect(() => {
+    if (import.meta.env.DEV && !client && !cobrStage) {
+      setActionData(devCobrActionPayload(() => {}));
+    }
+  }, [client, cobrStage, setActionData]);
 
-  const devSeed = useCallback(() => {
-    setActionData(devCobrActionPayload(() => {}));
-  }, [setActionData]);
-
-  useRegisterActionGuard({ ready, devSeed });
-
-  const handleBack = useCallback(() => {
-    clearActionData();
+  const handleBack = () => {
     navigate(-1);
-  }, [clearActionData, navigate]);
+  };
 
   if (!client || !cobrStage) {
     return null;
@@ -93,7 +89,6 @@ export function RegisterChargeActionPage() {
       });
       await createFollowUp.mutateAsync(payload);
       onComplete({ note });
-      clearActionData();
       navigate(-1);
     } catch (err) {
       showToast(getApiErrorMessage(err, "Erro ao registrar ação."), {

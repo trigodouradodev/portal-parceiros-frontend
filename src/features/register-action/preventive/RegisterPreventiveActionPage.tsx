@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, MapPinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import {
   RegisterFormCard,
   RegisterSaveButton,
   RegisterStepIndicator,
-  useRegisterActionGuard,
 } from "@/features/register-action";
 import {
   PrevChannelPicker,
@@ -48,7 +47,7 @@ export function RegisterPreventiveActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, onComplete, clearActionData, setActionData } =
+  const { client, onComplete, setActionData } =
     useActionContext();
   const [step, setStep] = useState<Step>("channel");
   const [channel, setChannel] = useState<PrevChannel | null>(null);
@@ -63,18 +62,15 @@ export function RegisterPreventiveActionPage() {
     longitude: number;
   } | null>(null);
 
-  const ready = Boolean(client);
+  useEffect(() => {
+    if (import.meta.env.DEV && !client) {
+      setActionData(devPrevActionPayload(() => {}));
+    }
+  }, [client, setActionData]);
 
-  const devSeed = useCallback(() => {
-    setActionData(devPrevActionPayload(() => {}));
-  }, [setActionData]);
-
-  useRegisterActionGuard({ ready, devSeed });
-
-  const handleBack = useCallback(() => {
-    clearActionData();
+  const handleBack = () => {
     navigate(-1);
-  }, [clearActionData, navigate]);
+  };
 
   if (!client) {
     return null;
@@ -148,7 +144,6 @@ export function RegisterPreventiveActionPage() {
       });
       await createFollowUp.mutateAsync(payload);
       onComplete({ channel, outcome, note, status: outcome });
-      clearActionData();
       navigate(-1);
     } catch (err) {
       showToast(getApiErrorMessage(err, "Erro ao registrar contato."), {
