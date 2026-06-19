@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, MapPinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActionContext } from "@/contexts/action";
-import { devPrevActionPayload } from "@/contexts/action/dev-action-mock";
 import {
   OutcomeOptionList,
   RegisterActionFooter,
@@ -47,7 +46,7 @@ export function RegisterPreventiveActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, onComplete, setActionData } = useActionContext();
+  const { client, onComplete } = useActionContext();
   const [step, setStep] = useState<Step>("channel");
   const [channel, setChannel] = useState<PrevChannel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
@@ -60,12 +59,6 @@ export function RegisterPreventiveActionPage() {
     latitude: number;
     longitude: number;
   } | null>(null);
-
-  useEffect(() => {
-    if (import.meta.env.DEV && !client) {
-      setActionData(devPrevActionPayload(() => {}));
-    }
-  }, [client, setActionData]);
 
   const handleBack = () => {
     navigate(-1);

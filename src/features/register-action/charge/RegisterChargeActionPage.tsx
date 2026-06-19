@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActionContext } from "@/contexts/action";
-import { devCobrActionPayload } from "@/contexts/action/dev-action-mock";
 import {
   COBR_TITLES,
   getCobrOutcomeOptions,
@@ -38,7 +37,7 @@ export function RegisterChargeActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, cobrStage, onComplete, setActionData } = useActionContext();
+  const { client, cobrStage, onComplete } = useActionContext();
   const [step, setStep] = useState<Step>(
     cobrStage === "promise" ? "boleto" : "outcome",
   );
@@ -46,12 +45,6 @@ export function RegisterChargeActionPage() {
   const [boletoValue, setBoletoValue] = useState(client?.value ?? "");
   const [boletoDate, setBoletoDate] = useState("");
   const [note, setNote] = useState("");
-
-  useEffect(() => {
-    if (import.meta.env.DEV && !client && !cobrStage) {
-      setActionData(devCobrActionPayload(() => {}));
-    }
-  }, [client, cobrStage, setActionData]);
 
   const handleBack = () => {
     navigate(-1);
