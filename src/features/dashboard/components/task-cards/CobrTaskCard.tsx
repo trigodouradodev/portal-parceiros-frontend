@@ -25,8 +25,8 @@ export function CobrTaskCard({
   const initials = getInitials(client.name);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <div className="w-full p-4 text-left">
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+      <div className="flex w-full flex-1 flex-col p-4 text-left">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-yellow text-xs font-bold text-brand-navy">
             {initials}
@@ -56,14 +56,16 @@ export function CobrTaskCard({
           <ChevronRight size={16} className="mb-1 shrink-0 text-input" />
         </div>
 
-        {client.lastAction && (
-          <div className="mt-2.5 flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#BA7517]" />
-            <p className="truncate text-xs text-muted-foreground">
-              {client.lastAction}
-            </p>
-          </div>
-        )}
+        <div className="mt-2.5 flex min-h-[1.25rem] items-center gap-1.5">
+          {client.lastAction && (
+            <>
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#BA7517]" />
+              <p className="truncate text-xs text-muted-foreground">
+                {client.lastAction}
+              </p>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="border-t border-muted px-4 pb-3 pt-1">

@@ -1,19 +1,26 @@
 import { useState } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { AlertTriangle, Clock, RefreshCw, FileText } from "lucide-react";
-import { useOutletContext } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/contexts/toast/toast-context";
+import { useActionContext } from "@/contexts/action";
 import { SummaryCard } from "@/features/dashboard/components/SummaryCards";
 import { PerformanceSection } from "@/features/dashboard/components/PerformanceSection";
 import { CommissionSection } from "@/features/dashboard/components/CommissionSection";
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
-import { TasksTabs } from "@/features/dashboard/components/tasks/TasksTabs";
-import { type CobrStage } from "@/features/dashboard/mocks/tasks";
 import {
+  TasksTabs,
+  type TaskTab,
+} from "@/features/dashboard/components/tasks/TasksTabs";
+import type { PrevClient } from "@/features/dashboard/mocks/tasks";
+import {
+  formatPreventiveDaysInfo,
   mapFollowupStatusToStage,
   mapPreventiveContractToPrevClient,
 } from "@/features/dashboard/utils/task-mappers";
+import { fmtBRL } from "@/lib/utils";
+import { getCookie, setCookie } from "@/lib/cookies";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   useDashboard,
@@ -27,15 +34,27 @@ interface ShellContext {
   onMobileLogout?: () => void;
 }
 
+const TASK_TAB_COOKIE = "dashboard_task_tab";
+
+function readTaskTabCookie(): TaskTab {
+  return getCookie(TASK_TAB_COOKIE) === "prev" ? "prev" : "cobr";
+}
+
 export function DashboardPage() {
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const { setActionData } = useActionContext();
   const { onMobileLogout } = useOutletContext<ShellContext>();
-  const [prevDone, setPrevDone] = useState<
-    Record<string, { at: number; status: string }>
-  >({});
-  const [cobrStages, setCobrStages] = useState<Record<string, CobrStage>>({});
 
-  // Fetch real data from API
+  const [taskTab, setTaskTabState] = useState<TaskTab>(() =>
+    readTaskTabCookie(),
+  );
+
+  const setTaskTab = (tab: TaskTab) => {
+    setTaskTabState(tab);
+    setCookie(TASK_TAB_COOKIE, tab);
+  };
+
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
   const { data: performanceData, isLoading: isLoadingPerformance } =
     usePerformance();
@@ -47,7 +66,8 @@ export function DashboardPage() {
     isFetchingNextPage,
   } = useOverdueContractsInfinite(30);
 
-  const { data: preventiveData } = usePreventiveContractsInfinite(30, 15);
+  const { data: preventiveData, isLoading: isLoadingPreventive } =
+    usePreventiveContractsInfinite(30, 15);
 
   const loadMoreRef = useInfiniteScroll({
     hasNextPage,
@@ -55,62 +75,92 @@ export function DashboardPage() {
     fetchNextPage,
   });
 
-  // Flatten all pages into a single array of contracts
   const overdueContracts =
     overdueData?.pages.flatMap((page) => page.contracts) ?? [];
   const preventiveContracts =
     preventiveData?.pages.flatMap((page) => page.contracts) ?? [];
+  const preventiveMapped = preventiveContracts.map((contract) =>
+    mapPreventiveContractToPrevClient(contract),
+  );
 
-  const getCobrStage = (contract: OverdueContract): CobrStage =>
-    cobrStages[contract.contractId] ??
+  const getCobrStage = (contract: OverdueContract) =>
     mapFollowupStatusToStage(
       contract.firstOverdueInstallment.latestFollowupStatus,
+      contract.firstOverdueInstallment.followupCount,
     );
 
-  // Preventive tasks from API
-  const preventivePending = preventiveContracts
-    .map((contract) => mapPreventiveContractToPrevClient(contract))
-    .filter((c) => !prevDone[c.id]);
-  const preventiveDoneList = preventiveContracts
-    .map((contract) => mapPreventiveContractToPrevClient(contract))
-    .filter((c) => prevDone[c.id])
+  const preventivePending = preventiveMapped.filter(
+    (c) => c.followupCount === 0,
+  );
+  const preventiveDoneList = preventiveMapped
+    .filter((c) => c.followupCount > 0)
     .map((client) => ({
       client,
-      label: prevDone[client.id]?.status ?? "Concluído",
+      label: "Contato registrado",
     }));
 
-  // Collection tasks from API
   const cobrPending = overdueContracts.filter(
     (c) => getCobrStage(c) !== "paid",
   );
 
   const totalActions = cobrPending.length + preventivePending.length;
 
-  // KPIs from API
   const ativos = dashboardData?.activeContracts ?? 0;
   const vencemHoje = dashboardData?.dueTodayContracts ?? 0;
   const emAtraso = dashboardData?.overdueContracts ?? 0;
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
-  const handleAction = (name: string) => {
-    showToast(`Registro de ação para ${name} — em breve.`);
-  };
-
-  const handleCobrReopen = (contractId: string) => {
-    setCobrStages((s) => ({ ...s, [contractId]: "initial" }));
-    showToast("Tarefa reaberta.");
-  };
-
-  const handlePrevReopen = (id: string) => {
-    setPrevDone((d) => {
-      const next = { ...d };
-      delete next[id];
-      return next;
+  const handleCobrAction = (contract: OverdueContract) => {
+    const installment = contract.firstOverdueInstallment;
+    const stage = getCobrStage(contract);
+    const overdueDays = installment.daysOverdue;
+    setTaskTab("cobr");
+    setActionData({
+      mode: "cobr",
+      cobrStage: stage,
+      client: {
+        id: contract.contractId,
+        installmentNumber: installment.installmentNumber,
+        name: contract.clientName,
+        contract: contract.contractNumber,
+        parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
+        value: fmtBRL(installment.pendingAmount),
+        currentStep: stage,
+        daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
+      },
+      onComplete: () => {
+        showToast("Ação registrada.");
+      },
     });
-    showToast("Tarefa reaberta.");
+    navigate("/register/charge");
   };
 
-  // Show skeleton while loading dashboard data
+  const handlePrevAction = (client: PrevClient) => {
+    setTaskTab("prev");
+    setActionData({
+      mode: "prev",
+      client: {
+        id: client.id,
+        installmentNumber: client.installmentNumber,
+        name: client.name,
+        contract: client.contract,
+        parcela: client.parcela,
+        value: fmtBRL(client.value),
+        currentStep: "Contato preventivo",
+        daysInfo: formatPreventiveDaysInfo(client.daysUntilDue),
+        phone: client.phone,
+      },
+      onComplete: () => {
+        showToast("Contato preventivo registrado!");
+      },
+    });
+    navigate("/register/preventive");
+  };
+
+  const handleCobrReopen = () => {
+    showToast("Reabertura de tarefa em breve.", { variant: "info" });
+  };
+
   if (isLoadingDashboard) {
     return <DashboardSkeleton onLogout={onMobileLogout} />;
   }
@@ -174,22 +224,24 @@ export function DashboardPage() {
           </div>
 
           <TasksTabs
+            taskTab={taskTab}
+            onTaskTabChange={setTaskTab}
             cobrCount={cobrPending.length}
             prevCount={preventivePending.length}
             cobr={{
               isLoading: isLoadingOverdue,
               contracts: overdueContracts,
               getStage: getCobrStage,
-              onAction: handleAction,
+              onAction: handleCobrAction,
               onReopen: handleCobrReopen,
               hasNextPage,
               loadMoreRef,
             }}
             prev={{
+              isLoading: isLoadingPreventive,
               pending: preventivePending,
               done: preventiveDoneList,
-              onAction: handleAction,
-              onReopen: handlePrevReopen,
+              onAction: handlePrevAction,
             }}
           />
         </div>

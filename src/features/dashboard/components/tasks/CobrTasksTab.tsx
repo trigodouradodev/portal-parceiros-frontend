@@ -17,7 +17,7 @@ interface CobrTasksTabProps {
   isLoading: boolean;
   contracts: OverdueContract[];
   getStage: (contract: OverdueContract) => CobrStage;
-  onAction: (name: string) => void;
+  onAction: (contract: OverdueContract) => void;
   onReopen: (contractId: string) => void;
   hasNextPage: boolean;
   loadMoreRef: RefObject<HTMLDivElement | null>;
@@ -53,7 +53,7 @@ export function CobrTasksTab({
           key={c.contractId}
           client={mapOverdueContractToCobrClient(c)}
           stage={getStage(c)}
-          onAction={() => onAction(c.clientName)}
+          onAction={() => onAction(c)}
         />
       ))}
 

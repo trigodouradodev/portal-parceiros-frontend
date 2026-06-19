@@ -1,11 +1,13 @@
-import { useState, type ComponentProps } from "react";
+import type { ComponentProps } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CobrTasksTab } from "@/features/dashboard/components/tasks/CobrTasksTab";
 import { PrevTasksTab } from "@/features/dashboard/components/tasks/PrevTasksTab";
 
-type TaskTab = "cobr" | "prev";
+export type TaskTab = "cobr" | "prev";
 
 interface TasksTabsProps {
+  taskTab: TaskTab;
+  onTaskTabChange: (tab: TaskTab) => void;
   cobrCount: number;
   prevCount: number;
   cobr: ComponentProps<typeof CobrTasksTab>;
@@ -27,17 +29,17 @@ function TabCount({ active, value }: { active: boolean; value: number }) {
 }
 
 export function TasksTabs({
+  taskTab,
+  onTaskTabChange,
   cobrCount,
   prevCount,
   cobr,
   prev,
 }: TasksTabsProps) {
-  const [taskTab, setTaskTab] = useState<TaskTab>("cobr");
-
   return (
     <Tabs
       value={taskTab}
-      onValueChange={(v) => setTaskTab(v as TaskTab)}
+      onValueChange={(v) => onTaskTabChange(v as TaskTab)}
       className="w-full"
     >
       <TabsList className="md:w-72">
