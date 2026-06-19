@@ -23,7 +23,6 @@ import {
 } from "@/features/register-action/preventive/components";
 import { PREV_OUTCOMES } from "@/features/register-action/preventive/constants/prev-outcomes";
 import { buildPrevFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
-import { exitRegisterAction } from "@/features/register-action/utils/exit-register-action";
 import { getPrevWaTemplates } from "@/features/register-action/preventive/utils/prev-wa-templates";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
@@ -73,7 +72,8 @@ export function RegisterPreventiveActionPage() {
   useRegisterActionGuard({ ready, devSeed });
 
   const handleBack = useCallback(() => {
-    exitRegisterAction(navigate, clearActionData);
+    clearActionData();
+    navigate(-1);
   }, [clearActionData, navigate]);
 
   if (!client) {
@@ -148,7 +148,8 @@ export function RegisterPreventiveActionPage() {
       });
       await createFollowUp.mutateAsync(payload);
       onComplete({ channel, outcome, note, status: outcome });
-      exitRegisterAction(navigate, clearActionData);
+      clearActionData();
+      navigate(-1);
     } catch (err) {
       showToast(getApiErrorMessage(err, "Erro ao registrar contato."), {
         variant: "destructive",

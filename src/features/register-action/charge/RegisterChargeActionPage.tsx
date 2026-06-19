@@ -29,7 +29,6 @@ import {
   useRegisterActionGuard,
 } from "@/features/register-action";
 import { buildCobrFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
-import { exitRegisterAction } from "@/features/register-action/utils/exit-register-action";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
@@ -59,7 +58,8 @@ export function RegisterChargeActionPage() {
   useRegisterActionGuard({ ready, devSeed });
 
   const handleBack = useCallback(() => {
-    exitRegisterAction(navigate, clearActionData);
+    clearActionData();
+    navigate(-1);
   }, [clearActionData, navigate]);
 
   if (!client || !cobrStage) {
@@ -93,7 +93,8 @@ export function RegisterChargeActionPage() {
       });
       await createFollowUp.mutateAsync(payload);
       onComplete({ note });
-      exitRegisterAction(navigate, clearActionData);
+      clearActionData();
+      navigate(-1);
     } catch (err) {
       showToast(getApiErrorMessage(err, "Erro ao registrar ação."), {
         variant: "destructive",

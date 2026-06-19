@@ -12,7 +12,7 @@ export function useRegisterActionGuard({
 }: UseRegisterActionGuardOptions) {
   const navigate = useNavigate();
   const devSeeded = useRef(false);
-  const redirected = useRef(false);
+  const hasBeenReady = useRef(false);
 
   useEffect(() => {
     if (import.meta.env.DEV && devSeed && !devSeeded.current && !ready) {
@@ -21,9 +21,13 @@ export function useRegisterActionGuard({
       return;
     }
 
-    if (!ready && !redirected.current) {
-      redirected.current = true;
-      navigate("/", { replace: true });
+    if (ready) {
+      hasBeenReady.current = true;
+      return;
+    }
+
+    if (!hasBeenReady.current) {
+      navigate(-1);
     }
   }, [ready, devSeed, navigate]);
 }
