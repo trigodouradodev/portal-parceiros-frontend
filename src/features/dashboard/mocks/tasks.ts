@@ -35,6 +35,7 @@ export interface CobrClient {
   value: number;
   overdueDays: number;
   phone: string;
+  address?: ClientAddress;
   activityType: ActivityType;
   stage: CobrStage;
   lastAction: string | null;

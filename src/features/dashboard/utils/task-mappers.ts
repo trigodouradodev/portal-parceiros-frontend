@@ -71,6 +71,7 @@ export function mapOverdueContractToCobrClient(
     value: installment.pendingAmount,
     overdueDays: installment.daysOverdue,
     phone: contract.clientPhone ?? "",
+    address: contract.address,
     activityType,
     stage: mapFollowupStatusToStage(
       installment.latestFollowupStatus,

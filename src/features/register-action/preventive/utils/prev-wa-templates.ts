@@ -1,7 +1,6 @@
-export interface WaTemplate {
-  tag: string;
-  message: string;
-}
+import type { WaTemplate } from "@/features/register-action/types/wa-template";
+
+export type { WaTemplate };
 
 export function getPrevWaTemplates(client: {
   name: string;

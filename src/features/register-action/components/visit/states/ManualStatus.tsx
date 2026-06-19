@@ -1,4 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
+import { ActionHint } from "@/features/register-action/components/contact/ActionHint";
 
 export function ManualStatus() {
   return (
@@ -7,9 +8,7 @@ export function ManualStatus() {
         <CheckCircle2 size={18} />
         Presença confirmada manualmente
       </div>
-      <p className="text-center text-xs text-muted-foreground">
-        Avance para registrar o resultado da visita.
-      </p>
+      <ActionHint variant="visit-confirmed" />
     </div>
   );
 }

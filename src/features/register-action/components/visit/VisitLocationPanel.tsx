@@ -1,23 +1,19 @@
-import { MapPin } from "lucide-react";
-import { formatClientAddress, hasValidAddress } from "@/lib/contact-actions";
+import { hasValidAddress } from "@/lib/contact-actions";
 import type { LocationCheckResult } from "@/services/location-check/location-check.types";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
+import type { VisitLocationStatus } from "@/features/register-action/hooks/useVisitLocationCheck";
+import { ClientAddressCard } from "./ClientAddressCard";
 import {
   CheckingStatus,
   ConfirmedStatus,
   IdleStatus,
   ManualStatus,
   NotFoundStatus,
-} from "./visit-location";
+} from "./states";
 
-export type VisitLocationStatus =
-  | "idle"
-  | "checking"
-  | "confirmed"
-  | "not_found"
-  | "manual";
+export type { VisitLocationStatus };
 
-interface PrevVisitLocationPanelProps {
+interface VisitLocationPanelProps {
   address?: ClientAddress;
   status: VisitLocationStatus;
   locationCheckResult?: LocationCheckResult | null;
@@ -25,29 +21,18 @@ interface PrevVisitLocationPanelProps {
   onConfirmManual: () => void;
 }
 
-export function PrevVisitLocationPanel({
+export function VisitLocationPanel({
   address,
   status,
   locationCheckResult,
   onVerifyLocation,
   onConfirmManual,
-}: PrevVisitLocationPanelProps) {
+}: VisitLocationPanelProps) {
   const hasAddress = hasValidAddress(address);
-  const formattedAddress = hasAddress ? formatClientAddress(address!) : null;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-start gap-3 rounded-2xl bg-background p-4">
-        <MapPin size={18} className="mt-0.5 shrink-0 text-brand-navy" />
-        <div>
-          <p className="mb-0.5 text-xs text-muted-foreground">
-            Endereço do cliente
-          </p>
-          <p className="text-sm font-semibold text-foreground">
-            {formattedAddress ?? "Endereço não cadastrado"}
-          </p>
-        </div>
-      </div>
+      <ClientAddressCard address={address} />
 
       {!hasAddress && (
         <p className="rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">

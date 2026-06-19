@@ -19,7 +19,7 @@ import {
 } from "@/features/register-action/charge/constants/cobr-outcomes";
 import { getCobrWaTemplates } from "@/features/register-action/charge/utils/cobr-wa-templates";
 import {
-  ContactActionsBar,
+  ContactActionsPanel,
   OutcomeOptionList,
   RegisterActionFooter,
   RegisterActionLayout,
@@ -164,10 +164,12 @@ export function RegisterChargeActionPage() {
       <RegisterFormCard>
         {step === "outcome" && (
           <>
-            <ContactActionsBar
+            <ContactActionsPanel
               phone={clientPhone}
               clientFirstName={clientFirstName}
               templates={waTemplates}
+              mode="combined"
+              layout="compact"
             />
             <OutcomeOptionList
               options={outcomeOptions}

@@ -4,30 +4,27 @@ import { ChevronRight, MapPinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActionContext } from "@/contexts/action";
 import {
+  ContactActionsPanel,
   OutcomeOptionList,
   RegisterActionFooter,
   RegisterActionLayout,
   RegisterFormCard,
   RegisterSaveButton,
   RegisterStepIndicator,
+  VisitLocationPanel,
 } from "@/features/register-action";
+import { useVisitLocationCheck } from "@/features/register-action/hooks/useVisitLocationCheck";
 import {
   PrevChannelPicker,
-  PrevPhonePanel,
-  PrevVisitLocationPanel,
-  PrevWhatsAppPanel,
   type PrevChannel,
-  type VisitLocationStatus,
 } from "@/features/register-action/preventive/components";
 import { PREV_OUTCOMES } from "@/features/register-action/preventive/constants/prev-outcomes";
-import { buildPrevFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { getPrevWaTemplates } from "@/features/register-action/preventive/utils/prev-wa-templates";
+import { buildPrevFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
-import { useVerifyLocation } from "@/hooks/useVerifyLocation";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getFirstName } from "@/lib/user-display";
-import type { LocationCheckResult } from "@/services/location-check/location-check.types";
 
 type Step = "channel" | "channel_action" | "outcome";
 
@@ -48,26 +45,27 @@ export function RegisterPreventiveActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const verifyLocation = useVerifyLocation();
   const { client, onComplete } = useActionContext();
   const [step, setStep] = useState<Step>("channel");
   const [channel, setChannel] = useState<PrevChannel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
   const [note, setNote] = useState("");
-  const [copied, setCopied] = useState<number | null>(null);
-  const [selectedMsg, setSelectedMsg] = useState(0);
-  const [locationStatus, setLocationStatus] =
-    useState<VisitLocationStatus>("idle");
-  const [geoCoords, setGeoCoords] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [locationCheckResult, setLocationCheckResult] =
-    useState<LocationCheckResult | null>(null);
 
   const handleBack = () => {
     navigate(-1);
   };
+
+  const {
+    status: locationStatus,
+    result: locationCheckResult,
+    coords: geoCoords,
+    verify: verifyLocationCheck,
+    confirmManual,
+    locationOk,
+  } = useVisitLocationCheck({
+    contractId: client?.id ?? "",
+    installmentNumber: client?.installmentNumber ?? 0,
+  });
 
   if (!client) {
     return null;
@@ -83,77 +81,7 @@ export function RegisterPreventiveActionPage() {
   const currentStepIndex =
     step === "channel" ? 0 : step === "channel_action" ? 1 : 2;
   const saving = createFollowUp.isPending;
-  const locationOk =
-    locationStatus === "confirmed" || locationStatus === "manual";
   const canSaveOutcome = step === "outcome" && outcome !== null;
-
-  function handleCopy(index: number) {
-    navigator.clipboard?.writeText(waTemplates[index].message).catch(() => {});
-    setCopied(index);
-    setTimeout(() => setCopied(null), 2000);
-  }
-
-  function verifyLocationCheck() {
-    const currentClient = client;
-    if (!currentClient) return;
-
-    setLocationStatus("checking");
-    setLocationCheckResult(null);
-
-    if (!navigator.geolocation) {
-      showToast("Geolocalização não disponível neste dispositivo.", {
-        variant: "destructive",
-      });
-      setLocationStatus("idle");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const coords = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-
-        verifyLocation
-          .mutateAsync({
-            contractId: currentClient.id,
-            installmentNumber: currentClient.installmentNumber,
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-          })
-          .then((result) => {
-            setGeoCoords(coords);
-            setLocationCheckResult(result);
-            setLocationStatus(result.withinRadius ? "confirmed" : "not_found");
-
-            if (result.partialMatch) {
-              showToast(
-                "Endereço geolocalizado de forma aproximada. Confirme manualmente se necessário.",
-                { variant: "info" },
-              );
-            }
-          })
-          .catch((err) => {
-            showToast(
-              getApiErrorMessage(
-                err,
-                "Não foi possível verificar a localização.",
-              ),
-              { variant: "destructive" },
-            );
-            setLocationStatus("idle");
-          });
-      },
-      () => {
-        showToast("Não foi possível obter sua localização.", {
-          variant: "destructive",
-        });
-        setLocationStatus("idle");
-      },
-      { timeout: 10000, enableHighAccuracy: true },
-    );
-  }
 
   async function handleSave() {
     if (!channel || !outcome) return;
@@ -263,30 +191,32 @@ export function RegisterPreventiveActionPage() {
         )}
 
         {step === "channel_action" && channel === "whatsapp" && (
-          <PrevWhatsAppPanel
+          <ContactActionsPanel
             phone={clientPhone}
+            clientFirstName={clientFirstName}
             templates={waTemplates}
-            selectedIndex={selectedMsg}
-            copiedIndex={copied}
-            onSelect={setSelectedMsg}
-            onCopy={handleCopy}
+            mode="whatsapp"
+            layout="expanded"
           />
         )}
 
         {step === "channel_action" && channel === "phone" && (
-          <PrevPhonePanel
+          <ContactActionsPanel
             phone={clientPhone}
             clientFirstName={clientFirstName}
+            templates={waTemplates}
+            mode="phone"
+            layout="expanded"
           />
         )}
 
         {step === "channel_action" && channel === "visit" && (
-          <PrevVisitLocationPanel
+          <VisitLocationPanel
             address={clientAddress}
             status={locationStatus}
             locationCheckResult={locationCheckResult}
             onVerifyLocation={verifyLocationCheck}
-            onConfirmManual={() => setLocationStatus("manual")}
+            onConfirmManual={confirmManual}
           />
         )}
 

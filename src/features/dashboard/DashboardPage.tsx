@@ -113,6 +113,7 @@ export function DashboardPage() {
         currentStep: stage,
         daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
         phone: contract.clientPhone,
+        address: contract.address,
       },
       onComplete: () => {
         showToast("Ação registrada.");
