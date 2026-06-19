@@ -1,9 +1,6 @@
 import { CheckCircle2, Copy, ExternalLink, MessageSquare } from "lucide-react";
 import type { WaTemplate } from "@/features/register-action/preventive/utils/prev-wa-templates";
-import {
-  hasCallablePhone,
-  openWhatsApp,
-} from "@/lib/contact-actions";
+import { hasCallablePhone, openWhatsApp } from "@/lib/contact-actions";
 
 interface PrevWhatsAppPanelProps {
   phone: string;
@@ -84,9 +81,7 @@ export function PrevWhatsAppPanel({
         type="button"
         disabled={!callable}
         className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] py-3.5 font-semibold text-white transition-colors hover:bg-[#1ebe5a] disabled:cursor-not-allowed disabled:opacity-50"
-        onClick={() =>
-          openWhatsApp(phone, templates[selectedIndex]?.message)
-        }
+        onClick={() => openWhatsApp(phone, templates[selectedIndex]?.message)}
       >
         <MessageSquare size={18} />
         Abrir WhatsApp com esta mensagem

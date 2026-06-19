@@ -65,9 +65,7 @@ export function ContactActionsBar({
           type="button"
           disabled={!callable}
           className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#25D366] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1ebe5a] disabled:cursor-not-allowed disabled:opacity-50"
-          onClick={() =>
-            openWhatsApp(phone, templates[selectedIndex]?.message)
-          }
+          onClick={() => openWhatsApp(phone, templates[selectedIndex]?.message)}
         >
           <MessageSquare size={16} />
           WhatsApp

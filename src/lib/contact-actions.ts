@@ -15,19 +15,13 @@ export function normalizePhoneDigits(phone: string): string | null {
 
   if (digits.startsWith(BRAZIL_COUNTRY_CODE)) {
     const local = digits.slice(BRAZIL_COUNTRY_CODE.length);
-    if (
-      local.length >= MIN_LOCAL_DIGITS &&
-      local.length <= MAX_LOCAL_DIGITS
-    ) {
+    if (local.length >= MIN_LOCAL_DIGITS && local.length <= MAX_LOCAL_DIGITS) {
       return digits;
     }
     return null;
   }
 
-  if (
-    digits.length >= MIN_LOCAL_DIGITS &&
-    digits.length <= MAX_LOCAL_DIGITS
-  ) {
+  if (digits.length >= MIN_LOCAL_DIGITS && digits.length <= MAX_LOCAL_DIGITS) {
     return `${BRAZIL_COUNTRY_CODE}${digits}`;
   }
 

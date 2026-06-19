@@ -1,8 +1,5 @@
 import { ExternalLink, Phone } from "lucide-react";
-import {
-  hasCallablePhone,
-  openPhoneCall,
-} from "@/lib/contact-actions";
+import { hasCallablePhone, openPhoneCall } from "@/lib/contact-actions";
 
 interface PrevPhonePanelProps {
   phone: string;
