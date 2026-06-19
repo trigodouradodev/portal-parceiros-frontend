@@ -38,8 +38,7 @@ export function RegisterChargeActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, cobrStage, onComplete, setActionData } =
-    useActionContext();
+  const { client, cobrStage, onComplete, setActionData } = useActionContext();
   const [step, setStep] = useState<Step>(
     cobrStage === "promise" ? "boleto" : "outcome",
   );

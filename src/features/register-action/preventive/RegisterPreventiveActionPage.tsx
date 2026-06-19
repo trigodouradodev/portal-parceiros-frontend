@@ -47,8 +47,7 @@ export function RegisterPreventiveActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, onComplete, setActionData } =
-    useActionContext();
+  const { client, onComplete, setActionData } = useActionContext();
   const [step, setStep] = useState<Step>("channel");
   const [channel, setChannel] = useState<PrevChannel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
