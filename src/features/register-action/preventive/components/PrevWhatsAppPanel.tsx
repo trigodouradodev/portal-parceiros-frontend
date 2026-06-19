@@ -1,7 +1,12 @@
 import { CheckCircle2, Copy, ExternalLink, MessageSquare } from "lucide-react";
 import type { WaTemplate } from "@/features/register-action/preventive/utils/prev-wa-templates";
+import {
+  hasCallablePhone,
+  openWhatsApp,
+} from "@/lib/contact-actions";
 
 interface PrevWhatsAppPanelProps {
+  phone: string;
   templates: WaTemplate[];
   selectedIndex: number;
   copiedIndex: number | null;
@@ -10,17 +15,25 @@ interface PrevWhatsAppPanelProps {
 }
 
 export function PrevWhatsAppPanel({
+  phone,
   templates,
   selectedIndex,
   copiedIndex,
   onSelect,
   onCopy,
 }: PrevWhatsAppPanelProps) {
+  const callable = hasCallablePhone(phone);
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">
         Selecione uma mensagem e envie pelo WhatsApp.
       </p>
+      {!callable && (
+        <p className="rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
+          Telefone não disponível. Não é possível abrir o WhatsApp.
+        </p>
+      )}
       {templates.map((template, index) => (
         <div
           key={template.tag}
@@ -69,9 +82,10 @@ export function PrevWhatsAppPanel({
       ))}
       <button
         type="button"
-        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] py-3.5 font-semibold text-white transition-colors hover:bg-[#1ebe5a]"
+        disabled={!callable}
+        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] py-3.5 font-semibold text-white transition-colors hover:bg-[#1ebe5a] disabled:cursor-not-allowed disabled:opacity-50"
         onClick={() =>
-          window.alert("Abrirá o WhatsApp com a mensagem selecionada.")
+          openWhatsApp(phone, templates[selectedIndex]?.message)
         }
       >
         <MessageSquare size={18} />

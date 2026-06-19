@@ -1,3 +1,4 @@
+export { ContactActionsBar } from "./ContactActionsBar";
 export { OptionalNoteField } from "./OptionalNoteField";
 export { OutcomeOptionList, type OutcomeOption } from "./OutcomeOptionList";
 export { RegisterActionFooter } from "./RegisterActionFooter";

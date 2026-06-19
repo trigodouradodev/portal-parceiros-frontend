@@ -127,6 +127,7 @@ export function DashboardPage() {
         value: fmtBRL(installment.pendingAmount),
         currentStep: stage,
         daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
+        phone: contract.clientPhone,
       },
       onComplete: () => {
         showToast("Ação registrada.");

@@ -18,7 +18,9 @@ import {
   COBR_TITLES,
   getCobrOutcomeOptions,
 } from "@/features/register-action/charge/constants/cobr-outcomes";
+import { getCobrWaTemplates } from "@/features/register-action/charge/utils/cobr-wa-templates";
 import {
+  ContactActionsBar,
   OutcomeOptionList,
   RegisterActionFooter,
   RegisterActionLayout,
@@ -32,6 +34,7 @@ import { buildCobrFollowUpPayload } from "@/features/register-action/utils/map-t
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import { getFirstName } from "@/lib/user-display";
 
 type Step = "outcome" | "boleto";
 
@@ -67,6 +70,9 @@ export function RegisterChargeActionPage() {
   }
 
   const title = COBR_TITLES[cobrStage] ?? "Registrar ação";
+  const clientPhone = client.phone ?? "";
+  const clientFirstName = getFirstName(client.name);
+  const waTemplates = getCobrWaTemplates(client);
   const saving = createFollowUp.isPending;
   const outcomeOptions = getCobrOutcomeOptions(cobrStage, {
     no_return_1: <PhoneOff size={18} />,
@@ -170,13 +176,20 @@ export function RegisterChargeActionPage() {
     >
       <RegisterFormCard>
         {step === "outcome" && (
-          <OutcomeOptionList
-            options={outcomeOptions}
-            value={outcome}
-            onChange={setOutcome}
-            prompt="Qual foi o resultado da ligação?"
-            note={{ value: note, onChange: setNote }}
-          />
+          <>
+            <ContactActionsBar
+              phone={clientPhone}
+              clientFirstName={clientFirstName}
+              templates={waTemplates}
+            />
+            <OutcomeOptionList
+              options={outcomeOptions}
+              value={outcome}
+              onChange={setOutcome}
+              prompt="Qual foi o resultado da ligação?"
+              note={{ value: note, onChange: setNote }}
+            />
+          </>
         )}
 
         {step === "boleto" && (

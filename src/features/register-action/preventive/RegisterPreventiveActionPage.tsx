@@ -81,7 +81,7 @@ export function RegisterPreventiveActionPage() {
   }
 
   const waTemplates = getPrevWaTemplates(client);
-  const mockPhone = client.phone ?? "(11) 98765-4321";
+  const clientPhone = client.phone ?? "";
   const mockAddress = client.address ?? "Rua das Flores, 42 – Centro";
   const clientFirstName = getFirstName(client.name);
 
@@ -235,6 +235,7 @@ export function RegisterPreventiveActionPage() {
 
         {step === "channel_action" && channel === "whatsapp" && (
           <PrevWhatsAppPanel
+            phone={clientPhone}
             templates={waTemplates}
             selectedIndex={selectedMsg}
             copiedIndex={copied}
@@ -244,7 +245,10 @@ export function RegisterPreventiveActionPage() {
         )}
 
         {step === "channel_action" && channel === "phone" && (
-          <PrevPhonePanel phone={mockPhone} clientFirstName={clientFirstName} />
+          <PrevPhonePanel
+            phone={clientPhone}
+            clientFirstName={clientFirstName}
+          />
         )}
 
         {step === "channel_action" && channel === "visit" && (

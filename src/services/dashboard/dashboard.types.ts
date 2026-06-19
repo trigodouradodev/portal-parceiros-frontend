@@ -63,6 +63,7 @@ export interface OverdueContract {
   totalInstallments: number;
   clientName: string;
   clientTaxId: string;
+  clientPhone?: string;
   consultantName?: string;
   companyName?: string;
   collectionAgent?: CollectionAgentRef;
@@ -100,6 +101,7 @@ export interface PreventiveContract {
   totalInstallments: number;
   clientName: string;
   clientTaxId: string;
+  clientPhone?: string;
   consultantName?: string;
   companyName?: string;
   collectionAgent?: CollectionAgentRef;
