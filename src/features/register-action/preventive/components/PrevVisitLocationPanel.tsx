@@ -1,8 +1,5 @@
 import { MapPin } from "lucide-react";
-import {
-  formatClientAddress,
-  hasValidAddress,
-} from "@/lib/contact-actions";
+import { formatClientAddress, hasValidAddress } from "@/lib/contact-actions";
 import type { LocationCheckResult } from "@/services/location-check/location-check.types";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 import {

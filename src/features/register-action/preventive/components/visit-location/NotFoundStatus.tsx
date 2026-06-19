@@ -5,10 +5,7 @@ import {
   MapPinOff,
   Navigation,
 } from "lucide-react";
-import {
-  hasValidAddress,
-  openMapsNavigation,
-} from "@/lib/contact-actions";
+import { hasValidAddress, openMapsNavigation } from "@/lib/contact-actions";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 
 interface NotFoundStatusProps {

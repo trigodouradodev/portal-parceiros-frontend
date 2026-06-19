@@ -72,7 +72,9 @@ function formatZipCode(zipCode: string): string {
 }
 
 export function formatClientAddress(address: ClientAddress): string {
-  const streetLine = [address.street, address.number].filter(Boolean).join(", ");
+  const streetLine = [address.street, address.number]
+    .filter(Boolean)
+    .join(", ");
   const cityLine = [address.neighborhood, address.city, address.state]
     .filter(Boolean)
     .join(" – ");
@@ -98,9 +100,9 @@ export function hasValidAddress(address?: ClientAddress | null): boolean {
 
   return Boolean(
     address.street?.trim() &&
-      address.number?.trim() &&
-      address.neighborhood?.trim() &&
-      address.city?.trim(),
+    address.number?.trim() &&
+    address.neighborhood?.trim() &&
+    address.city?.trim(),
   );
 }
 
