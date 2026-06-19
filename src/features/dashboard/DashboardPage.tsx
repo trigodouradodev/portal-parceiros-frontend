@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { AlertTriangle, Clock, RefreshCw, FileText } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -9,10 +8,12 @@ import { SummaryCard } from "@/features/dashboard/components/SummaryCards";
 import { PerformanceSection } from "@/features/dashboard/components/PerformanceSection";
 import { CommissionSection } from "@/features/dashboard/components/CommissionSection";
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
+import { TasksTabs } from "@/features/dashboard/components/tasks/TasksTabs";
 import {
-  TasksTabs,
-  type TaskTab,
-} from "@/features/dashboard/components/tasks/TasksTabs";
+  readTaskTabFromCookie,
+  TaskTab,
+  writeTaskTabCookie,
+} from "@/features/dashboard/constants/task-tab";
 import type { PrevClient } from "@/features/dashboard/mocks/tasks";
 import {
   formatPreventiveDaysInfo,
@@ -20,7 +21,6 @@ import {
   mapPreventiveContractToPrevClient,
 } from "@/features/dashboard/utils/task-mappers";
 import { fmtBRL } from "@/lib/utils";
-import { getCookie, setCookie } from "@/lib/cookies";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   useDashboard,
@@ -34,26 +34,11 @@ interface ShellContext {
   onMobileLogout?: () => void;
 }
 
-const TASK_TAB_COOKIE = "dashboard_task_tab";
-
-function readTaskTabCookie(): TaskTab {
-  return getCookie(TASK_TAB_COOKIE) === "prev" ? "prev" : "cobr";
-}
-
 export function DashboardPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { setActionData } = useActionContext();
   const { onMobileLogout } = useOutletContext<ShellContext>();
-
-  const [taskTab, setTaskTabState] = useState<TaskTab>(() =>
-    readTaskTabCookie(),
-  );
-
-  const setTaskTab = (tab: TaskTab) => {
-    setTaskTabState(tab);
-    setCookie(TASK_TAB_COOKIE, tab);
-  };
 
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
   const { data: performanceData, isLoading: isLoadingPerformance } =
@@ -114,9 +99,9 @@ export function DashboardPage() {
     const installment = contract.firstOverdueInstallment;
     const stage = getCobrStage(contract);
     const overdueDays = installment.daysOverdue;
-    setTaskTab("cobr");
+    writeTaskTabCookie(readTaskTabFromCookie());
     setActionData({
-      mode: "cobr",
+      mode: TaskTab.Charge,
       cobrStage: stage,
       client: {
         id: contract.contractId,
@@ -137,9 +122,9 @@ export function DashboardPage() {
   };
 
   const handlePrevAction = (client: PrevClient) => {
-    setTaskTab("prev");
+    writeTaskTabCookie(readTaskTabFromCookie());
     setActionData({
-      mode: "prev",
+      mode: TaskTab.Preventive,
       client: {
         id: client.id,
         installmentNumber: client.installmentNumber,
@@ -225,11 +210,9 @@ export function DashboardPage() {
           </div>
 
           <TasksTabs
-            taskTab={taskTab}
-            onTaskTabChange={setTaskTab}
-            cobrCount={cobrPending.length}
-            prevCount={preventivePending.length}
-            cobr={{
+            chargeCount={cobrPending.length}
+            preventiveCount={preventivePending.length}
+            charge={{
               isLoading: isLoadingOverdue,
               contracts: overdueContracts,
               getStage: getCobrStage,
@@ -238,7 +221,7 @@ export function DashboardPage() {
               hasNextPage,
               loadMoreRef,
             }}
-            prev={{
+            preventive={{
               isLoading: isLoadingPreventive,
               pending: preventivePending,
               done: preventiveDoneList,

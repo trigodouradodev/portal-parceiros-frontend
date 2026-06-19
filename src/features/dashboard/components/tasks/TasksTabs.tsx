@@ -1,17 +1,19 @@
-import type { ComponentProps } from "react";
+import { useState, type ComponentProps } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CobrTasksTab } from "@/features/dashboard/components/tasks/CobrTasksTab";
 import { PrevTasksTab } from "@/features/dashboard/components/tasks/PrevTasksTab";
-
-export type TaskTab = "cobr" | "prev";
+import {
+  isTaskTab,
+  readTaskTabFromCookie,
+  TaskTab,
+  writeTaskTabCookie,
+} from "@/features/dashboard/constants/task-tab";
 
 interface TasksTabsProps {
-  taskTab: TaskTab;
-  onTaskTabChange: (tab: TaskTab) => void;
-  cobrCount: number;
-  prevCount: number;
-  cobr: ComponentProps<typeof CobrTasksTab>;
-  prev: ComponentProps<typeof PrevTasksTab>;
+  chargeCount: number;
+  preventiveCount: number;
+  charge: ComponentProps<typeof CobrTasksTab>;
+  preventive: ComponentProps<typeof PrevTasksTab>;
 }
 
 function TabCount({ active, value }: { active: boolean; value: number }) {
@@ -29,36 +31,44 @@ function TabCount({ active, value }: { active: boolean; value: number }) {
 }
 
 export function TasksTabs({
-  taskTab,
-  onTaskTabChange,
-  cobrCount,
-  prevCount,
-  cobr,
-  prev,
+  chargeCount,
+  preventiveCount,
+  charge,
+  preventive,
 }: TasksTabsProps) {
+  const [, setRevision] = useState(0);
+  const taskTab = readTaskTabFromCookie();
+
   return (
     <Tabs
       value={taskTab}
-      onValueChange={(v) => onTaskTabChange(v as TaskTab)}
+      onValueChange={(value) => {
+        if (!isTaskTab(value)) return;
+        writeTaskTabCookie(value);
+        setRevision((n) => n + 1);
+      }}
       className="w-full"
     >
       <TabsList className="md:w-72">
-        <TabsTrigger value="cobr">
+        <TabsTrigger value={TaskTab.Charge}>
           Cobrança
-          <TabCount active={taskTab === "cobr"} value={cobrCount} />
+          <TabCount active={taskTab === TaskTab.Charge} value={chargeCount} />
         </TabsTrigger>
-        <TabsTrigger value="prev">
+        <TabsTrigger value={TaskTab.Preventive}>
           Preventivo
-          <TabCount active={taskTab === "prev"} value={prevCount} />
+          <TabCount
+            active={taskTab === TaskTab.Preventive}
+            value={preventiveCount}
+          />
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="cobr" className="w-full">
-        <CobrTasksTab {...cobr} />
+      <TabsContent value={TaskTab.Charge} className="w-full">
+        <CobrTasksTab {...charge} />
       </TabsContent>
 
-      <TabsContent value="prev" className="w-full">
-        <PrevTasksTab {...prev} />
+      <TabsContent value={TaskTab.Preventive} className="w-full">
+        <PrevTasksTab {...preventive} />
       </TabsContent>
     </Tabs>
   );
