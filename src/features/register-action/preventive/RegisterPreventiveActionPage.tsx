@@ -4,23 +4,24 @@ import { ChevronRight, MapPinOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActionContext } from "@/contexts/action";
 import {
-  ContactActionsPanel,
   OutcomeOptionList,
   RegisterActionFooter,
   RegisterActionLayout,
   RegisterFormCard,
   RegisterSaveButton,
   RegisterStepIndicator,
-  VisitLocationPanel,
 } from "@/features/register-action";
-import { useVisitLocationCheck } from "@/features/register-action/hooks/useVisitLocationCheck";
 import {
-  PrevChannelPicker,
-  type PrevChannel,
+  ChannelPicker,
+  PhonePanel,
+  VisitLocationPanel,
+  WhatsAppPanel,
+  type Channel,
 } from "@/features/register-action/preventive/components";
-import { PREV_OUTCOMES } from "@/features/register-action/preventive/constants/prev-outcomes";
-import { getPrevWaTemplates } from "@/features/register-action/preventive/utils/prev-wa-templates";
-import { buildPrevFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
+import { useVisitLocationCheck } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
+import { OUTCOMES } from "@/features/register-action/preventive/constants/outcomes";
+import { getWaTemplates } from "@/features/register-action/preventive/utils/wa-templates";
+import { buildPreventiveFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
@@ -34,7 +35,7 @@ const STEP_TITLES: Record<Step, string> = {
   outcome: "Resultado do contato",
 };
 
-function channelActionTitle(channel: PrevChannel | null): string {
+function channelActionTitle(channel: Channel | null): string {
   if (channel === "whatsapp") return "Mensagem WhatsApp";
   if (channel === "phone") return "Ligar para o cliente";
   if (channel === "visit") return "Verificar localização";
@@ -47,7 +48,7 @@ export function RegisterPreventiveActionPage() {
   const createFollowUp = useCreateFollowUp();
   const { client, onComplete } = useActionContext();
   const [step, setStep] = useState<Step>("channel");
-  const [channel, setChannel] = useState<PrevChannel | null>(null);
+  const [channel, setChannel] = useState<Channel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
   const [note, setNote] = useState("");
 
@@ -71,7 +72,7 @@ export function RegisterPreventiveActionPage() {
     return null;
   }
 
-  const waTemplates = getPrevWaTemplates(client);
+  const waTemplates = getWaTemplates(client);
   const clientPhone = client.phone ?? "";
   const clientAddress = client.address;
   const clientFirstName = getFirstName(client.name);
@@ -95,7 +96,7 @@ export function RegisterPreventiveActionPage() {
       geoCoords !== null;
 
     try {
-      const payload = buildPrevFollowUpPayload({
+      const payload = buildPreventiveFollowUpPayload({
         contractId: currentClient.id,
         installmentNumber: currentClient.installmentNumber,
         channel,
@@ -187,26 +188,22 @@ export function RegisterPreventiveActionPage() {
     >
       <RegisterFormCard>
         {step === "channel" && (
-          <PrevChannelPicker value={channel} onChange={setChannel} />
+          <ChannelPicker value={channel} onChange={setChannel} />
         )}
 
         {step === "channel_action" && channel === "whatsapp" && (
-          <ContactActionsPanel
+          <WhatsAppPanel
             phone={clientPhone}
             clientFirstName={clientFirstName}
             templates={waTemplates}
-            mode="whatsapp"
-            layout="expanded"
           />
         )}
 
         {step === "channel_action" && channel === "phone" && (
-          <ContactActionsPanel
+          <PhonePanel
             phone={clientPhone}
             clientFirstName={clientFirstName}
             templates={waTemplates}
-            mode="phone"
-            layout="expanded"
           />
         )}
 
@@ -222,7 +219,7 @@ export function RegisterPreventiveActionPage() {
 
         {step === "outcome" && (
           <OutcomeOptionList
-            options={PREV_OUTCOMES}
+            options={OUTCOMES}
             value={outcome}
             onChange={setOutcome}
             prompt="Qual foi o resultado do contato?"

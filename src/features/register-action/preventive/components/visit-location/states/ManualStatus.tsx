@@ -1,5 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
-import { ActionHint } from "@/features/register-action/components/contact/ActionHint";
+import { ActionHint } from "@/features/register-action/components/primitives/contact/ActionHint";
 
 export function ManualStatus() {
   return (

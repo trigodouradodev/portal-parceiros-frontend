@@ -2,7 +2,7 @@ import type { WaTemplate } from "@/features/register-action/types/wa-template";
 
 export type { WaTemplate };
 
-export function getCobrWaTemplates(client: {
+export function getWaTemplates(client: {
   name: string;
   parcela: string;
   value: string;

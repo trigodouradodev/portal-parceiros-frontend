@@ -1,15 +1,15 @@
 import { hasValidAddress } from "@/lib/contact-actions";
 import type { LocationCheckResult } from "@/services/location-check/location-check.types";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
-import type { VisitLocationStatus } from "@/features/register-action/hooks/useVisitLocationCheck";
-import { ClientAddressCard } from "./ClientAddressCard";
+import type { VisitLocationStatus } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
+import { ClientAddressCard } from "./visit-location/ClientAddressCard";
 import {
   CheckingStatus,
   ConfirmedStatus,
   IdleStatus,
   ManualStatus,
   NotFoundStatus,
-} from "./states";
+} from "./visit-location/states";
 
 export type { VisitLocationStatus };
 

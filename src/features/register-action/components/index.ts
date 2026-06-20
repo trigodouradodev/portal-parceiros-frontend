@@ -1,4 +1,3 @@
-export { ContactActionsPanel } from "./contact";
 export { OptionalNoteField } from "./OptionalNoteField";
 export { OutcomeOptionList, type OutcomeOption } from "./OutcomeOptionList";
 export { RegisterActionFooter } from "./RegisterActionFooter";
@@ -8,4 +7,3 @@ export { RegisterFormCard } from "./RegisterFormCard";
 export { RegisterSaveButton } from "./RegisterSaveButton";
 export { RegisterStagePills } from "./RegisterStagePills";
 export { RegisterStepIndicator } from "./RegisterStepIndicator";
-export { VisitLocationPanel } from "./visit";

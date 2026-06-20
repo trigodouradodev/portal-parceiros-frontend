@@ -2,7 +2,7 @@ import type { WaTemplate } from "@/features/register-action/types/wa-template";
 
 export type { WaTemplate };
 
-export function getPrevWaTemplates(client: {
+export function getWaTemplates(client: {
   name: string;
   parcela: string;
   daysInfo: string;
