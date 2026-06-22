@@ -99,7 +99,11 @@ export function ContractDetailPage() {
       return;
     }
 
-    if (mode === TaskTab.Preventive && contract && !isOverdueContract(contract)) {
+    if (
+      mode === TaskTab.Preventive &&
+      contract &&
+      !isOverdueContract(contract)
+    ) {
       const prevClient = mapPreventiveContractToPrevClient(contract);
       setActionData(
         buildPreventiveActionPayload(prevClient, () => {

@@ -24,7 +24,7 @@ export function ContractInfoCard({
   const contractPeriod =
     contractStartDate && contractEndDate
       ? `${contractStartDate} — ${contractEndDate}`
-      : contractStartDate ?? contractEndDate;
+      : (contractStartDate ?? contractEndDate);
 
   return (
     <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">

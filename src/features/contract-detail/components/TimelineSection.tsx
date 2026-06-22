@@ -13,7 +13,9 @@ export function TimelineSection({
 }: TimelineSectionProps) {
   const doneCount = detail.timeline.filter((s) => s.status === "done").length;
   const titlePrefix =
-    detail.mode === TaskTab.Charge ? "Histórico de cobrança" : "Histórico preventivo";
+    detail.mode === TaskTab.Charge
+      ? "Histórico de cobrança"
+      : "Histórico preventivo";
 
   return (
     <div>
