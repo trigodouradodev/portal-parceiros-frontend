@@ -18,6 +18,7 @@ interface PrevTasksTabProps {
   isLoading: boolean;
   pending: PrevClient[];
   done: PrevDoneClient[];
+  onOpen: (client: PrevClient) => void;
   onAction: (client: PrevClient) => void;
 }
 
@@ -25,6 +26,7 @@ export function PrevTasksTab({
   isLoading,
   pending,
   done,
+  onOpen,
   onAction,
 }: PrevTasksTabProps) {
   if (isLoading) {
@@ -41,7 +43,12 @@ export function PrevTasksTab({
   return (
     <div className={GRID_CLASS}>
       {pending.map((c) => (
-        <PrevTaskCard key={c.id} client={c} onAction={() => onAction(c)} />
+        <PrevTaskCard
+          key={c.id}
+          client={c}
+          onOpen={() => onOpen(c)}
+          onAction={() => onAction(c)}
+        />
       ))}
 
       {done.map(({ client, label }) => (

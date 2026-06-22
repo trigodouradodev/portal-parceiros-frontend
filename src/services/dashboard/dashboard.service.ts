@@ -4,6 +4,7 @@ import type {
   MonthPerformance,
   OverdueCollectionPage,
   PreventiveCollectionPage,
+  CollectionDetail,
 } from "./dashboard.types";
 
 /**
@@ -56,6 +57,20 @@ export const dashboardService = {
     const { data } = await api.get<PreventiveCollectionPage>(
       "/collections/preventive",
       { params: { page, limit, withinDays } },
+    );
+    return data;
+  },
+
+  /**
+   * Get contract/installment detail with follow-up history
+   * GET /collections/:contractId/installments/:installmentNumber
+   */
+  async getCollectionDetail(
+    contractId: string,
+    installmentNumber: number,
+  ): Promise<CollectionDetail> {
+    const { data } = await api.get<CollectionDetail>(
+      `/collections/${contractId}/installments/${installmentNumber}`,
     );
     return data;
   },
