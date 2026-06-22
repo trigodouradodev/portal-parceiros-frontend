@@ -16,11 +16,15 @@ import {
 } from "@/features/dashboard/constants/task-tab";
 import type { PrevClient } from "@/features/dashboard/mocks/tasks";
 import {
-  formatPreventiveDaysInfo,
   mapFollowupStatusToStage,
   mapPreventiveContractToPrevClient,
 } from "@/features/dashboard/utils/task-mappers";
-import { fmtBRL } from "@/lib/utils";
+import {
+  buildChargeActionPayload,
+  buildPreventiveActionPayload,
+  getChargeRegisterPath,
+  getPreventiveRegisterPath,
+} from "@/features/dashboard/utils/launch-action";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   useDashboard,
@@ -96,53 +100,41 @@ export function DashboardPage() {
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
   const handleCobrAction = (contract: OverdueContract) => {
-    const installment = contract.firstOverdueInstallment;
-    const stage = getCobrStage(contract);
-    const overdueDays = installment.daysOverdue;
     writeTaskTabCookie(readTaskTabFromCookie());
-    setActionData({
-      mode: TaskTab.Charge,
-      cobrStage: stage,
-      client: {
-        id: contract.contractId,
-        installmentNumber: installment.installmentNumber,
-        name: contract.clientName,
-        contract: contract.contractNumber,
-        parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
-        value: fmtBRL(installment.pendingAmount),
-        currentStep: stage,
-        daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
-        phone: contract.clientPhone,
-        address: contract.address,
-      },
-      onComplete: () => {
+    setActionData(
+      buildChargeActionPayload(contract, () => {
         showToast("Ação registrada.");
-      },
-    });
-    navigate("/register/charge");
+      }),
+    );
+    navigate(getChargeRegisterPath());
   };
 
   const handlePrevAction = (client: PrevClient) => {
     writeTaskTabCookie(readTaskTabFromCookie());
-    setActionData({
-      mode: TaskTab.Preventive,
-      client: {
-        id: client.id,
-        installmentNumber: client.installmentNumber,
-        name: client.name,
-        contract: client.contract,
-        parcela: client.parcela,
-        value: fmtBRL(client.value),
-        currentStep: "Contato preventivo",
-        daysInfo: formatPreventiveDaysInfo(client.daysUntilDue),
-        phone: client.phone,
-        address: client.address,
-      },
-      onComplete: () => {
+    setActionData(
+      buildPreventiveActionPayload(client, () => {
         showToast("Contato preventivo registrado!");
+      }),
+    );
+    navigate(getPreventiveRegisterPath());
+  };
+
+  const handleCobrOpen = (contract: OverdueContract) => {
+    writeTaskTabCookie(TaskTab.Charge);
+    navigate(`/contracts/${contract.contractId}?mode=${TaskTab.Charge}`, {
+      state: { contract, mode: TaskTab.Charge },
+    });
+  };
+
+  const handlePrevOpen = (client: PrevClient) => {
+    writeTaskTabCookie(TaskTab.Preventive);
+    const source = preventiveContracts.find((c) => c.contractId === client.id);
+    navigate(`/contracts/${client.id}?mode=${TaskTab.Preventive}`, {
+      state: {
+        contract: source,
+        mode: TaskTab.Preventive,
       },
     });
-    navigate("/register/preventive");
   };
 
   const handleCobrReopen = () => {
@@ -218,6 +210,7 @@ export function DashboardPage() {
               isLoading: isLoadingOverdue,
               contracts: overdueContracts,
               getStage: getCobrStage,
+              onOpen: handleCobrOpen,
               onAction: handleCobrAction,
               onReopen: handleCobrReopen,
               hasNextPage,
@@ -227,6 +220,7 @@ export function DashboardPage() {
               isLoading: isLoadingPreventive,
               pending: preventivePending,
               done: preventiveDoneList,
+              onOpen: handlePrevOpen,
               onAction: handlePrevAction,
             }}
           />

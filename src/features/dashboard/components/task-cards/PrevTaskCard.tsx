@@ -7,9 +7,11 @@ import { type PrevClient } from "@/features/dashboard/mocks/tasks";
 
 export function PrevTaskCard({
   client,
+  onOpen,
   onAction,
 }: {
   client: PrevClient;
+  onOpen: () => void;
   onAction: () => void;
 }) {
   const daysVariant =
@@ -26,7 +28,11 @@ export function PrevTaskCard({
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <div className="flex w-full flex-1 flex-col p-4 text-left">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex w-full flex-1 flex-col p-4 text-left"
+      >
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-yellow text-xs font-bold text-brand-navy">
             {initials}
@@ -54,7 +60,7 @@ export function PrevTaskCard({
           </div>
           <ChevronRight size={16} className="mb-1 shrink-0 text-input" />
         </div>
-      </div>
+      </button>
 
       <div className="border-t border-muted px-4 pb-3 pt-1">
         <Button
