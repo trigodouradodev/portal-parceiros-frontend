@@ -112,6 +112,8 @@ export function DashboardPage() {
         value: fmtBRL(installment.pendingAmount),
         currentStep: stage,
         daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
+        phone: contract.clientPhone,
+        address: contract.address,
       },
       onComplete: () => {
         showToast("Ação registrada.");
@@ -134,6 +136,7 @@ export function DashboardPage() {
         currentStep: "Contato preventivo",
         daysInfo: formatPreventiveDaysInfo(client.daysUntilDue),
         phone: client.phone,
+        address: client.address,
       },
       onComplete: () => {
         showToast("Contato preventivo registrado!");

@@ -1,9 +1,9 @@
 import { CheckCircle2, MapPin, MessageSquare, Phone } from "lucide-react";
 
-export type PrevChannel = "whatsapp" | "phone" | "visit";
+export type Channel = "whatsapp" | "phone" | "visit";
 
 const CHANNEL_OPTIONS: {
-  value: PrevChannel;
+  value: Channel;
   label: string;
   desc: string;
   icon: React.ReactNode;
@@ -28,12 +28,12 @@ const CHANNEL_OPTIONS: {
   },
 ];
 
-interface PrevChannelPickerProps {
-  value: PrevChannel | null;
-  onChange: (channel: PrevChannel) => void;
+interface ChannelPickerProps {
+  value: Channel | null;
+  onChange: (channel: Channel) => void;
 }
 
-export function PrevChannelPicker({ value, onChange }: PrevChannelPickerProps) {
+export function ChannelPicker({ value, onChange }: ChannelPickerProps) {
   return (
     <div>
       <p className="mb-3 text-sm text-muted-foreground">

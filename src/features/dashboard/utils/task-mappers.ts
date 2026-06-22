@@ -70,7 +70,8 @@ export function mapOverdueContractToCobrClient(
     parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
     value: installment.pendingAmount,
     overdueDays: installment.daysOverdue,
-    phone: "",
+    phone: contract.clientPhone ?? "",
+    address: contract.address,
     activityType,
     stage: mapFollowupStatusToStage(
       installment.latestFollowupStatus,
@@ -98,7 +99,8 @@ export function mapPreventiveContractToPrevClient(
     daysUntilDue: installment.daysUntilDue,
     installmentNumber: installment.installmentNumber,
     followupCount: installment.followupCount,
-    phone: "",
+    phone: contract.clientPhone ?? "",
+    address: contract.address,
     activityType,
   };
 }

@@ -3,7 +3,7 @@ import type { OutcomeOption } from "../../components/OutcomeOptionList";
 import type { CobrStage } from "@/features/dashboard/mocks/tasks";
 import { CALL_OUTCOMES } from "@/features/dashboard/mocks/tasks";
 
-export const COBR_TITLES: Partial<Record<CobrStage, string>> = {
+export const CHARGE_TITLES: Partial<Record<CobrStage, string>> = {
   initial: "Registrar ligação inicial",
   second_attempt: "Registrar 2ª tentativa",
   third_attempt: "Registrar 3ª tentativa",
@@ -12,7 +12,7 @@ export const COBR_TITLES: Partial<Record<CobrStage, string>> = {
   fup: "FUP de promessa",
 };
 
-export function getCobrOutcomeColor(value: string): OutcomeColorKey {
+export function getOutcomeColor(value: string): OutcomeColorKey {
   if (value === "paid") return "green";
   if (value === "promise") return "teal";
   if (value === "no_return_1" || value === "no_return_2") return "amber";
@@ -20,7 +20,7 @@ export function getCobrOutcomeColor(value: string): OutcomeColorKey {
   return "gray";
 }
 
-export function getCobrOutcomeOptions(
+export function getOutcomeOptions(
   stage: CobrStage,
   icons: Record<string, OutcomeOption["icon"]>,
 ): OutcomeOption[] {
@@ -31,6 +31,6 @@ export function getCobrOutcomeOptions(
     label: outcome.label,
     desc: outcome.desc,
     icon: icons[outcome.value],
-    color: getCobrOutcomeColor(outcome.value),
+    color: getOutcomeColor(outcome.value),
   }));
 }

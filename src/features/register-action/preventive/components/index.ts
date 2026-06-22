@@ -1,7 +1,7 @@
-export { PrevChannelPicker, type PrevChannel } from "./PrevChannelPicker";
-export { PrevPhonePanel } from "./PrevPhonePanel";
+export { ChannelPicker, type Channel } from "./ChannelPicker";
+export { PhonePanel } from "./PhonePanel";
 export {
-  PrevVisitLocationPanel,
+  VisitLocationPanel,
   type VisitLocationStatus,
-} from "./PrevVisitLocationPanel";
-export { PrevWhatsAppPanel } from "./PrevWhatsAppPanel";
+} from "./VisitLocationPanel";
+export { WhatsAppPanel } from "./WhatsAppPanel";

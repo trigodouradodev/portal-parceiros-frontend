@@ -4,7 +4,7 @@ import {
   type CreateFollowUpPayload,
 } from "@/services/followup/followup.types";
 
-export function mapCobrOutcomeToStatus(outcome: string): FollowUpStatus {
+export function mapChargeOutcomeToStatus(outcome: string): FollowUpStatus {
   switch (outcome) {
     case "no_return_1":
     case "no_return_2":
@@ -21,7 +21,7 @@ export function mapCobrOutcomeToStatus(outcome: string): FollowUpStatus {
   }
 }
 
-export function mapPrevChannelToStatus(
+export function mapPreventiveChannelToStatus(
   channel: "whatsapp" | "phone" | "visit",
 ): FollowUpStatus {
   switch (channel) {
@@ -34,7 +34,7 @@ export function mapPrevChannelToStatus(
   }
 }
 
-export function mapPrevOutcomeToExpectedResult(
+export function mapPreventiveOutcomeToExpectedResult(
   outcome: string,
 ): FollowUpExpectedResult | undefined {
   switch (outcome) {
@@ -51,7 +51,7 @@ export function mapPrevOutcomeToExpectedResult(
   }
 }
 
-export function buildCobrFollowUpPayload(params: {
+export function buildChargeFollowUpPayload(params: {
   contractId: string;
   installmentNumber: number;
   outcome: string;
@@ -61,7 +61,7 @@ export function buildCobrFollowUpPayload(params: {
   const payload: CreateFollowUpPayload = {
     contractId: params.contractId,
     installmentNumber: params.installmentNumber,
-    status: mapCobrOutcomeToStatus(params.outcome),
+    status: mapChargeOutcomeToStatus(params.outcome),
     note: params.note || undefined,
   };
 
@@ -73,7 +73,7 @@ export function buildCobrFollowUpPayload(params: {
   return payload;
 }
 
-export function buildPrevFollowUpPayload(params: {
+export function buildPreventiveFollowUpPayload(params: {
   contractId: string;
   installmentNumber: number;
   channel: "whatsapp" | "phone" | "visit";
@@ -85,9 +85,9 @@ export function buildPrevFollowUpPayload(params: {
   const payload: CreateFollowUpPayload = {
     contractId: params.contractId,
     installmentNumber: params.installmentNumber,
-    status: mapPrevChannelToStatus(params.channel),
+    status: mapPreventiveChannelToStatus(params.channel),
     note: params.note || undefined,
-    expectedResult: mapPrevOutcomeToExpectedResult(params.outcome),
+    expectedResult: mapPreventiveOutcomeToExpectedResult(params.outcome),
   };
 
   if (

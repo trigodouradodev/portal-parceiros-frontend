@@ -14,9 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActionContext } from "@/contexts/action";
 import {
-  COBR_TITLES,
-  getCobrOutcomeOptions,
-} from "@/features/register-action/charge/constants/cobr-outcomes";
+  CHARGE_TITLES,
+  getOutcomeOptions,
+} from "@/features/register-action/charge/constants/outcomes";
+import { ContactPanel } from "@/features/register-action/charge/components";
+import { getWaTemplates } from "@/features/register-action/charge/utils/wa-templates";
 import {
   OutcomeOptionList,
   RegisterActionFooter,
@@ -26,10 +28,11 @@ import {
   RegisterStagePills,
   RegisterStepIndicator,
 } from "@/features/register-action";
-import { buildCobrFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
+import { buildChargeFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import { getFirstName } from "@/lib/user-display";
 
 type Step = "outcome" | "boleto";
 
@@ -54,9 +57,12 @@ export function RegisterChargeActionPage() {
     return null;
   }
 
-  const title = COBR_TITLES[cobrStage] ?? "Registrar ação";
+  const title = CHARGE_TITLES[cobrStage] ?? "Registrar ação";
+  const clientPhone = client.phone ?? "";
+  const clientFirstName = getFirstName(client.name);
+  const waTemplates = getWaTemplates(client);
   const saving = createFollowUp.isPending;
-  const outcomeOptions = getCobrOutcomeOptions(cobrStage, {
+  const outcomeOptions = getOutcomeOptions(cobrStage, {
     no_return_1: <PhoneOff size={18} />,
     no_return_2: <PhoneOff size={18} />,
     sem_previsao: <Calendar size={18} />,
@@ -72,7 +78,7 @@ export function RegisterChargeActionPage() {
     if (!currentClient) return;
 
     try {
-      const payload = buildCobrFollowUpPayload({
+      const payload = buildChargeFollowUpPayload({
         contractId: currentClient.id,
         installmentNumber: currentClient.installmentNumber,
         outcome: outcomeValue,
@@ -157,13 +163,20 @@ export function RegisterChargeActionPage() {
     >
       <RegisterFormCard>
         {step === "outcome" && (
-          <OutcomeOptionList
-            options={outcomeOptions}
-            value={outcome}
-            onChange={setOutcome}
-            prompt="Qual foi o resultado da ligação?"
-            note={{ value: note, onChange: setNote }}
-          />
+          <>
+            <ContactPanel
+              phone={clientPhone}
+              clientFirstName={clientFirstName}
+              templates={waTemplates}
+            />
+            <OutcomeOptionList
+              options={outcomeOptions}
+              value={outcome}
+              onChange={setOutcome}
+              prompt="Qual foi o resultado da ligação?"
+              note={{ value: note, onChange: setNote }}
+            />
+          </>
         )}
 
         {step === "boleto" && (

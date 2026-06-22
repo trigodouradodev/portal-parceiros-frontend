@@ -12,16 +12,16 @@ import {
   RegisterStepIndicator,
 } from "@/features/register-action";
 import {
-  PrevChannelPicker,
-  PrevPhonePanel,
-  PrevVisitLocationPanel,
-  PrevWhatsAppPanel,
-  type PrevChannel,
-  type VisitLocationStatus,
+  ChannelPicker,
+  PhonePanel,
+  VisitLocationPanel,
+  WhatsAppPanel,
+  type Channel,
 } from "@/features/register-action/preventive/components";
-import { PREV_OUTCOMES } from "@/features/register-action/preventive/constants/prev-outcomes";
-import { buildPrevFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
-import { getPrevWaTemplates } from "@/features/register-action/preventive/utils/prev-wa-templates";
+import { useVisitLocationCheck } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
+import { OUTCOMES } from "@/features/register-action/preventive/constants/outcomes";
+import { getWaTemplates } from "@/features/register-action/preventive/utils/wa-templates";
+import { buildPreventiveFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
@@ -35,7 +35,7 @@ const STEP_TITLES: Record<Step, string> = {
   outcome: "Resultado do contato",
 };
 
-function channelActionTitle(channel: PrevChannel | null): string {
+function channelActionTitle(channel: Channel | null): string {
   if (channel === "whatsapp") return "Mensagem WhatsApp";
   if (channel === "phone") return "Ligar para o cliente";
   if (channel === "visit") return "Verificar localização";
@@ -48,29 +48,33 @@ export function RegisterPreventiveActionPage() {
   const createFollowUp = useCreateFollowUp();
   const { client, onComplete } = useActionContext();
   const [step, setStep] = useState<Step>("channel");
-  const [channel, setChannel] = useState<PrevChannel | null>(null);
+  const [channel, setChannel] = useState<Channel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
   const [note, setNote] = useState("");
-  const [copied, setCopied] = useState<number | null>(null);
-  const [selectedMsg, setSelectedMsg] = useState(0);
-  const [locationStatus, setLocationStatus] =
-    useState<VisitLocationStatus>("idle");
-  const [geoCoords, setGeoCoords] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
 
   const handleBack = () => {
     navigate(-1);
   };
 
+  const {
+    status: locationStatus,
+    result: locationCheckResult,
+    coords: geoCoords,
+    verify: verifyLocationCheck,
+    confirmManual,
+    locationOk,
+  } = useVisitLocationCheck({
+    contractId: client?.id ?? "",
+    installmentNumber: client?.installmentNumber ?? 0,
+  });
+
   if (!client) {
     return null;
   }
 
-  const waTemplates = getPrevWaTemplates(client);
-  const mockPhone = client.phone ?? "(11) 98765-4321";
-  const mockAddress = client.address ?? "Rua das Flores, 42 – Centro";
+  const waTemplates = getWaTemplates(client);
+  const clientPhone = client.phone ?? "";
+  const clientAddress = client.address;
   const clientFirstName = getFirstName(client.name);
 
   const pageTitle =
@@ -78,40 +82,7 @@ export function RegisterPreventiveActionPage() {
   const currentStepIndex =
     step === "channel" ? 0 : step === "channel_action" ? 1 : 2;
   const saving = createFollowUp.isPending;
-  const locationOk =
-    locationStatus === "confirmed" || locationStatus === "manual";
   const canSaveOutcome = step === "outcome" && outcome !== null;
-
-  function handleCopy(index: number) {
-    navigator.clipboard?.writeText(waTemplates[index].message).catch(() => {});
-    setCopied(index);
-    setTimeout(() => setCopied(null), 2000);
-  }
-
-  function simulateLocationCheck() {
-    setLocationStatus("checking");
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setGeoCoords({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-          setLocationStatus("confirmed");
-        },
-        () => {
-          setLocationStatus("not_found");
-        },
-        { timeout: 5000 },
-      );
-      return;
-    }
-
-    setTimeout(() => {
-      setGeoCoords({ latitude: -23.5505, longitude: -46.6333 });
-      setLocationStatus(Math.random() > 0.5 ? "confirmed" : "not_found");
-    }, 1800);
-  }
 
   async function handleSave() {
     if (!channel || !outcome) return;
@@ -125,7 +96,7 @@ export function RegisterPreventiveActionPage() {
       geoCoords !== null;
 
     try {
-      const payload = buildPrevFollowUpPayload({
+      const payload = buildPreventiveFollowUpPayload({
         contractId: currentClient.id,
         installmentNumber: currentClient.installmentNumber,
         channel,
@@ -217,35 +188,38 @@ export function RegisterPreventiveActionPage() {
     >
       <RegisterFormCard>
         {step === "channel" && (
-          <PrevChannelPicker value={channel} onChange={setChannel} />
+          <ChannelPicker value={channel} onChange={setChannel} />
         )}
 
         {step === "channel_action" && channel === "whatsapp" && (
-          <PrevWhatsAppPanel
+          <WhatsAppPanel
+            phone={clientPhone}
+            clientFirstName={clientFirstName}
             templates={waTemplates}
-            selectedIndex={selectedMsg}
-            copiedIndex={copied}
-            onSelect={setSelectedMsg}
-            onCopy={handleCopy}
           />
         )}
 
         {step === "channel_action" && channel === "phone" && (
-          <PrevPhonePanel phone={mockPhone} clientFirstName={clientFirstName} />
+          <PhonePanel
+            phone={clientPhone}
+            clientFirstName={clientFirstName}
+            templates={waTemplates}
+          />
         )}
 
         {step === "channel_action" && channel === "visit" && (
-          <PrevVisitLocationPanel
-            address={mockAddress}
+          <VisitLocationPanel
+            address={clientAddress}
             status={locationStatus}
-            onVerifyLocation={simulateLocationCheck}
-            onConfirmManual={() => setLocationStatus("manual")}
+            locationCheckResult={locationCheckResult}
+            onVerifyLocation={verifyLocationCheck}
+            onConfirmManual={confirmManual}
           />
         )}
 
         {step === "outcome" && (
           <OutcomeOptionList
-            options={PREV_OUTCOMES}
+            options={OUTCOMES}
             value={outcome}
             onChange={setOutcome}
             prompt="Qual foi o resultado do contato?"
