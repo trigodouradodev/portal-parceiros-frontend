@@ -37,7 +37,6 @@ export function buildPreventiveTimeline(
         : index === currentIndex
           ? "current"
           : "pending",
-    date:
-      step.day === "Venc" && dueDateLabel ? dueDateLabel : undefined,
+    date: step.day === "Venc" && dueDateLabel ? dueDateLabel : undefined,
   }));
 }

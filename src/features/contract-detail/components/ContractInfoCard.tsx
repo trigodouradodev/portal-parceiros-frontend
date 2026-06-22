@@ -15,9 +15,7 @@ export function ContractInfoCard({
 }: ContractInfoCardProps) {
   return (
     <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-      <p className="mb-1 text-xs text-muted-foreground/80">
-        Valor da parcela
-      </p>
+      <p className="mb-1 text-xs text-muted-foreground/80">Valor da parcela</p>
       <div className="flex items-center justify-between gap-3">
         <span className="font-fraunces text-2xl font-bold text-foreground">
           {fmtBRL(installmentValue)}

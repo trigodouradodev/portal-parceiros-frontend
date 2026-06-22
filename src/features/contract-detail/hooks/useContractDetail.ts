@@ -40,7 +40,9 @@ export function useContractDetail(contractId: string, mode: DetailMode) {
 
   const contract = useMemo(() => {
     if (mode === TaskTab.Charge) {
-      const fromCache = overdueContracts.find((c) => c.contractId === contractId);
+      const fromCache = overdueContracts.find(
+        (c) => c.contractId === contractId,
+      );
       if (fromCache) return fromCache;
 
       const fromState = locationState?.contract;

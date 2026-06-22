@@ -13,8 +13,7 @@ export function TimelineSection({
 }: TimelineSectionProps) {
   const doneCount = detail.timeline.filter((s) => s.status === "done").length;
   const totalCount = detail.timeline.length;
-  const titlePrefix =
-    detail.mode === TaskTab.Charge ? "Cobrança" : "Jornada";
+  const titlePrefix = detail.mode === TaskTab.Charge ? "Cobrança" : "Jornada";
 
   return (
     <div>
@@ -27,10 +26,7 @@ export function TimelineSection({
         </span>
       </div>
       <div className="rounded-2xl border border-border bg-white p-4 shadow-sm md:p-5">
-        <Timeline
-          steps={detail.timeline}
-          onRegisterAction={onRegisterAction}
-        />
+        <Timeline steps={detail.timeline} onRegisterAction={onRegisterAction} />
       </div>
     </div>
   );
