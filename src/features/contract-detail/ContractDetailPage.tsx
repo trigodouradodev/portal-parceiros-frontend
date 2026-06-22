@@ -28,11 +28,27 @@ import type {
   OverdueContract,
   PreventiveContract,
 } from "@/services/dashboard/dashboard.types";
+import { fmtBRL } from "@/lib/utils";
 
 function isOverdueContract(
   contract: OverdueContract | PreventiveContract,
 ): contract is OverdueContract {
   return "firstOverdueInstallment" in contract;
+}
+
+function buildDaysInfoFromDetail(
+  mode: typeof TaskTab.Charge | typeof TaskTab.Preventive,
+  alertDays: number | undefined,
+): string {
+  const days = alertDays ?? 0;
+
+  if (mode === TaskTab.Charge) {
+    return `${days} dia${days !== 1 ? "s" : ""} em atraso`;
+  }
+
+  if (days === 0) return "Vence hoje";
+  if (days === 1) return "Vence amanhã";
+  return `Vence em ${days} dia${days !== 1 ? "s" : ""}`;
 }
 
 function ContractDetailSkeleton() {
@@ -60,7 +76,10 @@ export function ContractDetailPage() {
   const { setActionData } = useActionContext();
   const { showToast } = useToast();
 
-  const { detail, contract, isLoading } = useContractDetail(contractId, mode);
+  const { detail, contract, isLoading, isNotFound } = useContractDetail(
+    contractId,
+    mode,
+  );
 
   const handleBack = () => {
     writeTaskTabCookie(mode);
@@ -68,11 +87,9 @@ export function ContractDetailPage() {
   };
 
   const handleRegisterAction = () => {
-    if (!contract) return;
-
     writeTaskTabCookie(readTaskTabFromCookie());
 
-    if (mode === TaskTab.Charge && isOverdueContract(contract)) {
+    if (mode === TaskTab.Charge && contract && isOverdueContract(contract)) {
       setActionData(
         buildChargeActionPayload(contract, () => {
           showToast("Ação registrada.");
@@ -82,7 +99,7 @@ export function ContractDetailPage() {
       return;
     }
 
-    if (!isOverdueContract(contract)) {
+    if (mode === TaskTab.Preventive && contract && !isOverdueContract(contract)) {
       const prevClient = mapPreventiveContractToPrevClient(contract);
       setActionData(
         buildPreventiveActionPayload(prevClient, () => {
@@ -90,14 +107,45 @@ export function ContractDetailPage() {
         }),
       );
       navigate(getPreventiveRegisterPath());
+      return;
     }
+
+    if (!detail) return;
+
+    setActionData({
+      mode,
+      client: {
+        id: detail.contractId,
+        installmentNumber: detail.installmentNumber,
+        name: detail.clientName,
+        contract: detail.contractCode,
+        parcela: `Parc ${detail.installmentNumber}/${detail.totalInstallments}`,
+        value: fmtBRL(detail.installmentValue),
+        currentStep: detail.statusLabel,
+        daysInfo: buildDaysInfoFromDetail(mode, detail.alertDays),
+        phone: contract?.clientPhone,
+        address: contract?.address,
+      },
+      onComplete: () => {
+        showToast(
+          mode === TaskTab.Charge
+            ? "Ação registrada."
+            : "Contato preventivo registrado!",
+        );
+      },
+    });
+    navigate(
+      mode === TaskTab.Charge
+        ? getChargeRegisterPath()
+        : getPreventiveRegisterPath(),
+    );
   };
 
   if (isLoading) {
     return <ContractDetailSkeleton />;
   }
 
-  if (!detail) {
+  if (isNotFound || !detail) {
     return (
       <PageContainer>
         <div className="px-5 py-12 md:px-8">
@@ -132,8 +180,12 @@ export function ContractDetailPage() {
           <div className="flex flex-col gap-4 pt-4 md:pt-0">
             <ContractInfoCard
               installmentValue={detail.installmentValue}
+              installmentTotalAmount={detail.installmentTotalAmount}
               installmentNumber={detail.installmentNumber}
               totalInstallments={detail.totalInstallments}
+              contractTotalAmount={detail.contractTotalAmount}
+              contractStartDate={detail.contractStartDate}
+              contractEndDate={detail.contractEndDate}
               nextDue={detail.nextDue}
             />
 

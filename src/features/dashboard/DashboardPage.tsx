@@ -121,20 +121,29 @@ export function DashboardPage() {
 
   const handleCobrOpen = (contract: OverdueContract) => {
     writeTaskTabCookie(TaskTab.Charge);
-    navigate(`/contracts/${contract.contractId}?mode=${TaskTab.Charge}`, {
-      state: { contract, mode: TaskTab.Charge },
-    });
+    const installment = contract.firstOverdueInstallment.installmentNumber;
+    navigate(
+      `/contracts/${contract.contractId}?mode=${TaskTab.Charge}&installment=${installment}`,
+      {
+        state: { contract, mode: TaskTab.Charge },
+      },
+    );
   };
 
   const handlePrevOpen = (client: PrevClient) => {
     writeTaskTabCookie(TaskTab.Preventive);
     const source = preventiveContracts.find((c) => c.contractId === client.id);
-    navigate(`/contracts/${client.id}?mode=${TaskTab.Preventive}`, {
-      state: {
-        contract: source,
-        mode: TaskTab.Preventive,
+    const installment = source?.nextInstallment.installmentNumber;
+    const installmentParam = installment ? `&installment=${installment}` : "";
+    navigate(
+      `/contracts/${client.id}?mode=${TaskTab.Preventive}${installmentParam}`,
+      {
+        state: {
+          contract: source,
+          mode: TaskTab.Preventive,
+        },
       },
-    });
+    );
   };
 
   const handleCobrReopen = () => {

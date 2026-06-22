@@ -132,3 +132,44 @@ export interface PreventiveCollectionPage {
   contracts: PreventiveContract[];
   pagination: PreventivePagination;
 }
+
+export interface FollowUpAuthor {
+  id: string;
+  name: string;
+}
+
+export interface FollowUpGeolocation {
+  latitude: number;
+  longitude: number;
+}
+
+export interface FollowUpHistoryItem {
+  id: string;
+  status: string;
+  note?: string;
+  expectedResult?: string;
+  paymentForecast?: string;
+  createdAt: string;
+  author: FollowUpAuthor;
+  geolocation?: FollowUpGeolocation;
+}
+
+export interface CollectionInstallmentDetail {
+  id: string;
+  installmentNumber: number;
+  dueDate: string;
+  totalAmount: number;
+  pendingAmount: number;
+  status: string;
+}
+
+export interface CollectionDetail {
+  contractId: string;
+  contractNumber: string;
+  contractTotalAmount: number;
+  contractStartDate?: string;
+  contractEndDate?: string;
+  totalInstallments: number;
+  installment: CollectionInstallmentDetail;
+  followUps: FollowUpHistoryItem[];
+}

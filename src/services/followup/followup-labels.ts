@@ -1,4 +1,4 @@
-import { FollowUpStatus } from "./followup.types";
+import { FollowUpExpectedResult, FollowUpStatus } from "./followup.types";
 
 const FOLLOW_UP_STATUS_LABELS: Record<string, string> = {
   [FollowUpStatus.NO_ANSWER]: "Sem retorno",
@@ -19,6 +19,13 @@ const FOLLOW_UP_STATUS_LABELS: Record<string, string> = {
   [FollowUpStatus.WHATSAPP_MESSAGE]: "WhatsApp",
 };
 
+const FOLLOW_UP_EXPECTED_RESULT_LABELS: Record<string, string> = {
+  [FollowUpExpectedResult.WILL_PAY_ON_DATE]: "Pagará na data",
+  [FollowUpExpectedResult.NO_RETURN]: "Sem retorno",
+  [FollowUpExpectedResult.REQUESTED_EXTENSION]: "Pediu prorrogação",
+  [FollowUpExpectedResult.WANTS_RENEGOTIATION]: "Quer renegociar",
+};
+
 function humanizeSnakeCase(status: string): string {
   return status
     .split("_")
@@ -29,4 +36,12 @@ function humanizeSnakeCase(status: string): string {
 export function getFollowUpStatusLabel(status: string): string {
   const normalized = status.toLowerCase();
   return FOLLOW_UP_STATUS_LABELS[normalized] ?? humanizeSnakeCase(normalized);
+}
+
+export function getFollowUpExpectedResultLabel(result: string): string {
+  const normalized = result.toLowerCase();
+  return (
+    FOLLOW_UP_EXPECTED_RESULT_LABELS[normalized] ??
+    humanizeSnakeCase(normalized)
+  );
 }

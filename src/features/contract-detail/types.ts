@@ -30,13 +30,17 @@ export interface ContractDetailView {
   statusLabel: string;
   statusColor: StatusColor;
   installmentValue: number;
+  installmentTotalAmount: number;
   installmentNumber: number;
   totalInstallments: number;
+  contractTotalAmount: number;
+  contractStartDate?: string;
+  contractEndDate?: string;
   nextDue: string;
   alertDays?: number;
   alertType?: AlertType;
   timeline: TimelineStep[];
-  source: OverdueContract | PreventiveContract;
+  source?: OverdueContract | PreventiveContract;
 }
 
 export interface ContractDetailLocationState {
