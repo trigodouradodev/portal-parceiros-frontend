@@ -24,11 +24,11 @@ export function AlertCard({ type, days, onAction }: AlertCardProps) {
 
   const subtitle = isOverdue
     ? "Registre o retorno da cobrança para avançar na jornada."
-    : "Inicie o contato preventivo com o cliente.";
+    : "Inicie a conversa de renovação com o cliente.";
 
   const btnLabel = isOverdue
     ? "Registrar retorno de cobrança"
-    : "Registrar contato preventivo";
+    : "Marcar reunião de renovação";
 
   return (
     <div

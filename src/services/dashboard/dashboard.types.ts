@@ -163,9 +163,21 @@ export interface CollectionInstallmentDetail {
   status: string;
 }
 
+export type ResponsibleType = "COLLECTION_AGENT" | "CONSULTANT";
+
+export interface ContractResponsible {
+  id: string;
+  name: string;
+  type: ResponsibleType;
+}
+
 export interface CollectionDetail {
   contractId: string;
   contractNumber: string;
+  clientName: string;
+  clientTaxId: string;
+  address?: ClientAddress;
+  responsible?: ContractResponsible;
   contractTotalAmount: number;
   contractStartDate?: string;
   contractEndDate?: string;
