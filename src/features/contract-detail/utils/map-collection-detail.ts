@@ -13,10 +13,7 @@ import type {
   DetailMode,
   StatusColor,
 } from "@/features/contract-detail/types";
-import {
-  formatClientAddress,
-  hasValidAddress,
-} from "@/lib/contact-actions";
+import { formatClientAddress, hasValidAddress } from "@/lib/contact-actions";
 import type {
   CollectionDetail,
   OverdueContract,
@@ -151,7 +148,9 @@ export function mapCollectionDetailToView(
 
   const address =
     detail.address ??
-    (hasValidAddress(listContract?.address) ? listContract?.address : undefined);
+    (hasValidAddress(listContract?.address)
+      ? listContract?.address
+      : undefined);
 
   const clientAddress =
     address && hasValidAddress(address)
