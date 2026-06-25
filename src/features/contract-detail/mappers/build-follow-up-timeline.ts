@@ -1,24 +1,10 @@
-import { formatDueDate } from "@/features/contract-detail/utils/format-date";
 import type { TimelineStep } from "@/features/contract-detail/types";
+import { formatDate, formatDateTime } from "@/lib/format/date";
 import type { FollowUpHistoryItem } from "@/services/dashboard/dashboard.types";
 import {
   getFollowUpExpectedResultLabel,
   getFollowUpStatusLabel,
 } from "@/services/followup/followup-labels";
-
-function formatFollowUpDate(isoDate: string): string {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) {
-    return isoDate;
-  }
-  return date.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function buildFollowUpNote(followUp: FollowUpHistoryItem): string | undefined {
   const parts: string[] = [];
@@ -35,7 +21,7 @@ function buildFollowUpNote(followUp: FollowUpHistoryItem): string | undefined {
 
   if (followUp.paymentForecast) {
     parts.push(
-      `Previsão de pagamento: ${formatDueDate(followUp.paymentForecast)}`,
+      `Previsão de pagamento: ${formatDate(followUp.paymentForecast)}`,
     );
   }
 
@@ -52,7 +38,7 @@ export function buildFollowUpTimeline(
     day: `#${index + 1}`,
     label: getFollowUpStatusLabel(followUp.status),
     status: "done",
-    date: formatFollowUpDate(followUp.createdAt),
+    date: formatDateTime(followUp.createdAt),
     agent: followUp.author.name,
     note: buildFollowUpNote(followUp),
   }));

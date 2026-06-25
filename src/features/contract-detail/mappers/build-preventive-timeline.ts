@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, startOfDay } from "date-fns";
-import { formatDueDate } from "@/features/contract-detail/utils/format-date";
 import type { TimelineStep } from "@/features/contract-detail/types";
+import { formatDate, formatShortDateTime } from "@/lib/format/date";
 import type { FollowUpHistoryItem } from "@/services/dashboard/dashboard.types";
 import {
   getFollowUpExpectedResultLabel,
@@ -22,20 +22,6 @@ const PREVENTIVE_MILESTONES: PreventiveMilestone[] = [
   { id: "venc", day: "Venc", label: "Boleto vence", offset: 0 },
 ];
 
-function formatFollowUpDate(isoDate: string): string {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) {
-    return isoDate;
-  }
-
-  return date.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 function buildFollowUpNote(followUp: FollowUpHistoryItem): string | undefined {
   const parts: string[] = [];
 
@@ -51,7 +37,7 @@ function buildFollowUpNote(followUp: FollowUpHistoryItem): string | undefined {
 
   if (followUp.paymentForecast) {
     parts.push(
-      `Previsão de pagamento: ${formatDueDate(followUp.paymentForecast)}`,
+      `Previsão de pagamento: ${formatDate(followUp.paymentForecast)}`,
     );
   }
 
@@ -108,7 +94,7 @@ export function buildPreventiveTimeline(
         day: milestone.day,
         label: getFollowUpStatusLabel(followUp.status) || milestone.label,
         status: "done" as const,
-        date: formatFollowUpDate(followUp.createdAt),
+        date: formatShortDateTime(followUp.createdAt),
         agent: followUp.author.name,
         note: buildFollowUpNote(followUp),
       };
@@ -121,7 +107,7 @@ export function buildPreventiveTimeline(
         day: milestone.day,
         label: milestone.label,
         status: "current" as const,
-        date: milestone.offset === 0 ? formatDueDate(dueDate) : undefined,
+        date: milestone.offset === 0 ? formatDate(dueDate) : undefined,
       };
     }
 
@@ -130,7 +116,7 @@ export function buildPreventiveTimeline(
       day: milestone.day,
       label: milestone.label,
       status: "pending" as const,
-      date: milestone.offset === 0 ? formatDueDate(dueDate) : undefined,
+      date: milestone.offset === 0 ? formatDate(dueDate) : undefined,
     };
   });
 }

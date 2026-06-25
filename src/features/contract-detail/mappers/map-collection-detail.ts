@@ -3,10 +3,8 @@ import { TaskTab } from "@/features/dashboard/constants/task-tab";
 import type { CobrStage } from "@/features/dashboard/mocks/tasks";
 import { STAGE_INFO } from "@/features/dashboard/mocks/tasks";
 import { mapFollowupStatusToStage } from "@/features/dashboard/utils/task-mappers";
-import { buildFollowUpTimeline } from "@/features/contract-detail/utils/build-follow-up-timeline";
-import { buildPreventiveTimeline } from "@/features/contract-detail/utils/build-preventive-timeline";
-import { formatDueDate } from "@/features/contract-detail/utils/format-date";
-import { formatTaxId } from "@/features/contract-detail/utils/format-tax-id";
+import { buildFollowUpTimeline } from "@/features/contract-detail/mappers/build-follow-up-timeline";
+import { buildPreventiveTimeline } from "@/features/contract-detail/mappers/build-preventive-timeline";
 import type {
   AlertType,
   ContractDetailView,
@@ -14,6 +12,8 @@ import type {
   StatusColor,
 } from "@/features/contract-detail/types";
 import { formatClientAddress, hasValidAddress } from "@/lib/contact-actions";
+import { formatDate } from "@/lib/format/date";
+import { formatTaxId } from "@/lib/format/tax-id";
 import type {
   CollectionDetail,
   OverdueContract,
@@ -125,7 +125,7 @@ export function mapCollectionDetailToView(
 ): ContractDetailView {
   const listContract = context?.contract;
   const daysFromDue = getDaysFromDueDate(detail.installment.dueDate);
-  const nextDue = formatDueDate(detail.installment.dueDate);
+  const nextDue = formatDate(detail.installment.dueDate);
 
   const status =
     mode === TaskTab.Charge
@@ -176,10 +176,10 @@ export function mapCollectionDetailToView(
     totalInstallments: detail.totalInstallments,
     contractTotalAmount: detail.contractTotalAmount,
     contractStartDate: detail.contractStartDate
-      ? formatDueDate(detail.contractStartDate)
+      ? formatDate(detail.contractStartDate)
       : undefined,
     contractEndDate: detail.contractEndDate
-      ? formatDueDate(detail.contractEndDate)
+      ? formatDate(detail.contractEndDate)
       : undefined,
     nextDue,
     alertDays,
