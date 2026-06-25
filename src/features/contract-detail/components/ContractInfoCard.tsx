@@ -1,30 +1,24 @@
-import { fmtBRL } from "@/lib/utils";
 import { AlertBadge } from "@/features/contract-detail/components/AlertBadge";
-import type { AlertType } from "@/features/contract-detail/types";
+import type { ContractDetailView } from "@/features/contract-detail/types";
+import { fmtBRL } from "@/lib/utils";
 
 interface ContractInfoCardProps {
-  contractTotalAmount: number;
-  installmentTotalAmount: number;
-  installmentNumber: number;
-  totalInstallments: number;
-  contractStartDate?: string;
-  contractEndDate?: string;
-  nextDue: string;
-  alertType?: AlertType;
-  alertDays?: number;
+  detail: ContractDetailView;
 }
 
-export function ContractInfoCard({
-  contractTotalAmount,
-  installmentTotalAmount,
-  installmentNumber,
-  totalInstallments,
-  contractStartDate,
-  contractEndDate,
-  nextDue,
-  alertType,
-  alertDays,
-}: ContractInfoCardProps) {
+export function ContractInfoCard({ detail }: ContractInfoCardProps) {
+  const {
+    contractTotalAmount,
+    installmentTotalAmount,
+    installmentNumber,
+    totalInstallments,
+    contractStartDate,
+    contractEndDate,
+    nextDue,
+    alertType,
+    alertDays,
+  } = detail;
+
   return (
     <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
       <p className="mb-1 text-xs text-muted-foreground/80">

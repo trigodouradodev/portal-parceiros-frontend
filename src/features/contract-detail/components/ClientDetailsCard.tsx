@@ -1,25 +1,23 @@
 import { Briefcase, FileText, MapPin, User } from "lucide-react";
+import type { ContractDetailView } from "@/features/contract-detail/types";
 import type { ResponsibleType } from "@/services/dashboard/dashboard.types";
 
 interface ClientDetailsCardProps {
-  clientName: string;
-  clientTaxId?: string;
-  clientAddress?: string;
-  responsibleName?: string;
-  responsibleType?: ResponsibleType;
+  detail: ContractDetailView;
 }
 
 function getResponsibleLabel(type: ResponsibleType): string {
   return type === "COLLECTION_AGENT" ? "Agente de cobrança" : "Consultor";
 }
 
-export function ClientDetailsCard({
-  clientName,
-  clientTaxId,
-  clientAddress,
-  responsibleName,
-  responsibleType,
-}: ClientDetailsCardProps) {
+export function ClientDetailsCard({ detail }: ClientDetailsCardProps) {
+  const {
+    clientName,
+    clientTaxId,
+    clientAddress,
+    responsibleName,
+    responsibleType,
+  } = detail;
   const showResponsible = Boolean(responsibleName && responsibleType);
 
   return (

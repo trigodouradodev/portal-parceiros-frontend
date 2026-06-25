@@ -175,36 +175,17 @@ export function ContractDetailPage() {
   return (
     <PageContainer>
       <DetailPageHeader
-        businessName={detail.businessName}
-        contractCode={detail.contractCode}
+        detail={detail}
         partnerName={user?.full_name}
-        statusLabel={detail.statusLabel}
-        statusColor={detail.statusColor}
         onBack={handleBack}
       />
 
       <div className="flex-1 px-5 pb-28 md:px-8 md:pb-10">
         <div className="md:grid md:grid-cols-[1fr_400px] md:items-start md:gap-6 md:pt-6">
           <div className="flex flex-col gap-4 pt-4 md:pt-0">
-            <ContractInfoCard
-              contractTotalAmount={detail.contractTotalAmount}
-              installmentTotalAmount={detail.installmentTotalAmount}
-              installmentNumber={detail.installmentNumber}
-              totalInstallments={detail.totalInstallments}
-              contractStartDate={detail.contractStartDate}
-              contractEndDate={detail.contractEndDate}
-              nextDue={detail.nextDue}
-              alertType={detail.alertType}
-              alertDays={detail.alertDays}
-            />
+            <ContractInfoCard detail={detail} />
 
-            <ClientDetailsCard
-              clientName={detail.clientName}
-              clientTaxId={detail.clientTaxId}
-              clientAddress={detail.clientAddress}
-              responsibleName={detail.responsibleName}
-              responsibleType={detail.responsibleType}
-            />
+            <ClientDetailsCard detail={detail} />
 
             {detail.alertType !== undefined &&
               detail.alertDays !== undefined && (
