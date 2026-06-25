@@ -177,13 +177,6 @@ export function LoginPage() {
               </Button>
             </form>
           </Form>
-
-          <button
-            type="button"
-            className="mt-4 w-full text-center text-xs text-brand-navy/60 underline transition-colors hover:text-brand-navy"
-          >
-            Esqueci minha senha
-          </button>
         </CardContent>
       </Card>
 
