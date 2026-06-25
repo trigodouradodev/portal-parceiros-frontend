@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { TaskTab, isTaskTab } from "@/features/dashboard/constants/task-tab";
 import type { ContractDetailLocationState } from "@/features/contract-detail/types";
-import { mapCollectionDetailToView } from "@/features/contract-detail/utils/map-collection-detail";
+import { mapCollectionDetailToView } from "@/features/contract-detail/mappers/map-collection-detail";
 import type { DetailMode } from "@/features/contract-detail/types";
 import { useCollectionDetail } from "@/hooks/useCollectionDetail";
 import {

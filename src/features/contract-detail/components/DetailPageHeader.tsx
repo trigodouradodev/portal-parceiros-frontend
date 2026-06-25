@@ -1,8 +1,8 @@
 import { ArrowLeft } from "lucide-react";
-import type { StatusColor } from "@/features/contract-detail/types";
+import type { ContractDetailView } from "@/features/contract-detail/types";
 import { cn } from "@/lib/utils";
 
-const statusBadgeStyle: Record<StatusColor, string> = {
+const statusBadgeStyle: Record<ContractDetailView["statusColor"], string> = {
   blue: "bg-brand-yellow/20 text-brand-navy",
   amber: "bg-[#FDF3E0] text-[#854F0B]",
   red: "bg-[#FEECEC] text-[#A32D2D]",
@@ -10,22 +10,18 @@ const statusBadgeStyle: Record<StatusColor, string> = {
 };
 
 interface DetailPageHeaderProps {
-  businessName: string;
-  contractCode: string;
+  detail: ContractDetailView;
   partnerName?: string;
-  statusLabel: string;
-  statusColor: StatusColor;
   onBack: () => void;
 }
 
 export function DetailPageHeader({
-  businessName,
-  contractCode,
+  detail,
   partnerName,
-  statusLabel,
-  statusColor,
   onBack,
 }: DetailPageHeaderProps) {
+  const { businessName, contractCode, statusLabel, statusColor } = detail;
+
   return (
     <div className="bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8">
       <div className="mb-4 flex items-center justify-between">

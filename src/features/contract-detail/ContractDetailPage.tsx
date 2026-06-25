@@ -15,6 +15,7 @@ import {
 } from "@/features/dashboard/utils/launch-action";
 import { mapPreventiveContractToPrevClient } from "@/features/dashboard/utils/task-mappers";
 import { AlertCard } from "@/features/contract-detail/components/AlertCard";
+import { ClientDetailsCard } from "@/features/contract-detail/components/ClientDetailsCard";
 import { ContractInfoCard } from "@/features/contract-detail/components/ContractInfoCard";
 import { DetailPageHeader } from "@/features/contract-detail/components/DetailPageHeader";
 import { TimelineSection } from "@/features/contract-detail/components/TimelineSection";
@@ -23,6 +24,7 @@ import {
   useContractDetail,
 } from "@/features/contract-detail/hooks/useContractDetail";
 import { useActionContext } from "@/contexts/action";
+import { useAuth } from "@/contexts/auth/auth-context";
 import { useToast } from "@/contexts/toast/toast-context";
 import type {
   OverdueContract,
@@ -61,6 +63,7 @@ function ContractDetailSkeleton() {
       </div>
       <div className="flex flex-col gap-4 px-5 py-4 md:px-8">
         <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-36 rounded-2xl" />
         <Skeleton className="h-32 rounded-2xl" />
         <Skeleton className="h-64 rounded-2xl" />
       </div>
@@ -74,6 +77,7 @@ export function ContractDetailPage() {
   const mode = parseDetailMode(searchParams.get("mode"));
   const navigate = useNavigate();
   const { setActionData } = useActionContext();
+  const { user } = useAuth();
   const { showToast } = useToast();
 
   const { detail, contract, isLoading, isNotFound } = useContractDetail(
@@ -128,7 +132,7 @@ export function ContractDetailPage() {
         currentStep: detail.statusLabel,
         daysInfo: buildDaysInfoFromDetail(mode, detail.alertDays),
         phone: contract?.clientPhone,
-        address: contract?.address,
+        address: contract?.address ?? detail.address,
       },
       onComplete: () => {
         showToast(
@@ -171,27 +175,17 @@ export function ContractDetailPage() {
   return (
     <PageContainer>
       <DetailPageHeader
-        businessName={detail.businessName}
-        contractCode={detail.contractCode}
-        partnerName={detail.partnerName}
-        statusLabel={detail.statusLabel}
-        statusColor={detail.statusColor}
+        detail={detail}
+        partnerName={user?.full_name}
         onBack={handleBack}
       />
 
       <div className="flex-1 px-5 pb-28 md:px-8 md:pb-10">
         <div className="md:grid md:grid-cols-[1fr_400px] md:items-start md:gap-6 md:pt-6">
           <div className="flex flex-col gap-4 pt-4 md:pt-0">
-            <ContractInfoCard
-              installmentValue={detail.installmentValue}
-              installmentTotalAmount={detail.installmentTotalAmount}
-              installmentNumber={detail.installmentNumber}
-              totalInstallments={detail.totalInstallments}
-              contractTotalAmount={detail.contractTotalAmount}
-              contractStartDate={detail.contractStartDate}
-              contractEndDate={detail.contractEndDate}
-              nextDue={detail.nextDue}
-            />
+            <ContractInfoCard detail={detail} />
+
+            <ClientDetailsCard detail={detail} />
 
             {detail.alertType !== undefined &&
               detail.alertDays !== undefined && (

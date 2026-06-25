@@ -1,7 +1,9 @@
 import type { TaskTab } from "@/features/dashboard/constants/task-tab";
 import type {
+  ClientAddress,
   OverdueContract,
   PreventiveContract,
+  ResponsibleType,
 } from "@/services/dashboard/dashboard.types";
 
 export type DetailMode = typeof TaskTab.Charge | typeof TaskTab.Preventive;
@@ -25,8 +27,12 @@ export interface ContractDetailView {
   mode: DetailMode;
   businessName: string;
   clientName: string;
+  clientTaxId?: string;
+  clientAddress?: string;
+  address?: ClientAddress;
+  responsibleName?: string;
+  responsibleType?: ResponsibleType;
   contractCode: string;
-  partnerName?: string;
   statusLabel: string;
   statusColor: StatusColor;
   installmentValue: number;
