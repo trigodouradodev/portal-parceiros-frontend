@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth/auth-context";
-import { useToast } from "@/contexts/toast/toast-context";
 
 const loginSchema = z.object({
   email: z
@@ -32,32 +31,51 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const { login } = useAuth();
-  const { showToast } = useToast();
   const navigate = useNavigate();
   const [showPwd, setShowPwd] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
 
+  const email = form.watch("email");
+  const password = form.watch("password");
+  const isSubmitting = form.formState.isSubmitting;
+  const canSubmit =
+    email.trim() !== "" && password.trim() !== "" && !isSubmitting;
+
+  useEffect(() => {
+    if (formError) {
+      setFormError(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear server error when user edits credentials
+  }, [email, password]);
+
   const onSubmit = async (values: LoginFormValues) => {
+    setFormError(null);
+
     try {
       await login(values);
       navigate("/", { replace: true });
     } catch (err: unknown) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        showToast("E-mail ou senha inválidos", { variant: "destructive" });
-        return;
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401) {
+          setFormError("E-mail ou senha incorretos. Tente novamente.");
+          return;
+        }
+        if (!err.response) {
+          setFormError(
+            "Sem conexão. Verifique sua internet e tente novamente.",
+          );
+          return;
+        }
       }
 
-      showToast("Erro inesperado. Tente novamente em alguns instantes.", {
-        variant: "destructive",
-      });
+      setFormError("Erro inesperado. Tente novamente em alguns instantes.");
     }
   };
-
-  const isSubmitting = form.formState.isSubmitting;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-brand-yellow px-4">
@@ -136,11 +154,17 @@ export function LoginPage() {
                 )}
               />
 
+              {formError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {formError}
+                </p>
+              )}
+
               <Button
                 type="submit"
                 variant="default"
                 className="mt-1 h-10 w-full text-sm font-semibold"
-                disabled={isSubmitting}
+                disabled={!canSubmit}
               >
                 {isSubmitting ? (
                   <>

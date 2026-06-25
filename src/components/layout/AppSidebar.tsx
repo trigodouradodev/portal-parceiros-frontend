@@ -1,5 +1,4 @@
 import { LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { AureaLogoMark } from "@/components/brand/AureaLogo";
 import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
 import { useAuth } from "@/contexts/auth/auth-context";
@@ -9,21 +8,17 @@ import { cn } from "@/lib/utils";
 interface AppSidebarProps {
   activeTab: NavTab;
   onNavigate: (tab: NavTab) => void;
+  onRequestLogout: () => void;
   className?: string;
 }
 
 export function AppSidebar({
   activeTab,
   onNavigate,
+  onRequestLogout,
   className,
 }: AppSidebarProps) {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
+  const { user } = useAuth();
 
   const displayName = user?.full_name ?? "Parceiro";
   const roleLabel = user?.role ?? "Agente";
@@ -85,7 +80,7 @@ export function AppSidebar({
       <div className="px-3 pb-6">
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={onRequestLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/40 transition-all hover:bg-white/5 hover:text-white/70"
         >
           <LogOut size={18} />
