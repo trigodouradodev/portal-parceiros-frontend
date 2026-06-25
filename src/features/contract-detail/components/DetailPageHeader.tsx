@@ -2,10 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import type { ContractDetailView } from "@/features/contract-detail/types";
 import { cn } from "@/lib/utils";
 
-const statusBadgeStyle: Record<
-  ContractDetailView["statusColor"],
-  string
-> = {
+const statusBadgeStyle: Record<ContractDetailView["statusColor"], string> = {
   blue: "bg-brand-yellow/20 text-brand-navy",
   amber: "bg-[#FDF3E0] text-[#854F0B]",
   red: "bg-[#FEECEC] text-[#A32D2D]",
