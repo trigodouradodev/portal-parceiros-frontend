@@ -50,7 +50,9 @@ function mapInteractionToStep(
   };
 }
 
-export function buildActivityTimeline(activity: ActivityHistory): TimelineStep[] {
+export function buildActivityTimeline(
+  activity: ActivityHistory,
+): TimelineStep[] {
   const tasksChronological = [...activity.tasks].reverse();
   const interactionsChronological = [...activity.interactions].reverse();
 

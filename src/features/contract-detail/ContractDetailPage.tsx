@@ -84,7 +84,11 @@ export function ContractDetailPage() {
   const handleRegisterAction = () => {
     writeTaskTabCookie(readTaskTabFromCookie());
 
-    if (mode === TaskTab.Charge && listItem && isOverdueCollectionItem(listItem)) {
+    if (
+      mode === TaskTab.Charge &&
+      listItem &&
+      isOverdueCollectionItem(listItem)
+    ) {
       setActionData(
         buildChargeActionPayload(listItem, () => {
           showToast("Ação registrada.");

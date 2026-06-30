@@ -66,7 +66,9 @@ export function mapFollowupStatusToStage(
   return "initial";
 }
 
-export function mapOverdueItemToChargeClient(item: OverdueCollectionItem): ChargeClient {
+export function mapOverdueItemToChargeClient(
+  item: OverdueCollectionItem,
+): ChargeClient {
   const { installment, contract, client, task } = item;
   const followup = item.followup;
   const activityType: ActivityType = task
@@ -89,7 +91,10 @@ export function mapOverdueItemToChargeClient(item: OverdueCollectionItem): Charg
     phone: client.phone ?? "",
     address: client.address,
     activityType,
-    stage: mapFollowupStatusToStage(followup?.latestStatus, followup?.count ?? 0),
+    stage: mapFollowupStatusToStage(
+      followup?.latestStatus,
+      followup?.count ?? 0,
+    ),
     lastAction: followup?.latestStatus
       ? `${followup.count} follow-up(s) · ${getFollowUpStatusLabel(followup.latestStatus)}`
       : null,

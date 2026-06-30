@@ -64,8 +64,7 @@ export function DashboardPage() {
     fetchNextPage,
   });
 
-  const overdueItems =
-    overdueData?.pages.flatMap((page) => page.items) ?? [];
+  const overdueItems = overdueData?.pages.flatMap((page) => page.items) ?? [];
   const preventiveItems =
     preventiveData?.pages.flatMap((page) => page.items) ?? [];
   const preventiveMapped = preventiveItems.map((item) =>
