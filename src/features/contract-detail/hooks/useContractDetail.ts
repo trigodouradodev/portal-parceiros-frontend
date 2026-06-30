@@ -10,14 +10,14 @@ import {
   usePreventiveContractsInfinite,
 } from "@/hooks/useDashboard";
 import type {
-  OverdueContract,
-  PreventiveContract,
+  OverdueCollectionItem,
+  PreventiveCollectionItem,
 } from "@/services/dashboard/dashboard.types";
 
-function isOverdueContract(
-  contract: OverdueContract | PreventiveContract,
-): contract is OverdueContract {
-  return "firstOverdueInstallment" in contract;
+export function isOverdueCollectionItem(
+  item: OverdueCollectionItem | PreventiveCollectionItem,
+): item is OverdueCollectionItem {
+  return "daysOverdue" in item.installment;
 }
 
 function parseInstallmentNumber(value: string | null): number | undefined {
@@ -26,19 +26,10 @@ function parseInstallmentNumber(value: string | null): number | undefined {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-function getInstallmentFromContract(
-  contract: OverdueContract | PreventiveContract,
-  mode: DetailMode,
-): number | undefined {
-  if (mode === TaskTab.Charge && isOverdueContract(contract)) {
-    return contract.firstOverdueInstallment.installmentNumber;
-  }
-
-  if (mode === TaskTab.Preventive && !isOverdueContract(contract)) {
-    return contract.nextInstallment.installmentNumber;
-  }
-
-  return undefined;
+function getInstallmentFromListItem(
+  item: OverdueCollectionItem | PreventiveCollectionItem,
+): number {
+  return item.installment.number;
 }
 
 export function useContractDetail(contractId: string, mode: DetailMode) {
@@ -49,66 +40,76 @@ export function useContractDetail(contractId: string, mode: DetailMode) {
   const overdueQuery = useOverdueContractsInfinite(30);
   const preventiveQuery = usePreventiveContractsInfinite(30, 15);
 
-  const overdueContracts = useMemo(
-    () => overdueQuery.data?.pages.flatMap((page) => page.contracts) ?? [],
+  const overdueItems = useMemo(
+    () => overdueQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [overdueQuery.data?.pages],
   );
-  const preventiveContracts = useMemo(
-    () => preventiveQuery.data?.pages.flatMap((page) => page.contracts) ?? [],
+  const preventiveItems = useMemo(
+    () => preventiveQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [preventiveQuery.data?.pages],
   );
 
-  const listContract = useMemo(() => {
-    if (mode === TaskTab.Charge) {
-      const fromCache = overdueContracts.find(
-        (c) => c.contractId === contractId,
+  const installmentFromUrl = parseInstallmentNumber(
+    searchParams.get("installment"),
+  );
+
+  const listItem = useMemo(() => {
+    const matchByInstallment = (
+      items: (OverdueCollectionItem | PreventiveCollectionItem)[],
+    ) =>
+      items.find(
+        (item) =>
+          item.contract.id === contractId &&
+          (installmentFromUrl === undefined ||
+            item.installment.number === installmentFromUrl),
       );
+
+    if (mode === TaskTab.Charge) {
+      const fromCache = matchByInstallment(overdueItems);
       if (fromCache) return fromCache;
 
-      const fromState = locationState?.contract;
-      if (fromState && isOverdueContract(fromState)) {
+      const fromState = locationState?.item;
+      if (fromState && isOverdueCollectionItem(fromState)) {
         return fromState;
       }
       return undefined;
     }
 
-    const fromCache = preventiveContracts.find(
-      (c) => c.contractId === contractId,
-    );
+    const fromCache = matchByInstallment(preventiveItems);
     if (fromCache) return fromCache;
 
-    const fromState = locationState?.contract;
-    if (fromState && !isOverdueContract(fromState)) {
+    const fromState = locationState?.item;
+    if (fromState && !isOverdueCollectionItem(fromState)) {
       return fromState;
     }
     return undefined;
   }, [
     mode,
     contractId,
-    overdueContracts,
-    preventiveContracts,
-    locationState?.contract,
+    installmentFromUrl,
+    overdueItems,
+    preventiveItems,
+    locationState?.item,
   ]);
 
   const installmentNumber = useMemo(() => {
-    const fromUrl = parseInstallmentNumber(searchParams.get("installment"));
-    if (fromUrl) return fromUrl;
+    if (installmentFromUrl) return installmentFromUrl;
 
-    if (listContract) {
-      return getInstallmentFromContract(listContract, mode);
+    if (listItem) {
+      return getInstallmentFromListItem(listItem);
     }
 
     return undefined;
-  }, [searchParams, listContract, mode]);
+  }, [installmentFromUrl, listItem]);
 
   const detailQuery = useCollectionDetail(contractId, installmentNumber);
 
   const detail = useMemo(() => {
     if (!detailQuery.data) return undefined;
     return mapCollectionDetailToView(detailQuery.data, mode, {
-      contract: listContract,
+      item: listItem,
     });
-  }, [detailQuery.data, mode, listContract]);
+  }, [detailQuery.data, mode, listItem]);
 
   const isLoading = detailQuery.isLoading;
   const isNotFound =
@@ -118,7 +119,9 @@ export function useContractDetail(contractId: string, mode: DetailMode) {
 
   return {
     detail,
-    contract: listContract,
+    listItem,
+    /** @deprecated Use listItem */
+    contract: listItem,
     collectionDetail: detailQuery.data,
     installmentNumber,
     isLoading,
