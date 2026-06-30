@@ -73,7 +73,10 @@ export function DashboardPage() {
   );
 
   const getChargeStage = (item: OverdueCollectionItem) =>
-    mapFollowupStatusToStage(item.followup.latestStatus, item.followup.count);
+    mapFollowupStatusToStage(
+      item.followup?.latestStatus,
+      item.followup?.count ?? 0,
+    );
 
   const preventivePending = preventiveMapped.filter(
     (c) => c.followupCount === 0,

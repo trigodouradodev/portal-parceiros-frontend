@@ -137,7 +137,11 @@ export interface OverdueCollectionItem {
   client: ClientInfo;
   responsible?: ContractResponsible;
   task: ActivityTaskSummary | null;
-  followup: FollowupSummary;
+  /**
+   * O overdue do backend (dev) não retorna `followup` neste endpoint — apenas
+   * `task` (régua). Mantido opcional para compatibilidade e robustez.
+   */
+  followup?: FollowupSummary;
 }
 
 export interface OverduePagination {

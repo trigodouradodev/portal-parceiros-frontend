@@ -20,8 +20,8 @@ export function buildChargeActionPayload(
 ): SetActionDataPayload {
   const { installment, contract, client, followup } = item;
   const stage = mapFollowupStatusToStage(
-    followup.latestStatus,
-    followup.count,
+    followup?.latestStatus,
+    followup?.count ?? 0,
   );
   const overdueDays = installment.daysOverdue;
 
