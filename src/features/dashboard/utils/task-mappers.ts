@@ -5,10 +5,16 @@ import type {
   PrevClient,
 } from "@/features/dashboard/mocks/tasks";
 import type {
-  OverdueContract,
+  ActivityChannel,
+  OverdueCollectionItem,
   PreventiveContract,
 } from "@/services/dashboard/dashboard.types";
 import { getFollowUpStatusLabel } from "@/services/followup/followup-labels";
+
+function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
+  if (channel === "client_visit") return "visit";
+  return "phone";
+}
 
 /**
  * Maps backend latestFollowupStatus + followupCount to frontend CobrStage.
@@ -56,32 +62,33 @@ export function mapFollowupStatusToStage(
   return "initial";
 }
 
-export function mapOverdueContractToCobrClient(
-  contract: OverdueContract,
-): CobrClient {
-  const installment = contract.firstOverdueInstallment;
-  const activityType: ActivityType =
-    installment.daysOverdue > 30 ? "visit" : "phone";
+export function mapOverdueItemToCobrClient(item: OverdueCollectionItem): CobrClient {
+  const { installment, contract, client, followup, task } = item;
+  const activityType: ActivityType = task
+    ? mapChannelToActivityType(task.channel)
+    : installment.daysOverdue > 30
+      ? "visit"
+      : "phone";
 
   return {
-    id: contract.contractId,
-    name: contract.clientName,
-    contract: contract.contractNumber,
-    parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
+    id: contract.id,
+    name: client.name,
+    contract: contract.number,
+    parcela: installment.label,
     value: installment.pendingAmount,
     overdueDays: installment.daysOverdue,
-    phone: contract.clientPhone ?? "",
-    address: contract.address,
+    phone: client.phone ?? "",
+    address: client.address,
     activityType,
-    stage: mapFollowupStatusToStage(
-      installment.latestFollowupStatus,
-      installment.followupCount,
-    ),
-    lastAction: installment.latestFollowupStatus
-      ? `${installment.followupCount} follow-up(s) · ${getFollowUpStatusLabel(installment.latestFollowupStatus)}`
+    stage: mapFollowupStatusToStage(followup.latestStatus, followup.count),
+    lastAction: followup.latestStatus
+      ? `${followup.count} follow-up(s) · ${getFollowUpStatusLabel(followup.latestStatus)}`
       : null,
   };
 }
+
+/** @deprecated Use mapOverdueItemToCobrClient */
+export const mapOverdueContractToCobrClient = mapOverdueItemToCobrClient;
 
 export function mapPreventiveContractToPrevClient(
   contract: PreventiveContract,

@@ -8,20 +8,20 @@ import type {
   SetActionDataPayload,
   ActionResult,
 } from "@/contexts/action/action-context";
-import type { OverdueContract } from "@/services/dashboard/dashboard.types";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 import { fmtBRL } from "@/lib/utils";
 
 export const CHARGE_REGISTER_PATH = "/register/charge";
 export const PREVENTIVE_REGISTER_PATH = "/register/preventive";
 
 export function buildChargeActionPayload(
-  contract: OverdueContract,
+  item: OverdueCollectionItem,
   onComplete: (result: ActionResult) => void,
 ): SetActionDataPayload {
-  const installment = contract.firstOverdueInstallment;
+  const { installment, contract, client, followup } = item;
   const stage = mapFollowupStatusToStage(
-    installment.latestFollowupStatus,
-    installment.followupCount,
+    followup.latestStatus,
+    followup.count,
   );
   const overdueDays = installment.daysOverdue;
 
@@ -29,16 +29,16 @@ export function buildChargeActionPayload(
     mode: TaskTab.Charge,
     cobrStage: stage,
     client: {
-      id: contract.contractId,
-      installmentNumber: installment.installmentNumber,
-      name: contract.clientName,
-      contract: contract.contractNumber,
-      parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
+      id: contract.id,
+      installmentNumber: installment.number,
+      name: client.name,
+      contract: contract.number,
+      parcela: installment.label,
       value: fmtBRL(installment.pendingAmount),
       currentStep: stage,
       daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
-      phone: contract.clientPhone,
-      address: contract.address,
+      phone: client.phone,
+      address: client.address,
     },
     onComplete,
   };
