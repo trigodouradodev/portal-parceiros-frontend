@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, startOfDay } from "date-fns";
 import { TaskTab } from "@/features/dashboard/constants/task-tab";
-import type { CobrStage } from "@/features/dashboard/mocks/tasks";
+import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import { STAGE_INFO } from "@/features/dashboard/mocks/tasks";
 import { mapFollowupStatusToStage } from "@/features/dashboard/utils/task-mappers";
 import { getReguaBadge } from "@/features/dashboard/utils/collection-stage";
@@ -67,7 +67,7 @@ function getChargeStatus(
     const stage = mapFollowupStatusToStage(
       latestStatus,
       detail.followups.length,
-    ) as CobrStage;
+    ) as ChargeStage;
     const stageInfo = STAGE_INFO[stage];
     return {
       label: stageInfo.label,

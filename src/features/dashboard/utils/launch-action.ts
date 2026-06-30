@@ -27,7 +27,7 @@ export function buildChargeActionPayload(
 
   return {
     mode: TaskTab.Charge,
-    cobrStage: stage,
+    chargeStage: stage,
     client: {
       id: contract.id,
       installmentNumber: installment.number,

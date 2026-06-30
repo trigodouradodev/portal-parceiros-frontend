@@ -40,9 +40,9 @@ export function RegisterChargeActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const createFollowUp = useCreateFollowUp();
-  const { client, cobrStage, onComplete } = useActionContext();
+  const { client, chargeStage, onComplete } = useActionContext();
   const [step, setStep] = useState<Step>(
-    cobrStage === "promise" ? "boleto" : "outcome",
+    chargeStage === "promise" ? "boleto" : "outcome",
   );
   const [outcome, setOutcome] = useState<string | null>(null);
   const [boletoValue, setBoletoValue] = useState(client?.value ?? "");
@@ -53,16 +53,16 @@ export function RegisterChargeActionPage() {
     navigate(-1);
   };
 
-  if (!client || !cobrStage) {
+  if (!client || !chargeStage) {
     return null;
   }
 
-  const title = CHARGE_TITLES[cobrStage] ?? "Registrar ação";
+  const title = CHARGE_TITLES[chargeStage] ?? "Registrar ação";
   const clientPhone = client.phone ?? "";
   const clientFirstName = getFirstName(client.name);
   const waTemplates = getWaTemplates(client);
   const saving = createFollowUp.isPending;
-  const outcomeOptions = getOutcomeOptions(cobrStage, {
+  const outcomeOptions = getOutcomeOptions(chargeStage, {
     no_return_1: <PhoneOff size={18} />,
     no_return_2: <PhoneOff size={18} />,
     sem_previsao: <Calendar size={18} />,
@@ -113,12 +113,12 @@ export function RegisterChargeActionPage() {
   }
 
   const stepIndicator =
-    cobrStage !== "fup" && cobrStage !== "promise" ? (
+    chargeStage !== "fup" && chargeStage !== "promise" ? (
       <RegisterStepIndicator
         steps={["Resultado", "Observações"]}
         currentStep={step === "outcome" ? 0 : 1}
       />
-    ) : cobrStage === "fup" ? (
+    ) : chargeStage === "fup" ? (
       <RegisterStagePills
         steps={["Ligação", "Promessa", "Boleto", "FUP"]}
         activeIndex={3}

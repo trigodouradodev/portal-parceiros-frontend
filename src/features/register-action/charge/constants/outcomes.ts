@@ -1,9 +1,9 @@
 import type { OutcomeColorKey } from "../../constants/outcome-colors";
 import type { OutcomeOption } from "../../components/OutcomeOptionList";
-import type { CobrStage } from "@/features/dashboard/mocks/tasks";
+import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import { CALL_OUTCOMES } from "@/features/dashboard/mocks/tasks";
 
-export const CHARGE_TITLES: Partial<Record<CobrStage, string>> = {
+export const CHARGE_TITLES: Partial<Record<ChargeStage, string>> = {
   initial: "Registrar ligação inicial",
   second_attempt: "Registrar 2ª tentativa",
   third_attempt: "Registrar 3ª tentativa",
@@ -21,7 +21,7 @@ export function getOutcomeColor(value: string): OutcomeColorKey {
 }
 
 export function getOutcomeOptions(
-  stage: CobrStage,
+  stage: ChargeStage,
   icons: Record<string, OutcomeOption["icon"]>,
 ): OutcomeOption[] {
   const outcomes = CALL_OUTCOMES[stage] ?? CALL_OUTCOMES.initial ?? [];

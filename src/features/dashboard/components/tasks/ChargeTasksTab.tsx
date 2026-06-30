@@ -2,21 +2,21 @@ import type { RefObject } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  CobrTaskCard,
+  ChargeTaskCard,
   DoneCard,
 } from "@/features/dashboard/components/task-cards";
 import { TaskCardSkeleton } from "@/features/dashboard/components/tasks/TaskCardSkeleton";
-import type { CobrStage } from "@/features/dashboard/mocks/tasks";
-import { mapOverdueItemToCobrClient } from "@/features/dashboard/utils/task-mappers";
+import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
+import { mapOverdueItemToChargeClient } from "@/features/dashboard/utils/task-mappers";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 const GRID_CLASS =
   "grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
-interface CobrTasksTabProps {
+interface ChargeTasksTabProps {
   isLoading: boolean;
   items: OverdueCollectionItem[];
-  getStage: (item: OverdueCollectionItem) => CobrStage;
+  getStage: (item: OverdueCollectionItem) => ChargeStage;
   onOpen: (item: OverdueCollectionItem) => void;
   onAction: (item: OverdueCollectionItem) => void;
   onReopen: (installmentId: string) => void;
@@ -24,7 +24,7 @@ interface CobrTasksTabProps {
   loadMoreRef: RefObject<HTMLDivElement | null>;
 }
 
-export function CobrTasksTab({
+export function ChargeTasksTab({
   isLoading,
   items,
   getStage,
@@ -33,7 +33,7 @@ export function CobrTasksTab({
   onReopen,
   hasNextPage,
   loadMoreRef,
-}: CobrTasksTabProps) {
+}: ChargeTasksTabProps) {
   if (isLoading) {
     return (
       <div className={GRID_CLASS}>
@@ -51,9 +51,9 @@ export function CobrTasksTab({
   return (
     <div className={GRID_CLASS}>
       {pending.map((item) => (
-        <CobrTaskCard
+        <ChargeTaskCard
           key={item.installment.id}
-          client={mapOverdueItemToCobrClient(item)}
+          client={mapOverdueItemToChargeClient(item)}
           stage={getStage(item)}
           onOpen={() => onOpen(item)}
           onAction={() => onAction(item)}

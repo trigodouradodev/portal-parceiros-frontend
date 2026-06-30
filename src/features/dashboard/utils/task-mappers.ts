@@ -1,7 +1,7 @@
 import type {
   ActivityType,
-  CobrClient,
-  CobrStage,
+  ChargeClient,
+  ChargeStage,
   PrevClient,
 } from "@/features/dashboard/mocks/tasks";
 import type {
@@ -21,12 +21,12 @@ function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
 }
 
 /**
- * Maps backend latestFollowupStatus + followupCount to frontend CobrStage.
+ * Maps backend latestFollowupStatus + followupCount to frontend ChargeStage.
  */
 export function mapFollowupStatusToStage(
   status: string | undefined,
   followupCount = 0,
-): CobrStage {
+): ChargeStage {
   if (!status) {
     return "initial";
   }
@@ -66,7 +66,7 @@ export function mapFollowupStatusToStage(
   return "initial";
 }
 
-export function mapOverdueItemToCobrClient(item: OverdueCollectionItem): CobrClient {
+export function mapOverdueItemToChargeClient(item: OverdueCollectionItem): ChargeClient {
   const { installment, contract, client, followup, task } = item;
   const activityType: ActivityType = task
     ? mapChannelToActivityType(task.channel)
@@ -95,9 +95,6 @@ export function mapOverdueItemToCobrClient(item: OverdueCollectionItem): CobrCli
     reguaBadge,
   };
 }
-
-/** @deprecated Use mapOverdueItemToCobrClient */
-export const mapOverdueContractToCobrClient = mapOverdueItemToCobrClient;
 
 export function mapPreventiveItemToPrevClient(
   item: PreventiveCollectionItem,

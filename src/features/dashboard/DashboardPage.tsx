@@ -72,7 +72,7 @@ export function DashboardPage() {
     mapPreventiveItemToPrevClient(item),
   );
 
-  const getCobrStage = (item: OverdueCollectionItem) =>
+  const getChargeStage = (item: OverdueCollectionItem) =>
     mapFollowupStatusToStage(item.followup.latestStatus, item.followup.count);
 
   const preventivePending = preventiveMapped.filter(
@@ -85,16 +85,18 @@ export function DashboardPage() {
       label: "Contato registrado",
     }));
 
-  const cobrPending = overdueItems.filter((item) => getCobrStage(item) !== "paid");
+  const chargePending = overdueItems.filter(
+    (item) => getChargeStage(item) !== "paid",
+  );
 
-  const totalActions = cobrPending.length + preventivePending.length;
+  const totalActions = chargePending.length + preventivePending.length;
 
   const ativos = dashboardData?.activeContracts ?? 0;
   const vencemHoje = dashboardData?.dueTodayContracts ?? 0;
   const emAtraso = dashboardData?.overdueContracts ?? 0;
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
-  const handleCobrAction = (item: OverdueCollectionItem) => {
+  const handleChargeAction = (item: OverdueCollectionItem) => {
     writeTaskTabCookie(readTaskTabFromCookie());
     setActionData(
       buildChargeActionPayload(item, () => {
@@ -114,7 +116,7 @@ export function DashboardPage() {
     navigate(getPreventiveRegisterPath());
   };
 
-  const handleCobrOpen = (item: OverdueCollectionItem) => {
+  const handleChargeOpen = (item: OverdueCollectionItem) => {
     writeTaskTabCookie(TaskTab.Charge);
     const installment = item.installment.number;
     navigate(
@@ -145,7 +147,7 @@ export function DashboardPage() {
     );
   };
 
-  const handleCobrReopen = () => {
+  const handleChargeReopen = () => {
     showToast("Reabertura de tarefa em breve.", { variant: "info" });
   };
 
@@ -212,15 +214,15 @@ export function DashboardPage() {
           </div>
 
           <TasksTabs
-            chargeCount={cobrPending.length}
+            chargeCount={chargePending.length}
             preventiveCount={preventivePending.length}
             charge={{
               isLoading: isLoadingOverdue,
               items: overdueItems,
-              getStage: getCobrStage,
-              onOpen: handleCobrOpen,
-              onAction: handleCobrAction,
-              onReopen: handleCobrReopen,
+              getStage: getChargeStage,
+              onOpen: handleChargeOpen,
+              onAction: handleChargeAction,
+              onReopen: handleChargeReopen,
               hasNextPage,
               loadMoreRef,
             }}

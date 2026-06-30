@@ -6,18 +6,18 @@ import { getInitials } from "@/lib/user-display";
 import { fmtBRL } from "@/lib/utils";
 import {
   STAGE_INFO,
-  type CobrClient,
-  type CobrStage,
+  type ChargeClient,
+  type ChargeStage,
 } from "@/features/dashboard/mocks/tasks";
 
-export function CobrTaskCard({
+export function ChargeTaskCard({
   client,
   stage,
   onOpen,
   onAction,
 }: {
-  client: CobrClient;
-  stage: CobrStage;
+  client: ChargeClient;
+  stage: ChargeStage;
   onOpen: () => void;
   onAction: () => void;
 }) {
