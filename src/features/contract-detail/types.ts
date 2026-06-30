@@ -1,8 +1,8 @@
 import type { TaskTab } from "@/features/dashboard/constants/task-tab";
 import type {
   ClientAddress,
-  OverdueContract,
-  PreventiveContract,
+  OverdueCollectionItem,
+  PreventiveCollectionItem,
   ResponsibleType,
 } from "@/services/dashboard/dashboard.types";
 
@@ -46,10 +46,10 @@ export interface ContractDetailView {
   alertDays?: number;
   alertType?: AlertType;
   timeline: TimelineStep[];
-  source?: OverdueContract | PreventiveContract;
+  source?: OverdueCollectionItem | PreventiveCollectionItem;
 }
 
 export interface ContractDetailLocationState {
-  contract?: OverdueContract | PreventiveContract;
+  item?: OverdueCollectionItem | PreventiveCollectionItem;
   mode?: DetailMode;
 }

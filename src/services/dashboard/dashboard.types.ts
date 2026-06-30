@@ -191,12 +191,12 @@ export interface PreventiveCollectionPage {
   pagination: PreventivePagination;
 }
 
-export interface FollowUpAuthor {
+export interface HistoryAuthor {
   id: string;
   name: string;
 }
 
-export interface FollowUpGeolocation {
+export interface Geolocation {
   latitude: number;
   longitude: number;
 }
@@ -208,30 +208,50 @@ export interface FollowUpHistoryItem {
   expectedResult?: string;
   paymentForecast?: string;
   createdAt: string;
-  author: FollowUpAuthor;
-  geolocation?: FollowUpGeolocation;
+  author: HistoryAuthor;
+  geolocation?: Geolocation;
 }
 
-export interface CollectionInstallmentDetail {
+export interface ActivityInteractionHistoryItem {
   id: string;
-  installmentNumber: number;
+  channel: string;
+  result: string;
+  observation?: string;
+  promiseDate?: string;
+  createdAt: string;
+  author: HistoryAuthor;
+  geolocation?: Geolocation;
+}
+
+export interface ActivityHistory {
+  tasks: ActivityTaskSummary[];
+  interactions: ActivityInteractionHistoryItem[];
+}
+
+export interface ContractDetailInfo {
+  id: string;
+  number: string;
+  totalInstallments: number;
+  totalAmount: number;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface InstallmentDetailInfo {
+  id: string;
+  number: number;
+  label: string;
   dueDate: string;
   totalAmount: number;
   pendingAmount: number;
-  status: string;
+  status: InstallmentStatus;
 }
 
 export interface CollectionDetail {
-  contractId: string;
-  contractNumber: string;
-  clientName: string;
-  clientTaxId: string;
-  address?: ClientAddress;
+  contract: ContractDetailInfo;
+  client: ClientInfo;
   responsible?: ContractResponsible;
-  contractTotalAmount: number;
-  contractStartDate?: string;
-  contractEndDate?: string;
-  totalInstallments: number;
-  installment: CollectionInstallmentDetail;
-  followUps: FollowUpHistoryItem[];
+  installment: InstallmentDetailInfo;
+  activity: ActivityHistory;
+  followups: FollowUpHistoryItem[];
 }
