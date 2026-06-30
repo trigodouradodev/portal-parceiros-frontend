@@ -15,6 +15,7 @@ export type ActivityType = "phone" | "visit";
 
 export interface PrevClient {
   id: string;
+  installmentId?: string;
   name: string;
   contract: string;
   parcela: string;

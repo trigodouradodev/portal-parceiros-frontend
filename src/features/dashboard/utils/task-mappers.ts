@@ -7,7 +7,7 @@ import type {
 import type {
   ActivityChannel,
   OverdueCollectionItem,
-  PreventiveContract,
+  PreventiveCollectionItem,
 } from "@/services/dashboard/dashboard.types";
 import { getFollowUpStatusLabel } from "@/services/followup/followup-labels";
 import {
@@ -99,27 +99,31 @@ export function mapOverdueItemToCobrClient(item: OverdueCollectionItem): CobrCli
 /** @deprecated Use mapOverdueItemToCobrClient */
 export const mapOverdueContractToCobrClient = mapOverdueItemToCobrClient;
 
-export function mapPreventiveContractToPrevClient(
-  contract: PreventiveContract,
+export function mapPreventiveItemToPrevClient(
+  item: PreventiveCollectionItem,
 ): PrevClient {
-  const installment = contract.nextInstallment;
+  const { installment, contract, client, followup } = item;
   const activityType: ActivityType =
     installment.daysUntilDue > 7 ? "visit" : "phone";
 
   return {
-    id: contract.contractId,
-    name: contract.clientName,
-    contract: contract.contractNumber,
-    parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
+    id: contract.id,
+    installmentId: installment.id,
+    name: client.name,
+    contract: contract.number,
+    parcela: installment.label,
     value: installment.pendingAmount,
     daysUntilDue: installment.daysUntilDue,
-    installmentNumber: installment.installmentNumber,
-    followupCount: installment.followupCount,
-    phone: contract.clientPhone ?? "",
-    address: contract.address,
+    installmentNumber: installment.number,
+    followupCount: followup.count,
+    phone: client.phone ?? "",
+    address: client.address,
     activityType,
   };
 }
+
+/** @deprecated Use mapPreventiveItemToPrevClient */
+export const mapPreventiveContractToPrevClient = mapPreventiveItemToPrevClient;
 
 /** Normaliza daysInfo para templates WhatsApp do fluxo preventivo. */
 export function formatPreventiveDaysInfo(daysUntilDue: number): string {

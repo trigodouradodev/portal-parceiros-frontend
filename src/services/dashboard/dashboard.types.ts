@@ -153,48 +153,41 @@ export interface OverdueCollectionPage {
   pagination: OverduePagination;
 }
 
-/** @deprecated Legacy ref — preventive list still uses old shape until feat/preventive-list-shape */
+/** @deprecated Legacy ref — removed from new collection shapes */
 export interface CollectionAgentRef {
   id: string;
   name: string;
 }
 
-export interface UpcomingInstallmentSummary {
+export interface UpcomingInstallmentInfo {
   id: string;
-  installmentNumber: number;
-  dueDate: string; // ISO date string
+  number: number;
+  label: string;
+  dueDate: string;
   daysUntilDue: number;
   pendingAmount: number;
   totalAmount: number;
-  status: string;
-  followupCount: number;
-  latestFollowupStatus?: string;
+  status: InstallmentStatus;
 }
 
-export interface PreventiveContract {
-  contractId: string;
-  contractNumber: string;
-  totalInstallments: number;
-  clientName: string;
-  clientTaxId: string;
-  clientPhone?: string;
-  address?: ClientAddress;
-  consultantName?: string;
-  companyName?: string;
-  collectionAgent?: CollectionAgentRef;
-  nextInstallment: UpcomingInstallmentSummary;
+export interface PreventiveCollectionItem {
+  installment: UpcomingInstallmentInfo;
+  contract: ContractInfo;
+  client: ClientInfo;
+  responsible?: ContractResponsible;
+  followup: FollowupSummary;
 }
 
 export interface PreventivePagination {
   page: number;
   limit: number;
-  totalContracts: number;
+  total: number;
   totalPages: number;
   hasNextPage: boolean;
 }
 
 export interface PreventiveCollectionPage {
-  contracts: PreventiveContract[];
+  items: PreventiveCollectionItem[];
   pagination: PreventivePagination;
 }
 

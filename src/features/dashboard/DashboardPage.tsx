@@ -17,7 +17,7 @@ import {
 import type { PrevClient } from "@/features/dashboard/mocks/tasks";
 import {
   mapFollowupStatusToStage,
-  mapPreventiveContractToPrevClient,
+  mapPreventiveItemToPrevClient,
 } from "@/features/dashboard/utils/task-mappers";
 import {
   buildChargeActionPayload,
@@ -32,7 +32,10 @@ import {
   useOverdueContractsInfinite,
   usePreventiveContractsInfinite,
 } from "@/hooks/useDashboard";
-import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
+import type {
+  OverdueCollectionItem,
+  PreventiveCollectionItem,
+} from "@/services/dashboard/dashboard.types";
 
 interface ShellContext {
   onMobileLogout?: () => void;
@@ -66,10 +69,10 @@ export function DashboardPage() {
 
   const overdueItems =
     overdueData?.pages.flatMap((page) => page.items) ?? [];
-  const preventiveContracts =
-    preventiveData?.pages.flatMap((page) => page.contracts) ?? [];
-  const preventiveMapped = preventiveContracts.map((contract) =>
-    mapPreventiveContractToPrevClient(contract),
+  const preventiveItems =
+    preventiveData?.pages.flatMap((page) => page.items) ?? [];
+  const preventiveMapped = preventiveItems.map((item) =>
+    mapPreventiveItemToPrevClient(item),
   );
 
   const getCobrStage = (item: OverdueCollectionItem) =>
@@ -127,14 +130,18 @@ export function DashboardPage() {
 
   const handlePrevOpen = (client: PrevClient) => {
     writeTaskTabCookie(TaskTab.Preventive);
-    const source = preventiveContracts.find((c) => c.contractId === client.id);
-    const installment = source?.nextInstallment.installmentNumber;
+    const source = preventiveItems.find(
+      (item) =>
+        item.contract.id === client.id &&
+        item.installment.number === client.installmentNumber,
+    );
+    const installment = source?.installment.number;
     const installmentParam = installment ? `&installment=${installment}` : "";
     navigate(
       `/contracts/${client.id}?mode=${TaskTab.Preventive}${installmentParam}`,
       {
         state: {
-          contract: source,
+          item: source,
           mode: TaskTab.Preventive,
         },
       },
