@@ -5,6 +5,7 @@ import { STAGE_INFO } from "@/features/dashboard/mocks/tasks";
 import { mapFollowupStatusToStage } from "@/features/dashboard/utils/task-mappers";
 import { getReguaBadge } from "@/features/dashboard/utils/collection-stage";
 import { buildFollowUpTimeline } from "@/features/contract-detail/mappers/build-follow-up-timeline";
+import { buildActivityTimeline } from "@/features/contract-detail/mappers/build-activity-timeline";
 import { buildPreventiveTimeline } from "@/features/contract-detail/mappers/build-preventive-timeline";
 import type {
   AlertType,
@@ -128,6 +129,13 @@ function buildTimeline(
       detail.installment.dueDate,
       detail.followups,
     );
+  }
+
+  if (
+    detail.activity.tasks.length > 0 ||
+    detail.activity.interactions.length > 0
+  ) {
+    return buildActivityTimeline(detail.activity);
   }
 
   return buildFollowUpTimeline(detail.followups);
