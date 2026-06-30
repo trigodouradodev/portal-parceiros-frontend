@@ -40,22 +40,38 @@ export interface MonthPerformance {
   renewals: number;
 }
 
-export interface OverdueInstallmentSummary {
-  id: string;
-  installmentNumber: number;
-  dueDate: string; // ISO date string
-  daysOverdue: number;
-  pendingAmount: number;
-  totalAmount: number;
-  status: string;
-  followupCount: number;
-  latestFollowupStatus?: string;
-}
+export type InstallmentStatus = "not_paid" | "partially_paid";
 
-export interface CollectionAgentRef {
-  id: string;
-  name: string;
-}
+export type CollectionStageCode =
+  | "friendly"
+  | "assertive"
+  | "warning"
+  | "defaulted";
+
+export type ActivityChannel =
+  | "whatsapp_message"
+  | "client_call"
+  | "client_visit";
+
+export type ActivityTaskStatus = "pending" | "completed" | "cancelled";
+
+export type FollowupLatestStatus =
+  | "contacted"
+  | "no_answer"
+  | "promise_to_pay"
+  | "dispute"
+  | "other"
+  | "client_call"
+  | "guarantor_call"
+  | "client_visit"
+  | "guarantor_visit"
+  | "client_collection_letter"
+  | "guarantor_collection_letter"
+  | "negativation"
+  | "renegotiation"
+  | "deceased"
+  | "no_forecast"
+  | "whatsapp_message";
 
 export interface ClientAddress {
   street: string;
@@ -67,31 +83,80 @@ export interface ClientAddress {
   zipCode: string;
 }
 
-export interface OverdueContract {
-  contractId: string;
-  contractNumber: string;
+export interface InstallmentInfo {
+  id: string;
+  number: number;
+  label: string;
+  dueDate: string;
+  daysOverdue: number;
+  pendingAmount: number;
+  totalAmount: number;
+  status: InstallmentStatus;
+}
+
+export interface ContractInfo {
+  id: string;
+  number: string;
   totalInstallments: number;
-  clientName: string;
-  clientTaxId: string;
-  clientPhone?: string;
-  address?: ClientAddress;
-  consultantName?: string;
   companyName?: string;
-  collectionAgent?: CollectionAgentRef;
-  firstOverdueInstallment: OverdueInstallmentSummary;
+}
+
+export interface ClientInfo {
+  name: string;
+  taxId: string;
+  phone?: string;
+  address?: ClientAddress;
+}
+
+export type ResponsibleType = "COLLECTION_AGENT" | "CONSULTANT";
+
+export interface ContractResponsible {
+  id: string;
+  name: string;
+  type: ResponsibleType;
+}
+
+export interface ActivityTaskSummary {
+  id: string;
+  stageCode: CollectionStageCode;
+  stageBadgeLabel: string;
+  channel: ActivityChannel;
+  status: ActivityTaskStatus;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface FollowupSummary {
+  count: number;
+  latestStatus?: FollowupLatestStatus | string;
+}
+
+export interface OverdueCollectionItem {
+  installment: InstallmentInfo;
+  contract: ContractInfo;
+  client: ClientInfo;
+  responsible?: ContractResponsible;
+  task: ActivityTaskSummary | null;
+  followup: FollowupSummary;
 }
 
 export interface OverduePagination {
   page: number;
   limit: number;
-  totalContracts: number;
+  total: number;
   totalPages: number;
   hasNextPage: boolean;
 }
 
 export interface OverdueCollectionPage {
-  contracts: OverdueContract[];
+  items: OverdueCollectionItem[];
   pagination: OverduePagination;
+}
+
+/** @deprecated Legacy ref — preventive list still uses old shape until feat/preventive-list-shape */
+export interface CollectionAgentRef {
+  id: string;
+  name: string;
 }
 
 export interface UpcomingInstallmentSummary {
@@ -161,14 +226,6 @@ export interface CollectionInstallmentDetail {
   totalAmount: number;
   pendingAmount: number;
   status: string;
-}
-
-export type ResponsibleType = "COLLECTION_AGENT" | "CONSULTANT";
-
-export interface ContractResponsible {
-  id: string;
-  name: string;
-  type: ResponsibleType;
 }
 
 export interface CollectionDetail {
