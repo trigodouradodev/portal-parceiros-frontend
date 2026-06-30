@@ -32,10 +32,7 @@ import {
   useOverdueContractsInfinite,
   usePreventiveContractsInfinite,
 } from "@/hooks/useDashboard";
-import type {
-  OverdueCollectionItem,
-  PreventiveCollectionItem,
-} from "@/services/dashboard/dashboard.types";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 interface ShellContext {
   onMobileLogout?: () => void;
