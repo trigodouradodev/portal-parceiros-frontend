@@ -22,7 +22,10 @@ export function CobrTaskCard({
   onAction: () => void;
 }) {
   const info = STAGE_INFO[stage];
-  const badgeVariant = stageBadgeVariant(info.color);
+  const badgeLabel = client.reguaBadge?.label ?? info.label;
+  const badgeVariant = stageBadgeVariant(
+    client.reguaBadge?.color ?? info.color,
+  );
   const overdueLabel = `${client.overdueDays}d atraso`;
   const initials = getInitials(client.name);
 
@@ -44,7 +47,7 @@ export function CobrTaskCard({
           </div>
           <Badge variant={badgeVariant} className="shrink-0 text-[10px]">
             <AlertTriangle size={9} />
-            {info.label}
+            {badgeLabel}
           </Badge>
         </div>
 

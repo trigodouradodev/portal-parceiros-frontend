@@ -10,6 +10,10 @@ import type {
   PreventiveContract,
 } from "@/services/dashboard/dashboard.types";
 import { getFollowUpStatusLabel } from "@/services/followup/followup-labels";
+import {
+  getReguaBadge,
+  getReguaBadgeWhenNoTask,
+} from "@/features/dashboard/utils/collection-stage";
 
 function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
   if (channel === "client_visit") return "visit";
@@ -70,6 +74,10 @@ export function mapOverdueItemToCobrClient(item: OverdueCollectionItem): CobrCli
       ? "visit"
       : "phone";
 
+  const reguaBadge = task
+    ? getReguaBadge(task.stageCode, task.stageBadgeLabel)
+    : getReguaBadgeWhenNoTask(installment.daysOverdue);
+
   return {
     id: contract.id,
     name: client.name,
@@ -84,6 +92,7 @@ export function mapOverdueItemToCobrClient(item: OverdueCollectionItem): CobrCli
     lastAction: followup.latestStatus
       ? `${followup.count} follow-up(s) · ${getFollowUpStatusLabel(followup.latestStatus)}`
       : null,
+    reguaBadge,
   };
 }
 

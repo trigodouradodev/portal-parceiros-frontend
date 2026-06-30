@@ -39,6 +39,7 @@ export interface CobrClient {
   activityType: ActivityType;
   stage: CobrStage;
   lastAction: string | null;
+  reguaBadge?: { label: string; color: string };
 }
 
 // prevClients array removed - now using API data via usePreventiveContractsInfinite
