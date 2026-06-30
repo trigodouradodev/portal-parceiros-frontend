@@ -32,7 +32,7 @@ import {
   useOverdueContractsInfinite,
   usePreventiveContractsInfinite,
 } from "@/hooks/useDashboard";
-import type { OverdueContract } from "@/services/dashboard/dashboard.types";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 interface ShellContext {
   onMobileLogout?: () => void;
@@ -64,19 +64,16 @@ export function DashboardPage() {
     fetchNextPage,
   });
 
-  const overdueContracts =
-    overdueData?.pages.flatMap((page) => page.contracts) ?? [];
+  const overdueItems =
+    overdueData?.pages.flatMap((page) => page.items) ?? [];
   const preventiveContracts =
     preventiveData?.pages.flatMap((page) => page.contracts) ?? [];
   const preventiveMapped = preventiveContracts.map((contract) =>
     mapPreventiveContractToPrevClient(contract),
   );
 
-  const getCobrStage = (contract: OverdueContract) =>
-    mapFollowupStatusToStage(
-      contract.firstOverdueInstallment.latestFollowupStatus,
-      contract.firstOverdueInstallment.followupCount,
-    );
+  const getCobrStage = (item: OverdueCollectionItem) =>
+    mapFollowupStatusToStage(item.followup.latestStatus, item.followup.count);
 
   const preventivePending = preventiveMapped.filter(
     (c) => c.followupCount === 0,
@@ -88,9 +85,7 @@ export function DashboardPage() {
       label: "Contato registrado",
     }));
 
-  const cobrPending = overdueContracts.filter(
-    (c) => getCobrStage(c) !== "paid",
-  );
+  const cobrPending = overdueItems.filter((item) => getCobrStage(item) !== "paid");
 
   const totalActions = cobrPending.length + preventivePending.length;
 
@@ -99,10 +94,10 @@ export function DashboardPage() {
   const emAtraso = dashboardData?.overdueContracts ?? 0;
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
-  const handleCobrAction = (contract: OverdueContract) => {
+  const handleCobrAction = (item: OverdueCollectionItem) => {
     writeTaskTabCookie(readTaskTabFromCookie());
     setActionData(
-      buildChargeActionPayload(contract, () => {
+      buildChargeActionPayload(item, () => {
         showToast("Ação registrada.");
       }),
     );
@@ -119,13 +114,13 @@ export function DashboardPage() {
     navigate(getPreventiveRegisterPath());
   };
 
-  const handleCobrOpen = (contract: OverdueContract) => {
+  const handleCobrOpen = (item: OverdueCollectionItem) => {
     writeTaskTabCookie(TaskTab.Charge);
-    const installment = contract.firstOverdueInstallment.installmentNumber;
+    const installment = item.installment.number;
     navigate(
-      `/contracts/${contract.contractId}?mode=${TaskTab.Charge}&installment=${installment}`,
+      `/contracts/${item.contract.id}?mode=${TaskTab.Charge}&installment=${installment}`,
       {
-        state: { contract, mode: TaskTab.Charge },
+        state: { item, mode: TaskTab.Charge },
       },
     );
   };
@@ -217,7 +212,7 @@ export function DashboardPage() {
             preventiveCount={preventivePending.length}
             charge={{
               isLoading: isLoadingOverdue,
-              contracts: overdueContracts,
+              items: overdueItems,
               getStage: getCobrStage,
               onOpen: handleCobrOpen,
               onAction: handleCobrAction,

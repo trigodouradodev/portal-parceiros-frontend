@@ -7,26 +7,26 @@ import {
 } from "@/features/dashboard/components/task-cards";
 import { TaskCardSkeleton } from "@/features/dashboard/components/tasks/TaskCardSkeleton";
 import type { CobrStage } from "@/features/dashboard/mocks/tasks";
-import { mapOverdueContractToCobrClient } from "@/features/dashboard/utils/task-mappers";
-import type { OverdueContract } from "@/services/dashboard/dashboard.types";
+import { mapOverdueItemToCobrClient } from "@/features/dashboard/utils/task-mappers";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 const GRID_CLASS =
   "grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 interface CobrTasksTabProps {
   isLoading: boolean;
-  contracts: OverdueContract[];
-  getStage: (contract: OverdueContract) => CobrStage;
-  onOpen: (contract: OverdueContract) => void;
-  onAction: (contract: OverdueContract) => void;
-  onReopen: (contractId: string) => void;
+  items: OverdueCollectionItem[];
+  getStage: (item: OverdueCollectionItem) => CobrStage;
+  onOpen: (item: OverdueCollectionItem) => void;
+  onAction: (item: OverdueCollectionItem) => void;
+  onReopen: (installmentId: string) => void;
   hasNextPage: boolean;
   loadMoreRef: RefObject<HTMLDivElement | null>;
 }
 
 export function CobrTasksTab({
   isLoading,
-  contracts,
+  items,
   getStage,
   onOpen,
   onAction,
@@ -45,28 +45,28 @@ export function CobrTasksTab({
     );
   }
 
-  const pending = contracts.filter((c) => getStage(c) !== "paid");
-  const done = contracts.filter((c) => getStage(c) === "paid");
+  const pending = items.filter((item) => getStage(item) !== "paid");
+  const done = items.filter((item) => getStage(item) === "paid");
 
   return (
     <div className={GRID_CLASS}>
-      {pending.map((c) => (
+      {pending.map((item) => (
         <CobrTaskCard
-          key={c.contractId}
-          client={mapOverdueContractToCobrClient(c)}
-          stage={getStage(c)}
-          onOpen={() => onOpen(c)}
-          onAction={() => onAction(c)}
+          key={item.installment.id}
+          client={mapOverdueItemToCobrClient(item)}
+          stage={getStage(item)}
+          onOpen={() => onOpen(item)}
+          onAction={() => onAction(item)}
         />
       ))}
 
-      {done.map((c) => (
+      {done.map((item) => (
         <DoneCard
-          key={c.contractId}
-          name={c.clientName}
-          contract={c.contractNumber}
+          key={item.installment.id}
+          name={item.client.name}
+          contract={item.contract.number}
           label="Pagamento confirmado"
-          onReopen={() => onReopen(c.contractId)}
+          onReopen={() => onReopen(item.installment.id)}
         />
       ))}
 
