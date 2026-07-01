@@ -2,6 +2,10 @@ import type { OutcomeColorKey } from "../../constants/outcome-colors";
 import type { OutcomeOption } from "../../components/OutcomeOptionList";
 import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import { CALL_OUTCOMES } from "@/features/dashboard/mocks/tasks";
+import {
+  ChargeOutcome,
+  type ChargeOutcome as ChargeOutcomeValue,
+} from "@/features/register-action/charge/types";
 
 export const CHARGE_TITLES: Partial<Record<ChargeStage, string>> = {
   initial: "Registrar ligação inicial",
@@ -12,17 +16,17 @@ export const CHARGE_TITLES: Partial<Record<ChargeStage, string>> = {
   fup: "FUP de promessa",
 };
 
-export function getOutcomeColor(value: string): OutcomeColorKey {
-  if (value === "paid") return "green";
-  if (value === "promise") return "teal";
-  if (value === "no_return_1" || value === "no_return_2") return "amber";
-  if (value === "not_paid") return "red";
+export function getOutcomeColor(value: ChargeOutcomeValue): OutcomeColorKey {
+  if (value === ChargeOutcome.PAID) return "green";
+  if (value === ChargeOutcome.PROMISE) return "teal";
+  if (value === ChargeOutcome.NO_RETURN) return "amber";
+  if (value === ChargeOutcome.NOT_PAID) return "red";
   return "gray";
 }
 
 export function getOutcomeOptions(
   stage: ChargeStage,
-  icons: Record<string, OutcomeOption["icon"]>,
+  icons: Partial<Record<ChargeOutcomeValue, OutcomeOption["icon"]>>,
 ): OutcomeOption[] {
   const outcomes = CALL_OUTCOMES[stage] ?? CALL_OUTCOMES.initial ?? [];
 
@@ -30,7 +34,7 @@ export function getOutcomeOptions(
     value: outcome.value,
     label: outcome.label,
     desc: outcome.desc,
-    icon: icons[outcome.value],
-    color: getOutcomeColor(outcome.value),
+    icon: icons[outcome.value as ChargeOutcomeValue],
+    color: getOutcomeColor(outcome.value as ChargeOutcomeValue),
   }));
 }

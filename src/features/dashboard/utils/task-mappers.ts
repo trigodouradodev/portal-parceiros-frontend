@@ -4,11 +4,11 @@ import type {
   ChargeStage,
   PrevClient,
 } from "@/features/dashboard/mocks/tasks";
-import type {
+import {
   ActivityChannel,
-  ActivityTaskSummary,
-  OverdueCollectionItem,
-  PreventiveCollectionItem,
+  type ActivityTaskSummary,
+  type OverdueCollectionItem,
+  type PreventiveCollectionItem,
 } from "@/services/dashboard/dashboard.types";
 import {
   getReguaBadge,
@@ -16,9 +16,9 @@ import {
 } from "@/features/dashboard/utils/collection-stage";
 
 const CHANNEL_LABELS: Record<ActivityChannel, string> = {
-  whatsapp_message: "WhatsApp",
-  client_call: "Ligação",
-  client_visit: "Visita",
+  [ActivityChannel.WHATSAPP_MESSAGE]: "WhatsApp",
+  [ActivityChannel.CLIENT_CALL]: "Ligação",
+  [ActivityChannel.CLIENT_VISIT]: "Visita",
 };
 
 const TASK_STATUS_LABELS: Record<string, string> = {
@@ -28,7 +28,7 @@ const TASK_STATUS_LABELS: Record<string, string> = {
 };
 
 function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
-  if (channel === "client_visit") return "visit";
+  if (channel === ActivityChannel.CLIENT_VISIT) return "visit";
   return "phone";
 }
 

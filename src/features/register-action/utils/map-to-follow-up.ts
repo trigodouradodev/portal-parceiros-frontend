@@ -3,18 +3,23 @@ import {
   FollowUpStatus,
   type CreateFollowUpPayload,
 } from "@/services/followup/followup.types";
+import {
+  ChargeOutcome,
+  type ChargeOutcome as ChargeOutcomeValue,
+} from "@/features/register-action/charge/types";
 
-export function mapChargeOutcomeToStatus(outcome: string): FollowUpStatus {
+export function mapChargeOutcomeToStatus(
+  outcome: ChargeOutcomeValue,
+): FollowUpStatus {
   switch (outcome) {
-    case "no_return_1":
-    case "no_return_2":
+    case ChargeOutcome.NO_RETURN:
       return FollowUpStatus.NO_ANSWER;
-    case "sem_previsao":
-    case "not_paid":
+    case ChargeOutcome.SEM_PREVISAO:
+    case ChargeOutcome.NOT_PAID:
       return FollowUpStatus.NO_FORECAST;
-    case "promise":
+    case ChargeOutcome.PROMISE:
       return FollowUpStatus.PROMISE_TO_PAY;
-    case "paid":
+    case ChargeOutcome.PAID:
       return FollowUpStatus.CONTACTED;
     default:
       return FollowUpStatus.OTHER;
@@ -54,7 +59,7 @@ export function mapPreventiveOutcomeToExpectedResult(
 export function buildChargeFollowUpPayload(params: {
   contractId: string;
   installmentNumber: number;
-  outcome: string;
+  outcome: ChargeOutcomeValue;
   note?: string;
   boletoDate?: string;
 }): CreateFollowUpPayload {
@@ -65,7 +70,7 @@ export function buildChargeFollowUpPayload(params: {
     note: params.note || undefined,
   };
 
-  if (params.outcome === "promise" && params.boletoDate) {
+  if (params.outcome === ChargeOutcome.PROMISE && params.boletoDate) {
     // Date input is YYYY-MM-DD; noon UTC avoids local timezone shifting the day.
     payload.paymentForecast = `${params.boletoDate}T12:00:00.000Z`;
   }

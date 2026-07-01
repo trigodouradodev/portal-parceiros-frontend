@@ -120,8 +120,6 @@ export function useContractDetail(contractId: string, mode: DetailMode) {
   return {
     detail,
     listItem,
-    /** @deprecated Use listItem */
-    contract: listItem,
     collectionDetail: detailQuery.data,
     installmentNumber,
     isLoading,

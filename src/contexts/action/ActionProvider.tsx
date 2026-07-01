@@ -8,7 +8,7 @@ import {
   type SetActionDataPayload,
   type PreventiveContactType,
 } from "@/contexts/action/action-context";
-import type { ActivityChannel } from "@/services/dashboard/dashboard.types";
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 export function ActionProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ActionClient | null>(null);

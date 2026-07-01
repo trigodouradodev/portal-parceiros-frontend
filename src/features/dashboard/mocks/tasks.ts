@@ -158,7 +158,7 @@ export const CALL_OUTCOMES: Partial<
 > = {
   initial: [
     {
-      value: "no_return_1",
+      value: "no_return",
       label: "Sem retorno",
       desc: "Não atendeu a ligação",
     },
@@ -175,7 +175,7 @@ export const CALL_OUTCOMES: Partial<
   ],
   second_attempt: [
     {
-      value: "no_return_2",
+      value: "no_return",
       label: "Sem retorno",
       desc: "Não atendeu novamente",
     },

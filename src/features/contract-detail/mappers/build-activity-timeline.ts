@@ -7,10 +7,12 @@ import type {
   ActivityTaskSummary,
 } from "@/services/dashboard/dashboard.types";
 
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
+
 const CHANNEL_LABELS: Record<string, string> = {
-  whatsapp_message: "WhatsApp",
-  client_call: "Ligação",
-  client_visit: "Visita",
+  [ActivityChannel.WHATSAPP_MESSAGE]: "WhatsApp",
+  [ActivityChannel.CLIENT_CALL]: "Ligação",
+  [ActivityChannel.CLIENT_VISIT]: "Visita",
 };
 
 function getChannelLabel(channel: string): string {

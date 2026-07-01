@@ -1,9 +1,9 @@
 import { createContext, useContext } from "react";
 import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import type { TaskTab } from "@/features/dashboard/constants/task-tab";
-import type {
+import {
   ActivityChannel,
-  ClientAddress,
+  type ClientAddress,
 } from "@/services/dashboard/dashboard.types";
 
 export type ActionMode = TaskTab;

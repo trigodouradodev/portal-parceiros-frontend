@@ -48,10 +48,14 @@ export type CollectionStageCode =
   | "warning"
   | "defaulted";
 
+export const ActivityChannel = {
+  WHATSAPP_MESSAGE: "whatsapp_message",
+  CLIENT_CALL: "client_call",
+  CLIENT_VISIT: "client_visit",
+} as const;
+
 export type ActivityChannel =
-  | "whatsapp_message"
-  | "client_call"
-  | "client_visit";
+  (typeof ActivityChannel)[keyof typeof ActivityChannel];
 
 export type ActivityTaskStatus = "pending" | "completed" | "cancelled";
 

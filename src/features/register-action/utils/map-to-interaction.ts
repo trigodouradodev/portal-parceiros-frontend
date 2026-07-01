@@ -2,20 +2,23 @@ import {
   ActivityInteractionResult,
   type RegisterInteractionPayload,
 } from "@/services/activities/activities.types";
-import type { ActivityChannel } from "@/services/dashboard/dashboard.types";
+import {
+  ChargeOutcome,
+  type ChargeOutcome as ChargeOutcomeValue,
+} from "@/features/register-action/charge/types";
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 export function mapChargeOutcomeToInteractionResult(
-  outcome: string,
+  outcome: ChargeOutcomeValue,
 ): ActivityInteractionResult {
   switch (outcome) {
-    case "no_return_1":
-    case "no_return_2":
-    case "sem_previsao":
-    case "not_paid":
+    case ChargeOutcome.NO_RETURN:
+    case ChargeOutcome.SEM_PREVISAO:
+    case ChargeOutcome.NOT_PAID:
       return ActivityInteractionResult.NO_RETURN;
-    case "promise":
+    case ChargeOutcome.PROMISE:
       return ActivityInteractionResult.PAYMENT_PROMISE;
-    case "paid":
+    case ChargeOutcome.PAID:
       return ActivityInteractionResult.WILL_PAY_ON_DATE;
     default:
       return ActivityInteractionResult.NO_RETURN;
@@ -23,7 +26,7 @@ export function mapChargeOutcomeToInteractionResult(
 }
 
 export function buildRegisterInteractionPayload(params: {
-  outcome: string;
+  outcome: ChargeOutcomeValue;
   note?: string;
   promiseDate?: string;
   taskChannel?: ActivityChannel;
@@ -35,12 +38,12 @@ export function buildRegisterInteractionPayload(params: {
     observation: params.note || undefined,
   };
 
-  if (params.outcome === "promise" && params.promiseDate) {
+  if (params.outcome === ChargeOutcome.PROMISE && params.promiseDate) {
     payload.promiseDate = `${params.promiseDate}T12:00:00.000Z`;
   }
 
   if (
-    params.taskChannel === "client_visit" &&
+    params.taskChannel === ActivityChannel.CLIENT_VISIT &&
     params.latitude !== undefined &&
     params.longitude !== undefined
   ) {

@@ -17,8 +17,13 @@ import {
   CHARGE_TITLES,
   getOutcomeOptions,
 } from "@/features/register-action/charge/constants/outcomes";
+import {
+  ChargeOutcome,
+  type ChargeOutcome as ChargeOutcomeValue,
+} from "@/features/register-action/charge/types";
 import { ContactPanel } from "@/features/register-action/charge/components";
 import { getWaTemplates } from "@/features/register-action/charge/utils/wa-templates";
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 import {
   OutcomeOptionList,
   RegisterActionFooter,
@@ -47,7 +52,7 @@ export function RegisterChargeActionPage() {
   const [step, setStep] = useState<Step>(
     chargeStage === "promise" ? "boleto" : "outcome",
   );
-  const [outcome, setOutcome] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<ChargeOutcomeValue | null>(null);
   const [boletoValue, setBoletoValue] = useState(client?.value ?? "");
   const [boletoDate, setBoletoDate] = useState("");
   const [note, setNote] = useState("");
@@ -81,19 +86,18 @@ export function RegisterChargeActionPage() {
     return null;
   }
 
-  const isVisitTask = taskChannel === "client_visit";
+  const isVisitTask = taskChannel === ActivityChannel.CLIENT_VISIT;
   const title = CHARGE_TITLES[chargeStage] ?? "Registrar ação";
   const clientPhone = client.phone ?? "";
   const clientFirstName = getFirstName(client.name);
   const waTemplates = getWaTemplates(client);
   const saving = registerInteraction.isPending;
   const outcomeOptions = getOutcomeOptions(chargeStage, {
-    no_return_1: <PhoneOff size={18} />,
-    no_return_2: <PhoneOff size={18} />,
-    sem_previsao: <Calendar size={18} />,
-    promise: <Handshake size={18} />,
-    paid: <CheckCircle2 size={18} />,
-    not_paid: <XCircle size={18} />,
+    [ChargeOutcome.NO_RETURN]: <PhoneOff size={18} />,
+    [ChargeOutcome.SEM_PREVISAO]: <Calendar size={18} />,
+    [ChargeOutcome.PROMISE]: <Handshake size={18} />,
+    [ChargeOutcome.PAID]: <CheckCircle2 size={18} />,
+    [ChargeOutcome.NOT_PAID]: <XCircle size={18} />,
   });
   const visitLocationReady = !isVisitTask || locationOk;
   const canSaveOutcome =
@@ -101,7 +105,7 @@ export function RegisterChargeActionPage() {
   const canSaveBoleto = step === "boleto" && boletoDate !== "";
 
   async function submitInteraction(
-    outcomeValue: string,
+    outcomeValue: ChargeOutcomeValue,
     boletoDueDate?: string,
   ) {
     const currentClient = client;
@@ -142,7 +146,7 @@ export function RegisterChargeActionPage() {
         });
         return;
       }
-      if (outcome === "promise") {
+      if (outcome === ChargeOutcome.PROMISE) {
         setStep("boleto");
         return;
       }
@@ -152,7 +156,7 @@ export function RegisterChargeActionPage() {
 
     if (step === "boleto") {
       if (!boletoDate) return;
-      await submitInteraction("promise", boletoDate);
+      await submitInteraction(ChargeOutcome.PROMISE, boletoDate);
     }
   }
 
@@ -226,11 +230,11 @@ export function RegisterChargeActionPage() {
             <OutcomeOptionList
               options={outcomeOptions}
               value={outcome}
-              onChange={setOutcome}
+              onChange={(value) => setOutcome(value as ChargeOutcomeValue)}
               prompt={
                 isVisitTask
                   ? "Qual foi o resultado da visita?"
-                  : taskChannel === "whatsapp_message"
+                  : taskChannel === ActivityChannel.WHATSAPP_MESSAGE
                     ? "Qual foi o resultado do contato?"
                     : "Qual foi o resultado da ligação?"
               }
