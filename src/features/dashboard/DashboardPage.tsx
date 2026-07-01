@@ -15,15 +15,13 @@ import {
   writeTaskTabCookie,
 } from "@/features/dashboard/constants/task-tab";
 import type { PrevClient } from "@/features/dashboard/mocks/tasks";
-import {
-  mapFollowupStatusToStage,
-  mapPreventiveItemToPrevClient,
-} from "@/features/dashboard/utils/task-mappers";
+import { mapPreventiveItemToPrevClient } from "@/features/dashboard/utils/task-mappers";
 import {
   buildChargeActionPayload,
   buildPreventiveActionPayload,
   getChargeRegisterPath,
   getPreventiveRegisterPath,
+  hasPendingChargeTask,
 } from "@/features/dashboard/utils/launch-action";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
@@ -71,12 +69,6 @@ export function DashboardPage() {
     mapPreventiveItemToPrevClient(item),
   );
 
-  const getChargeStage = (item: OverdueCollectionItem) =>
-    mapFollowupStatusToStage(
-      item.followup?.latestStatus,
-      item.followup?.count ?? 0,
-    );
-
   const preventivePending = preventiveMapped.filter(
     (c) => c.followupCount === 0,
   );
@@ -87,9 +79,7 @@ export function DashboardPage() {
       label: "Contato registrado",
     }));
 
-  const chargePending = overdueItems.filter(
-    (item) => getChargeStage(item) !== "paid",
-  );
+  const chargePending = overdueItems.filter(hasPendingChargeTask);
 
   const totalActions = chargePending.length + preventivePending.length;
 
@@ -100,11 +90,16 @@ export function DashboardPage() {
 
   const handleChargeAction = (item: OverdueCollectionItem) => {
     writeTaskTabCookie(readTaskTabFromCookie());
-    setActionData(
-      buildChargeActionPayload(item, () => {
-        showToast("Ação registrada.");
-      }),
-    );
+    const payload = buildChargeActionPayload(item, () => {
+      showToast("Ação registrada.");
+    });
+    if (!payload) {
+      showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
+        variant: "destructive",
+      });
+      return;
+    }
+    setActionData(payload);
     navigate(getChargeRegisterPath());
   };
 
@@ -147,10 +142,6 @@ export function DashboardPage() {
         },
       },
     );
-  };
-
-  const handleChargeReopen = () => {
-    showToast("Reabertura de tarefa em breve.", { variant: "info" });
   };
 
   if (isLoadingDashboard) {
@@ -221,10 +212,8 @@ export function DashboardPage() {
             charge={{
               isLoading: isLoadingOverdue,
               items: overdueItems,
-              getStage: getChargeStage,
               onOpen: handleChargeOpen,
               onAction: handleChargeAction,
-              onReopen: handleChargeReopen,
               hasNextPage,
               loadMoreRef,
             }}

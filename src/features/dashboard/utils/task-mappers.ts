@@ -6,22 +6,40 @@ import type {
 } from "@/features/dashboard/mocks/tasks";
 import type {
   ActivityChannel,
+  ActivityTaskSummary,
   OverdueCollectionItem,
   PreventiveCollectionItem,
 } from "@/services/dashboard/dashboard.types";
-import { getFollowUpStatusLabel } from "@/services/followup/followup-labels";
 import {
   getReguaBadge,
   getReguaBadgeWhenNoTask,
 } from "@/features/dashboard/utils/collection-stage";
+
+const CHANNEL_LABELS: Record<ActivityChannel, string> = {
+  whatsapp_message: "WhatsApp",
+  client_call: "Ligação",
+  client_visit: "Visita",
+};
+
+const TASK_STATUS_LABELS: Record<string, string> = {
+  pending: "Pendente",
+  completed: "Concluída",
+  cancelled: "Cancelada",
+};
 
 function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
   if (channel === "client_visit") return "visit";
   return "phone";
 }
 
+export function mapTaskToChargeStage(task: ActivityTaskSummary): ChargeStage {
+  void task;
+  return "initial";
+}
+
 /**
  * Maps backend latestFollowupStatus + followupCount to frontend ChargeStage.
+ * Used on contract detail when deriving status from preventive follow-up history.
  */
 export function mapFollowupStatusToStage(
   status: string | undefined,
@@ -66,11 +84,16 @@ export function mapFollowupStatusToStage(
   return "initial";
 }
 
+function formatTaskLastAction(task: ActivityTaskSummary): string {
+  const channelLabel = CHANNEL_LABELS[task.channel] ?? task.channel;
+  const statusLabel = TASK_STATUS_LABELS[task.status] ?? task.status;
+  return `${channelLabel} · ${statusLabel}`;
+}
+
 export function mapOverdueItemToChargeClient(
   item: OverdueCollectionItem,
 ): ChargeClient {
   const { installment, contract, client, task } = item;
-  const followup = item.followup;
   const activityType: ActivityType = task
     ? mapChannelToActivityType(task.channel)
     : installment.daysOverdue > 30
@@ -91,13 +114,8 @@ export function mapOverdueItemToChargeClient(
     phone: client.phone ?? "",
     address: client.address,
     activityType,
-    stage: mapFollowupStatusToStage(
-      followup?.latestStatus,
-      followup?.count ?? 0,
-    ),
-    lastAction: followup?.latestStatus
-      ? `${followup.count} follow-up(s) · ${getFollowUpStatusLabel(followup.latestStatus)}`
-      : null,
+    stage: task ? mapTaskToChargeStage(task) : "initial",
+    lastAction: task ? formatTaskLastAction(task) : null,
     reguaBadge,
   };
 }

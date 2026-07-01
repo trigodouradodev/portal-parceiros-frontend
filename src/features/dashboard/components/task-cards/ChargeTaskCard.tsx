@@ -13,11 +13,13 @@ import {
 export function ChargeTaskCard({
   client,
   stage,
+  canRegister = true,
   onOpen,
   onAction,
 }: {
   client: ChargeClient;
   stage: ChargeStage;
+  canRegister?: boolean;
   onOpen: () => void;
   onAction: () => void;
 }) {
@@ -82,6 +84,7 @@ export function ChargeTaskCard({
           size="sm"
           variant="outline"
           className="h-8 w-full gap-1.5 text-xs"
+          disabled={!canRegister}
           onClick={onAction}
         >
           <MapPin size={11} className="text-[#BA7517]" />
