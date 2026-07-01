@@ -9,34 +9,26 @@ import {
 } from "@/features/dashboard/constants/task-tab";
 import {
   buildChargeActionPayload,
+  buildChargeActionPayloadFromDetail,
   buildPreventiveActionPayload,
   getChargeRegisterPath,
   getPreventiveRegisterPath,
 } from "@/features/dashboard/utils/launch-action";
-import { mapPreventiveContractToPrevClient } from "@/features/dashboard/utils/task-mappers";
+import { mapPreventiveItemToPrevClient } from "@/features/dashboard/utils/task-mappers";
 import { AlertCard } from "@/features/contract-detail/components/AlertCard";
 import { ClientDetailsCard } from "@/features/contract-detail/components/ClientDetailsCard";
 import { ContractInfoCard } from "@/features/contract-detail/components/ContractInfoCard";
 import { DetailPageHeader } from "@/features/contract-detail/components/DetailPageHeader";
 import { TimelineSection } from "@/features/contract-detail/components/TimelineSection";
 import {
+  isOverdueCollectionItem,
   parseDetailMode,
   useContractDetail,
 } from "@/features/contract-detail/hooks/useContractDetail";
 import { useActionContext } from "@/contexts/action";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { useToast } from "@/contexts/toast/toast-context";
-import type {
-  OverdueContract,
-  PreventiveContract,
-} from "@/services/dashboard/dashboard.types";
 import { fmtBRL } from "@/lib/utils";
-
-function isOverdueContract(
-  contract: OverdueContract | PreventiveContract,
-): contract is OverdueContract {
-  return "firstOverdueInstallment" in contract;
-}
 
 function buildDaysInfoFromDetail(
   mode: typeof TaskTab.Charge | typeof TaskTab.Preventive,
@@ -80,10 +72,8 @@ export function ContractDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const { detail, contract, isLoading, isNotFound } = useContractDetail(
-    contractId,
-    mode,
-  );
+  const { detail, listItem, collectionDetail, isLoading, isNotFound } =
+    useContractDetail(contractId, mode);
 
   const handleBack = () => {
     writeTaskTabCookie(mode);
@@ -93,22 +83,49 @@ export function ContractDetailPage() {
   const handleRegisterAction = () => {
     writeTaskTabCookie(readTaskTabFromCookie());
 
-    if (mode === TaskTab.Charge && contract && isOverdueContract(contract)) {
-      setActionData(
-        buildChargeActionPayload(contract, () => {
+    if (
+      mode === TaskTab.Charge &&
+      listItem &&
+      isOverdueCollectionItem(listItem)
+    ) {
+      const payload = buildChargeActionPayload(listItem, () => {
+        showToast("Ação registrada.");
+      });
+      if (!payload) {
+        showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
+          variant: "destructive",
+        });
+        return;
+      }
+      setActionData(payload);
+      navigate(getChargeRegisterPath());
+      return;
+    }
+
+    if (mode === TaskTab.Charge && collectionDetail) {
+      const payload = buildChargeActionPayloadFromDetail(
+        collectionDetail,
+        () => {
           showToast("Ação registrada.");
-        }),
+        },
       );
+      if (!payload) {
+        showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
+          variant: "destructive",
+        });
+        return;
+      }
+      setActionData(payload);
       navigate(getChargeRegisterPath());
       return;
     }
 
     if (
       mode === TaskTab.Preventive &&
-      contract &&
-      !isOverdueContract(contract)
+      listItem &&
+      !isOverdueCollectionItem(listItem)
     ) {
-      const prevClient = mapPreventiveContractToPrevClient(contract);
+      const prevClient = mapPreventiveItemToPrevClient(listItem);
       setActionData(
         buildPreventiveActionPayload(prevClient, () => {
           showToast("Contato preventivo registrado!");
@@ -131,8 +148,8 @@ export function ContractDetailPage() {
         value: fmtBRL(detail.installmentValue),
         currentStep: detail.statusLabel,
         daysInfo: buildDaysInfoFromDetail(mode, detail.alertDays),
-        phone: contract?.clientPhone,
-        address: contract?.address ?? detail.address,
+        phone: listItem?.client.phone,
+        address: listItem?.client.address ?? detail.address,
       },
       onComplete: () => {
         showToast(

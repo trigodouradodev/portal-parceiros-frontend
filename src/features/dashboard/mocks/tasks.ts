@@ -1,4 +1,4 @@
-export type CobrStage =
+export type ChargeStage =
   | "initial"
   | "no_return_1"
   | "second_attempt"
@@ -15,6 +15,7 @@ export type ActivityType = "phone" | "visit";
 
 export interface PrevClient {
   id: string;
+  installmentId?: string;
   name: string;
   contract: string;
   parcela: string;
@@ -27,7 +28,7 @@ export interface PrevClient {
   activityType: ActivityType;
 }
 
-export interface CobrClient {
+export interface ChargeClient {
   id: string;
   name: string;
   contract: string;
@@ -37,13 +38,14 @@ export interface CobrClient {
   phone: string;
   address?: ClientAddress;
   activityType: ActivityType;
-  stage: CobrStage;
+  stage: ChargeStage;
   lastAction: string | null;
+  reguaBadge?: { label: string; color: string };
 }
 
 // prevClients array removed - now using API data via usePreventiveContractsInfinite
 
-export const cobrClients: CobrClient[] = [
+export const chargeClients: ChargeClient[] = [
   {
     id: "c1",
     name: "Ricardo Alves",
@@ -95,7 +97,7 @@ export const cobrClients: CobrClient[] = [
 ];
 
 export const STAGE_INFO: Record<
-  CobrStage,
+  ChargeStage,
   { label: string; color: string; journeyPath: string[] }
 > = {
   initial: {
@@ -152,11 +154,11 @@ export const STAGE_INFO: Record<
 };
 
 export const CALL_OUTCOMES: Partial<
-  Record<CobrStage, { value: string; label: string; desc: string }[]>
+  Record<ChargeStage, { value: string; label: string; desc: string }[]>
 > = {
   initial: [
     {
-      value: "no_return_1",
+      value: "no_return",
       label: "Sem retorno",
       desc: "Não atendeu a ligação",
     },
@@ -173,7 +175,7 @@ export const CALL_OUTCOMES: Partial<
   ],
   second_attempt: [
     {
-      value: "no_return_2",
+      value: "no_return",
       label: "Sem retorno",
       desc: "Não atendeu novamente",
     },

@@ -1,22 +1,50 @@
 import type {
   ActivityType,
-  CobrClient,
-  CobrStage,
+  ChargeClient,
+  ChargeStage,
   PrevClient,
 } from "@/features/dashboard/mocks/tasks";
-import type {
-  OverdueContract,
-  PreventiveContract,
+import {
+  ActivityChannel,
+  type ActivityTaskSummary,
+  type OverdueCollectionItem,
+  type PreventiveCollectionItem,
 } from "@/services/dashboard/dashboard.types";
-import { getFollowUpStatusLabel } from "@/services/followup/followup-labels";
+import {
+  getReguaBadge,
+  getReguaBadgeWhenNoTask,
+} from "@/features/dashboard/utils/collection-stage";
+
+const CHANNEL_LABELS: Record<ActivityChannel, string> = {
+  [ActivityChannel.WHATSAPP_MESSAGE]: "WhatsApp",
+  [ActivityChannel.CLIENT_CALL]: "Ligação",
+  [ActivityChannel.CLIENT_VISIT]: "Visita",
+};
+
+const TASK_STATUS_LABELS: Record<string, string> = {
+  pending: "Pendente",
+  completed: "Concluída",
+  cancelled: "Cancelada",
+};
+
+function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
+  if (channel === ActivityChannel.CLIENT_VISIT) return "visit";
+  return "phone";
+}
+
+export function mapTaskToChargeStage(task: ActivityTaskSummary): ChargeStage {
+  void task;
+  return "initial";
+}
 
 /**
- * Maps backend latestFollowupStatus + followupCount to frontend CobrStage.
+ * Maps backend latestFollowupStatus + followupCount to frontend ChargeStage.
+ * Used on contract detail when deriving status from preventive follow-up history.
  */
 export function mapFollowupStatusToStage(
   status: string | undefined,
   followupCount = 0,
-): CobrStage {
+): ChargeStage {
   if (!status) {
     return "initial";
   }
@@ -56,54 +84,67 @@ export function mapFollowupStatusToStage(
   return "initial";
 }
 
-export function mapOverdueContractToCobrClient(
-  contract: OverdueContract,
-): CobrClient {
-  const installment = contract.firstOverdueInstallment;
-  const activityType: ActivityType =
-    installment.daysOverdue > 30 ? "visit" : "phone";
+function formatTaskLastAction(task: ActivityTaskSummary): string {
+  const channelLabel = CHANNEL_LABELS[task.channel] ?? task.channel;
+  const statusLabel = TASK_STATUS_LABELS[task.status] ?? task.status;
+  return `${channelLabel} · ${statusLabel}`;
+}
+
+export function mapOverdueItemToChargeClient(
+  item: OverdueCollectionItem,
+): ChargeClient {
+  const { installment, contract, client, task } = item;
+  const activityType: ActivityType = task
+    ? mapChannelToActivityType(task.channel)
+    : installment.daysOverdue > 30
+      ? "visit"
+      : "phone";
+
+  const reguaBadge = task
+    ? getReguaBadge(task.stageCode, task.stageBadgeLabel)
+    : getReguaBadgeWhenNoTask(installment.daysOverdue);
 
   return {
-    id: contract.contractId,
-    name: contract.clientName,
-    contract: contract.contractNumber,
-    parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
+    id: contract.id,
+    name: client.name,
+    contract: contract.number,
+    parcela: installment.label,
     value: installment.pendingAmount,
     overdueDays: installment.daysOverdue,
-    phone: contract.clientPhone ?? "",
-    address: contract.address,
+    phone: client.phone ?? "",
+    address: client.address,
     activityType,
-    stage: mapFollowupStatusToStage(
-      installment.latestFollowupStatus,
-      installment.followupCount,
-    ),
-    lastAction: installment.latestFollowupStatus
-      ? `${installment.followupCount} follow-up(s) · ${getFollowUpStatusLabel(installment.latestFollowupStatus)}`
-      : null,
+    stage: task ? mapTaskToChargeStage(task) : "initial",
+    lastAction: task ? formatTaskLastAction(task) : null,
+    reguaBadge,
   };
 }
 
-export function mapPreventiveContractToPrevClient(
-  contract: PreventiveContract,
+export function mapPreventiveItemToPrevClient(
+  item: PreventiveCollectionItem,
 ): PrevClient {
-  const installment = contract.nextInstallment;
+  const { installment, contract, client, followup } = item;
   const activityType: ActivityType =
     installment.daysUntilDue > 7 ? "visit" : "phone";
 
   return {
-    id: contract.contractId,
-    name: contract.clientName,
-    contract: contract.contractNumber,
-    parcela: `Parc ${installment.installmentNumber}/${contract.totalInstallments}`,
+    id: contract.id,
+    installmentId: installment.id,
+    name: client.name,
+    contract: contract.number,
+    parcela: installment.label,
     value: installment.pendingAmount,
     daysUntilDue: installment.daysUntilDue,
-    installmentNumber: installment.installmentNumber,
-    followupCount: installment.followupCount,
-    phone: contract.clientPhone ?? "",
-    address: contract.address,
+    installmentNumber: installment.number,
+    followupCount: followup.count,
+    phone: client.phone ?? "",
+    address: client.address,
     activityType,
   };
 }
+
+/** @deprecated Use mapPreventiveItemToPrevClient */
+export const mapPreventiveContractToPrevClient = mapPreventiveItemToPrevClient;
 
 /** Normaliza daysInfo para templates WhatsApp do fluxo preventivo. */
 export function formatPreventiveDaysInfo(daysUntilDue: number): string {

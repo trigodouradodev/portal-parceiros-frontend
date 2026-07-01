@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -17,8 +17,13 @@ import {
   CHARGE_TITLES,
   getOutcomeOptions,
 } from "@/features/register-action/charge/constants/outcomes";
+import {
+  ChargeOutcome,
+  type ChargeOutcome as ChargeOutcomeValue,
+} from "@/features/register-action/charge/types";
 import { ContactPanel } from "@/features/register-action/charge/components";
 import { getWaTemplates } from "@/features/register-action/charge/utils/wa-templates";
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 import {
   OutcomeOptionList,
   RegisterActionFooter,
@@ -28,8 +33,10 @@ import {
   RegisterStagePills,
   RegisterStepIndicator,
 } from "@/features/register-action";
-import { buildChargeFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
-import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
+import { VisitLocationPanel } from "@/features/register-action/preventive/components";
+import { useVisitLocationCheck } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
+import { buildRegisterInteractionPayload } from "@/features/register-action/utils/map-to-interaction";
+import { useRegisterInteraction } from "@/hooks/useRegisterInteraction";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getFirstName } from "@/lib/user-display";
@@ -39,53 +46,88 @@ type Step = "outcome" | "boleto";
 export function RegisterChargeActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const createFollowUp = useCreateFollowUp();
-  const { client, cobrStage, onComplete } = useActionContext();
+  const registerInteraction = useRegisterInteraction();
+  const { client, chargeStage, taskId, taskChannel, onComplete } =
+    useActionContext();
   const [step, setStep] = useState<Step>(
-    cobrStage === "promise" ? "boleto" : "outcome",
+    chargeStage === "promise" ? "boleto" : "outcome",
   );
-  const [outcome, setOutcome] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<ChargeOutcomeValue | null>(null);
   const [boletoValue, setBoletoValue] = useState(client?.value ?? "");
   const [boletoDate, setBoletoDate] = useState("");
   const [note, setNote] = useState("");
+
+  const {
+    status: locationStatus,
+    result: locationCheckResult,
+    coords: geoCoords,
+    verify: verifyLocationCheck,
+    confirmManual,
+    locationOk,
+  } = useVisitLocationCheck({
+    contractId: client?.id ?? "",
+    installmentNumber: client?.installmentNumber ?? 0,
+  });
+
+  useEffect(() => {
+    if (!taskId) {
+      showToast("Nenhuma tarefa de cobrança pendente para registrar.", {
+        variant: "destructive",
+      });
+      navigate(-1);
+    }
+  }, [taskId, navigate, showToast]);
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  if (!client || !cobrStage) {
+  if (!client || !chargeStage || !taskId) {
     return null;
   }
 
-  const title = CHARGE_TITLES[cobrStage] ?? "Registrar ação";
+  const isVisitTask = taskChannel === ActivityChannel.CLIENT_VISIT;
+  const title = CHARGE_TITLES[chargeStage] ?? "Registrar ação";
   const clientPhone = client.phone ?? "";
   const clientFirstName = getFirstName(client.name);
   const waTemplates = getWaTemplates(client);
-  const saving = createFollowUp.isPending;
-  const outcomeOptions = getOutcomeOptions(cobrStage, {
-    no_return_1: <PhoneOff size={18} />,
-    no_return_2: <PhoneOff size={18} />,
-    sem_previsao: <Calendar size={18} />,
-    promise: <Handshake size={18} />,
-    paid: <CheckCircle2 size={18} />,
-    not_paid: <XCircle size={18} />,
+  const saving = registerInteraction.isPending;
+  const outcomeOptions = getOutcomeOptions(chargeStage, {
+    [ChargeOutcome.NO_RETURN]: <PhoneOff size={18} />,
+    [ChargeOutcome.SEM_PREVISAO]: <Calendar size={18} />,
+    [ChargeOutcome.PROMISE]: <Handshake size={18} />,
+    [ChargeOutcome.PAID]: <CheckCircle2 size={18} />,
+    [ChargeOutcome.NOT_PAID]: <XCircle size={18} />,
   });
-  const canSaveOutcome = step === "outcome" && outcome !== null;
+  const visitLocationReady = !isVisitTask || locationOk;
+  const canSaveOutcome =
+    step === "outcome" && outcome !== null && visitLocationReady;
   const canSaveBoleto = step === "boleto" && boletoDate !== "";
 
-  async function submitFollowUp(outcomeValue: string, boletoDueDate?: string) {
+  async function submitInteraction(
+    outcomeValue: ChargeOutcomeValue,
+    boletoDueDate?: string,
+  ) {
     const currentClient = client;
-    if (!currentClient) return;
+    if (!currentClient || !taskId) return;
+
+    const includeGeo = isVisitTask && locationOk && geoCoords !== null;
 
     try {
-      const payload = buildChargeFollowUpPayload({
-        contractId: currentClient.id,
-        installmentNumber: currentClient.installmentNumber,
+      const payload = buildRegisterInteractionPayload({
         outcome: outcomeValue,
         note,
-        boletoDate: boletoDueDate,
+        promiseDate: boletoDueDate,
+        taskChannel,
+        latitude: includeGeo ? geoCoords.latitude : undefined,
+        longitude: includeGeo ? geoCoords.longitude : undefined,
       });
-      await createFollowUp.mutateAsync(payload);
+      await registerInteraction.mutateAsync({
+        taskId,
+        payload,
+        contractId: currentClient.id,
+        installmentNumber: currentClient.installmentNumber,
+      });
       onComplete({ note });
       navigate(-1);
     } catch (err) {
@@ -98,27 +140,33 @@ export function RegisterChargeActionPage() {
   async function handleSave() {
     if (step === "outcome") {
       if (!outcome) return;
-      if (outcome === "promise") {
+      if (isVisitTask && !locationOk) {
+        showToast("Confirme a localização da visita antes de registrar.", {
+          variant: "destructive",
+        });
+        return;
+      }
+      if (outcome === ChargeOutcome.PROMISE) {
         setStep("boleto");
         return;
       }
-      await submitFollowUp(outcome);
+      await submitInteraction(outcome);
       return;
     }
 
     if (step === "boleto") {
       if (!boletoDate) return;
-      await submitFollowUp("promise", boletoDate);
+      await submitInteraction(ChargeOutcome.PROMISE, boletoDate);
     }
   }
 
   const stepIndicator =
-    cobrStage !== "fup" && cobrStage !== "promise" ? (
+    chargeStage !== "fup" && chargeStage !== "promise" ? (
       <RegisterStepIndicator
         steps={["Resultado", "Observações"]}
         currentStep={step === "outcome" ? 0 : 1}
       />
-    ) : cobrStage === "fup" ? (
+    ) : chargeStage === "fup" ? (
       <RegisterStagePills
         steps={["Ligação", "Promessa", "Boleto", "FUP"]}
         activeIndex={3}
@@ -164,16 +212,32 @@ export function RegisterChargeActionPage() {
       <RegisterFormCard>
         {step === "outcome" && (
           <>
-            <ContactPanel
-              phone={clientPhone}
-              clientFirstName={clientFirstName}
-              templates={waTemplates}
-            />
+            {isVisitTask ? (
+              <VisitLocationPanel
+                address={client.address}
+                status={locationStatus}
+                locationCheckResult={locationCheckResult}
+                onVerifyLocation={verifyLocationCheck}
+                onConfirmManual={confirmManual}
+              />
+            ) : (
+              <ContactPanel
+                phone={clientPhone}
+                clientFirstName={clientFirstName}
+                templates={waTemplates}
+              />
+            )}
             <OutcomeOptionList
               options={outcomeOptions}
               value={outcome}
-              onChange={setOutcome}
-              prompt="Qual foi o resultado da ligação?"
+              onChange={(value) => setOutcome(value as ChargeOutcomeValue)}
+              prompt={
+                isVisitTask
+                  ? "Qual foi o resultado da visita?"
+                  : taskChannel === ActivityChannel.WHATSAPP_MESSAGE
+                    ? "Qual foi o resultado do contato?"
+                    : "Qual foi o resultado da ligação?"
+              }
               note={{ value: note, onChange: setNote }}
             />
           </>

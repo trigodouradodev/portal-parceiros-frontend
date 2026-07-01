@@ -15,15 +15,13 @@ import {
   writeTaskTabCookie,
 } from "@/features/dashboard/constants/task-tab";
 import type { PrevClient } from "@/features/dashboard/mocks/tasks";
-import {
-  mapFollowupStatusToStage,
-  mapPreventiveContractToPrevClient,
-} from "@/features/dashboard/utils/task-mappers";
+import { mapPreventiveItemToPrevClient } from "@/features/dashboard/utils/task-mappers";
 import {
   buildChargeActionPayload,
   buildPreventiveActionPayload,
   getChargeRegisterPath,
   getPreventiveRegisterPath,
+  hasPendingChargeTask,
 } from "@/features/dashboard/utils/launch-action";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
@@ -32,7 +30,7 @@ import {
   useOverdueContractsInfinite,
   usePreventiveContractsInfinite,
 } from "@/hooks/useDashboard";
-import type { OverdueContract } from "@/services/dashboard/dashboard.types";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 interface ShellContext {
   onMobileLogout?: () => void;
@@ -64,19 +62,12 @@ export function DashboardPage() {
     fetchNextPage,
   });
 
-  const overdueContracts =
-    overdueData?.pages.flatMap((page) => page.contracts) ?? [];
-  const preventiveContracts =
-    preventiveData?.pages.flatMap((page) => page.contracts) ?? [];
-  const preventiveMapped = preventiveContracts.map((contract) =>
-    mapPreventiveContractToPrevClient(contract),
+  const overdueItems = overdueData?.pages.flatMap((page) => page.items) ?? [];
+  const preventiveItems =
+    preventiveData?.pages.flatMap((page) => page.items) ?? [];
+  const preventiveMapped = preventiveItems.map((item) =>
+    mapPreventiveItemToPrevClient(item),
   );
-
-  const getCobrStage = (contract: OverdueContract) =>
-    mapFollowupStatusToStage(
-      contract.firstOverdueInstallment.latestFollowupStatus,
-      contract.firstOverdueInstallment.followupCount,
-    );
 
   const preventivePending = preventiveMapped.filter(
     (c) => c.followupCount === 0,
@@ -88,24 +79,27 @@ export function DashboardPage() {
       label: "Contato registrado",
     }));
 
-  const cobrPending = overdueContracts.filter(
-    (c) => getCobrStage(c) !== "paid",
-  );
+  const chargePending = overdueItems.filter(hasPendingChargeTask);
 
-  const totalActions = cobrPending.length + preventivePending.length;
+  const totalActions = chargePending.length + preventivePending.length;
 
   const ativos = dashboardData?.activeContracts ?? 0;
   const vencemHoje = dashboardData?.dueTodayContracts ?? 0;
   const emAtraso = dashboardData?.overdueContracts ?? 0;
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
-  const handleCobrAction = (contract: OverdueContract) => {
+  const handleChargeAction = (item: OverdueCollectionItem) => {
     writeTaskTabCookie(readTaskTabFromCookie());
-    setActionData(
-      buildChargeActionPayload(contract, () => {
-        showToast("Ação registrada.");
-      }),
-    );
+    const payload = buildChargeActionPayload(item, () => {
+      showToast("Ação registrada.");
+    });
+    if (!payload) {
+      showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
+        variant: "destructive",
+      });
+      return;
+    }
+    setActionData(payload);
     navigate(getChargeRegisterPath());
   };
 
@@ -119,35 +113,35 @@ export function DashboardPage() {
     navigate(getPreventiveRegisterPath());
   };
 
-  const handleCobrOpen = (contract: OverdueContract) => {
+  const handleChargeOpen = (item: OverdueCollectionItem) => {
     writeTaskTabCookie(TaskTab.Charge);
-    const installment = contract.firstOverdueInstallment.installmentNumber;
+    const installment = item.installment.number;
     navigate(
-      `/contracts/${contract.contractId}?mode=${TaskTab.Charge}&installment=${installment}`,
+      `/contracts/${item.contract.id}?mode=${TaskTab.Charge}&installment=${installment}`,
       {
-        state: { contract, mode: TaskTab.Charge },
+        state: { item, mode: TaskTab.Charge },
       },
     );
   };
 
   const handlePrevOpen = (client: PrevClient) => {
     writeTaskTabCookie(TaskTab.Preventive);
-    const source = preventiveContracts.find((c) => c.contractId === client.id);
-    const installment = source?.nextInstallment.installmentNumber;
+    const source = preventiveItems.find(
+      (item) =>
+        item.contract.id === client.id &&
+        item.installment.number === client.installmentNumber,
+    );
+    const installment = source?.installment.number;
     const installmentParam = installment ? `&installment=${installment}` : "";
     navigate(
       `/contracts/${client.id}?mode=${TaskTab.Preventive}${installmentParam}`,
       {
         state: {
-          contract: source,
+          item: source,
           mode: TaskTab.Preventive,
         },
       },
     );
-  };
-
-  const handleCobrReopen = () => {
-    showToast("Reabertura de tarefa em breve.", { variant: "info" });
   };
 
   if (isLoadingDashboard) {
@@ -213,15 +207,13 @@ export function DashboardPage() {
           </div>
 
           <TasksTabs
-            chargeCount={cobrPending.length}
+            chargeCount={chargePending.length}
             preventiveCount={preventivePending.length}
             charge={{
               isLoading: isLoadingOverdue,
-              contracts: overdueContracts,
-              getStage: getCobrStage,
-              onOpen: handleCobrOpen,
-              onAction: handleCobrAction,
-              onReopen: handleCobrReopen,
+              items: overdueItems,
+              onOpen: handleChargeOpen,
+              onAction: handleChargeAction,
               hasNextPage,
               loadMoreRef,
             }}

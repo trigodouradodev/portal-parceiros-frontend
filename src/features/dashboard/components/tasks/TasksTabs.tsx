@@ -1,6 +1,6 @@
 import { useState, type ComponentProps } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CobrTasksTab } from "@/features/dashboard/components/tasks/CobrTasksTab";
+import { ChargeTasksTab } from "@/features/dashboard/components/tasks/ChargeTasksTab";
 import { PrevTasksTab } from "@/features/dashboard/components/tasks/PrevTasksTab";
 import {
   isTaskTab,
@@ -12,7 +12,7 @@ import {
 interface TasksTabsProps {
   chargeCount: number;
   preventiveCount: number;
-  charge: ComponentProps<typeof CobrTasksTab>;
+  charge: ComponentProps<typeof ChargeTasksTab>;
   preventive: ComponentProps<typeof PrevTasksTab>;
 }
 
@@ -64,7 +64,7 @@ export function TasksTabs({
       </TabsList>
 
       <TabsContent value={TaskTab.Charge} className="w-full">
-        <CobrTasksTab {...charge} />
+        <ChargeTasksTab {...charge} />
       </TabsContent>
 
       <TabsContent value={TaskTab.Preventive} className="w-full">

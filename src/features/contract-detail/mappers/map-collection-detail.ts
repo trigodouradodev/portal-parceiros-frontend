@@ -1,9 +1,11 @@
 import { differenceInCalendarDays, startOfDay } from "date-fns";
 import { TaskTab } from "@/features/dashboard/constants/task-tab";
-import type { CobrStage } from "@/features/dashboard/mocks/tasks";
+import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import { STAGE_INFO } from "@/features/dashboard/mocks/tasks";
 import { mapFollowupStatusToStage } from "@/features/dashboard/utils/task-mappers";
+import { getReguaBadge } from "@/features/dashboard/utils/collection-stage";
 import { buildFollowUpTimeline } from "@/features/contract-detail/mappers/build-follow-up-timeline";
+import { buildActivityTimeline } from "@/features/contract-detail/mappers/build-activity-timeline";
 import { buildPreventiveTimeline } from "@/features/contract-detail/mappers/build-preventive-timeline";
 import type {
   AlertType,
@@ -16,12 +18,12 @@ import { formatDate } from "@/lib/format/date";
 import { formatTaxId } from "@/lib/format/tax-id";
 import type {
   CollectionDetail,
-  OverdueContract,
-  PreventiveContract,
+  OverdueCollectionItem,
+  PreventiveCollectionItem,
 } from "@/services/dashboard/dashboard.types";
 
 export interface CollectionListContext {
-  contract?: OverdueContract | PreventiveContract;
+  item?: OverdueCollectionItem | PreventiveCollectionItem;
 }
 
 function mapStageColor(color: string): StatusColor {
@@ -46,12 +48,26 @@ function getChargeStatus(
   detail: CollectionDetail,
   daysOverdue: number,
 ): { label: string; color: StatusColor } {
-  const latestStatus = detail.followUps[0]?.status;
+  const currentTask = detail.activity.tasks[0];
+  if (currentTask) {
+    const regua = getReguaBadge(
+      currentTask.stageCode,
+      currentTask.stageBadgeLabel,
+    );
+    if (regua) {
+      return {
+        label: regua.label,
+        color: mapStageColor(regua.color),
+      };
+    }
+  }
+
+  const latestStatus = detail.followups[0]?.status;
   if (latestStatus) {
     const stage = mapFollowupStatusToStage(
       latestStatus,
-      detail.followUps.length,
-    ) as CobrStage;
+      detail.followups.length,
+    ) as ChargeStage;
     const stageInfo = STAGE_INFO[stage];
     return {
       label: stageInfo.label,
@@ -111,11 +127,18 @@ function buildTimeline(
   if (mode === TaskTab.Preventive) {
     return buildPreventiveTimeline(
       detail.installment.dueDate,
-      detail.followUps,
+      detail.followups,
     );
   }
 
-  return buildFollowUpTimeline(detail.followUps);
+  if (
+    detail.activity.tasks.length > 0 ||
+    detail.activity.interactions.length > 0
+  ) {
+    return buildActivityTimeline(detail.activity);
+  }
+
+  return buildFollowUpTimeline(detail.followups);
 }
 
 export function mapCollectionDetailToView(
@@ -123,7 +146,7 @@ export function mapCollectionDetailToView(
   mode: DetailMode,
   context?: CollectionListContext,
 ): ContractDetailView {
-  const listContract = context?.contract;
+  const listItem = context?.item;
   const daysFromDue = getDaysFromDueDate(detail.installment.dueDate);
   const nextDue = formatDate(detail.installment.dueDate);
 
@@ -135,21 +158,20 @@ export function mapCollectionDetailToView(
   const { alertDays, alertType } = getAlertInfo(mode, daysFromDue);
 
   const businessName =
-    listContract?.companyName ?? detail.clientName ?? detail.contractNumber;
+    listItem?.contract.companyName ??
+    detail.client.name ??
+    detail.contract.number;
 
-  const clientName =
-    detail.clientName ?? listContract?.clientName ?? detail.contractNumber;
+  const clientName = detail.client.name;
 
-  const clientTaxId = detail.clientTaxId
-    ? formatTaxId(detail.clientTaxId)
-    : listContract?.clientTaxId
-      ? formatTaxId(listContract.clientTaxId)
-      : undefined;
+  const clientTaxId = detail.client.taxId
+    ? formatTaxId(detail.client.taxId)
+    : undefined;
 
   const address =
-    detail.address ??
-    (hasValidAddress(listContract?.address)
-      ? listContract?.address
+    detail.client.address ??
+    (hasValidAddress(listItem?.client.address)
+      ? listItem?.client.address
       : undefined);
 
   const clientAddress =
@@ -158,7 +180,7 @@ export function mapCollectionDetailToView(
       : undefined;
 
   return {
-    contractId: detail.contractId,
+    contractId: detail.contract.id,
     mode,
     businessName,
     clientName,
@@ -167,24 +189,24 @@ export function mapCollectionDetailToView(
     address,
     responsibleName: detail.responsible?.name,
     responsibleType: detail.responsible?.type,
-    contractCode: detail.contractNumber,
+    contractCode: detail.contract.number,
     statusLabel: status.label,
     statusColor: status.color,
     installmentValue: detail.installment.pendingAmount,
     installmentTotalAmount: detail.installment.totalAmount,
-    installmentNumber: detail.installment.installmentNumber,
-    totalInstallments: detail.totalInstallments,
-    contractTotalAmount: detail.contractTotalAmount,
-    contractStartDate: detail.contractStartDate
-      ? formatDate(detail.contractStartDate)
+    installmentNumber: detail.installment.number,
+    totalInstallments: detail.contract.totalInstallments,
+    contractTotalAmount: detail.contract.totalAmount,
+    contractStartDate: detail.contract.startDate
+      ? formatDate(detail.contract.startDate)
       : undefined,
-    contractEndDate: detail.contractEndDate
-      ? formatDate(detail.contractEndDate)
+    contractEndDate: detail.contract.endDate
+      ? formatDate(detail.contract.endDate)
       : undefined,
     nextDue,
     alertDays,
     alertType,
     timeline: buildTimeline(detail, mode),
-    source: listContract,
+    source: listItem,
   };
 }

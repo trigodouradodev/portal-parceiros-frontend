@@ -6,23 +6,28 @@ import { getInitials } from "@/lib/user-display";
 import { fmtBRL } from "@/lib/utils";
 import {
   STAGE_INFO,
-  type CobrClient,
-  type CobrStage,
+  type ChargeClient,
+  type ChargeStage,
 } from "@/features/dashboard/mocks/tasks";
 
-export function CobrTaskCard({
+export function ChargeTaskCard({
   client,
   stage,
+  canRegister = true,
   onOpen,
   onAction,
 }: {
-  client: CobrClient;
-  stage: CobrStage;
+  client: ChargeClient;
+  stage: ChargeStage;
+  canRegister?: boolean;
   onOpen: () => void;
   onAction: () => void;
 }) {
   const info = STAGE_INFO[stage];
-  const badgeVariant = stageBadgeVariant(info.color);
+  const badgeLabel = client.reguaBadge?.label ?? info.label;
+  const badgeVariant = stageBadgeVariant(
+    client.reguaBadge?.color ?? info.color,
+  );
   const overdueLabel = `${client.overdueDays}d atraso`;
   const initials = getInitials(client.name);
 
@@ -44,7 +49,7 @@ export function CobrTaskCard({
           </div>
           <Badge variant={badgeVariant} className="shrink-0 text-[10px]">
             <AlertTriangle size={9} />
-            {info.label}
+            {badgeLabel}
           </Badge>
         </div>
 
@@ -79,6 +84,7 @@ export function CobrTaskCard({
           size="sm"
           variant="outline"
           className="h-8 w-full gap-1.5 text-xs"
+          disabled={!canRegister}
           onClick={onAction}
         >
           <MapPin size={11} className="text-[#BA7517]" />

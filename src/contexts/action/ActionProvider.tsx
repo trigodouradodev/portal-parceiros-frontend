@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import type { CobrStage } from "@/features/dashboard/mocks/tasks";
+import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import {
   ActionContext,
   type ActionClient,
@@ -8,11 +8,18 @@ import {
   type SetActionDataPayload,
   type PreventiveContactType,
 } from "@/contexts/action/action-context";
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 export function ActionProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ActionClient | null>(null);
   const [mode, setMode] = useState<ActionMode | null>(null);
-  const [cobrStage, setCobrStage] = useState<CobrStage | undefined>(undefined);
+  const [chargeStage, setChargeStage] = useState<ChargeStage | undefined>(
+    undefined,
+  );
+  const [taskId, setTaskId] = useState<string | undefined>(undefined);
+  const [taskChannel, setTaskChannel] = useState<ActivityChannel | undefined>(
+    undefined,
+  );
   const [contactType, setContactType] = useState<
     PreventiveContactType | undefined
   >(undefined);
@@ -23,7 +30,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
   function setActionData(data: SetActionDataPayload) {
     setClient(data.client);
     setMode(data.mode);
-    setCobrStage(data.cobrStage);
+    setChargeStage(data.chargeStage);
+    setTaskId(data.taskId);
+    setTaskChannel(data.taskChannel);
     setContactType(data.contactType);
     setOnComplete(() => data.onComplete);
   }
@@ -31,7 +40,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
   function clearActionData() {
     setClient(null);
     setMode(null);
-    setCobrStage(undefined);
+    setChargeStage(undefined);
+    setTaskId(undefined);
+    setTaskChannel(undefined);
     setContactType(undefined);
     setOnComplete(() => () => {});
   }
@@ -41,7 +52,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
       value={{
         client,
         mode,
-        cobrStage,
+        chargeStage,
+        taskId,
+        taskChannel,
         contactType,
         onComplete,
         setActionData,
