@@ -1,7 +1,10 @@
 import { createContext, useContext } from "react";
 import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import type { TaskTab } from "@/features/dashboard/constants/task-tab";
-import type { ClientAddress } from "@/services/dashboard/dashboard.types";
+import type {
+  ActivityChannel,
+  ClientAddress,
+} from "@/services/dashboard/dashboard.types";
 
 export type ActionMode = TaskTab;
 
@@ -33,6 +36,8 @@ export interface SetActionDataPayload {
   client: ActionClient;
   mode: ActionMode;
   chargeStage?: ChargeStage;
+  taskId?: string;
+  taskChannel?: ActivityChannel;
   contactType?: PreventiveContactType;
   onComplete: (result: ActionResult) => void;
 }
@@ -41,6 +46,8 @@ export interface ActionContextType {
   client: ActionClient | null;
   mode: ActionMode | null;
   chargeStage?: ChargeStage;
+  taskId?: string;
+  taskChannel?: ActivityChannel;
   contactType?: PreventiveContactType;
   onComplete: (result: ActionResult) => void;
   setActionData: (data: SetActionDataPayload) => void;

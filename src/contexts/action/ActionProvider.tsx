@@ -8,11 +8,16 @@ import {
   type SetActionDataPayload,
   type PreventiveContactType,
 } from "@/contexts/action/action-context";
+import type { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 export function ActionProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ActionClient | null>(null);
   const [mode, setMode] = useState<ActionMode | null>(null);
   const [chargeStage, setChargeStage] = useState<ChargeStage | undefined>(
+    undefined,
+  );
+  const [taskId, setTaskId] = useState<string | undefined>(undefined);
+  const [taskChannel, setTaskChannel] = useState<ActivityChannel | undefined>(
     undefined,
   );
   const [contactType, setContactType] = useState<
@@ -26,6 +31,8 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setClient(data.client);
     setMode(data.mode);
     setChargeStage(data.chargeStage);
+    setTaskId(data.taskId);
+    setTaskChannel(data.taskChannel);
     setContactType(data.contactType);
     setOnComplete(() => data.onComplete);
   }
@@ -34,6 +41,8 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setClient(null);
     setMode(null);
     setChargeStage(undefined);
+    setTaskId(undefined);
+    setTaskChannel(undefined);
     setContactType(undefined);
     setOnComplete(() => () => {});
   }
@@ -44,6 +53,8 @@ export function ActionProvider({ children }: { children: ReactNode }) {
         client,
         mode,
         chargeStage,
+        taskId,
+        taskChannel,
         contactType,
         onComplete,
         setActionData,

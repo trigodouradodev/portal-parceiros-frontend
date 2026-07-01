@@ -2,32 +2,91 @@ import { TaskTab } from "@/features/dashboard/constants/task-tab";
 import type { PrevClient } from "@/features/dashboard/mocks/tasks";
 import {
   formatPreventiveDaysInfo,
-  mapFollowupStatusToStage,
+  mapTaskToChargeStage,
 } from "@/features/dashboard/utils/task-mappers";
 import type {
   SetActionDataPayload,
   ActionResult,
 } from "@/contexts/action/action-context";
-import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
+import type {
+  ActivityTaskSummary,
+  CollectionDetail,
+  OverdueCollectionItem,
+} from "@/services/dashboard/dashboard.types";
 import { fmtBRL } from "@/lib/utils";
 
 export const CHARGE_REGISTER_PATH = "/register/charge";
 export const PREVENTIVE_REGISTER_PATH = "/register/preventive";
 
+export function hasPendingChargeTask(item: OverdueCollectionItem): boolean {
+  return item.task?.status === "pending";
+}
+
+export function getPendingChargeTask(
+  detail: CollectionDetail,
+): ActivityTaskSummary | undefined {
+  return detail.activity.tasks.find((task) => task.status === "pending");
+}
+
 export function buildChargeActionPayload(
   item: OverdueCollectionItem,
   onComplete: (result: ActionResult) => void,
-): SetActionDataPayload {
-  const { installment, contract, client, followup } = item;
-  const stage = mapFollowupStatusToStage(
-    followup?.latestStatus,
-    followup?.count ?? 0,
-  );
+): SetActionDataPayload | null {
+  const task = item.task;
+  if (!task || task.status !== "pending") {
+    return null;
+  }
+
+  const { installment, contract, client } = item;
+  const stage = mapTaskToChargeStage(task);
   const overdueDays = installment.daysOverdue;
 
   return {
     mode: TaskTab.Charge,
     chargeStage: stage,
+    taskId: task.id,
+    taskChannel: task.channel,
+    client: {
+      id: contract.id,
+      installmentNumber: installment.number,
+      name: client.name,
+      contract: contract.number,
+      parcela: installment.label,
+      value: fmtBRL(installment.pendingAmount),
+      currentStep: stage,
+      daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
+      phone: client.phone,
+      address: client.address,
+    },
+    onComplete,
+  };
+}
+
+export function buildChargeActionPayloadFromDetail(
+  detail: CollectionDetail,
+  onComplete: (result: ActionResult) => void,
+): SetActionDataPayload | null {
+  const task = getPendingChargeTask(detail);
+  if (!task) {
+    return null;
+  }
+
+  const { installment, contract, client } = detail;
+  const stage = mapTaskToChargeStage(task);
+  const dueDate = new Date(installment.dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
+  const overdueDays = Math.max(
+    0,
+    Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)),
+  );
+
+  return {
+    mode: TaskTab.Charge,
+    chargeStage: stage,
+    taskId: task.id,
+    taskChannel: task.channel,
     client: {
       id: contract.id,
       installmentNumber: installment.number,

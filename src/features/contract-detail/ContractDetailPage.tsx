@@ -9,6 +9,7 @@ import {
 } from "@/features/dashboard/constants/task-tab";
 import {
   buildChargeActionPayload,
+  buildChargeActionPayloadFromDetail,
   buildPreventiveActionPayload,
   getChargeRegisterPath,
   getPreventiveRegisterPath,
@@ -71,10 +72,8 @@ export function ContractDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const { detail, listItem, isLoading, isNotFound } = useContractDetail(
-    contractId,
-    mode,
-  );
+  const { detail, listItem, collectionDetail, isLoading, isNotFound } =
+    useContractDetail(contractId, mode);
 
   const handleBack = () => {
     writeTaskTabCookie(mode);
@@ -89,11 +88,34 @@ export function ContractDetailPage() {
       listItem &&
       isOverdueCollectionItem(listItem)
     ) {
-      setActionData(
-        buildChargeActionPayload(listItem, () => {
+      const payload = buildChargeActionPayload(listItem, () => {
+        showToast("Ação registrada.");
+      });
+      if (!payload) {
+        showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
+          variant: "destructive",
+        });
+        return;
+      }
+      setActionData(payload);
+      navigate(getChargeRegisterPath());
+      return;
+    }
+
+    if (mode === TaskTab.Charge && collectionDetail) {
+      const payload = buildChargeActionPayloadFromDetail(
+        collectionDetail,
+        () => {
           showToast("Ação registrada.");
-        }),
+        },
       );
+      if (!payload) {
+        showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
+          variant: "destructive",
+        });
+        return;
+      }
+      setActionData(payload);
       navigate(getChargeRegisterPath());
       return;
     }
