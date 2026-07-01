@@ -1,5 +1,6 @@
 import type { TimelineStep } from "@/features/contract-detail/types";
 import { formatDateTime } from "@/lib/format/date";
+import { getActivityInteractionResultLabel } from "@/services/activities/activity-interaction-labels";
 import type {
   ActivityHistory,
   ActivityInteractionHistoryItem,
@@ -42,7 +43,7 @@ function mapInteractionToStep(
   return {
     id: `interaction-${interaction.id}`,
     day: `#${index + 1}`,
-    label: interaction.result,
+    label: getActivityInteractionResultLabel(interaction.result),
     status: "done",
     date: formatDateTime(interaction.createdAt),
     agent: interaction.author.name,
