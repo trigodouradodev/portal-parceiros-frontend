@@ -13,13 +13,15 @@ export function mapChargeOutcomeToInteractionResult(
 ): ActivityInteractionResult {
   switch (outcome) {
     case ChargeOutcome.NO_RETURN:
-    case ChargeOutcome.SEM_PREVISAO:
-    case ChargeOutcome.NOT_PAID:
       return ActivityInteractionResult.NO_RETURN;
-    case ChargeOutcome.PROMISE:
+    case ChargeOutcome.PAYMENT_PROMISE:
       return ActivityInteractionResult.PAYMENT_PROMISE;
-    case ChargeOutcome.PAID:
+    case ChargeOutcome.WILL_PAY_ON_DATE:
       return ActivityInteractionResult.WILL_PAY_ON_DATE;
+    case ChargeOutcome.REQUESTED_EXTENSION:
+      return ActivityInteractionResult.REQUESTED_EXTENSION;
+    case ChargeOutcome.WANTS_RENEGOTIATION:
+      return ActivityInteractionResult.WANTS_RENEGOTIATION;
     default:
       return ActivityInteractionResult.NO_RETURN;
   }
@@ -38,7 +40,10 @@ export function buildRegisterInteractionPayload(params: {
     observation: params.note || undefined,
   };
 
-  if (params.outcome === ChargeOutcome.PROMISE && params.promiseDate) {
+  if (
+    params.outcome === ChargeOutcome.PAYMENT_PROMISE &&
+    params.promiseDate
+  ) {
     payload.promiseDate = `${params.promiseDate}T12:00:00.000Z`;
   }
 

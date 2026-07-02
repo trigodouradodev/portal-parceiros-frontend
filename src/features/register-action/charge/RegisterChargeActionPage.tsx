@@ -5,8 +5,8 @@ import {
   CheckCircle2,
   Handshake,
   PhoneOff,
+  RefreshCw,
   Send,
-  XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActionContext } from "@/contexts/action";
 import {
-  CHARGE_TITLES,
+  getChargeRegisterTitle,
   getOutcomeOptions,
 } from "@/features/register-action/charge/constants/outcomes";
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/features/register-action/charge/types";
 import { ContactPanel } from "@/features/register-action/charge/components";
 import { getWaTemplates } from "@/features/register-action/charge/utils/wa-templates";
+import { ToneChip } from "@/components/collection/ToneChip";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 import {
   OutcomeOptionList,
@@ -30,7 +31,6 @@ import {
   RegisterActionLayout,
   RegisterFormCard,
   RegisterSaveButton,
-  RegisterStagePills,
   RegisterStepIndicator,
 } from "@/features/register-action";
 import { VisitLocationPanel } from "@/features/register-action/preventive/components";
@@ -47,11 +47,9 @@ export function RegisterChargeActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const registerInteraction = useRegisterInteraction();
-  const { client, chargeStage, taskId, taskChannel, onComplete } =
+  const { client, taskId, taskChannel, taskStageCode, onComplete } =
     useActionContext();
-  const [step, setStep] = useState<Step>(
-    chargeStage === "promise" ? "boleto" : "outcome",
-  );
+  const [step, setStep] = useState<Step>("outcome");
   const [outcome, setOutcome] = useState<ChargeOutcomeValue | null>(null);
   const [boletoValue, setBoletoValue] = useState(client?.value ?? "");
   const [boletoDate, setBoletoDate] = useState("");
@@ -70,34 +68,35 @@ export function RegisterChargeActionPage() {
   });
 
   useEffect(() => {
-    if (!taskId) {
+    if (!taskId || !taskChannel) {
       showToast("Nenhuma tarefa de cobrança pendente para registrar.", {
         variant: "destructive",
       });
       navigate(-1);
     }
-  }, [taskId, navigate, showToast]);
+  }, [taskId, taskChannel, navigate, showToast]);
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  if (!client || !chargeStage || !taskId) {
+  if (!client || !taskId || !taskChannel) {
     return null;
   }
 
   const isVisitTask = taskChannel === ActivityChannel.CLIENT_VISIT;
-  const title = CHARGE_TITLES[chargeStage] ?? "Registrar ação";
+  const isWhatsAppTask = taskChannel === ActivityChannel.WHATSAPP_MESSAGE;
+  const title = getChargeRegisterTitle(taskChannel);
   const clientPhone = client.phone ?? "";
   const clientFirstName = getFirstName(client.name);
-  const waTemplates = getWaTemplates(client);
+  const waTemplates = getWaTemplates(client, taskStageCode);
   const saving = registerInteraction.isPending;
-  const outcomeOptions = getOutcomeOptions(chargeStage, {
+  const outcomeOptions = getOutcomeOptions(taskChannel, {
     [ChargeOutcome.NO_RETURN]: <PhoneOff size={18} />,
-    [ChargeOutcome.SEM_PREVISAO]: <Calendar size={18} />,
-    [ChargeOutcome.PROMISE]: <Handshake size={18} />,
-    [ChargeOutcome.PAID]: <CheckCircle2 size={18} />,
-    [ChargeOutcome.NOT_PAID]: <XCircle size={18} />,
+    [ChargeOutcome.PAYMENT_PROMISE]: <Handshake size={18} />,
+    [ChargeOutcome.WANTS_RENEGOTIATION]: <RefreshCw size={18} />,
+    [ChargeOutcome.REQUESTED_EXTENSION]: <Calendar size={18} />,
+    [ChargeOutcome.WILL_PAY_ON_DATE]: <CheckCircle2 size={18} />,
   });
   const visitLocationReady = !isVisitTask || locationOk;
   const canSaveOutcome =
@@ -146,7 +145,7 @@ export function RegisterChargeActionPage() {
         });
         return;
       }
-      if (outcome === ChargeOutcome.PROMISE) {
+      if (outcome === ChargeOutcome.PAYMENT_PROMISE) {
         setStep("boleto");
         return;
       }
@@ -156,34 +155,27 @@ export function RegisterChargeActionPage() {
 
     if (step === "boleto") {
       if (!boletoDate) return;
-      await submitInteraction(ChargeOutcome.PROMISE, boletoDate);
+      await submitInteraction(ChargeOutcome.PAYMENT_PROMISE, boletoDate);
     }
   }
 
-  const stepIndicator =
-    chargeStage !== "fup" && chargeStage !== "promise" ? (
-      <RegisterStepIndicator
-        steps={["Resultado", "Observações"]}
-        currentStep={step === "outcome" ? 0 : 1}
-      />
-    ) : chargeStage === "fup" ? (
-      <RegisterStagePills
-        steps={["Ligação", "Promessa", "Boleto", "FUP"]}
-        activeIndex={3}
-      />
-    ) : (
-      <RegisterStagePills
-        steps={["Promessa", "Boleto", "FUP"]}
-        activeIndex={1}
-      />
-    );
+  const outcomePrompt = isVisitTask
+    ? "Qual foi o resultado da visita?"
+    : isWhatsAppTask
+      ? "Qual foi o resultado do contato?"
+      : "Qual foi o resultado da ligação?";
 
   return (
     <RegisterActionLayout
       title={title}
       client={client}
       onBack={handleBack}
-      beforeContent={stepIndicator}
+      beforeContent={
+        <RegisterStepIndicator
+          steps={["Ação", "Resultado"]}
+          currentStep={step === "outcome" ? 0 : 1}
+        />
+      }
       footer={
         <RegisterActionFooter>
           {step === "boleto" && (
@@ -210,6 +202,14 @@ export function RegisterChargeActionPage() {
       }
     >
       <RegisterFormCard>
+        {taskStageCode && (
+          <ToneChip
+            stageCode={taskStageCode}
+            showDescription
+            size="md"
+            className="mb-4"
+          />
+        )}
         {step === "outcome" && (
           <>
             {isVisitTask ? (
@@ -231,13 +231,7 @@ export function RegisterChargeActionPage() {
               options={outcomeOptions}
               value={outcome}
               onChange={(value) => setOutcome(value as ChargeOutcomeValue)}
-              prompt={
-                isVisitTask
-                  ? "Qual foi o resultado da visita?"
-                  : taskChannel === ActivityChannel.WHATSAPP_MESSAGE
-                    ? "Qual foi o resultado do contato?"
-                    : "Qual foi o resultado da ligação?"
-              }
+              prompt={outcomePrompt}
               note={{ value: note, onChange: setNote }}
             />
           </>
@@ -251,22 +245,23 @@ export function RegisterChargeActionPage() {
                 className="mt-0.5 shrink-0 text-brand-navy"
               />
               <p className="text-xs font-medium text-brand-navy">
-                Cliente fez promessa de pagamento. Emita o boleto e um FUP será
-                agendado automaticamente.
+                Cliente fez promessa de pagamento. Informe a data prevista de
+                pagamento para registrar a promessa.
               </p>
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <Label>Valor do boleto</Label>
+                <Label>Valor da parcela</Label>
                 <Input
                   className="mt-1"
                   value={boletoValue}
                   onChange={(event) => setBoletoValue(event.target.value)}
                   placeholder="R$ 0,00"
+                  readOnly
                 />
               </div>
               <div className="flex-1">
-                <Label>Vencimento</Label>
+                <Label>Previsão de pagamento</Label>
                 <Input
                   className="mt-1"
                   type="date"

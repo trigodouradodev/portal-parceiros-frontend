@@ -1,6 +1,7 @@
 import type { TaskTab } from "@/features/dashboard/constants/task-tab";
 import type {
   ClientAddress,
+  CollectionStageCode,
   OverdueCollectionItem,
   PreventiveCollectionItem,
   ResponsibleType,
@@ -20,6 +21,9 @@ export interface TimelineStep {
   date?: string;
   agent?: string;
   note?: string;
+  stageCode?: CollectionStageCode;
+  outcome?: string;
+  actionLabel?: string;
 }
 
 export interface ContractDetailView {

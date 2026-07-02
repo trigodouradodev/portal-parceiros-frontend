@@ -9,6 +9,7 @@ import {
   type PreventiveContactType,
 } from "@/contexts/action/action-context";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
+import type { CollectionStageCode } from "@/services/dashboard/dashboard.types";
 
 export function ActionProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ActionClient | null>(null);
@@ -20,6 +21,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
   const [taskChannel, setTaskChannel] = useState<ActivityChannel | undefined>(
     undefined,
   );
+  const [taskStageCode, setTaskStageCode] = useState<
+    CollectionStageCode | undefined
+  >(undefined);
   const [contactType, setContactType] = useState<
     PreventiveContactType | undefined
   >(undefined);
@@ -33,6 +37,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setChargeStage(data.chargeStage);
     setTaskId(data.taskId);
     setTaskChannel(data.taskChannel);
+    setTaskStageCode(data.taskStageCode);
     setContactType(data.contactType);
     setOnComplete(() => data.onComplete);
   }
@@ -43,6 +48,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setChargeStage(undefined);
     setTaskId(undefined);
     setTaskChannel(undefined);
+    setTaskStageCode(undefined);
     setContactType(undefined);
     setOnComplete(() => () => {});
   }
@@ -55,6 +61,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
         chargeStage,
         taskId,
         taskChannel,
+        taskStageCode,
         contactType,
         onComplete,
         setActionData,

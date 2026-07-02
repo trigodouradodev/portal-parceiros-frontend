@@ -8,6 +8,7 @@ import { LoginPage } from "@/features/login/LoginPage";
 import { ContractDetailPage } from "@/features/contract-detail";
 import { RegisterChargeActionPage } from "@/features/register-action/charge";
 import { RegisterPreventiveActionPage } from "@/features/register-action/preventive";
+import { ProfilePage } from "@/features/profile/ProfilePage";
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
         element: <Layout />,
         children: [
           { index: true, element: <DashboardPage /> },
+          { path: "/profile", element: <ProfilePage /> },
           {
             path: "/contracts/:contractId",
             element: <ContractDetailPage />,

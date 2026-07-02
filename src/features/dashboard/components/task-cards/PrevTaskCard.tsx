@@ -27,12 +27,8 @@ export function PrevTaskCard({
   const initials = getInitials(client.name);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex w-full flex-1 flex-col p-4 text-left"
-      >
+    <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+      <button type="button" onClick={onOpen} className="w-full p-4 text-left">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-yellow text-xs font-bold text-brand-navy">
             {initials}
@@ -48,7 +44,7 @@ export function PrevTaskCard({
         </div>
 
         <div className="mt-3 flex items-end justify-between gap-2">
-          <div>
+          <div className="min-w-0">
             <p className="font-mono-dm font-fraunces text-xl font-bold leading-tight text-foreground">
               {fmtBRL(client.value)}
             </p>

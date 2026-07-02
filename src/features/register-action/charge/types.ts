@@ -1,10 +1,10 @@
-/** Valores selecionáveis na UI de registrar cobrança (antes do mapeamento para a API). */
+/** Valores alinhados ao enum ActivityInteractionResult da API de activities. */
 export const ChargeOutcome = {
   NO_RETURN: "no_return",
-  SEM_PREVISAO: "sem_previsao",
-  PROMISE: "promise",
-  PAID: "paid",
-  NOT_PAID: "not_paid",
+  PAYMENT_PROMISE: "payment_promise",
+  WILL_PAY_ON_DATE: "will_pay_on_date",
+  REQUESTED_EXTENSION: "requested_extension",
+  WANTS_RENEGOTIATION: "wants_renegotiation",
 } as const;
 
 export type ChargeOutcome = (typeof ChargeOutcome)[keyof typeof ChargeOutcome];

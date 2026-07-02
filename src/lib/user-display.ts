@@ -14,6 +14,18 @@ export function getGreeting(): string {
   return "Boa noite";
 }
 
+export function getRoleLabel(role: string): string {
+  const labels: Record<string, string> = {
+    ROLE_ADMIN: "Administrador",
+    ROLE_CONSULTANT: "Consultor",
+    ROLE_MANAGER: "Gerente",
+    ROLE_DIRECTOR: "Diretor",
+    ROLE_COLLECTION_AGENT: "Agente de cobrança",
+  };
+
+  return labels[role] ?? role.replace(/^ROLE_/, "").replace(/_/g, " ");
+}
+
 export function getFirstName(fullName: string): string {
   return fullName.split(" ")[0] ?? fullName;
 }

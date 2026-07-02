@@ -1,9 +1,7 @@
 import { TaskTab } from "@/features/dashboard/constants/task-tab";
 import type { PrevClient } from "@/features/dashboard/mocks/tasks";
-import {
-  formatPreventiveDaysInfo,
-  mapTaskToChargeStage,
-} from "@/features/dashboard/utils/task-mappers";
+import { formatPreventiveDaysInfo } from "@/features/dashboard/utils/task-mappers";
+import { getChannelShortLabel } from "@/features/dashboard/utils/charge-channel";
 import type {
   SetActionDataPayload,
   ActionResult,
@@ -38,14 +36,13 @@ export function buildChargeActionPayload(
   }
 
   const { installment, contract, client } = item;
-  const stage = mapTaskToChargeStage(task);
   const overdueDays = installment.daysOverdue;
 
   return {
     mode: TaskTab.Charge,
-    chargeStage: stage,
     taskId: task.id,
     taskChannel: task.channel,
+    taskStageCode: task.stageCode,
     client: {
       id: contract.id,
       installmentNumber: installment.number,
@@ -53,7 +50,7 @@ export function buildChargeActionPayload(
       contract: contract.number,
       parcela: installment.label,
       value: fmtBRL(installment.pendingAmount),
-      currentStep: stage,
+      currentStep: getChannelShortLabel(task.channel),
       daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
       phone: client.phone,
       address: client.address,
@@ -72,7 +69,6 @@ export function buildChargeActionPayloadFromDetail(
   }
 
   const { installment, contract, client } = detail;
-  const stage = mapTaskToChargeStage(task);
   const dueDate = new Date(installment.dueDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -84,9 +80,9 @@ export function buildChargeActionPayloadFromDetail(
 
   return {
     mode: TaskTab.Charge,
-    chargeStage: stage,
     taskId: task.id,
     taskChannel: task.channel,
+    taskStageCode: task.stageCode,
     client: {
       id: contract.id,
       installmentNumber: installment.number,
@@ -94,7 +90,7 @@ export function buildChargeActionPayloadFromDetail(
       contract: contract.number,
       parcela: installment.label,
       value: fmtBRL(installment.pendingAmount),
-      currentStep: stage,
+      currentStep: getChannelShortLabel(task.channel),
       daysInfo: `${overdueDays} dia${overdueDays !== 1 ? "s" : ""} em atraso`,
       phone: client.phone,
       address: client.address,

@@ -8,19 +8,21 @@ import {
   type ChargeOutcome as ChargeOutcomeValue,
 } from "@/features/register-action/charge/types";
 
+/** @deprecated Cobrança usa activities API; mantido para compatibilidade legada. */
 export function mapChargeOutcomeToStatus(
   outcome: ChargeOutcomeValue,
 ): FollowUpStatus {
   switch (outcome) {
     case ChargeOutcome.NO_RETURN:
       return FollowUpStatus.NO_ANSWER;
-    case ChargeOutcome.SEM_PREVISAO:
-    case ChargeOutcome.NOT_PAID:
+    case ChargeOutcome.REQUESTED_EXTENSION:
       return FollowUpStatus.NO_FORECAST;
-    case ChargeOutcome.PROMISE:
+    case ChargeOutcome.PAYMENT_PROMISE:
       return FollowUpStatus.PROMISE_TO_PAY;
-    case ChargeOutcome.PAID:
+    case ChargeOutcome.WILL_PAY_ON_DATE:
       return FollowUpStatus.CONTACTED;
+    case ChargeOutcome.WANTS_RENEGOTIATION:
+      return FollowUpStatus.RENEGOTIATION;
     default:
       return FollowUpStatus.OTHER;
   }
@@ -56,6 +58,7 @@ export function mapPreventiveOutcomeToExpectedResult(
   }
 }
 
+/** @deprecated Cobrança usa POST /activities/tasks/:taskId/interactions */
 export function buildChargeFollowUpPayload(params: {
   contractId: string;
   installmentNumber: number;
@@ -70,8 +73,10 @@ export function buildChargeFollowUpPayload(params: {
     note: params.note || undefined,
   };
 
-  if (params.outcome === ChargeOutcome.PROMISE && params.boletoDate) {
-    // Date input is YYYY-MM-DD; noon UTC avoids local timezone shifting the day.
+  if (
+    params.outcome === ChargeOutcome.PAYMENT_PROMISE &&
+    params.boletoDate
+  ) {
     payload.paymentForecast = `${params.boletoDate}T12:00:00.000Z`;
   }
 

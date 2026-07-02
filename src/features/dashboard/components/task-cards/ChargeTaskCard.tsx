@@ -1,43 +1,58 @@
-import { AlertTriangle, ChevronRight, MapPin } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { stageBadgeVariant } from "@/lib/stage-badge";
+import {
+  AlertTriangle,
+  ChevronRight,
+  MessageSquare,
+  Phone,
+  MapPin,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/user-display";
 import { fmtBRL } from "@/lib/utils";
+import { ChargeTaskPipeline } from "@/features/dashboard/components/task-cards/ChargeTaskPipeline";
+import { getChannelActionButtonLabel } from "@/features/dashboard/utils/charge-channel";
+import { getStageToneMeta } from "@/features/dashboard/utils/collection-stage";
+import type { ChargeClient } from "@/features/dashboard/mocks/tasks";
 import {
-  STAGE_INFO,
-  type ChargeClient,
-  type ChargeStage,
-} from "@/features/dashboard/mocks/tasks";
+  ActivityChannel,
+  type ActivityTaskStatus,
+} from "@/services/dashboard/dashboard.types";
 
 export function ChargeTaskCard({
   client,
-  stage,
+  taskChannel,
+  taskStatus = "pending",
   canRegister = true,
   onOpen,
   onAction,
 }: {
   client: ChargeClient;
-  stage: ChargeStage;
+  taskChannel?: ActivityChannel;
+  taskStatus?: ActivityTaskStatus;
   canRegister?: boolean;
   onOpen: () => void;
   onAction: () => void;
 }) {
-  const info = STAGE_INFO[stage];
-  const badgeLabel = client.reguaBadge?.label ?? info.label;
-  const badgeVariant = stageBadgeVariant(
-    client.reguaBadge?.color ?? info.color,
+  const toneMeta = getStageToneMeta(
+    client.stageCode,
+    client.reguaBadge?.label,
   );
+  const toneColor = toneMeta?.chipClassName ?? "bg-muted text-muted-foreground";
   const overdueLabel = `${client.overdueDays}d atraso`;
   const initials = getInitials(client.name);
+  const actionLabel = taskChannel
+    ? getChannelActionButtonLabel(taskChannel)
+    : "Registrar ação";
+
+  const ActionIcon =
+    taskChannel === ActivityChannel.WHATSAPP_MESSAGE
+      ? MessageSquare
+      : taskChannel === ActivityChannel.CLIENT_VISIT
+        ? MapPin
+        : Phone;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex w-full flex-1 flex-col p-4 text-left"
-      >
+    <div className="overflow-hidden rounded-2xl border border-[#E2E4EC] bg-white shadow-sm">
+      <button type="button" onClick={onOpen} className="w-full p-4 text-left">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-yellow text-xs font-bold text-brand-navy">
             {initials}
@@ -46,40 +61,50 @@ export function ChargeTaskCard({
             <p className="truncate text-sm font-semibold text-foreground">
               {client.name}
             </p>
+            <p className="truncate text-xs text-[#9DA3B4]">{client.contract}</p>
           </div>
-          <Badge variant={badgeVariant} className="shrink-0 text-[10px]">
+          <span
+            className={`flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${toneColor}`}
+          >
             <AlertTriangle size={9} />
-            {badgeLabel}
-          </Badge>
+            {overdueLabel}
+          </span>
         </div>
+
+        {taskChannel && (
+          <ChargeTaskPipeline channel={taskChannel} status={taskStatus} />
+        )}
 
         <div className="mt-3 flex items-end justify-between gap-2">
-          <div>
-            <p className="font-mono-dm font-fraunces text-xl font-bold leading-tight text-foreground">
+          <div className="min-w-0">
+            <p className="font-fraunces text-xl font-bold leading-tight text-foreground">
               {fmtBRL(client.value)}
             </p>
-            <p className="mt-0.5 text-xs text-muted-foreground/80">
-              {client.parcela}
-              <span className="mx-1.5 text-[#D8D9E0]">·</span>
-              <span className="font-medium text-[#D84040]">{overdueLabel}</span>
+            <p className="mt-0.5 text-xs text-[#9DA3B4]">{client.parcela}</p>
+          </div>
+          <div className="mb-1 flex shrink-0 items-center gap-2">
+            {toneMeta && (
+              <span
+                className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${toneColor}`}
+              >
+                {toneMeta.chipLabel}
+              </span>
+            )}
+            <ChevronRight size={16} className="text-[#C8CBD8]" />
+          </div>
+        </div>
+
+        {client.lastAction && (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#9DA3B4]" />
+            <p className="truncate text-xs text-[#9DA3B4]">
+              {client.lastAction}
             </p>
           </div>
-          <ChevronRight size={16} className="mb-1 shrink-0 text-input" />
-        </div>
-
-        <div className="mt-2.5 flex min-h-[1.25rem] items-center gap-1.5">
-          {client.lastAction && (
-            <>
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#BA7517]" />
-              <p className="truncate text-xs text-muted-foreground">
-                {client.lastAction}
-              </p>
-            </>
-          )}
-        </div>
+        )}
       </button>
 
-      <div className="border-t border-muted px-4 pb-3 pt-1">
+      <div className="border-t border-[#F0F1F5] px-4 pb-3 pt-1">
         <Button
           size="sm"
           variant="outline"
@@ -87,8 +112,8 @@ export function ChargeTaskCard({
           disabled={!canRegister}
           onClick={onAction}
         >
-          <MapPin size={11} className="text-[#BA7517]" />
-          Registrar ação
+          <ActionIcon size={11} className="text-[#BA7517]" />
+          {actionLabel}
         </Button>
       </div>
     </div>

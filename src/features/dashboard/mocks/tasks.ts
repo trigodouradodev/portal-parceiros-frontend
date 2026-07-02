@@ -9,7 +9,10 @@ export type ChargeStage =
   | "fup"
   | "paid";
 
-import type { ClientAddress } from "@/services/dashboard/dashboard.types";
+import type {
+  ClientAddress,
+  CollectionStageCode,
+} from "@/services/dashboard/dashboard.types";
 
 export type ActivityType = "phone" | "visit";
 
@@ -40,6 +43,7 @@ export interface ChargeClient {
   activityType: ActivityType;
   stage: ChargeStage;
   lastAction: string | null;
+  stageCode?: CollectionStageCode;
   reguaBadge?: { label: string; color: string };
 }
 

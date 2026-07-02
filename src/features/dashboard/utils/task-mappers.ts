@@ -10,16 +10,16 @@ import {
   type OverdueCollectionItem,
   type PreventiveCollectionItem,
 } from "@/services/dashboard/dashboard.types";
+import { getChannelShortLabel } from "@/features/dashboard/utils/charge-channel";
+import {
+  formatContractCardLabel,
+  formatParcelaCardLabel,
+} from "@/lib/format/installment";
 import {
   getReguaBadge,
   getReguaBadgeWhenNoTask,
+  getStageCodeWhenNoTask,
 } from "@/features/dashboard/utils/collection-stage";
-
-const CHANNEL_LABELS: Record<ActivityChannel, string> = {
-  [ActivityChannel.WHATSAPP_MESSAGE]: "WhatsApp",
-  [ActivityChannel.CLIENT_CALL]: "Ligação",
-  [ActivityChannel.CLIENT_VISIT]: "Visita",
-};
 
 const TASK_STATUS_LABELS: Record<string, string> = {
   pending: "Pendente",
@@ -30,11 +30,6 @@ const TASK_STATUS_LABELS: Record<string, string> = {
 function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
   if (channel === ActivityChannel.CLIENT_VISIT) return "visit";
   return "phone";
-}
-
-export function mapTaskToChargeStage(task: ActivityTaskSummary): ChargeStage {
-  void task;
-  return "initial";
 }
 
 /**
@@ -85,7 +80,7 @@ export function mapFollowupStatusToStage(
 }
 
 function formatTaskLastAction(task: ActivityTaskSummary): string {
-  const channelLabel = CHANNEL_LABELS[task.channel] ?? task.channel;
+  const channelLabel = getChannelShortLabel(task.channel);
   const statusLabel = TASK_STATUS_LABELS[task.status] ?? task.status;
   return `${channelLabel} · ${statusLabel}`;
 }
@@ -100,6 +95,9 @@ export function mapOverdueItemToChargeClient(
       ? "visit"
       : "phone";
 
+  const stageCode = task
+    ? task.stageCode
+    : getStageCodeWhenNoTask(installment.daysOverdue);
   const reguaBadge = task
     ? getReguaBadge(task.stageCode, task.stageBadgeLabel)
     : getReguaBadgeWhenNoTask(installment.daysOverdue);
@@ -107,15 +105,19 @@ export function mapOverdueItemToChargeClient(
   return {
     id: contract.id,
     name: client.name,
-    contract: contract.number,
-    parcela: installment.label,
+    contract: formatContractCardLabel(contract.number),
+    parcela: formatParcelaCardLabel(
+      installment.number,
+      contract.totalInstallments,
+    ),
     value: installment.pendingAmount,
     overdueDays: installment.daysOverdue,
     phone: client.phone ?? "",
     address: client.address,
     activityType,
-    stage: task ? mapTaskToChargeStage(task) : "initial",
+    stage: "initial",
     lastAction: task ? formatTaskLastAction(task) : null,
+    stageCode,
     reguaBadge,
   };
 }
@@ -131,8 +133,11 @@ export function mapPreventiveItemToPrevClient(
     id: contract.id,
     installmentId: installment.id,
     name: client.name,
-    contract: contract.number,
-    parcela: installment.label,
+    contract: formatContractCardLabel(contract.number),
+    parcela: formatParcelaCardLabel(
+      installment.number,
+      contract.totalInstallments,
+    ),
     value: installment.pendingAmount,
     daysUntilDue: installment.daysUntilDue,
     installmentNumber: installment.number,

@@ -3,10 +3,7 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChargeTaskCard } from "@/features/dashboard/components/task-cards";
 import { TaskCardSkeleton } from "@/features/dashboard/components/tasks/TaskCardSkeleton";
-import {
-  mapOverdueItemToChargeClient,
-  mapTaskToChargeStage,
-} from "@/features/dashboard/utils/task-mappers";
+import { mapOverdueItemToChargeClient } from "@/features/dashboard/utils/task-mappers";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 const GRID_CLASS =
@@ -44,15 +41,14 @@ export function ChargeTasksTab({
     <div className={GRID_CLASS}>
       {items.map((item) => {
         const canRegister = item.task?.status === "pending";
-        const stage = item.task
-          ? mapTaskToChargeStage(item.task)
-          : mapOverdueItemToChargeClient(item).stage;
+        const task = item.task;
 
         return (
           <ChargeTaskCard
             key={item.installment.id}
             client={mapOverdueItemToChargeClient(item)}
-            stage={stage}
+            taskChannel={task?.channel}
+            taskStatus={task?.status ?? "pending"}
             canRegister={canRegister}
             onOpen={() => onOpen(item)}
             onAction={() => onAction(item)}

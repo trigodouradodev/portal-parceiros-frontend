@@ -4,6 +4,7 @@ import type { TaskTab } from "@/features/dashboard/constants/task-tab";
 import {
   ActivityChannel,
   type ClientAddress,
+  type CollectionStageCode,
 } from "@/services/dashboard/dashboard.types";
 
 export type ActionMode = TaskTab;
@@ -38,6 +39,7 @@ export interface SetActionDataPayload {
   chargeStage?: ChargeStage;
   taskId?: string;
   taskChannel?: ActivityChannel;
+  taskStageCode?: CollectionStageCode;
   contactType?: PreventiveContactType;
   onComplete: (result: ActionResult) => void;
 }
@@ -48,6 +50,7 @@ export interface ActionContextType {
   chargeStage?: ChargeStage;
   taskId?: string;
   taskChannel?: ActivityChannel;
+  taskStageCode?: CollectionStageCode;
   contactType?: PreventiveContactType;
   onComplete: (result: ActionResult) => void;
   setActionData: (data: SetActionDataPayload) => void;
