@@ -2,7 +2,7 @@ import { MapPin, MessageSquare, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/user-display";
 import { fmtBRL } from "@/lib/utils";
-import type { ChargeQueueDisplayItem } from "@/features/dashboard/utils/map-queue-display";
+import type { ChargeQueueDisplayItem } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 interface ChargeQueueHeroCardProps {

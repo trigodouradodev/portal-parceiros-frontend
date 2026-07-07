@@ -1,7 +1,7 @@
 import { Lock } from "lucide-react";
 import { getInitials } from "@/lib/user-display";
 import { fmtBRL } from "@/lib/utils";
-import type { ChargeQueueDisplayItem } from "@/features/dashboard/utils/map-queue-display";
+import type { ChargeQueueDisplayItem } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
 
 interface ChargeQueueCompactRowProps {
   display: ChargeQueueDisplayItem;

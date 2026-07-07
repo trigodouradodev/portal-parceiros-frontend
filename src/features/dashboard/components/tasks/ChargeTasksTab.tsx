@@ -1,28 +1,13 @@
 import { useMemo, type RefObject } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ChargeQueueCompactRow } from "@/features/dashboard/components/task-cards/ChargeQueueCompactRow";
 import { ChargeQueueHeroCard } from "@/features/dashboard/components/task-cards/ChargeQueueHeroCard";
 import { ChargeQueueSegmentHeader } from "@/features/dashboard/components/tasks/ChargeQueueSegmentHeader";
+import { ChargeQueueSkeleton } from "@/features/dashboard/components/tasks/ChargeQueueSkeleton";
 import { TaskCardSkeleton } from "@/features/dashboard/components/tasks/TaskCardSkeleton";
-import type {
-  ChargeQueueSegmentCode,
-  ChargeQueueSegmentMeta,
-} from "@/features/dashboard/constants/charge-queue-segments";
-import { getChargeQueueSegmentMeta } from "@/features/dashboard/constants/charge-queue-segments";
-import {
-  buildChargeQueue,
-  isQueueItemActionable,
-  type ChargeQueueView,
-} from "@/features/dashboard/utils/charge-queue";
-import {
-  mapOverdueToQueueDisplay,
-  type ChargeQueueDisplayItem,
-} from "@/features/dashboard/utils/map-queue-display";
-import type {
-  ActivityChannel,
-  OverdueCollectionItem,
-} from "@/services/dashboard/dashboard.types";
+import { buildChargeQueueTabView } from "@/features/dashboard/mappers/build-charge-queue-tab-view";
+import { buildChargeQueue } from "@/features/dashboard/utils/charge-queue";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 interface ChargeTasksTabProps {
   isLoading: boolean;
@@ -31,92 +16,6 @@ interface ChargeTasksTabProps {
   onAction: (item: OverdueCollectionItem) => void;
   hasNextPage: boolean;
   loadMoreRef: RefObject<HTMLDivElement | null>;
-}
-
-function ChargeQueueSkeleton() {
-  return (
-    <div className="flex flex-col gap-3">
-      <Skeleton className="h-56 rounded-2xl" />
-      <Skeleton className="h-16 rounded-xl" />
-      <Skeleton className="h-16 rounded-xl" />
-    </div>
-  );
-}
-
-interface ChargeQueueRowView {
-  key: string;
-  item: OverdueCollectionItem;
-  display: ChargeQueueDisplayItem;
-  locked: boolean;
-}
-
-interface ChargeQueueBlockView {
-  key: string;
-  segment: ChargeQueueSegmentMeta;
-  rows: ChargeQueueRowView[];
-}
-
-interface ChargeQueueHeroView {
-  item: OverdueCollectionItem;
-  display: ChargeQueueDisplayItem;
-  taskChannel?: ActivityChannel;
-}
-
-interface ChargeQueueTabView {
-  hero: ChargeQueueHeroView | null;
-  compactHeader: boolean;
-  blocks: ChargeQueueBlockView[];
-}
-
-function buildChargeQueueTabView(queue: ChargeQueueView): ChargeQueueTabView {
-  const heroEntry =
-    queue.actionableIndex !== null
-      ? queue.flat.find((entry) => entry.globalIndex === queue.actionableIndex)
-      : null;
-
-  const hero = heroEntry
-    ? {
-        item: heroEntry.item,
-        display: mapOverdueToQueueDisplay(
-          heroEntry.item,
-          heroEntry.globalIndex + 1,
-        ),
-        taskChannel: heroEntry.item.task?.channel,
-      }
-    : null;
-
-  const blocks: ChargeQueueBlockView[] = [];
-  let currentCode: ChargeQueueSegmentCode | null = null;
-
-  for (const entry of queue.flat) {
-    if (entry.globalIndex === queue.actionableIndex) continue;
-
-    const hasPendingTask = entry.item.task?.status === "pending";
-    const row: ChargeQueueRowView = {
-      key: entry.item.installment.id,
-      item: entry.item,
-      display: mapOverdueToQueueDisplay(entry.item, entry.globalIndex + 1),
-      locked: !isQueueItemActionable(
-        entry.globalIndex,
-        queue.actionableIndex,
-        hasPendingTask,
-      ),
-    };
-
-    if (entry.segmentCode !== currentCode) {
-      currentCode = entry.segmentCode;
-      blocks.push({
-        key: `${currentCode}-${entry.item.installment.id}`,
-        segment: getChargeQueueSegmentMeta(currentCode),
-        rows: [row],
-      });
-      continue;
-    }
-
-    blocks[blocks.length - 1].rows.push(row);
-  }
-
-  return { hero, compactHeader: hero !== null, blocks };
 }
 
 /** Fila segmentada de cobrança na Home (AUREA-186). */
