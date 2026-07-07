@@ -56,9 +56,7 @@ export function ChargeTasksTab({
 
   const remainingEntries = useMemo(
     () =>
-      queue.flat.filter(
-        (entry) => entry.globalIndex !== queue.actionableIndex,
-      ),
+      queue.flat.filter((entry) => entry.globalIndex !== queue.actionableIndex),
     [queue.flat, queue.actionableIndex],
   );
 

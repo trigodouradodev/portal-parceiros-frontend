@@ -107,9 +107,12 @@ export function DashboardPage() {
         hasPendingTask,
       )
     ) {
-      showToast("Complete a tarefa anterior na fila antes de registrar esta ação.", {
-        variant: "destructive",
-      });
+      showToast(
+        "Complete a tarefa anterior na fila antes de registrar esta ação.",
+        {
+          variant: "destructive",
+        },
+      );
       return;
     }
 
