@@ -23,6 +23,10 @@ import {
   getPreventiveRegisterPath,
   hasPendingChargeTask,
 } from "@/features/dashboard/utils/launch-action";
+import {
+  buildChargeQueue,
+  isQueueItemActionable,
+} from "@/features/dashboard/utils/charge-queue";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   useDashboard,
@@ -89,6 +93,26 @@ export function DashboardPage() {
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
   const handleChargeAction = (item: OverdueCollectionItem) => {
+    const queue = buildChargeQueue(overdueItems);
+    const entry = queue.flat.find(
+      (queueEntry) => queueEntry.item.installment.id === item.installment.id,
+    );
+    const hasPendingTask = item.task?.status === "pending";
+
+    if (
+      entry &&
+      !isQueueItemActionable(
+        entry.globalIndex,
+        queue.actionableIndex,
+        hasPendingTask,
+      )
+    ) {
+      showToast("Complete a tarefa anterior na fila antes de registrar esta ação.", {
+        variant: "destructive",
+      });
+      return;
+    }
+
     writeTaskTabCookie(readTaskTabFromCookie());
     const payload = buildChargeActionPayload(item, () => {
       showToast("Ação registrada.");
