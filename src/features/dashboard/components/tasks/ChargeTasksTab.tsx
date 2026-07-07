@@ -5,14 +5,24 @@ import { ChargeQueueCompactRow } from "@/features/dashboard/components/task-card
 import { ChargeQueueHeroCard } from "@/features/dashboard/components/task-cards/ChargeQueueHeroCard";
 import { ChargeQueueSegmentHeader } from "@/features/dashboard/components/tasks/ChargeQueueSegmentHeader";
 import { TaskCardSkeleton } from "@/features/dashboard/components/tasks/TaskCardSkeleton";
-import type { ChargeQueueSegmentCode } from "@/features/dashboard/constants/charge-queue-segments";
+import type {
+  ChargeQueueSegmentCode,
+  ChargeQueueSegmentMeta,
+} from "@/features/dashboard/constants/charge-queue-segments";
 import { getChargeQueueSegmentMeta } from "@/features/dashboard/constants/charge-queue-segments";
 import {
   buildChargeQueue,
   isQueueItemActionable,
+  type ChargeQueueView,
 } from "@/features/dashboard/utils/charge-queue";
-import { mapOverdueToQueueDisplay } from "@/features/dashboard/utils/map-queue-display";
-import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
+import {
+  mapOverdueToQueueDisplay,
+  type ChargeQueueDisplayItem,
+} from "@/features/dashboard/utils/map-queue-display";
+import type {
+  ActivityChannel,
+  OverdueCollectionItem,
+} from "@/services/dashboard/dashboard.types";
 
 interface ChargeTasksTabProps {
   isLoading: boolean;
@@ -33,9 +43,80 @@ function ChargeQueueSkeleton() {
   );
 }
 
-interface RemainingSegmentBlock {
-  segmentCode: ChargeQueueSegmentCode;
-  entries: ReturnType<typeof buildChargeQueue>["flat"];
+interface ChargeQueueRowView {
+  key: string;
+  item: OverdueCollectionItem;
+  display: ChargeQueueDisplayItem;
+  locked: boolean;
+}
+
+interface ChargeQueueBlockView {
+  key: string;
+  segment: ChargeQueueSegmentMeta;
+  rows: ChargeQueueRowView[];
+}
+
+interface ChargeQueueHeroView {
+  item: OverdueCollectionItem;
+  display: ChargeQueueDisplayItem;
+  taskChannel?: ActivityChannel;
+}
+
+interface ChargeQueueTabView {
+  hero: ChargeQueueHeroView | null;
+  compactHeader: boolean;
+  blocks: ChargeQueueBlockView[];
+}
+
+function buildChargeQueueTabView(queue: ChargeQueueView): ChargeQueueTabView {
+  const heroEntry =
+    queue.actionableIndex !== null
+      ? queue.flat.find((entry) => entry.globalIndex === queue.actionableIndex)
+      : null;
+
+  const hero = heroEntry
+    ? {
+        item: heroEntry.item,
+        display: mapOverdueToQueueDisplay(
+          heroEntry.item,
+          heroEntry.globalIndex + 1,
+        ),
+        taskChannel: heroEntry.item.task?.channel,
+      }
+    : null;
+
+  const blocks: ChargeQueueBlockView[] = [];
+  let currentCode: ChargeQueueSegmentCode | null = null;
+
+  for (const entry of queue.flat) {
+    if (entry.globalIndex === queue.actionableIndex) continue;
+
+    const hasPendingTask = entry.item.task?.status === "pending";
+    const row: ChargeQueueRowView = {
+      key: entry.item.installment.id,
+      item: entry.item,
+      display: mapOverdueToQueueDisplay(entry.item, entry.globalIndex + 1),
+      locked: !isQueueItemActionable(
+        entry.globalIndex,
+        queue.actionableIndex,
+        hasPendingTask,
+      ),
+    };
+
+    if (entry.segmentCode !== currentCode) {
+      currentCode = entry.segmentCode;
+      blocks.push({
+        key: `${currentCode}-${entry.item.installment.id}`,
+        segment: getChargeQueueSegmentMeta(currentCode),
+        rows: [row],
+      });
+      continue;
+    }
+
+    blocks[blocks.length - 1].rows.push(row);
+  }
+
+  return { hero, compactHeader: hero !== null, blocks };
 }
 
 /** Fila segmentada de cobrança na Home (AUREA-186). */
@@ -47,34 +128,10 @@ export function ChargeTasksTab({
   hasNextPage,
   loadMoreRef,
 }: ChargeTasksTabProps) {
-  const queue = useMemo(() => buildChargeQueue(items), [items]);
-
-  const heroEntry =
-    queue.actionableIndex !== null
-      ? queue.flat.find((entry) => entry.globalIndex === queue.actionableIndex)
-      : null;
-
-  const remainingEntries = useMemo(
-    () =>
-      queue.flat.filter((entry) => entry.globalIndex !== queue.actionableIndex),
-    [queue.flat, queue.actionableIndex],
+  const queueView = useMemo(
+    () => buildChargeQueueTabView(buildChargeQueue(items)),
+    [items],
   );
-
-  const remainingBlocks = useMemo(() => {
-    const blocks: RemainingSegmentBlock[] = [];
-    let currentCode: ChargeQueueSegmentCode | null = null;
-
-    for (const entry of remainingEntries) {
-      if (entry.segmentCode !== currentCode) {
-        currentCode = entry.segmentCode;
-        blocks.push({ segmentCode: currentCode, entries: [entry] });
-      } else {
-        blocks[blocks.length - 1].entries.push(entry);
-      }
-    }
-
-    return blocks;
-  }, [remainingEntries]);
 
   if (isLoading) {
     return <ChargeQueueSkeleton />;
@@ -84,59 +141,38 @@ export function ChargeTasksTab({
     return <EmptyState label="Nenhuma cobrança pendente hoje." />;
   }
 
+  const { hero, compactHeader, blocks } = queueView;
+
   return (
     <div className="flex flex-col gap-4">
-      {heroEntry && (
+      {hero && (
         <ChargeQueueHeroCard
-          display={mapOverdueToQueueDisplay(
-            heroEntry.item,
-            heroEntry.globalIndex + 1,
-          )}
-          taskChannel={heroEntry.item.task?.channel}
-          onOpen={() => onOpen(heroEntry.item)}
-          onWhatsApp={() => onAction(heroEntry.item)}
-          onCall={() => onAction(heroEntry.item)}
-          onVisit={() => onAction(heroEntry.item)}
+          display={hero.display}
+          taskChannel={hero.taskChannel}
+          onOpen={() => onOpen(hero.item)}
+          onWhatsApp={() => onAction(hero.item)}
+          onCall={() => onAction(hero.item)}
+          onVisit={() => onAction(hero.item)}
         />
       )}
 
-      {remainingBlocks.map((block) => {
-        const segment = getChargeQueueSegmentMeta(block.segmentCode);
-        const useCompactHeader = Boolean(heroEntry);
-
-        return (
-          <section
-            key={`${block.segmentCode}-${block.entries[0]?.item.installment.id}`}
-            className="flex flex-col gap-2"
-          >
-            <ChargeQueueSegmentHeader
-              segment={segment}
-              count={block.entries.length}
-              compact={useCompactHeader}
+      {blocks.map((block) => (
+        <section key={block.key} className="flex flex-col gap-2">
+          <ChargeQueueSegmentHeader
+            segment={block.segment}
+            count={block.rows.length}
+            compact={compactHeader}
+          />
+          {block.rows.map((row) => (
+            <ChargeQueueCompactRow
+              key={row.key}
+              display={row.display}
+              locked={row.locked}
+              onOpen={() => onOpen(row.item)}
             />
-            {block.entries.map((entry) => {
-              const hasPendingTask = entry.item.task?.status === "pending";
-              const isActionable = isQueueItemActionable(
-                entry.globalIndex,
-                queue.actionableIndex,
-                hasPendingTask,
-              );
-
-              return (
-                <ChargeQueueCompactRow
-                  key={entry.item.installment.id}
-                  display={mapOverdueToQueueDisplay(
-                    entry.item,
-                    entry.globalIndex + 1,
-                  )}
-                  locked={!isActionable}
-                  onOpen={() => onOpen(entry.item)}
-                />
-              );
-            })}
-          </section>
-        );
-      })}
+          ))}
+        </section>
+      ))}
 
       {hasNextPage && (
         <div ref={loadMoreRef} className="flex flex-col gap-3 pt-1">
