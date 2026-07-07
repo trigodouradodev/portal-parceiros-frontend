@@ -23,6 +23,10 @@ import {
 } from "@/features/register-action/charge/types";
 import { ContactPanel } from "@/features/register-action/charge/components";
 import { getWaTemplates } from "@/features/register-action/charge/utils/wa-templates";
+import {
+  getPromiseDateBounds,
+  validatePromiseDate,
+} from "@/features/register-action/charge/utils/validate-promise-date";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 import {
   OutcomeOptionList,
@@ -100,9 +104,14 @@ export function RegisterChargeActionPage() {
     [ChargeOutcome.NOT_PAID]: <XCircle size={18} />,
   });
   const visitLocationReady = !isVisitTask || locationOk;
+  const promiseDateBounds = getPromiseDateBounds();
+  const promiseDateError = boletoDate
+    ? validatePromiseDate(boletoDate)
+    : null;
   const canSaveOutcome =
     step === "outcome" && outcome !== null && visitLocationReady;
-  const canSaveBoleto = step === "boleto" && boletoDate !== "";
+  const canSaveBoleto =
+    step === "boleto" && boletoDate !== "" && promiseDateError === null;
 
   async function submitInteraction(
     outcomeValue: ChargeOutcomeValue,
@@ -156,6 +165,11 @@ export function RegisterChargeActionPage() {
 
     if (step === "boleto") {
       if (!boletoDate) return;
+      const dateError = validatePromiseDate(boletoDate);
+      if (dateError) {
+        showToast(dateError, { variant: "destructive" });
+        return;
+      }
       await submitInteraction(ChargeOutcome.PROMISE, boletoDate);
     }
   }
@@ -251,8 +265,8 @@ export function RegisterChargeActionPage() {
                 className="mt-0.5 shrink-0 text-brand-navy"
               />
               <p className="text-xs font-medium text-brand-navy">
-                Cliente fez promessa de pagamento. Emita o boleto e um FUP será
-                agendado automaticamente.
+                Cliente fez promessa de pagamento. Informe a data prevista de
+                pagamento (máximo de 10 dias) para registrar a promessa.
               </p>
             </div>
             <div className="flex gap-3">
@@ -266,13 +280,20 @@ export function RegisterChargeActionPage() {
                 />
               </div>
               <div className="flex-1">
-                <Label>Vencimento</Label>
+                <Label>Previsão de pagamento</Label>
                 <Input
                   className="mt-1"
                   type="date"
+                  min={promiseDateBounds.min}
+                  max={promiseDateBounds.max}
                   value={boletoDate}
                   onChange={(event) => setBoletoDate(event.target.value)}
                 />
+                {promiseDateError && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {promiseDateError}
+                  </p>
+                )}
               </div>
             </div>
             <div>
