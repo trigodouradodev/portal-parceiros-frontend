@@ -1,16 +1,13 @@
-import type { RefObject } from "react";
+import { useMemo, type RefObject } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ChargeTaskCard } from "@/features/dashboard/components/task-cards";
+import { ChargeQueueCompactRow } from "@/features/dashboard/components/task-cards/ChargeQueueCompactRow";
+import { ChargeQueueHeroCard } from "@/features/dashboard/components/task-cards/ChargeQueueHeroCard";
+import { ChargeQueueSegmentHeader } from "@/features/dashboard/components/tasks/ChargeQueueSegmentHeader";
+import { ChargeQueueSkeleton } from "@/features/dashboard/components/tasks/ChargeQueueSkeleton";
 import { TaskCardSkeleton } from "@/features/dashboard/components/tasks/TaskCardSkeleton";
-import {
-  mapOverdueItemToChargeClient,
-  mapTaskToChargeStage,
-} from "@/features/dashboard/utils/task-mappers";
+import { buildChargeQueueTabView } from "@/features/dashboard/mappers/build-charge-queue-tab-view";
+import { buildChargeQueue } from "@/features/dashboard/utils/charge-queue";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
-
-const GRID_CLASS =
-  "grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 interface ChargeTasksTabProps {
   isLoading: boolean;
@@ -21,6 +18,7 @@ interface ChargeTasksTabProps {
   loadMoreRef: RefObject<HTMLDivElement | null>;
 }
 
+/** Fila segmentada de cobrança na Home (AUREA-186). */
 export function ChargeTasksTab({
   isLoading,
   items,
@@ -29,51 +27,56 @@ export function ChargeTasksTab({
   hasNextPage,
   loadMoreRef,
 }: ChargeTasksTabProps) {
+  const queueView = useMemo(
+    () => buildChargeQueueTabView(buildChargeQueue(items)),
+    [items],
+  );
+
   if (isLoading) {
-    return (
-      <div className={GRID_CLASS}>
-        <Skeleton className="h-40 rounded-2xl" />
-        <Skeleton className="h-40 rounded-2xl" />
-        <Skeleton className="h-40 rounded-2xl" />
-        <Skeleton className="h-40 rounded-2xl" />
-      </div>
-    );
+    return <ChargeQueueSkeleton />;
   }
 
+  if (items.length === 0 && !hasNextPage) {
+    return <EmptyState label="Nenhuma cobrança pendente hoje." />;
+  }
+
+  const { hero, compactHeader, blocks } = queueView;
+
   return (
-    <div className={GRID_CLASS}>
-      {items.map((item) => {
-        const canRegister = item.task?.status === "pending";
-        const stage = item.task
-          ? mapTaskToChargeStage(item.task)
-          : mapOverdueItemToChargeClient(item).stage;
-
-        return (
-          <ChargeTaskCard
-            key={item.installment.id}
-            client={mapOverdueItemToChargeClient(item)}
-            stage={stage}
-            canRegister={canRegister}
-            onOpen={() => onOpen(item)}
-            onAction={() => onAction(item)}
-          />
-        );
-      })}
-
-      {hasNextPage && (
-        <>
-          <div ref={loadMoreRef}>
-            <TaskCardSkeleton />
-          </div>
-          <TaskCardSkeleton />
-          <TaskCardSkeleton />
-          <TaskCardSkeleton />
-        </>
+    <div className="flex flex-col gap-4">
+      {hero && (
+        <ChargeQueueHeroCard
+          display={hero.display}
+          taskChannel={hero.taskChannel}
+          onOpen={() => onOpen(hero.item)}
+          onWhatsApp={() => onAction(hero.item)}
+          onCall={() => onAction(hero.item)}
+          onVisit={() => onAction(hero.item)}
+        />
       )}
 
-      {items.length === 0 && !hasNextPage && (
-        <div className="md:col-span-2 lg:col-span-3 xl:col-span-4">
-          <EmptyState label="Nenhuma cobrança pendente hoje." />
+      {blocks.map((block) => (
+        <section key={block.key} className="flex flex-col gap-2">
+          <ChargeQueueSegmentHeader
+            segment={block.segment}
+            count={block.rows.length}
+            compact={compactHeader}
+          />
+          {block.rows.map((row) => (
+            <ChargeQueueCompactRow
+              key={row.key}
+              display={row.display}
+              locked={row.locked}
+              onOpen={() => onOpen(row.item)}
+            />
+          ))}
+        </section>
+      ))}
+
+      {hasNextPage && (
+        <div ref={loadMoreRef} className="flex flex-col gap-3 pt-1">
+          <TaskCardSkeleton />
+          <TaskCardSkeleton />
         </div>
       )}
     </div>
