@@ -61,7 +61,7 @@ export function buildChargeFollowUpPayload(params: {
   installmentNumber: number;
   outcome: ChargeOutcomeValue;
   note?: string;
-  boletoDate?: string;
+  promiseDate?: string;
 }): CreateFollowUpPayload {
   const payload: CreateFollowUpPayload = {
     contractId: params.contractId,
@@ -70,9 +70,9 @@ export function buildChargeFollowUpPayload(params: {
     note: params.note || undefined,
   };
 
-  if (params.outcome === ChargeOutcome.PROMISE && params.boletoDate) {
+  if (params.outcome === ChargeOutcome.PROMISE && params.promiseDate) {
     // Date input is YYYY-MM-DD; noon UTC avoids local timezone shifting the day.
-    payload.paymentForecast = `${params.boletoDate}T12:00:00.000Z`;
+    payload.paymentForecast = `${params.promiseDate}T12:00:00.000Z`;
   }
 
   return payload;

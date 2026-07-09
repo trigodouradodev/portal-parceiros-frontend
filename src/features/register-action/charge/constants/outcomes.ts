@@ -12,7 +12,7 @@ export const CHARGE_TITLES: Partial<Record<ChargeStage, string>> = {
   second_attempt: "Registrar 2ª tentativa",
   third_attempt: "Registrar 3ª tentativa",
   sem_previsao: "Registrar novo contato",
-  promise: "Emitir boleto",
+  promise: "Registrar promessa de pagamento",
   fup: "FUP de promessa",
 };
 

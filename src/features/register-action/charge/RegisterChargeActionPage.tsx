@@ -45,7 +45,7 @@ import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getFirstName } from "@/lib/user-display";
 
-type Step = "outcome" | "boleto";
+type Step = "outcome" | "promiseDetails";
 
 export function RegisterChargeActionPage() {
   const navigate = useNavigate();
@@ -54,11 +54,10 @@ export function RegisterChargeActionPage() {
   const { client, chargeStage, taskId, taskChannel, onComplete } =
     useActionContext();
   const [step, setStep] = useState<Step>(
-    chargeStage === "promise" ? "boleto" : "outcome",
+    chargeStage === "promise" ? "promiseDetails" : "outcome",
   );
   const [outcome, setOutcome] = useState<ChargeOutcomeValue | null>(null);
-  const [boletoValue, setBoletoValue] = useState(client?.value ?? "");
-  const [boletoDate, setBoletoDate] = useState("");
+  const [promiseDate, setPromiseDate] = useState("");
   const [note, setNote] = useState("");
 
   const {
@@ -105,17 +104,19 @@ export function RegisterChargeActionPage() {
   });
   const visitLocationReady = !isVisitTask || locationOk;
   const promiseDateBounds = getPromiseDateBounds();
-  const promiseDateError = boletoDate
-    ? validatePromiseDate(boletoDate)
+  const promiseDateError = promiseDate
+    ? validatePromiseDate(promiseDate)
     : null;
   const canSaveOutcome =
     step === "outcome" && outcome !== null && visitLocationReady;
-  const canSaveBoleto =
-    step === "boleto" && boletoDate !== "" && promiseDateError === null;
+  const canSavePromise =
+    step === "promiseDetails" &&
+    promiseDate !== "" &&
+    promiseDateError === null;
 
   async function submitInteraction(
     outcomeValue: ChargeOutcomeValue,
-    boletoDueDate?: string,
+    selectedPromiseDate?: string,
   ) {
     const currentClient = client;
     if (!currentClient || !taskId) return;
@@ -126,7 +127,7 @@ export function RegisterChargeActionPage() {
       const payload = buildRegisterInteractionPayload({
         outcome: outcomeValue,
         note,
-        promiseDate: boletoDueDate,
+        promiseDate: selectedPromiseDate,
         taskChannel,
         latitude: includeGeo ? geoCoords.latitude : undefined,
         longitude: includeGeo ? geoCoords.longitude : undefined,
@@ -156,21 +157,21 @@ export function RegisterChargeActionPage() {
         return;
       }
       if (outcome === ChargeOutcome.PROMISE) {
-        setStep("boleto");
+        setStep("promiseDetails");
         return;
       }
       await submitInteraction(outcome);
       return;
     }
 
-    if (step === "boleto") {
-      if (!boletoDate) return;
-      const dateError = validatePromiseDate(boletoDate);
+    if (step === "promiseDetails") {
+      if (!promiseDate) return;
+      const dateError = validatePromiseDate(promiseDate);
       if (dateError) {
         showToast(dateError, { variant: "destructive" });
         return;
       }
-      await submitInteraction(ChargeOutcome.PROMISE, boletoDate);
+      await submitInteraction(ChargeOutcome.PROMISE, promiseDate);
     }
   }
 
@@ -187,8 +188,8 @@ export function RegisterChargeActionPage() {
       />
     ) : (
       <RegisterStagePills
-        steps={["Promessa", "Boleto", "FUP"]}
-        activeIndex={1}
+        steps={["Promessa", "FUP"]}
+        activeIndex={0}
       />
     );
 
@@ -200,7 +201,7 @@ export function RegisterChargeActionPage() {
       beforeContent={stepIndicator}
       footer={
         <RegisterActionFooter>
-          {step === "boleto" && (
+          {step === "promiseDetails" && chargeStage !== "promise" && (
             <Button
               variant="outline"
               className="h-12 rounded-2xl px-5"
@@ -214,11 +215,11 @@ export function RegisterChargeActionPage() {
           )}
           <RegisterSaveButton
             saving={saving}
-            disabled={!canSaveOutcome && !canSaveBoleto}
+            disabled={!canSaveOutcome && !canSavePromise}
             onClick={handleSave}
-            variant={step === "boleto" ? "success" : "navy"}
-            label={step === "boleto" ? "Emitir Boleto" : "Registrar"}
-            icon={step === "boleto" ? <Send size={15} /> : undefined}
+            variant={step === "promiseDetails" ? "success" : "navy"}
+            label={step === "promiseDetails" ? "Registrar promessa" : "Registrar"}
+            icon={step === "promiseDetails" ? <Send size={15} /> : undefined}
           />
         </RegisterActionFooter>
       }
@@ -257,7 +258,7 @@ export function RegisterChargeActionPage() {
           </>
         )}
 
-        {step === "boleto" && (
+        {step === "promiseDetails" && (
           <div className="flex flex-col gap-4">
             <div className="flex items-start gap-2.5 rounded-2xl bg-brand-yellow/15 p-3.5">
               <Handshake
@@ -269,32 +270,21 @@ export function RegisterChargeActionPage() {
                 pagamento (máximo de 10 dias) para registrar a promessa.
               </p>
             </div>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <Label>Valor do boleto</Label>
-                <Input
-                  className="mt-1"
-                  value={boletoValue}
-                  onChange={(event) => setBoletoValue(event.target.value)}
-                  placeholder="R$ 0,00"
-                />
-              </div>
-              <div className="flex-1">
-                <Label>Previsão de pagamento</Label>
-                <Input
-                  className="mt-1"
-                  type="date"
-                  min={promiseDateBounds.min}
-                  max={promiseDateBounds.max}
-                  value={boletoDate}
-                  onChange={(event) => setBoletoDate(event.target.value)}
-                />
-                {promiseDateError && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {promiseDateError}
-                  </p>
-                )}
-              </div>
+            <div>
+              <Label>Previsão de pagamento</Label>
+              <Input
+                className="mt-1"
+                type="date"
+                min={promiseDateBounds.min}
+                max={promiseDateBounds.max}
+                value={promiseDate}
+                onChange={(event) => setPromiseDate(event.target.value)}
+              />
+              {promiseDateError && (
+                <p className="mt-1 text-xs text-destructive">
+                  {promiseDateError}
+                </p>
+              )}
             </div>
             <div>
               <Label>
