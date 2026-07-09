@@ -84,6 +84,33 @@ export function mapFollowupStatusToStage(
   return "initial";
 }
 
+const INTERACTION_RESULT_LABELS: Record<string, string> = {
+  no_response: "Sem retorno",
+  will_pay_on_date: "Promessa de pagamento",
+  payment_promise: "Promessa de pagamento",
+  requested_extension: "Pediu prazo",
+  wants_renegotiation: "Quer renegociar",
+};
+
+const INTERACTION_CHANNEL_LABELS: Record<string, string> = {
+  call: "Ligação",
+  whatsapp: "WhatsApp",
+  visit: "Visita",
+};
+
+function formatLastInteraction(
+  interaction: OverdueCollectionItem["lastInteraction"],
+): string | null {
+  if (!interaction) return null;
+
+  const channelLabel =
+    INTERACTION_CHANNEL_LABELS[interaction.channel] ?? interaction.channel;
+  const resultLabel =
+    INTERACTION_RESULT_LABELS[interaction.result] ?? interaction.result;
+
+  return `${channelLabel} · ${resultLabel}`;
+}
+
 function formatTaskLastAction(task: ActivityTaskSummary): string {
   const channelLabel = CHANNEL_LABELS[task.channel] ?? task.channel;
   const statusLabel = TASK_STATUS_LABELS[task.status] ?? task.status;
@@ -115,7 +142,9 @@ export function mapOverdueItemToChargeClient(
     address: client.address,
     activityType,
     stage: task ? mapTaskToChargeStage(task) : "initial",
-    lastAction: task ? formatTaskLastAction(task) : null,
+    lastAction:
+      formatLastInteraction(item.lastInteraction) ??
+      (task ? formatTaskLastAction(task) : null),
     reguaBadge,
   };
 }

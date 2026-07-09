@@ -5,6 +5,7 @@ import {
   type ChargeQueueSegmentMeta,
 } from "@/features/dashboard/constants/charge-queue-segments";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
+import { normalizeQueueSegmentCode } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 
 /** Agrupamento e ordenação da fila de cobrança (AUREA-186). */
 
@@ -41,6 +42,10 @@ function isBrokenPromise(item: OverdueCollectionItem): boolean {
 export function resolveQueueSegment(
   item: OverdueCollectionItem,
 ): ChargeQueueSegmentCode {
+  if (item.queueSegmentCode) {
+    return normalizeQueueSegmentCode(item.queueSegmentCode);
+  }
+
   const days = item.installment.daysOverdue;
 
   if (isBrokenPromise(item)) {

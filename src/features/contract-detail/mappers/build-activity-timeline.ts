@@ -27,7 +27,7 @@ function mapTaskToStep(task: ActivityTaskSummary, index: number): TimelineStep {
     day: `#${index + 1}`,
     label: task.stageBadgeLabel,
     status: isPending ? "current" : "done",
-    date: formatDateTime(task.createdAt),
+    date: task.createdAt ? formatDateTime(task.createdAt) : undefined,
     note: `${getChannelLabel(task.channel)} · ${isPending ? "Pendente" : "Concluída"}`,
   };
 }
