@@ -57,7 +57,11 @@ export const ActivityChannel = {
 export type ActivityChannel =
   (typeof ActivityChannel)[keyof typeof ActivityChannel];
 
-export type ActivityTaskStatus = "pending" | "completed" | "cancelled";
+export type ActivityTaskStatus =
+  | "pending"
+  | "completed"
+  | "cancelled"
+  | "system_closed";
 
 export type FollowupLatestStatus =
   | "contacted"

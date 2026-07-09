@@ -13,15 +13,17 @@ export function mapChargeOutcomeToInteractionResult(
 ): ActivityInteractionResult {
   switch (outcome) {
     case ChargeOutcome.NO_RETURN:
+      return ActivityInteractionResult.NO_RESPONSE;
     case ChargeOutcome.SEM_PREVISAO:
+      return ActivityInteractionResult.NO_FORECAST;
     case ChargeOutcome.NOT_PAID:
-      return ActivityInteractionResult.NO_RETURN;
+      return ActivityInteractionResult.OTHER;
     case ChargeOutcome.PROMISE:
       return ActivityInteractionResult.PAYMENT_PROMISE;
     case ChargeOutcome.PAID:
-      return ActivityInteractionResult.WILL_PAY_ON_DATE;
+      return ActivityInteractionResult.OTHER;
     default:
-      return ActivityInteractionResult.NO_RETURN;
+      return ActivityInteractionResult.OTHER;
   }
 }
 

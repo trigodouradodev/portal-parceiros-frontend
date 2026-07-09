@@ -51,7 +51,8 @@ function mapTaskStatus(status: string): ActivityTaskStatus {
   if (
     status === "pending" ||
     status === "completed" ||
-    status === "cancelled"
+    status === "cancelled" ||
+    status === "system_closed"
   ) {
     return status;
   }

@@ -1,11 +1,14 @@
 /** Espelha portal-parceiros-backend/src/activities/enums/activity.enums.ts */
 
 export const ActivityInteractionResult = {
-  WILL_PAY_ON_DATE: "will_pay_on_date",
-  REQUESTED_EXTENSION: "requested_extension",
-  WANTS_RENEGOTIATION: "wants_renegotiation",
+  NO_RESPONSE: "no_response",
+  NOT_LOCATED: "not_located",
   PAYMENT_PROMISE: "payment_promise",
-  NO_RETURN: "no_return",
+  DISPUTE: "dispute",
+  RENEGOTIATION: "renegotiation",
+  DECEASED: "deceased",
+  NO_FORECAST: "no_forecast",
+  OTHER: "other",
 } as const;
 
 export type ActivityInteractionResult =
