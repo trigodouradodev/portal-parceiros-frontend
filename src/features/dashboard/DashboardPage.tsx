@@ -104,7 +104,6 @@ export function DashboardPage() {
       label: "Contato registrado",
     }));
 
-
   const totalActions = chargeCounter + preventivePending.length;
 
   const ativos = dashboardData?.activeContracts ?? 0;
