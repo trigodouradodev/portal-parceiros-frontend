@@ -1,11 +1,16 @@
 import { useMemo, type RefObject } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
-import { ChargeQueueCompactRow } from "@/features/dashboard/components/task-cards/ChargeQueueCompactRow";
+import {
+  ChargeQueueCompactRow,
+  DoneCard,
+} from "@/features/dashboard/components/task-cards";
 import { ChargeQueueHeroCard } from "@/features/dashboard/components/task-cards/ChargeQueueHeroCard";
+import { ChargeQueueSectionHeader } from "@/features/dashboard/components/tasks/ChargeQueueSectionHeader";
 import { ChargeQueueSegmentHeader } from "@/features/dashboard/components/tasks/ChargeQueueSegmentHeader";
 import { ChargeQueueSkeleton } from "@/features/dashboard/components/tasks/ChargeQueueSkeleton";
 import { TaskCardSkeleton } from "@/features/dashboard/components/tasks/TaskCardSkeleton";
 import { buildChargeQueueTabView } from "@/features/dashboard/mappers/build-charge-queue-tab-view";
+import { mapOverdueToQueueDisplay } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
 import {
   buildChargeQueue,
   type ChargeQueueView,
@@ -28,6 +33,9 @@ interface ChargeTasksTabProps {
   queueView?: ChargeQueueView;
   /** Totais por segmento vindos da API (`TodayQueue.segments`). */
   segmentCounts?: Partial<Record<ChargeQueueSegmentCode, number>>;
+  scheduledItems?: OverdueCollectionItem[];
+  completedTodayItems?: OverdueCollectionItem[];
+  onOpenDetail?: (item: OverdueCollectionItem) => void;
 }
 
 /** Fila segmentada de cobrança na Home (AUREA-186). */
@@ -44,6 +52,9 @@ export function ChargeTasksTab({
   loadMoreRef,
   queueView: queueViewProp,
   segmentCounts,
+  scheduledItems = [],
+  completedTodayItems = [],
+  onOpenDetail,
 }: ChargeTasksTabProps) {
   const queueView = useMemo(
     () => queueViewProp ?? buildChargeQueue(items),
@@ -55,11 +66,16 @@ export function ChargeTasksTab({
     [queueView, segmentCounts],
   );
 
+  const openDetail = onOpenDetail ?? onOpen;
+
   if (isLoading) {
     return <ChargeQueueSkeleton />;
   }
 
-  if (items.length === 0 && !hasNextPage) {
+  const hasSecondarySections =
+    scheduledItems.length > 0 || completedTodayItems.length > 0;
+
+  if (items.length === 0 && !hasNextPage && !hasSecondarySections) {
     return <EmptyState label="Nenhuma cobrança pendente hoje." />;
   }
 
@@ -107,6 +123,46 @@ export function ChargeTasksTab({
           <TaskCardSkeleton />
           <TaskCardSkeleton />
         </div>
+      )}
+
+      {scheduledItems.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <ChargeQueueSectionHeader
+            title="Agendadas"
+            count={scheduledItems.length}
+          />
+          {scheduledItems.map((item, index) => (
+            <ChargeQueueCompactRow
+              key={item.installment.id}
+              display={mapOverdueToQueueDisplay(item, index + 1)}
+              locked
+              onOpen={() => openDetail(item)}
+            />
+          ))}
+        </section>
+      )}
+
+      {completedTodayItems.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <ChargeQueueSectionHeader
+            title="Concluídas hoje"
+            count={completedTodayItems.length}
+          />
+          {completedTodayItems.map((item) => (
+            <button
+              key={item.installment.id}
+              type="button"
+              className="w-full text-left"
+              onClick={() => openDetail(item)}
+            >
+              <DoneCard
+                name={item.client.name}
+                contract={`${item.contract.number} · ${item.installment.label}`}
+                label="Ação concluída hoje"
+              />
+            </button>
+          ))}
+        </section>
       )}
     </div>
   );
