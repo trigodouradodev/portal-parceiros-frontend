@@ -8,9 +8,15 @@ import type {
   SetActionDataPayload,
   ActionResult,
 } from "@/contexts/action/action-context";
+import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
+import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
+import {
+  mapTaskTypeToChannel,
+  mapToneToStageCode,
+} from "@/services/activities/activity-task-mapping";
+import { ActivityTaskStatus } from "@/services/activities/activity.enums";
 import type {
   ActivityTaskSummary,
-  CollectionDetail,
   OverdueCollectionItem,
 } from "@/services/dashboard/dashboard.types";
 import { fmtBRL } from "@/lib/utils";
@@ -18,14 +24,30 @@ import { fmtBRL } from "@/lib/utils";
 export const CHARGE_REGISTER_PATH = "/register/charge";
 export const PREVENTIVE_REGISTER_PATH = "/register/preventive";
 
-export function hasPendingChargeTask(item: OverdueCollectionItem): boolean {
-  return item.task?.status === "pending";
+function mapTaskHistoryToSummary(task: TaskHistoryItem): ActivityTaskSummary {
+  const stageCode = mapToneToStageCode(task.tone);
+
+  return {
+    id: task.id,
+    stageCode,
+    stageBadgeLabel: task.segmentBadgeLabel ?? task.segmentCode,
+    channel: mapTaskTypeToChannel(task.taskType),
+    status: task.status,
+    createdAt: task.createdAt,
+    completedAt: task.completedAt,
+  };
 }
 
-export function getPendingChargeTask(
-  detail: CollectionDetail,
-): ActivityTaskSummary | undefined {
-  return detail.activity.tasks.find((task) => task.status === "pending");
+export function hasPendingChargeTask(item: OverdueCollectionItem): boolean {
+  return item.task?.status === ActivityTaskStatus.PENDING;
+}
+
+export function getPendingTaskFromInstallmentDetail(
+  detail: InstallmentDetail,
+): TaskHistoryItem | undefined {
+  return detail.tasks.find(
+    (task) => task.status === ActivityTaskStatus.PENDING,
+  );
 }
 
 export function buildChargeActionPayload(
@@ -33,7 +55,7 @@ export function buildChargeActionPayload(
   onComplete: (result: ActionResult) => void,
 ): SetActionDataPayload | null {
   const task = item.task;
-  if (!task || task.status !== "pending") {
+  if (!task || task.status !== ActivityTaskStatus.PENDING) {
     return null;
   }
 
@@ -46,6 +68,7 @@ export function buildChargeActionPayload(
     chargeStage: stage,
     taskId: task.id,
     taskChannel: task.channel,
+    installmentId: installment.id,
     client: {
       id: contract.id,
       installmentNumber: installment.number,
@@ -62,31 +85,26 @@ export function buildChargeActionPayload(
   };
 }
 
-export function buildChargeActionPayloadFromDetail(
-  detail: CollectionDetail,
+export function buildChargeActionPayloadFromInstallmentDetail(
+  detail: InstallmentDetail,
   onComplete: (result: ActionResult) => void,
 ): SetActionDataPayload | null {
-  const task = getPendingChargeTask(detail);
-  if (!task) {
+  const pendingTask = getPendingTaskFromInstallmentDetail(detail);
+  if (!pendingTask) {
     return null;
   }
 
+  const task = mapTaskHistoryToSummary(pendingTask);
   const { installment, contract, client } = detail;
   const stage = mapTaskToChargeStage(task);
-  const dueDate = new Date(installment.dueDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  dueDate.setHours(0, 0, 0, 0);
-  const overdueDays = Math.max(
-    0,
-    Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)),
-  );
+  const overdueDays = installment.daysOverdue;
 
   return {
     mode: TaskTab.Charge,
     chargeStage: stage,
     taskId: task.id,
     taskChannel: task.channel,
+    installmentId: installment.id,
     client: {
       id: contract.id,
       installmentNumber: installment.number,

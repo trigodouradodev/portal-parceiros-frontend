@@ -1,14 +1,19 @@
 import type { ChargeQueueSegmentCode } from "@/features/dashboard/constants/charge-queue-segments";
 import { getQueueToneLabel } from "@/features/dashboard/constants/charge-queue-tone";
+import type { QueueSegmentCode } from "@/services/activities/activity.enums";
 import type { QueueTaskCard } from "@/services/activities/activities.types";
 import {
-  ActivityChannel,
-  type ActivityTaskStatus,
-  type CollectionStageCode,
-  type OverdueCollectionItem,
-} from "@/services/dashboard/dashboard.types";
+  mapTaskTypeToChannel,
+  mapToneToStageCode,
+} from "@/services/activities/activity-task-mapping";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
-const API_SEGMENT_ALIASES: Record<string, ChargeQueueSegmentCode> = {
+const API_SEGMENT_ALIASES: Record<QueueSegmentCode, ChargeQueueSegmentCode> = {
+  recent: "recent",
+  broken_promise: "broken_promise",
+  fpd: "fpd",
+  early: "early",
+  mid: "mid",
   post_letter: "late",
   pre_default: "critical",
 };
@@ -24,9 +29,9 @@ const KNOWN_SEGMENTS = new Set<ChargeQueueSegmentCode>([
 ]);
 
 export function normalizeQueueSegmentCode(
-  segmentCode: string,
+  segmentCode: QueueSegmentCode | string,
 ): ChargeQueueSegmentCode {
-  const aliased = API_SEGMENT_ALIASES[segmentCode];
+  const aliased = API_SEGMENT_ALIASES[segmentCode as QueueSegmentCode];
   if (aliased) return aliased;
 
   if (KNOWN_SEGMENTS.has(segmentCode as ChargeQueueSegmentCode)) {
@@ -34,33 +39,6 @@ export function normalizeQueueSegmentCode(
   }
 
   return "mid";
-}
-
-const TONE_TO_STAGE: Record<string, CollectionStageCode> = {
-  friendly: "friendly",
-  firm: "assertive",
-  severe: "warning",
-};
-
-function mapTaskTypeToChannel(taskType: string): ActivityChannel {
-  if (taskType === "visit") return ActivityChannel.CLIENT_VISIT;
-  return ActivityChannel.CLIENT_CALL;
-}
-
-function mapTaskStatus(status: string): ActivityTaskStatus {
-  if (
-    status === "pending" ||
-    status === "completed" ||
-    status === "cancelled" ||
-    status === "system_closed"
-  ) {
-    return status;
-  }
-  return "pending";
-}
-
-function mapToneToStageCode(tone: string): CollectionStageCode {
-  return TONE_TO_STAGE[tone] ?? "friendly";
 }
 
 /** Adapta um card da fila v2 para o shape usado pela UI de cobrança (AUREA-186). */
@@ -96,12 +74,19 @@ export function mapQueueTaskCardToOverdueItem(
       stageCode,
       stageBadgeLabel: getQueueToneLabel(card.tone, stageCode),
       channel: mapTaskTypeToChannel(card.taskType),
-      status: mapTaskStatus(card.status),
+      status: card.status,
     },
     queueSegmentCode: normalizeQueueSegmentCode(card.segmentCode),
+    apiSegmentCode: card.segmentCode,
     queueTone: card.tone,
     queuePosition: card.position,
     correctedAmount: card.installment.amountOverdue,
     lastInteraction: card.lastInteraction ?? undefined,
+    wasPostponed: card.wasPostponed,
+    wasRescheduled: card.wasRescheduled,
+    expireDate: card.expireDate,
+    taskType: card.taskType,
+    assignedTo: card.assignedTo,
+    isActive: card.isActive,
   };
 }

@@ -3,6 +3,7 @@ import { getChargeQueueSegmentMeta } from "@/features/dashboard/constants/charge
 import { getQueueToneLabel } from "@/features/dashboard/constants/charge-queue-tone";
 import type { ChargeClient } from "@/features/dashboard/mocks/tasks";
 import { mapOverdueItemToChargeClient } from "@/features/dashboard/utils/task-mappers";
+import { formatDate } from "@/lib/format/date";
 import {
   ActivityChannel,
   type OverdueCollectionItem,
@@ -20,6 +21,10 @@ export interface ChargeQueueDisplayItem {
   toneLabel: string;
   pendingActionLabel: string;
   contractSubtitle: string;
+  contractLabel: string;
+  wasPostponed: boolean;
+  wasRescheduled: boolean;
+  rescheduledDateLabel?: string;
 }
 
 function getPendingActionLabel(channel?: ActivityChannel): string {
@@ -70,10 +75,17 @@ export function mapOverdueToQueueDisplay(
     consolidatedOverdueAmount: correctedAmount,
     toneLabel: getQueueToneLabel(item.queueTone, stageCode),
     pendingActionLabel: getPendingActionLabel(item.task?.channel),
+    contractLabel: formatContractLabel(client.contract),
     contractSubtitle: buildContractSubtitle(
       client.contract,
       segment,
       item.installment.daysOverdue,
     ),
+    wasPostponed: item.wasPostponed ?? false,
+    wasRescheduled: item.wasRescheduled ?? false,
+    rescheduledDateLabel:
+      item.wasRescheduled && item.expireDate
+        ? formatDate(item.expireDate)
+        : undefined,
   };
 }

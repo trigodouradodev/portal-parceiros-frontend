@@ -12,6 +12,7 @@ import type {
   ChargeQueueView,
 } from "@/features/dashboard/utils/charge-queue";
 import type { QueueTaskCard } from "@/services/activities/activities.types";
+import { ActivityTaskStatus } from "@/services/activities/activity.enums";
 
 /** Monta a fila preservando ordem e segmentos vindos da API v2 (`/activities/tasks/today`). */
 export function buildChargeQueueFromApiCards(
@@ -46,8 +47,9 @@ export function buildChargeQueueFromApiCards(
   const actionableIndex =
     activeIndex >= 0
       ? activeIndex
-      : (flat.find((entry) => entry.item.task?.status === "pending")
-          ?.globalIndex ?? null);
+      : (flat.find(
+          (entry) => entry.item.task?.status === ActivityTaskStatus.PENDING,
+        )?.globalIndex ?? null);
 
   return { groups, flat, actionableIndex };
 }

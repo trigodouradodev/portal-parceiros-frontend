@@ -1,7 +1,9 @@
 import {
+  ActivityInteractionChannel,
   ActivityInteractionResult,
-  type RegisterInteractionPayload,
-} from "@/services/activities/activities.types";
+  ActivityRecipientType,
+} from "@/services/activities/activity.enums";
+import type { RegisterInteractionPayload } from "@/services/activities/activities.types";
 import {
   ChargeOutcome,
   type ChargeOutcome as ChargeOutcomeValue,
@@ -27,6 +29,18 @@ export function mapChargeOutcomeToInteractionResult(
   }
 }
 
+function mapUiChannelToInteractionChannel(
+  taskChannel?: ActivityChannel,
+): ActivityInteractionChannel {
+  if (taskChannel === ActivityChannel.CLIENT_VISIT) {
+    return ActivityInteractionChannel.VISIT;
+  }
+  if (taskChannel === ActivityChannel.WHATSAPP_MESSAGE) {
+    return ActivityInteractionChannel.WHATSAPP;
+  }
+  return ActivityInteractionChannel.CALL;
+}
+
 export function buildRegisterInteractionPayload(params: {
   outcome: ChargeOutcomeValue;
   note?: string;
@@ -36,6 +50,8 @@ export function buildRegisterInteractionPayload(params: {
   longitude?: number;
 }): RegisterInteractionPayload {
   const payload: RegisterInteractionPayload = {
+    channel: mapUiChannelToInteractionChannel(params.taskChannel),
+    recipientType: ActivityRecipientType.CLIENT,
     result: mapChargeOutcomeToInteractionResult(params.outcome),
     observation: params.note || undefined,
   };

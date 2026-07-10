@@ -20,6 +20,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
   const [taskChannel, setTaskChannel] = useState<ActivityChannel | undefined>(
     undefined,
   );
+  const [installmentId, setInstallmentId] = useState<string | undefined>(
+    undefined,
+  );
   const [contactType, setContactType] = useState<
     PreventiveContactType | undefined
   >(undefined);
@@ -33,6 +36,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setChargeStage(data.chargeStage);
     setTaskId(data.taskId);
     setTaskChannel(data.taskChannel);
+    setInstallmentId(data.installmentId);
     setContactType(data.contactType);
     setOnComplete(() => data.onComplete);
   }
@@ -43,6 +47,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setChargeStage(undefined);
     setTaskId(undefined);
     setTaskChannel(undefined);
+    setInstallmentId(undefined);
     setContactType(undefined);
     setOnComplete(() => () => {});
   }
@@ -55,6 +60,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
         chargeStage,
         taskId,
         taskChannel,
+        installmentId,
         contactType,
         onComplete,
         setActionData,

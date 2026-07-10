@@ -24,6 +24,8 @@ export interface ChargeQueueHeroView {
   item: OverdueCollectionItem;
   display: ChargeQueueDisplayItem;
   taskChannel?: ActivityChannel;
+  canPostpone: boolean;
+  canRescheduleVisit: boolean;
 }
 
 export interface ChargeQueueTabView {

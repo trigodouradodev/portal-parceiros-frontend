@@ -47,8 +47,14 @@ export function RegisterChargeActionPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const registerInteraction = useRegisterInteraction();
-  const { client, chargeStage, taskId, taskChannel, onComplete } =
-    useActionContext();
+  const {
+    client,
+    chargeStage,
+    taskId,
+    taskChannel,
+    installmentId,
+    onComplete,
+  } = useActionContext();
   const [step, setStep] = useState<Step>(
     chargeStage === "promise" ? "boleto" : "outcome",
   );
@@ -127,6 +133,7 @@ export function RegisterChargeActionPage() {
         payload,
         contractId: currentClient.id,
         installmentNumber: currentClient.installmentNumber,
+        installmentId,
       });
       onComplete({ note });
       navigate(-1);

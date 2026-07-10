@@ -9,7 +9,7 @@ import {
 } from "@/features/dashboard/constants/task-tab";
 import {
   buildChargeActionPayload,
-  buildChargeActionPayloadFromDetail,
+  buildChargeActionPayloadFromInstallmentDetail,
   buildPreventiveActionPayload,
   getChargeRegisterPath,
   getPreventiveRegisterPath,
@@ -72,7 +72,7 @@ export function ContractDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const { detail, listItem, collectionDetail, isLoading, isNotFound } =
+  const { detail, listItem, installmentDetail, isLoading, isNotFound } =
     useContractDetail(contractId, mode);
 
   const handleBack = () => {
@@ -102,9 +102,9 @@ export function ContractDetailPage() {
       return;
     }
 
-    if (mode === TaskTab.Charge && collectionDetail) {
-      const payload = buildChargeActionPayloadFromDetail(
-        collectionDetail,
+    if (mode === TaskTab.Charge && installmentDetail) {
+      const payload = buildChargeActionPayloadFromInstallmentDetail(
+        installmentDetail,
         () => {
           showToast("Ação registrada.");
         },

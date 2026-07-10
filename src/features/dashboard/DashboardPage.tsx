@@ -24,11 +24,13 @@ import {
   getPreventiveRegisterPath,
 } from "@/features/dashboard/utils/launch-action";
 import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
-import { isQueueItemActionable } from "@/features/dashboard/utils/charge-queue";
+import { isChargeQueueItemBlocked } from "@/features/dashboard/utils/charge-queue";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   buildSegmentCountsFromApi,
   flattenTodayQueueCards,
+  usePostponeTask,
+  useRescheduleTask,
   useTodayQueueInfinite,
 } from "@/hooks/useActivities";
 import {
@@ -37,6 +39,8 @@ import {
   usePreventiveContractsInfinite,
 } from "@/hooks/useDashboard";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
+import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
+import { formatDate } from "@/lib/format/date";
 
 interface ShellContext {
   onMobileLogout?: () => void;
@@ -58,6 +62,8 @@ export function DashboardPage() {
     fetchNextPage,
     isFetchingNextPage,
   } = useTodayQueueInfinite(30);
+  const postponeTask = usePostponeTask();
+  const rescheduleTask = useRescheduleTask();
 
   const { data: preventiveData, isLoading: isLoadingPreventive } =
     usePreventiveContractsInfinite(30, 15);
@@ -112,19 +118,7 @@ export function DashboardPage() {
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
   const handleChargeAction = (item: OverdueCollectionItem) => {
-    const entry = chargeQueueView.flat.find(
-      (queueEntry) => queueEntry.item.task?.id === item.task?.id,
-    );
-    const hasPendingTask = item.task?.status === "pending";
-
-    if (
-      entry &&
-      !isQueueItemActionable(
-        entry.globalIndex,
-        chargeQueueView.actionableIndex,
-        hasPendingTask,
-      )
-    ) {
+    if (isChargeQueueItemBlocked(chargeQueueView, item)) {
       showToast(
         "Complete a tarefa anterior na fila antes de registrar esta ação.",
         {
@@ -159,14 +153,73 @@ export function DashboardPage() {
   };
 
   const handleChargeOpen = (item: OverdueCollectionItem) => {
+    if (isChargeQueueItemBlocked(chargeQueueView, item)) {
+      showToast(
+        "Complete a tarefa anterior na fila antes de abrir este contrato.",
+        { variant: "destructive" },
+      );
+      return;
+    }
+
     writeTaskTabCookie(TaskTab.Charge);
     const installment = item.installment.number;
+    const installmentId = item.installment.id;
     navigate(
-      `/contracts/${item.contract.id}?mode=${TaskTab.Charge}&installment=${installment}`,
+      `/contracts/${item.contract.id}?mode=${TaskTab.Charge}&installment=${installment}&installmentId=${installmentId}`,
       {
         state: { item, mode: TaskTab.Charge },
       },
     );
+  };
+
+  const handlePostpone = async (item: OverdueCollectionItem) => {
+    const taskId = item.task?.id;
+    if (!taskId) {
+      showToast("Nenhuma tarefa de cobrança pendente para postergar.", {
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await postponeTask.mutateAsync({
+        taskId,
+        installmentId: item.installment.id,
+      });
+      showToast("Tarefa postergada para amanhã.");
+    } catch (err) {
+      showToast(
+        getTaskActionErrorMessage(err, "Não foi possível postergar a tarefa."),
+        { variant: "destructive" },
+      );
+    }
+  };
+
+  const handleRescheduleVisit = async (
+    item: OverdueCollectionItem,
+    date: string,
+  ) => {
+    const taskId = item.task?.id;
+    if (!taskId) {
+      showToast("Nenhuma tarefa de visita pendente para reagendar.", {
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await rescheduleTask.mutateAsync({
+        taskId,
+        payload: { date },
+        installmentId: item.installment.id,
+      });
+      showToast(`Visita reagendada para ${formatDate(date)}.`);
+    } catch (err) {
+      showToast(
+        getTaskActionErrorMessage(err, "Não foi possível reagendar a visita."),
+        { variant: "destructive" },
+      );
+    }
   };
 
   const handlePrevOpen = (client: PrevClient) => {
@@ -261,6 +314,10 @@ export function DashboardPage() {
               segmentCounts,
               onOpen: handleChargeOpen,
               onAction: handleChargeAction,
+              onPostpone: handlePostpone,
+              onRescheduleVisit: handleRescheduleVisit,
+              isPostponing: postponeTask.isPending,
+              isRescheduling: rescheduleTask.isPending,
               hasNextPage,
               loadMoreRef,
             }}

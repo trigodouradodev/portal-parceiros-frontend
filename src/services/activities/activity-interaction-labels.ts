@@ -1,4 +1,4 @@
-import { ActivityInteractionResult } from "./activities.types";
+import { ActivityInteractionResult } from "./activity.enums";
 
 const ACTIVITY_INTERACTION_RESULT_LABELS: Record<
   ActivityInteractionResult,

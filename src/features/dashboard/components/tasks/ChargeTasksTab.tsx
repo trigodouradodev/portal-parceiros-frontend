@@ -18,6 +18,10 @@ interface ChargeTasksTabProps {
   items: OverdueCollectionItem[];
   onOpen: (item: OverdueCollectionItem) => void;
   onAction: (item: OverdueCollectionItem) => void;
+  onPostpone: (item: OverdueCollectionItem) => void;
+  onRescheduleVisit: (item: OverdueCollectionItem, date: string) => void;
+  isPostponing?: boolean;
+  isRescheduling?: boolean;
   hasNextPage: boolean;
   loadMoreRef: RefObject<HTMLDivElement | null>;
   /** Quando informado, usa a fila v2 já ordenada pela API. */
@@ -32,6 +36,10 @@ export function ChargeTasksTab({
   items,
   onOpen,
   onAction,
+  onPostpone,
+  onRescheduleVisit,
+  isPostponing = false,
+  isRescheduling = false,
   hasNextPage,
   loadMoreRef,
   queueView: queueViewProp,
@@ -63,10 +71,16 @@ export function ChargeTasksTab({
         <ChargeQueueHeroCard
           display={hero.display}
           taskChannel={hero.taskChannel}
+          canPostpone={hero.canPostpone}
+          canRescheduleVisit={hero.canRescheduleVisit}
           onOpen={() => onOpen(hero.item)}
           onWhatsApp={() => onAction(hero.item)}
           onCall={() => onAction(hero.item)}
           onVisit={() => onAction(hero.item)}
+          onPostpone={() => onPostpone(hero.item)}
+          onRescheduleVisit={(date) => onRescheduleVisit(hero.item, date)}
+          isPostponing={isPostponing}
+          isRescheduling={isRescheduling}
         />
       )}
 
