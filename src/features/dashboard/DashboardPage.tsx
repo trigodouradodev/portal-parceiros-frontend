@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { AlertTriangle, Clock, RefreshCw, FileText } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -21,17 +22,18 @@ import {
   buildPreventiveActionPayload,
   getChargeRegisterPath,
   getPreventiveRegisterPath,
-  hasPendingChargeTask,
 } from "@/features/dashboard/utils/launch-action";
-import {
-  buildChargeQueue,
-  isQueueItemActionable,
-} from "@/features/dashboard/utils/charge-queue";
+import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
+import { isQueueItemActionable } from "@/features/dashboard/utils/charge-queue";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
+import {
+  buildSegmentCountsFromApi,
+  flattenTodayQueueCards,
+  useTodayQueueInfinite,
+} from "@/hooks/useActivities";
 import {
   useDashboard,
   usePerformance,
-  useOverdueContractsInfinite,
   usePreventiveContractsInfinite,
 } from "@/hooks/useDashboard";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
@@ -50,12 +52,12 @@ export function DashboardPage() {
   const { data: performanceData, isLoading: isLoadingPerformance } =
     usePerformance();
   const {
-    data: overdueData,
-    isLoading: isLoadingOverdue,
+    data: todayQueueData,
+    isLoading: isLoadingTodayQueue,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useOverdueContractsInfinite(30);
+  } = useTodayQueueInfinite(30);
 
   const { data: preventiveData, isLoading: isLoadingPreventive } =
     usePreventiveContractsInfinite(30, 15);
@@ -66,7 +68,26 @@ export function DashboardPage() {
     fetchNextPage,
   });
 
-  const overdueItems = overdueData?.pages.flatMap((page) => page.items) ?? [];
+  const chargeQueueData = useMemo(() => {
+    const pages = todayQueueData?.pages ?? [];
+    const cards = flattenTodayQueueCards(pages);
+    const queueView = buildChargeQueueFromApiCards(cards);
+    const firstPage = pages[0];
+
+    return {
+      items: queueView.flat.map((entry) => entry.item),
+      queueView,
+      counter: firstPage?.counter ?? cards.length,
+      segmentCounts: buildSegmentCountsFromApi(firstPage?.segments ?? []),
+    };
+  }, [todayQueueData?.pages]);
+
+  const {
+    items: chargeItems,
+    queueView: chargeQueueView,
+    counter: chargeCounter,
+    segmentCounts,
+  } = chargeQueueData;
   const preventiveItems =
     preventiveData?.pages.flatMap((page) => page.items) ?? [];
   const preventiveMapped = preventiveItems.map((item) =>
@@ -83,9 +104,7 @@ export function DashboardPage() {
       label: "Contato registrado",
     }));
 
-  const chargePending = overdueItems.filter(hasPendingChargeTask);
-
-  const totalActions = chargePending.length + preventivePending.length;
+  const totalActions = chargeCounter + preventivePending.length;
 
   const ativos = dashboardData?.activeContracts ?? 0;
   const vencemHoje = dashboardData?.dueTodayContracts ?? 0;
@@ -93,9 +112,8 @@ export function DashboardPage() {
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
 
   const handleChargeAction = (item: OverdueCollectionItem) => {
-    const queue = buildChargeQueue(overdueItems);
-    const entry = queue.flat.find(
-      (queueEntry) => queueEntry.item.installment.id === item.installment.id,
+    const entry = chargeQueueView.flat.find(
+      (queueEntry) => queueEntry.item.task?.id === item.task?.id,
     );
     const hasPendingTask = item.task?.status === "pending";
 
@@ -103,7 +121,7 @@ export function DashboardPage() {
       entry &&
       !isQueueItemActionable(
         entry.globalIndex,
-        queue.actionableIndex,
+        chargeQueueView.actionableIndex,
         hasPendingTask,
       )
     ) {
@@ -234,11 +252,13 @@ export function DashboardPage() {
           </div>
 
           <TasksTabs
-            chargeCount={chargePending.length}
+            chargeCount={chargeCounter}
             preventiveCount={preventivePending.length}
             charge={{
-              isLoading: isLoadingOverdue,
-              items: overdueItems,
+              isLoading: isLoadingTodayQueue,
+              items: chargeItems,
+              queueView: chargeQueueView,
+              segmentCounts,
               onOpen: handleChargeOpen,
               onAction: handleChargeAction,
               hasNextPage,

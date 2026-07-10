@@ -1,10 +1,10 @@
 import type { ChargeQueueSegmentMeta } from "@/features/dashboard/constants/charge-queue-segments";
 import { getChargeQueueSegmentMeta } from "@/features/dashboard/constants/charge-queue-segments";
+import { getQueueToneLabel } from "@/features/dashboard/constants/charge-queue-tone";
 import type { ChargeClient } from "@/features/dashboard/mocks/tasks";
 import { mapOverdueItemToChargeClient } from "@/features/dashboard/utils/task-mappers";
 import {
   ActivityChannel,
-  type CollectionStageCode,
   type OverdueCollectionItem,
 } from "@/services/dashboard/dashboard.types";
 import { resolveQueueSegment } from "@/features/dashboard/utils/charge-queue";
@@ -20,18 +20,6 @@ export interface ChargeQueueDisplayItem {
   toneLabel: string;
   pendingActionLabel: string;
   contractSubtitle: string;
-}
-
-const TONE_LABELS: Record<CollectionStageCode, string> = {
-  friendly: "Tom amigável",
-  assertive: "Tom firme",
-  warning: "Tom severo",
-  defaulted: "Tom severo",
-};
-
-function getToneLabel(stageCode?: CollectionStageCode): string {
-  if (!stageCode) return "Tom amigável";
-  return TONE_LABELS[stageCode] ?? "Tom amigável";
 }
 
 function getPendingActionLabel(channel?: ActivityChannel): string {
@@ -62,7 +50,7 @@ function buildContractSubtitle(
 
 export function mapOverdueToQueueDisplay(
   item: OverdueCollectionItem,
-  queuePosition: number,
+  fallbackPosition: number,
 ): ChargeQueueDisplayItem {
   const client = mapOverdueItemToChargeClient(item);
   const segmentCode = resolveQueueSegment(item);
@@ -70,16 +58,17 @@ export function mapOverdueToQueueDisplay(
   const stageCode = item.task?.stageCode;
   const pendingAmount = item.installment.pendingAmount;
   const totalAmount = item.installment.totalAmount;
+  const correctedAmount = item.correctedAmount ?? pendingAmount;
 
   return {
     client,
     segment,
-    queuePosition,
+    queuePosition: item.queuePosition ?? fallbackPosition,
     originalAmount: totalAmount,
-    correctedAmount: pendingAmount,
+    correctedAmount,
     overdueInstallmentCount: 1,
-    consolidatedOverdueAmount: pendingAmount,
-    toneLabel: getToneLabel(stageCode),
+    consolidatedOverdueAmount: correctedAmount,
+    toneLabel: getQueueToneLabel(item.queueTone, stageCode),
     pendingActionLabel: getPendingActionLabel(item.task?.channel),
     contractSubtitle: buildContractSubtitle(
       client.contract,

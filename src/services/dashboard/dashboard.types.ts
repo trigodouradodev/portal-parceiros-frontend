@@ -57,7 +57,11 @@ export const ActivityChannel = {
 export type ActivityChannel =
   (typeof ActivityChannel)[keyof typeof ActivityChannel];
 
-export type ActivityTaskStatus = "pending" | "completed" | "cancelled";
+export type ActivityTaskStatus =
+  | "pending"
+  | "completed"
+  | "cancelled"
+  | "system_closed";
 
 export type FollowupLatestStatus =
   | "contacted"
@@ -126,7 +130,7 @@ export interface ActivityTaskSummary {
   stageBadgeLabel: string;
   channel: ActivityChannel;
   status: ActivityTaskStatus;
-  createdAt: string;
+  createdAt?: string;
   completedAt?: string;
 }
 
@@ -146,6 +150,20 @@ export interface OverdueCollectionItem {
    * `task` (régua). Mantido opcional para compatibilidade e robustez.
    */
   followup?: FollowupSummary;
+  /** Segmento da fila v2 (`/activities/tasks/today`). */
+  queueSegmentCode?: string;
+  /** Tom da régua v2: friendly | firm | severe. */
+  queueTone?: string;
+  /** Posição na fila conforme API v2. */
+  queuePosition?: number;
+  /** Valor corrigido hoje (amountOverdue da API v2). */
+  correctedAmount?: number;
+  /** Última interação registrada (API v2). */
+  lastInteraction?: {
+    result: string;
+    channel: string;
+    createdAt: string;
+  };
 }
 
 export interface OverduePagination {

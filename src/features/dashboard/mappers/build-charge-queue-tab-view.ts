@@ -11,8 +11,13 @@ import {
   type ChargeQueueView,
 } from "@/features/dashboard/utils/charge-queue";
 
+export interface BuildChargeQueueTabViewOptions {
+  segmentCounts?: Record<string, number>;
+}
+
 export function buildChargeQueueTabView(
   queue: ChargeQueueView,
+  options?: BuildChargeQueueTabViewOptions,
 ): ChargeQueueTabView {
   const heroEntry =
     queue.actionableIndex !== null
@@ -53,6 +58,7 @@ export function buildChargeQueueTabView(
       blocks.push({
         key: `${currentCode}-${entry.item.installment.id}`,
         segment: getChargeQueueSegmentMeta(currentCode),
+        segmentCount: options?.segmentCounts?.[currentCode],
         rows: [row],
       });
       continue;

@@ -15,6 +15,8 @@ export interface ChargeQueueRowView {
 export interface ChargeQueueBlockView {
   key: string;
   segment: ChargeQueueSegmentMeta;
+  /** Total do segmento na API (travadas); fallback = rows carregadas. */
+  segmentCount?: number;
   rows: ChargeQueueRowView[];
 }
 

@@ -14,6 +14,10 @@ import {
   getReguaBadge,
   getReguaBadgeWhenNoTask,
 } from "@/features/dashboard/utils/collection-stage";
+import {
+  getActivityInteractionChannelLabel,
+  getActivityInteractionResultLabel,
+} from "@/services/activities/activity-interaction-labels";
 
 const CHANNEL_LABELS: Record<ActivityChannel, string> = {
   [ActivityChannel.WHATSAPP_MESSAGE]: "WhatsApp",
@@ -25,6 +29,7 @@ const TASK_STATUS_LABELS: Record<string, string> = {
   pending: "Pendente",
   completed: "Concluída",
   cancelled: "Cancelada",
+  system_closed: "Encerrada pelo sistema",
 };
 
 function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
@@ -84,6 +89,17 @@ export function mapFollowupStatusToStage(
   return "initial";
 }
 
+function formatLastInteraction(
+  interaction: OverdueCollectionItem["lastInteraction"],
+): string | null {
+  if (!interaction) return null;
+
+  const channelLabel = getActivityInteractionChannelLabel(interaction.channel);
+  const resultLabel = getActivityInteractionResultLabel(interaction.result);
+
+  return `${channelLabel} · ${resultLabel}`;
+}
+
 function formatTaskLastAction(task: ActivityTaskSummary): string {
   const channelLabel = CHANNEL_LABELS[task.channel] ?? task.channel;
   const statusLabel = TASK_STATUS_LABELS[task.status] ?? task.status;
@@ -115,7 +131,9 @@ export function mapOverdueItemToChargeClient(
     address: client.address,
     activityType,
     stage: task ? mapTaskToChargeStage(task) : "initial",
-    lastAction: task ? formatTaskLastAction(task) : null,
+    lastAction:
+      formatLastInteraction(item.lastInteraction) ??
+      (task ? formatTaskLastAction(task) : null),
     reguaBadge,
   };
 }
