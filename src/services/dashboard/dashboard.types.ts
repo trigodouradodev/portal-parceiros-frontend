@@ -4,6 +4,14 @@
  * Source: portal-parceiros-backend/src/collections/interfaces/
  */
 
+import type {
+  ActivityInteractionChannel,
+  ActivityInteractionResult,
+  ActivityTaskType,
+  QueueSegmentCode,
+  QueueTone,
+} from "@/services/activities/activity.enums";
+
 export interface RenewalMonthBucket {
   month: string; // 'YYYY-MM'
   count: number;
@@ -150,20 +158,32 @@ export interface OverdueCollectionItem {
    * `task` (régua). Mantido opcional para compatibilidade e robustez.
    */
   followup?: FollowupSummary;
-  /** Segmento da fila v2 (`/activities/tasks/today`). */
+  /** Segmento normalizado para UI (mapeado a partir do code da API v2). */
   queueSegmentCode?: string;
-  /** Tom da régua v2: friendly | firm | severe. */
-  queueTone?: string;
+  /** segmentCode bruto retornado pela API v2. */
+  apiSegmentCode?: QueueSegmentCode;
+  /** Tom da régua v2. */
+  queueTone?: QueueTone;
   /** Posição na fila conforme API v2. */
   queuePosition?: number;
   /** Valor corrigido hoje (amountOverdue da API v2). */
   correctedAmount?: number;
   /** Última interação registrada (API v2). */
   lastInteraction?: {
-    result: string;
-    channel: string;
+    result: ActivityInteractionResult;
+    channel: ActivityInteractionChannel;
     createdAt: string;
   };
+  /** Flags da fila v2 (postergar / reagendar). */
+  wasPostponed?: boolean;
+  wasRescheduled?: boolean;
+  expireDate?: string;
+  /** Tipo da tarefa v2: contact | visit. */
+  taskType?: ActivityTaskType;
+  /** Responsável pela tarefa (supervisão gerente/diretor). */
+  assignedTo?: { id: string; name: string } | null;
+  /** Se é a tarefa #1 executável do responsável. */
+  isActive?: boolean;
 }
 
 export interface OverduePagination {
@@ -278,6 +298,5 @@ export interface CollectionDetail {
   client: ClientInfo;
   responsible?: ContractResponsible;
   installment: InstallmentDetailInfo;
-  activity: ActivityHistory;
   followups: FollowUpHistoryItem[];
 }

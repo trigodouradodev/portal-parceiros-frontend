@@ -1,18 +1,14 @@
-/** Espelha portal-parceiros-backend/src/activities/enums/activity.enums.ts */
+import type {
+  ActivityInteractionChannel,
+  ActivityInteractionResult,
+  ActivityRecipientType,
+  ActivityTaskStatus,
+  ActivityTaskType,
+  QueueSegmentCode,
+  QueueTone,
+} from "@/services/activities/activity.enums";
 
-export const ActivityInteractionResult = {
-  NO_RESPONSE: "no_response",
-  NOT_LOCATED: "not_located",
-  PAYMENT_PROMISE: "payment_promise",
-  DISPUTE: "dispute",
-  RENEGOTIATION: "renegotiation",
-  DECEASED: "deceased",
-  NO_FORECAST: "no_forecast",
-  OTHER: "other",
-} as const;
-
-export type ActivityInteractionResult =
-  (typeof ActivityInteractionResult)[keyof typeof ActivityInteractionResult];
+export * from "@/services/activities/activity.enums";
 
 export interface InteractionGeolocation {
   latitude: number;
@@ -20,9 +16,12 @@ export interface InteractionGeolocation {
 }
 
 export interface RegisterInteractionPayload {
+  channel: ActivityInteractionChannel;
+  recipientType: ActivityRecipientType;
   result: ActivityInteractionResult;
   observation?: string;
   promiseDate?: string;
+  recipientContactId?: string;
   latitude?: number;
   longitude?: number;
 }
@@ -32,8 +31,11 @@ export interface ActivityInteractionResponse {
   taskId: string;
   installmentId: string;
   contractId: string;
-  channel: string;
-  result: string;
+  taskType: ActivityTaskType;
+  channel: ActivityInteractionChannel;
+  recipientType: ActivityRecipientType;
+  recipientContactId?: string;
+  result: ActivityInteractionResult;
   promiseDate?: string;
   observation?: string;
   userId: string;
@@ -41,19 +43,8 @@ export interface ActivityInteractionResponse {
   geolocation?: InteractionGeolocation;
 }
 
-export interface CreatedTaskResponse {
-  id: string;
-  installmentId: string;
-  contractId: string;
-  stageCode: string;
-  channel: string;
-  status: string;
-  createdAt: string;
-}
-
 export interface RegisterInteractionResponse {
   interaction: ActivityInteractionResponse;
-  nextTask: CreatedTaskResponse | null;
 }
 
 export interface RegisterInteractionVariables {
@@ -61,6 +52,7 @@ export interface RegisterInteractionVariables {
   payload: RegisterInteractionPayload;
   contractId: string;
   installmentNumber: number;
+  installmentId?: string;
 }
 
 /** Espelha portal-parceiros-backend/src/activities/interfaces/task-queue.interface.ts */
@@ -90,8 +82,8 @@ export interface QueueInstallment {
 }
 
 export interface QueueLastInteraction {
-  result: string;
-  channel: string;
+  result: ActivityInteractionResult;
+  channel: ActivityInteractionChannel;
   createdAt: string;
 }
 
@@ -100,17 +92,14 @@ export interface QueueAssignee {
   name: string;
 }
 
-export type QueueTaskType = "contact" | "visit";
-export type QueueTone = "friendly" | "firm" | "severe";
-
 export interface QueueTaskCard {
   position: number;
   taskId: string;
-  segmentCode: string;
+  segmentCode: QueueSegmentCode;
   priority: number;
-  tone: QueueTone | string;
-  taskType: QueueTaskType | string;
-  status: string;
+  tone: QueueTone;
+  taskType: ActivityTaskType;
+  status: ActivityTaskStatus;
   isActive: boolean;
   assignedTo: QueueAssignee | null;
   expireDate: string;
@@ -123,7 +112,7 @@ export interface QueueTaskCard {
 }
 
 export interface SegmentSummary {
-  code: string;
+  code: QueueSegmentCode;
   priority: number;
   count: number;
 }
@@ -148,4 +137,21 @@ export interface TodayQueue {
   locked: LockedPage;
   scheduled: QueueTaskCard[];
   completedToday: QueueTaskCard[];
+}
+
+/** Estado da tarefa após postergar ou reagendar. */
+export interface TaskActionResult {
+  id: string;
+  installmentId: string;
+  contractId: string;
+  segmentCode: QueueSegmentCode;
+  taskType: ActivityTaskType;
+  status: ActivityTaskStatus;
+  expireDate: string;
+  wasPostponed: boolean;
+  wasRescheduled: boolean;
+}
+
+export interface RescheduleTaskPayload {
+  date: string;
 }

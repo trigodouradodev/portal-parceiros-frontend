@@ -10,9 +10,28 @@ import {
   isQueueItemActionable,
   type ChargeQueueView,
 } from "@/features/dashboard/utils/charge-queue";
+import { ActivityTaskStatus } from "@/services/activities/activity.enums";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 export interface BuildChargeQueueTabViewOptions {
   segmentCounts?: Record<string, number>;
+}
+
+function buildHeroView(entry: {
+  item: OverdueCollectionItem;
+  globalIndex: number;
+}) {
+  const taskChannel = entry.item.task?.channel;
+  return {
+    item: entry.item,
+    display: mapOverdueToQueueDisplay(entry.item, entry.globalIndex + 1),
+    taskChannel,
+    canPostpone: !entry.item.wasPostponed,
+    canRescheduleVisit:
+      taskChannel === ActivityChannel.CLIENT_VISIT &&
+      !entry.item.wasRescheduled,
+  };
 }
 
 export function buildChargeQueueTabView(
@@ -24,16 +43,7 @@ export function buildChargeQueueTabView(
       ? queue.flat.find((entry) => entry.globalIndex === queue.actionableIndex)
       : null;
 
-  const hero = heroEntry
-    ? {
-        item: heroEntry.item,
-        display: mapOverdueToQueueDisplay(
-          heroEntry.item,
-          heroEntry.globalIndex + 1,
-        ),
-        taskChannel: heroEntry.item.task?.channel,
-      }
-    : null;
+  const hero = heroEntry ? buildHeroView(heroEntry) : null;
 
   const blocks: ChargeQueueBlockView[] = [];
   let currentCode: ChargeQueueSegmentCode | null = null;
@@ -41,7 +51,8 @@ export function buildChargeQueueTabView(
   for (const entry of queue.flat) {
     if (entry.globalIndex === queue.actionableIndex) continue;
 
-    const hasPendingTask = entry.item.task?.status === "pending";
+    const hasPendingTask =
+      entry.item.task?.status === ActivityTaskStatus.PENDING;
     const row: ChargeQueueRowView = {
       key: entry.item.installment.id,
       item: entry.item,

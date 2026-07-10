@@ -1,9 +1,16 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { ChargeQueueSegmentCode } from "@/features/dashboard/constants/charge-queue-segments";
 import { normalizeQueueSegmentCode } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
+import { dashboardKeys } from "@/hooks/useDashboard";
+import { installmentKeys } from "@/hooks/useInstallmentDetail";
 import { activitiesService } from "@/services/activities/activities.service";
 import type {
   QueueTaskCard,
+  RescheduleTaskPayload,
   SegmentSummary,
 } from "@/services/activities/activities.types";
 
@@ -59,5 +66,49 @@ export function useTodayQueueInfinite(limit = 30) {
       return undefined;
     },
     staleTime: 30 * 1000,
+  });
+}
+
+export function usePostponeTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ taskId }: { taskId: string; installmentId?: string }) =>
+      activitiesService.postponeTask(taskId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      queryClient.invalidateQueries({ queryKey: installmentKeys.all });
+      if (variables.installmentId) {
+        queryClient.invalidateQueries({
+          queryKey: installmentKeys.detail(variables.installmentId),
+        });
+      }
+    },
+  });
+}
+
+export function useRescheduleTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      payload,
+    }: {
+      taskId: string;
+      payload: RescheduleTaskPayload;
+      installmentId?: string;
+    }) => activitiesService.rescheduleTask(taskId, payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      queryClient.invalidateQueries({ queryKey: installmentKeys.all });
+      if (variables.installmentId) {
+        queryClient.invalidateQueries({
+          queryKey: installmentKeys.detail(variables.installmentId),
+        });
+      }
+    },
   });
 }
