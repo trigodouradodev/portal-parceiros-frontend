@@ -14,6 +14,7 @@ import {
   mapTaskTypeToChannel,
   mapToneToStageCode,
 } from "@/services/activities/activity-task-mapping";
+import { ActivityTaskStatus } from "@/services/activities/activity.enums";
 import type {
   ActivityTaskSummary,
   OverdueCollectionItem,
@@ -31,20 +32,22 @@ function mapTaskHistoryToSummary(task: TaskHistoryItem): ActivityTaskSummary {
     stageCode,
     stageBadgeLabel: task.segmentBadgeLabel ?? task.segmentCode,
     channel: mapTaskTypeToChannel(task.taskType),
-    status: task.status as ActivityTaskSummary["status"],
+    status: task.status,
     createdAt: task.createdAt,
     completedAt: task.completedAt,
   };
 }
 
 export function hasPendingChargeTask(item: OverdueCollectionItem): boolean {
-  return item.task?.status === "pending";
+  return item.task?.status === ActivityTaskStatus.PENDING;
 }
 
 export function getPendingTaskFromInstallmentDetail(
   detail: InstallmentDetail,
 ): TaskHistoryItem | undefined {
-  return detail.tasks.find((task) => task.status === "pending");
+  return detail.tasks.find(
+    (task) => task.status === ActivityTaskStatus.PENDING,
+  );
 }
 
 export function buildChargeActionPayload(
@@ -52,7 +55,7 @@ export function buildChargeActionPayload(
   onComplete: (result: ActionResult) => void,
 ): SetActionDataPayload | null {
   const task = item.task;
-  if (!task || task.status !== "pending") {
+  if (!task || task.status !== ActivityTaskStatus.PENDING) {
     return null;
   }
 

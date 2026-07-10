@@ -4,19 +4,26 @@ import {
   getActivityInteractionChannelLabel,
   getActivityInteractionResultLabel,
 } from "@/services/activities/activity-interaction-labels";
+import {
+  ActivityTaskStatus,
+  ActivityTaskType,
+} from "@/services/activities/activity.enums";
 import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
 
-function mapTaskStatusLabel(status: string): string {
-  if (status === "pending") return "Pendente";
-  if (status === "completed") return "Concluída";
-  if (status === "system_closed") return "Encerrada pelo sistema";
-  if (status === "cancelled") return "Cancelada";
-  return status;
+const TASK_STATUS_LABELS: Record<ActivityTaskStatus, string> = {
+  [ActivityTaskStatus.PENDING]: "Pendente",
+  [ActivityTaskStatus.COMPLETED]: "Concluída",
+  [ActivityTaskStatus.SYSTEM_CLOSED]: "Encerrada pelo sistema",
+  [ActivityTaskStatus.CANCELLED]: "Cancelada",
+};
+
+function mapTaskStatusLabel(status: ActivityTaskStatus): string {
+  return TASK_STATUS_LABELS[status] ?? status;
 }
 
 function mapTaskToStep(task: TaskHistoryItem, index: number): TimelineStep {
   const interaction = task.interaction;
-  const isPending = task.status === "pending";
+  const isPending = task.status === ActivityTaskStatus.PENDING;
   const label =
     interaction?.result != null
       ? getActivityInteractionResultLabel(interaction.result)
@@ -28,10 +35,11 @@ function mapTaskToStep(task: TaskHistoryItem, index: number): TimelineStep {
     if (interaction.observation) {
       noteParts.push(interaction.observation);
     }
-  } else if (task.status === "system_closed") {
+  } else if (task.status === ActivityTaskStatus.SYSTEM_CLOSED) {
     noteParts.push("Encerrada pelo sistema");
   } else {
-    const channelLabel = task.taskType === "visit" ? "Visita" : "Contato";
+    const channelLabel =
+      task.taskType === ActivityTaskType.VISIT ? "Visita" : "Contato";
     noteParts.push(`${channelLabel} · ${mapTaskStatusLabel(task.status)}`);
   }
 

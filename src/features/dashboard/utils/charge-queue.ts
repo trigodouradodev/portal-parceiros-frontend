@@ -4,8 +4,9 @@ import {
   type ChargeQueueSegmentCode,
   type ChargeQueueSegmentMeta,
 } from "@/features/dashboard/constants/charge-queue-segments";
-import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 import { normalizeQueueSegmentCode } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
+import { ActivityTaskStatus } from "@/services/activities/activity.enums";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 /** Agrupamento e ordenação da fila de cobrança (AUREA-186). */
 
@@ -101,8 +102,8 @@ export function buildChargeQueue(
   }
 
   const actionableIndex =
-    flat.find((entry) => entry.item.task?.status === "pending")?.globalIndex ??
-    null;
+    flat.find((entry) => entry.item.task?.status === ActivityTaskStatus.PENDING)
+      ?.globalIndex ?? null;
 
   return { groups, flat, actionableIndex };
 }
@@ -124,7 +125,7 @@ export function isChargeQueueItemBlocked(
   );
   if (!entry) return true;
 
-  const hasPendingTask = item.task?.status === "pending";
+  const hasPendingTask = item.task?.status === ActivityTaskStatus.PENDING;
   return !isQueueItemActionable(
     entry.globalIndex,
     queue.actionableIndex,

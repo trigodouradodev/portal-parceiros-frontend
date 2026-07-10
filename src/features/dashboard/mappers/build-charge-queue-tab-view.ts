@@ -10,6 +10,7 @@ import {
   isQueueItemActionable,
   type ChargeQueueView,
 } from "@/features/dashboard/utils/charge-queue";
+import { ActivityTaskStatus } from "@/services/activities/activity.enums";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
@@ -50,7 +51,8 @@ export function buildChargeQueueTabView(
   for (const entry of queue.flat) {
     if (entry.globalIndex === queue.actionableIndex) continue;
 
-    const hasPendingTask = entry.item.task?.status === "pending";
+    const hasPendingTask =
+      entry.item.task?.status === ActivityTaskStatus.PENDING;
     const row: ChargeQueueRowView = {
       key: entry.item.installment.id,
       item: entry.item,

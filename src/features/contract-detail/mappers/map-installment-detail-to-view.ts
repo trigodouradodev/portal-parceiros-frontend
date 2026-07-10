@@ -11,6 +11,7 @@ import { formatClientAddress, hasValidAddress } from "@/lib/contact-actions";
 import { formatDate } from "@/lib/format/date";
 import { formatTaxId } from "@/lib/format/tax-id";
 import { mapToneToStageCode } from "@/services/activities/activity-task-mapping";
+import { ActivityTaskStatus } from "@/services/activities/activity.enums";
 import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
@@ -32,7 +33,8 @@ function mapStageColor(color: string): StatusColor {
 
 function getPendingOrLatestTask(detail: InstallmentDetail) {
   return (
-    detail.tasks.find((task) => task.status === "pending") ?? detail.tasks[0]
+    detail.tasks.find((task) => task.status === ActivityTaskStatus.PENDING) ??
+    detail.tasks[0]
   );
 }
 
