@@ -1,3 +1,12 @@
+import type {
+  ActivityInteractionChannel,
+  ActivityInteractionResult,
+  ActivityRecipientType,
+  ActivityTaskStatus,
+  ActivityTaskType,
+  QueueSegmentCode,
+  QueueTone,
+} from "@/services/activities/activity.enums";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 import type { ContractResponsible } from "@/services/dashboard/dashboard.types";
 
@@ -13,9 +22,9 @@ export interface DetailGeolocation {
 
 export interface TaskInteraction {
   id: string;
-  channel: string;
-  recipientType: string;
-  result: string;
+  channel: ActivityInteractionChannel;
+  recipientType: ActivityRecipientType;
+  result: ActivityInteractionResult;
   promiseDate?: string;
   observation?: string;
   createdAt: string;
@@ -25,12 +34,12 @@ export interface TaskInteraction {
 
 export interface TaskHistoryItem {
   id: string;
-  segmentCode: string;
+  segmentCode: QueueSegmentCode;
   segmentBadgeLabel?: string;
   priority: number;
-  tone: string;
-  taskType: string;
-  status: string;
+  tone: QueueTone;
+  taskType: ActivityTaskType;
+  status: ActivityTaskStatus;
   createdBy: string;
   expireDate: string;
   wasPostponed: boolean;

@@ -1,4 +1,8 @@
 import api from "@/lib/api/axios";
+import {
+  normalizeInstallmentDetail,
+  normalizeTodayQueue,
+} from "./normalize-api-responses";
 import type {
   RegisterInteractionPayload,
   RegisterInteractionResponse,
@@ -13,7 +17,7 @@ export const activitiesService = {
     const { data } = await api.get<TodayQueue>("/activities/tasks/today", {
       params: { page, limit },
     });
-    return data;
+    return normalizeTodayQueue(data);
   },
 
   async getInstallmentDetail(
@@ -22,7 +26,7 @@ export const activitiesService = {
     const { data } = await api.get<InstallmentDetail>(
       `/activities/installments/${installmentId}`,
     );
-    return data;
+    return normalizeInstallmentDetail(data);
   },
 
   async registerInteraction(

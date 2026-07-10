@@ -1,6 +1,7 @@
 import type { CollectionStageCode } from "@/services/dashboard/dashboard.types";
+import type { QueueTone } from "@/services/activities/activity.enums";
 
-export const QUEUE_TONE_LABELS: Record<string, string> = {
+export const QUEUE_TONE_LABELS: Record<QueueTone, string> = {
   friendly: "Tom amigável",
   firm: "Tom firme",
   severe: "Tom severo",
@@ -14,11 +15,11 @@ const STAGE_TONE_LABELS: Record<CollectionStageCode, string> = {
 };
 
 export function getQueueToneLabel(
-  queueTone?: string,
+  queueTone?: QueueTone | string,
   stageCode?: CollectionStageCode,
 ): string {
-  if (queueTone && QUEUE_TONE_LABELS[queueTone]) {
-    return QUEUE_TONE_LABELS[queueTone];
+  if (queueTone && queueTone in QUEUE_TONE_LABELS) {
+    return QUEUE_TONE_LABELS[queueTone as QueueTone];
   }
   if (!stageCode) return "Tom amigável";
   return STAGE_TONE_LABELS[stageCode] ?? "Tom amigável";
