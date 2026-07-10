@@ -6,38 +6,29 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/contexts/toast/toast-context";
 import { useActionContext } from "@/contexts/action";
 import { SummaryCard } from "@/features/dashboard/components/SummaryCards";
-import { PerformanceSection } from "@/features/dashboard/components/PerformanceSection";
-import { CommissionSection } from "@/features/dashboard/components/CommissionSection";
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
-import { TasksTabs } from "@/features/dashboard/components/tasks/TasksTabs";
+import { ChargeTasksTab } from "@/features/dashboard/components/tasks/ChargeTasksTab";
 import {
-  readTaskTabFromCookie,
   TaskTab,
   writeTaskTabCookie,
 } from "@/features/dashboard/constants/task-tab";
-import type { PrevClient } from "@/features/dashboard/mocks/tasks";
-import { mapPreventiveItemToPrevClient } from "@/features/dashboard/utils/task-mappers";
 import {
   buildChargeActionPayload,
-  buildPreventiveActionPayload,
   getChargeRegisterPath,
-  getPreventiveRegisterPath,
 } from "@/features/dashboard/utils/launch-action";
 import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
+import { mapQueueTaskCardToOverdueItem } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 import { isChargeQueueItemBlocked } from "@/features/dashboard/utils/charge-queue";
 import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   buildSegmentCountsFromApi,
+  extractTodayQueueMeta,
   flattenTodayQueueCards,
   usePostponeTask,
   useRescheduleTask,
   useTodayQueueInfinite,
 } from "@/hooks/useActivities";
-import {
-  useDashboard,
-  usePerformance,
-  usePreventiveContractsInfinite,
-} from "@/hooks/useDashboard";
+import { useDashboard } from "@/hooks/useDashboard";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { formatDate } from "@/lib/format/date";
@@ -53,8 +44,6 @@ export function DashboardPage() {
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
-  const { data: performanceData, isLoading: isLoadingPerformance } =
-    usePerformance();
   const {
     data: todayQueueData,
     isLoading: isLoadingTodayQueue,
@@ -64,9 +53,6 @@ export function DashboardPage() {
   } = useTodayQueueInfinite(30);
   const postponeTask = usePostponeTask();
   const rescheduleTask = useRescheduleTask();
-
-  const { data: preventiveData, isLoading: isLoadingPreventive } =
-    usePreventiveContractsInfinite(30, 15);
 
   const loadMoreRef = useInfiniteScroll({
     hasNextPage,
@@ -79,12 +65,15 @@ export function DashboardPage() {
     const cards = flattenTodayQueueCards(pages);
     const queueView = buildChargeQueueFromApiCards(cards);
     const firstPage = pages[0];
+    const { scheduled, completedToday } = extractTodayQueueMeta(pages);
 
     return {
       items: queueView.flat.map((entry) => entry.item),
       queueView,
       counter: firstPage?.counter ?? cards.length,
       segmentCounts: buildSegmentCountsFromApi(firstPage?.segments ?? []),
+      scheduledItems: scheduled.map(mapQueueTaskCardToOverdueItem),
+      completedTodayItems: completedToday.map(mapQueueTaskCardToOverdueItem),
     };
   }, [todayQueueData?.pages]);
 
@@ -93,29 +82,28 @@ export function DashboardPage() {
     queueView: chargeQueueView,
     counter: chargeCounter,
     segmentCounts,
+    scheduledItems,
+    completedTodayItems,
   } = chargeQueueData;
-  const preventiveItems =
-    preventiveData?.pages.flatMap((page) => page.items) ?? [];
-  const preventiveMapped = preventiveItems.map((item) =>
-    mapPreventiveItemToPrevClient(item),
-  );
 
-  const preventivePending = preventiveMapped.filter(
-    (c) => c.followupCount === 0,
-  );
-  const preventiveDoneList = preventiveMapped
-    .filter((c) => c.followupCount > 0)
-    .map((client) => ({
-      client,
-      label: "Contato registrado",
-    }));
-
-  const totalActions = chargeCounter + preventivePending.length;
+  const totalActions = chargeCounter;
 
   const ativos = dashboardData?.activeContracts ?? 0;
   const vencemHoje = dashboardData?.dueTodayContracts ?? 0;
   const emAtraso = dashboardData?.overdueContracts ?? 0;
   const renovProx = dashboardData?.upcomingRenewals.total ?? 0;
+
+  const handleDetailOpen = (item: OverdueCollectionItem) => {
+    writeTaskTabCookie(TaskTab.Charge);
+    const installment = item.installment.number;
+    const installmentId = item.installment.id;
+    navigate(
+      `/contracts/${item.contract.id}?mode=${TaskTab.Charge}&installment=${installment}&installmentId=${installmentId}`,
+      {
+        state: { item, mode: TaskTab.Charge },
+      },
+    );
+  };
 
   const handleChargeAction = (item: OverdueCollectionItem) => {
     if (isChargeQueueItemBlocked(chargeQueueView, item)) {
@@ -128,7 +116,6 @@ export function DashboardPage() {
       return;
     }
 
-    writeTaskTabCookie(readTaskTabFromCookie());
     const payload = buildChargeActionPayload(item, () => {
       showToast("Ação registrada.");
     });
@@ -142,16 +129,6 @@ export function DashboardPage() {
     navigate(getChargeRegisterPath());
   };
 
-  const handlePrevAction = (client: PrevClient) => {
-    writeTaskTabCookie(readTaskTabFromCookie());
-    setActionData(
-      buildPreventiveActionPayload(client, () => {
-        showToast("Contato preventivo registrado!");
-      }),
-    );
-    navigate(getPreventiveRegisterPath());
-  };
-
   const handleChargeOpen = (item: OverdueCollectionItem) => {
     if (isChargeQueueItemBlocked(chargeQueueView, item)) {
       showToast(
@@ -161,15 +138,7 @@ export function DashboardPage() {
       return;
     }
 
-    writeTaskTabCookie(TaskTab.Charge);
-    const installment = item.installment.number;
-    const installmentId = item.installment.id;
-    navigate(
-      `/contracts/${item.contract.id}?mode=${TaskTab.Charge}&installment=${installment}&installmentId=${installmentId}`,
-      {
-        state: { item, mode: TaskTab.Charge },
-      },
-    );
+    handleDetailOpen(item);
   };
 
   const handlePostpone = async (item: OverdueCollectionItem) => {
@@ -222,26 +191,6 @@ export function DashboardPage() {
     }
   };
 
-  const handlePrevOpen = (client: PrevClient) => {
-    writeTaskTabCookie(TaskTab.Preventive);
-    const source = preventiveItems.find(
-      (item) =>
-        item.contract.id === client.id &&
-        item.installment.number === client.installmentNumber,
-    );
-    const installment = source?.installment.number;
-    const installmentParam = installment ? `&installment=${installment}` : "";
-    navigate(
-      `/contracts/${client.id}?mode=${TaskTab.Preventive}${installmentParam}`,
-      {
-        state: {
-          item: source,
-          mode: TaskTab.Preventive,
-        },
-      },
-    );
-  };
-
   if (isLoadingDashboard) {
     return <DashboardSkeleton onLogout={onMobileLogout} />;
   }
@@ -282,12 +231,6 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <PerformanceSection
-        data={performanceData}
-        isLoading={isLoadingPerformance}
-      />
-      <CommissionSection />
-
       <div className="flex-1 pt-5">
         <div className="mb-4 px-5 md:px-8">
           <div className="mb-3 flex items-center justify-between">
@@ -304,30 +247,22 @@ export function DashboardPage() {
             </span>
           </div>
 
-          <TasksTabs
-            chargeCount={chargeCounter}
-            preventiveCount={preventivePending.length}
-            charge={{
-              isLoading: isLoadingTodayQueue,
-              items: chargeItems,
-              queueView: chargeQueueView,
-              segmentCounts,
-              onOpen: handleChargeOpen,
-              onAction: handleChargeAction,
-              onPostpone: handlePostpone,
-              onRescheduleVisit: handleRescheduleVisit,
-              isPostponing: postponeTask.isPending,
-              isRescheduling: rescheduleTask.isPending,
-              hasNextPage,
-              loadMoreRef,
-            }}
-            preventive={{
-              isLoading: isLoadingPreventive,
-              pending: preventivePending,
-              done: preventiveDoneList,
-              onOpen: handlePrevOpen,
-              onAction: handlePrevAction,
-            }}
+          <ChargeTasksTab
+            isLoading={isLoadingTodayQueue}
+            items={chargeItems}
+            queueView={chargeQueueView}
+            segmentCounts={segmentCounts}
+            scheduledItems={scheduledItems}
+            completedTodayItems={completedTodayItems}
+            onOpen={handleChargeOpen}
+            onOpenDetail={handleDetailOpen}
+            onAction={handleChargeAction}
+            onPostpone={handlePostpone}
+            onRescheduleVisit={handleRescheduleVisit}
+            isPostponing={postponeTask.isPending}
+            isRescheduling={rescheduleTask.isPending}
+            hasNextPage={hasNextPage}
+            loadMoreRef={loadMoreRef}
           />
         </div>
       </div>

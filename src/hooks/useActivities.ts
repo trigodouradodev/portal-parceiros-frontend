@@ -12,6 +12,7 @@ import type {
   QueueTaskCard,
   RescheduleTaskPayload,
   SegmentSummary,
+  TodayQueue,
 } from "@/services/activities/activities.types";
 
 export const activitiesKeys = {
@@ -35,6 +36,15 @@ export function flattenTodayQueueCards(
   );
 
   return [active, ...lockedWithoutActive];
+}
+
+export function extractTodayQueueMeta(pages: TodayQueue[]) {
+  const firstPage = pages[0];
+
+  return {
+    scheduled: firstPage?.scheduled ?? [],
+    completedToday: firstPage?.completedToday ?? [],
+  };
 }
 
 export function buildSegmentCountsFromApi(
