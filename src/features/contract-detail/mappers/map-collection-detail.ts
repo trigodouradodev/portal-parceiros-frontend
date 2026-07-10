@@ -1,11 +1,6 @@
 import { differenceInCalendarDays, startOfDay } from "date-fns";
 import { TaskTab } from "@/features/dashboard/constants/task-tab";
-import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
-import { STAGE_INFO } from "@/features/dashboard/mocks/tasks";
-import { mapFollowupStatusToStage } from "@/features/dashboard/utils/task-mappers";
-import { getReguaBadge } from "@/features/dashboard/utils/collection-stage";
 import { buildFollowUpTimeline } from "@/features/contract-detail/mappers/build-follow-up-timeline";
-import { buildActivityTimeline } from "@/features/contract-detail/mappers/build-activity-timeline";
 import { buildPreventiveTimeline } from "@/features/contract-detail/mappers/build-preventive-timeline";
 import type {
   AlertType,
@@ -26,60 +21,10 @@ export interface CollectionListContext {
   item?: OverdueCollectionItem | PreventiveCollectionItem;
 }
 
-function mapStageColor(color: string): StatusColor {
-  const map: Record<string, StatusColor> = {
-    blue: "blue",
-    amber: "amber",
-    red: "red",
-    green: "green",
-    teal: "green",
-    gray: "blue",
-  };
-  return map[color] ?? "amber";
-}
-
 function getDaysFromDueDate(dueDate: string): number {
   const due = startOfDay(new Date(dueDate));
   const today = startOfDay(new Date());
   return differenceInCalendarDays(today, due);
-}
-
-function getChargeStatus(
-  detail: CollectionDetail,
-  daysOverdue: number,
-): { label: string; color: StatusColor } {
-  const currentTask = detail.activity.tasks[0];
-  if (currentTask) {
-    const regua = getReguaBadge(
-      currentTask.stageCode,
-      currentTask.stageBadgeLabel,
-    );
-    if (regua) {
-      return {
-        label: regua.label,
-        color: mapStageColor(regua.color),
-      };
-    }
-  }
-
-  const latestStatus = detail.followups[0]?.status;
-  if (latestStatus) {
-    const stage = mapFollowupStatusToStage(
-      latestStatus,
-      detail.followups.length,
-    ) as ChargeStage;
-    const stageInfo = STAGE_INFO[stage];
-    return {
-      label: stageInfo.label,
-      color: mapStageColor(stageInfo.color),
-    };
-  }
-
-  if (daysOverdue > 0) {
-    return { label: `${daysOverdue}d em atraso`, color: "red" };
-  }
-
-  return { label: "Em dia", color: "blue" };
 }
 
 function getPreventiveStatus(daysUntilDue: number): {
@@ -131,16 +76,10 @@ function buildTimeline(
     );
   }
 
-  if (
-    detail.activity.tasks.length > 0 ||
-    detail.activity.interactions.length > 0
-  ) {
-    return buildActivityTimeline(detail.activity);
-  }
-
   return buildFollowUpTimeline(detail.followups);
 }
 
+/** Detalhe Preventivo via GET /collections/:contractId/installments/:n */
 export function mapCollectionDetailToView(
   detail: CollectionDetail,
   mode: DetailMode,
@@ -150,10 +89,7 @@ export function mapCollectionDetailToView(
   const daysFromDue = getDaysFromDueDate(detail.installment.dueDate);
   const nextDue = formatDate(detail.installment.dueDate);
 
-  const status =
-    mode === TaskTab.Charge
-      ? getChargeStatus(detail, daysFromDue)
-      : getPreventiveStatus(-daysFromDue);
+  const status = getPreventiveStatus(-daysFromDue);
 
   const { alertDays, alertType } = getAlertInfo(mode, daysFromDue);
 

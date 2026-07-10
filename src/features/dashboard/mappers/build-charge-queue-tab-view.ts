@@ -10,6 +10,7 @@ import {
   isQueueItemActionable,
   type ChargeQueueView,
 } from "@/features/dashboard/utils/charge-queue";
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 export interface BuildChargeQueueTabViewOptions {
   segmentCounts?: Record<string, number>;
@@ -25,14 +26,21 @@ export function buildChargeQueueTabView(
       : null;
 
   const hero = heroEntry
-    ? {
-        item: heroEntry.item,
-        display: mapOverdueToQueueDisplay(
-          heroEntry.item,
-          heroEntry.globalIndex + 1,
-        ),
-        taskChannel: heroEntry.item.task?.channel,
-      }
+    ? (() => {
+        const taskChannel = heroEntry.item.task?.channel;
+        return {
+          item: heroEntry.item,
+          display: mapOverdueToQueueDisplay(
+            heroEntry.item,
+            heroEntry.globalIndex + 1,
+          ),
+          taskChannel,
+          canPostpone: !heroEntry.item.wasPostponed,
+          canRescheduleVisit:
+            taskChannel === ActivityChannel.CLIENT_VISIT &&
+            !heroEntry.item.wasRescheduled,
+        };
+      })()
     : null;
 
   const blocks: ChargeQueueBlockView[] = [];

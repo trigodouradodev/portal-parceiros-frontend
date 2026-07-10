@@ -164,6 +164,11 @@ export interface OverdueCollectionItem {
     channel: string;
     createdAt: string;
   };
+  /** Flags da fila v2 (postergar / reagendar). */
+  wasPostponed?: boolean;
+  wasRescheduled?: boolean;
+  expireDate?: string;
+  taskType?: string;
 }
 
 export interface OverduePagination {
@@ -278,6 +283,5 @@ export interface CollectionDetail {
   client: ClientInfo;
   responsible?: ContractResponsible;
   installment: InstallmentDetailInfo;
-  activity: ActivityHistory;
   followups: FollowUpHistoryItem[];
 }

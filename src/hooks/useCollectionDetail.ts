@@ -10,12 +10,13 @@ export const collectionKeys = {
 export function useCollectionDetail(
   contractId: string,
   installmentNumber: number | undefined,
+  enabled = true,
 ) {
   return useQuery({
     queryKey: collectionKeys.detail(contractId, installmentNumber ?? 0),
     queryFn: () =>
       dashboardService.getCollectionDetail(contractId, installmentNumber!),
-    enabled: Boolean(contractId && installmentNumber),
+    enabled: enabled && Boolean(contractId && installmentNumber),
     staleTime: 30 * 1000,
   });
 }

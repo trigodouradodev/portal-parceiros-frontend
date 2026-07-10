@@ -8,24 +8,56 @@ import type {
   SetActionDataPayload,
   ActionResult,
 } from "@/contexts/action/action-context";
+import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
+import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
 import type {
   ActivityTaskSummary,
-  CollectionDetail,
+  CollectionStageCode,
   OverdueCollectionItem,
 } from "@/services/dashboard/dashboard.types";
+import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 import { fmtBRL } from "@/lib/utils";
 
 export const CHARGE_REGISTER_PATH = "/register/charge";
 export const PREVENTIVE_REGISTER_PATH = "/register/preventive";
 
+const TONE_TO_STAGE: Record<string, CollectionStageCode> = {
+  friendly: "friendly",
+  firm: "assertive",
+  severe: "warning",
+};
+
+function mapToneToStageCode(tone: string): CollectionStageCode {
+  return TONE_TO_STAGE[tone] ?? "friendly";
+}
+
+function mapTaskTypeToChannel(taskType: string): ActivityChannel {
+  if (taskType === "visit") return ActivityChannel.CLIENT_VISIT;
+  return ActivityChannel.CLIENT_CALL;
+}
+
+function mapTaskHistoryToSummary(task: TaskHistoryItem): ActivityTaskSummary {
+  const stageCode = mapToneToStageCode(task.tone);
+
+  return {
+    id: task.id,
+    stageCode,
+    stageBadgeLabel: task.segmentBadgeLabel ?? task.segmentCode,
+    channel: mapTaskTypeToChannel(task.taskType),
+    status: task.status as ActivityTaskSummary["status"],
+    createdAt: task.createdAt,
+    completedAt: task.completedAt,
+  };
+}
+
 export function hasPendingChargeTask(item: OverdueCollectionItem): boolean {
   return item.task?.status === "pending";
 }
 
-export function getPendingChargeTask(
-  detail: CollectionDetail,
-): ActivityTaskSummary | undefined {
-  return detail.activity.tasks.find((task) => task.status === "pending");
+export function getPendingTaskFromInstallmentDetail(
+  detail: InstallmentDetail,
+): TaskHistoryItem | undefined {
+  return detail.tasks.find((task) => task.status === "pending");
 }
 
 export function buildChargeActionPayload(
@@ -62,25 +94,19 @@ export function buildChargeActionPayload(
   };
 }
 
-export function buildChargeActionPayloadFromDetail(
-  detail: CollectionDetail,
+export function buildChargeActionPayloadFromInstallmentDetail(
+  detail: InstallmentDetail,
   onComplete: (result: ActionResult) => void,
 ): SetActionDataPayload | null {
-  const task = getPendingChargeTask(detail);
-  if (!task) {
+  const pendingTask = getPendingTaskFromInstallmentDetail(detail);
+  if (!pendingTask) {
     return null;
   }
 
+  const task = mapTaskHistoryToSummary(pendingTask);
   const { installment, contract, client } = detail;
   const stage = mapTaskToChargeStage(task);
-  const dueDate = new Date(installment.dueDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  dueDate.setHours(0, 0, 0, 0);
-  const overdueDays = Math.max(
-    0,
-    Math.floor((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)),
-  );
+  const overdueDays = installment.daysOverdue;
 
   return {
     mode: TaskTab.Charge,

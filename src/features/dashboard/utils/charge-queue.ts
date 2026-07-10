@@ -114,3 +114,20 @@ export function isQueueItemActionable(
 ): boolean {
   return hasPendingTask && actionableIndex === globalIndex;
 }
+
+export function isChargeQueueItemBlocked(
+  queue: ChargeQueueView,
+  item: OverdueCollectionItem,
+): boolean {
+  const entry = queue.flat.find(
+    (queueEntry) => queueEntry.item.task?.id === item.task?.id,
+  );
+  if (!entry) return false;
+
+  const hasPendingTask = item.task?.status === "pending";
+  return !isQueueItemActionable(
+    entry.globalIndex,
+    queue.actionableIndex,
+    hasPendingTask,
+  );
+}

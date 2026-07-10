@@ -103,5 +103,9 @@ export function mapQueueTaskCardToOverdueItem(
     queuePosition: card.position,
     correctedAmount: card.installment.amountOverdue,
     lastInteraction: card.lastInteraction ?? undefined,
+    wasPostponed: card.wasPostponed,
+    wasRescheduled: card.wasRescheduled,
+    expireDate: card.expireDate,
+    taskType: card.taskType,
   };
 }

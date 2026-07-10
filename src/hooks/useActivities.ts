@@ -1,9 +1,11 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ChargeQueueSegmentCode } from "@/features/dashboard/constants/charge-queue-segments";
 import { normalizeQueueSegmentCode } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
+import { dashboardKeys } from "@/hooks/useDashboard";
 import { activitiesService } from "@/services/activities/activities.service";
 import type {
   QueueTaskCard,
+  RescheduleTaskPayload,
   SegmentSummary,
 } from "@/services/activities/activities.types";
 
@@ -59,5 +61,35 @@ export function useTodayQueueInfinite(limit = 30) {
       return undefined;
     },
     staleTime: 30 * 1000,
+  });
+}
+
+export function usePostponeTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (taskId: string) => activitiesService.postponeTask(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+    },
+  });
+}
+
+export function useRescheduleTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      taskId,
+      payload,
+    }: {
+      taskId: string;
+      payload: RescheduleTaskPayload;
+    }) => activitiesService.rescheduleTask(taskId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+    },
   });
 }

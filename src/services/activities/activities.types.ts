@@ -61,6 +61,7 @@ export interface RegisterInteractionVariables {
   payload: RegisterInteractionPayload;
   contractId: string;
   installmentNumber: number;
+  installmentId?: string;
 }
 
 /** Espelha portal-parceiros-backend/src/activities/interfaces/task-queue.interface.ts */
@@ -148,4 +149,21 @@ export interface TodayQueue {
   locked: LockedPage;
   scheduled: QueueTaskCard[];
   completedToday: QueueTaskCard[];
+}
+
+/** Estado da tarefa após postergar ou reagendar. */
+export interface TaskActionResult {
+  id: string;
+  installmentId: string;
+  contractId: string;
+  segmentCode: string;
+  taskType: string;
+  status: string;
+  expireDate: string;
+  wasPostponed: boolean;
+  wasRescheduled: boolean;
+}
+
+export interface RescheduleTaskPayload {
+  date: string;
 }
