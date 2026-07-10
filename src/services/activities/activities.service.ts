@@ -16,7 +16,9 @@ export const activitiesService = {
     return data;
   },
 
-  async getInstallmentDetail(installmentId: string): Promise<InstallmentDetail> {
+  async getInstallmentDetail(
+    installmentId: string,
+  ): Promise<InstallmentDetail> {
     const { data } = await api.get<InstallmentDetail>(
       `/activities/installments/${installmentId}`,
     );

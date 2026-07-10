@@ -31,8 +31,7 @@ function mapTaskToStep(task: TaskHistoryItem, index: number): TimelineStep {
   } else if (task.status === "system_closed") {
     noteParts.push("Encerrada pelo sistema");
   } else {
-    const channelLabel =
-      task.taskType === "visit" ? "Visita" : "Contato";
+    const channelLabel = task.taskType === "visit" ? "Visita" : "Contato";
     noteParts.push(`${channelLabel} · ${mapTaskStatusLabel(task.status)}`);
   }
 

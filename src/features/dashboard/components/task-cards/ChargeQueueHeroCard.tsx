@@ -78,8 +78,13 @@ export function ChargeQueueHeroCard({
   const [confirmingPostpone, setConfirmingPostpone] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [draftVisitDate, setDraftVisitDate] = useState("");
-  const { client, segment, queuePosition, rescheduledDateLabel, wasRescheduled } =
-    display;
+  const {
+    client,
+    segment,
+    queuePosition,
+    rescheduledDateLabel,
+    wasRescheduled,
+  } = display;
   const initials = getInitials(client.name);
   const parcelaLabel = client.parcela.replace(/^Parc\.?\s*/i, "Parc ");
   const isVisitTask = taskChannel === ActivityChannel.CLIENT_VISIT;
