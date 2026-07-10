@@ -38,6 +38,7 @@ export interface SetActionDataPayload {
   chargeStage?: ChargeStage;
   taskId?: string;
   taskChannel?: ActivityChannel;
+  installmentId?: string;
   contactType?: PreventiveContactType;
   onComplete: (result: ActionResult) => void;
 }
@@ -48,6 +49,7 @@ export interface ActionContextType {
   chargeStage?: ChargeStage;
   taskId?: string;
   taskChannel?: ActivityChannel;
+  installmentId?: string;
   contactType?: PreventiveContactType;
   onComplete: (result: ActionResult) => void;
   setActionData: (data: SetActionDataPayload) => void;

@@ -41,19 +41,8 @@ export interface ActivityInteractionResponse {
   geolocation?: InteractionGeolocation;
 }
 
-export interface CreatedTaskResponse {
-  id: string;
-  installmentId: string;
-  contractId: string;
-  stageCode: string;
-  channel: string;
-  status: string;
-  createdAt: string;
-}
-
 export interface RegisterInteractionResponse {
   interaction: ActivityInteractionResponse;
-  nextTask: CreatedTaskResponse | null;
 }
 
 export interface RegisterInteractionVariables {

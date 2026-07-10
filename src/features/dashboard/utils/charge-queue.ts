@@ -122,7 +122,7 @@ export function isChargeQueueItemBlocked(
   const entry = queue.flat.find(
     (queueEntry) => queueEntry.item.task?.id === item.task?.id,
   );
-  if (!entry) return false;
+  if (!entry) return true;
 
   const hasPendingTask = item.task?.status === "pending";
   return !isQueueItemActionable(

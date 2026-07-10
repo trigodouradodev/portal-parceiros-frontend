@@ -182,7 +182,10 @@ export function DashboardPage() {
     }
 
     try {
-      await postponeTask.mutateAsync(taskId);
+      await postponeTask.mutateAsync({
+        taskId,
+        installmentId: item.installment.id,
+      });
       showToast("Tarefa postergada para amanhã.");
     } catch (err) {
       showToast(
@@ -208,6 +211,7 @@ export function DashboardPage() {
       await rescheduleTask.mutateAsync({
         taskId,
         payload: { date },
+        installmentId: item.installment.id,
       });
       showToast(`Visita reagendada para ${formatDate(date)}.`);
     } catch (err) {

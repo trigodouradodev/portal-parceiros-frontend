@@ -2,9 +2,11 @@ import type { ChargeQueueSegmentCode } from "@/features/dashboard/constants/char
 import { getQueueToneLabel } from "@/features/dashboard/constants/charge-queue-tone";
 import type { QueueTaskCard } from "@/services/activities/activities.types";
 import {
-  ActivityChannel,
+  mapTaskTypeToChannel,
+  mapToneToStageCode,
+} from "@/services/activities/activity-task-mapping";
+import {
   type ActivityTaskStatus,
-  type CollectionStageCode,
   type OverdueCollectionItem,
 } from "@/services/dashboard/dashboard.types";
 
@@ -36,17 +38,6 @@ export function normalizeQueueSegmentCode(
   return "mid";
 }
 
-const TONE_TO_STAGE: Record<string, CollectionStageCode> = {
-  friendly: "friendly",
-  firm: "assertive",
-  severe: "warning",
-};
-
-function mapTaskTypeToChannel(taskType: string): ActivityChannel {
-  if (taskType === "visit") return ActivityChannel.CLIENT_VISIT;
-  return ActivityChannel.CLIENT_CALL;
-}
-
 function mapTaskStatus(status: string): ActivityTaskStatus {
   if (
     status === "pending" ||
@@ -57,10 +48,6 @@ function mapTaskStatus(status: string): ActivityTaskStatus {
     return status;
   }
   return "pending";
-}
-
-function mapToneToStageCode(tone: string): CollectionStageCode {
-  return TONE_TO_STAGE[tone] ?? "friendly";
 }
 
 /** Adapta um card da fila v2 para o shape usado pela UI de cobrança (AUREA-186). */

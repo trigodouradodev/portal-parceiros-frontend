@@ -10,24 +10,12 @@ import { getReguaBadge } from "@/features/dashboard/utils/collection-stage";
 import { formatClientAddress, hasValidAddress } from "@/lib/contact-actions";
 import { formatDate } from "@/lib/format/date";
 import { formatTaxId } from "@/lib/format/tax-id";
+import { mapToneToStageCode } from "@/services/activities/activity-task-mapping";
 import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
-import type {
-  CollectionStageCode,
-  OverdueCollectionItem,
-} from "@/services/dashboard/dashboard.types";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 export interface InstallmentDetailListContext {
   item?: OverdueCollectionItem;
-}
-
-const TONE_TO_STAGE: Record<string, CollectionStageCode> = {
-  friendly: "friendly",
-  firm: "assertive",
-  severe: "warning",
-};
-
-function mapToneToStageCode(tone: string): CollectionStageCode {
-  return TONE_TO_STAGE[tone] ?? "friendly";
 }
 
 function mapStageColor(color: string): StatusColor {

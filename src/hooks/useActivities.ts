@@ -6,6 +6,7 @@ import {
 import type { ChargeQueueSegmentCode } from "@/features/dashboard/constants/charge-queue-segments";
 import { normalizeQueueSegmentCode } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 import { dashboardKeys } from "@/hooks/useDashboard";
+import { installmentKeys } from "@/hooks/useInstallmentDetail";
 import { activitiesService } from "@/services/activities/activities.service";
 import type {
   QueueTaskCard,
@@ -72,10 +73,17 @@ export function usePostponeTask() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (taskId: string) => activitiesService.postponeTask(taskId),
-    onSuccess: () => {
+    mutationFn: ({ taskId }: { taskId: string; installmentId?: string }) =>
+      activitiesService.postponeTask(taskId),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      queryClient.invalidateQueries({ queryKey: installmentKeys.all });
+      if (variables.installmentId) {
+        queryClient.invalidateQueries({
+          queryKey: installmentKeys.detail(variables.installmentId),
+        });
+      }
     },
   });
 }
@@ -90,10 +98,17 @@ export function useRescheduleTask() {
     }: {
       taskId: string;
       payload: RescheduleTaskPayload;
+      installmentId?: string;
     }) => activitiesService.rescheduleTask(taskId, payload),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+      queryClient.invalidateQueries({ queryKey: installmentKeys.all });
+      if (variables.installmentId) {
+        queryClient.invalidateQueries({
+          queryKey: installmentKeys.detail(variables.installmentId),
+        });
+      }
     },
   });
 }

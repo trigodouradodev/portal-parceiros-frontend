@@ -10,31 +10,18 @@ import type {
 } from "@/contexts/action/action-context";
 import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
 import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
+import {
+  mapTaskTypeToChannel,
+  mapToneToStageCode,
+} from "@/services/activities/activity-task-mapping";
 import type {
   ActivityTaskSummary,
-  CollectionStageCode,
   OverdueCollectionItem,
 } from "@/services/dashboard/dashboard.types";
-import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 import { fmtBRL } from "@/lib/utils";
 
 export const CHARGE_REGISTER_PATH = "/register/charge";
 export const PREVENTIVE_REGISTER_PATH = "/register/preventive";
-
-const TONE_TO_STAGE: Record<string, CollectionStageCode> = {
-  friendly: "friendly",
-  firm: "assertive",
-  severe: "warning",
-};
-
-function mapToneToStageCode(tone: string): CollectionStageCode {
-  return TONE_TO_STAGE[tone] ?? "friendly";
-}
-
-function mapTaskTypeToChannel(taskType: string): ActivityChannel {
-  if (taskType === "visit") return ActivityChannel.CLIENT_VISIT;
-  return ActivityChannel.CLIENT_CALL;
-}
 
 function mapTaskHistoryToSummary(task: TaskHistoryItem): ActivityTaskSummary {
   const stageCode = mapToneToStageCode(task.tone);
@@ -78,6 +65,7 @@ export function buildChargeActionPayload(
     chargeStage: stage,
     taskId: task.id,
     taskChannel: task.channel,
+    installmentId: installment.id,
     client: {
       id: contract.id,
       installmentNumber: installment.number,
@@ -113,6 +101,7 @@ export function buildChargeActionPayloadFromInstallmentDetail(
     chargeStage: stage,
     taskId: task.id,
     taskChannel: task.channel,
+    installmentId: installment.id,
     client: {
       id: contract.id,
       installmentNumber: installment.number,
