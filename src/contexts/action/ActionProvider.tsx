@@ -26,6 +26,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
   const [contactType, setContactType] = useState<
     PreventiveContactType | undefined
   >(undefined);
+  const [queueTone, setQueueTone] = useState<string | undefined>(undefined);
   const [onComplete, setOnComplete] = useState<(result: ActionResult) => void>(
     () => () => {},
   );
@@ -38,6 +39,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setTaskChannel(data.taskChannel);
     setInstallmentId(data.installmentId);
     setContactType(data.contactType);
+    setQueueTone(data.queueTone);
     setOnComplete(() => data.onComplete);
   }
 
@@ -49,6 +51,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setTaskChannel(undefined);
     setInstallmentId(undefined);
     setContactType(undefined);
+    setQueueTone(undefined);
     setOnComplete(() => () => {});
   }
 
@@ -62,6 +65,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
         taskChannel,
         installmentId,
         contactType,
+        queueTone,
         onComplete,
         setActionData,
         clearActionData,

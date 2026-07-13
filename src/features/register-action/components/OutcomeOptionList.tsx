@@ -21,7 +21,11 @@ interface OutcomeOptionListProps {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
+    required?: boolean;
+    hint?: string;
+    invalid?: boolean;
   };
+  afterOptions?: ReactNode;
   compact?: boolean;
 }
 
@@ -31,6 +35,7 @@ export function OutcomeOptionList({
   onChange,
   prompt,
   note,
+  afterOptions,
   compact = false,
 }: OutcomeOptionListProps) {
   return (
@@ -91,12 +96,16 @@ export function OutcomeOptionList({
           );
         })}
       </div>
+      {afterOptions}
       {note && (
         <OptionalNoteField
           value={note.value}
           onChange={note.onChange}
           placeholder={note.placeholder}
-          className={compact ? "mt-4" : "mt-2"}
+          required={note.required}
+          hint={note.hint}
+          invalid={note.invalid}
+          wrapperClassName={compact ? "mt-4" : "mt-2"}
         />
       )}
     </div>
