@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,74 @@ function isSameDay(a: Date, b: Date) {
   );
 }
 
+function buildCalendarCells(
+  viewYear: number,
+  viewMonth: number,
+): (Date | null)[] {
+  const firstOfMonth = new Date(viewYear, viewMonth, 1);
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const leadingBlanks = firstOfMonth.getDay();
+
+  return [
+    ...Array.from({ length: leadingBlanks }, () => null),
+    ...Array.from(
+      { length: daysInMonth },
+      (_, index) => new Date(viewYear, viewMonth, index + 1),
+    ),
+  ];
+}
+
+function getDayCellClassName(disabled: boolean, isSelected: boolean): string {
+  if (disabled) {
+    return "cursor-not-allowed text-muted-foreground/40";
+  }
+
+  if (isSelected) {
+    return "bg-brand-navy text-white";
+  }
+
+  return "text-foreground hover:bg-muted";
+}
+
+interface CalendarDayCellProps {
+  date: Date | null;
+  index: number;
+  selected?: Date;
+  min?: Date;
+  max?: Date;
+  onSelect: (date: Date) => void;
+}
+
+function CalendarDayCell({
+  date,
+  index,
+  selected,
+  min,
+  max,
+  onSelect,
+}: CalendarDayCellProps) {
+  if (!date) {
+    return <div key={index} className="h-8" />;
+  }
+
+  const disabled = Boolean((min && date < min) || (max && date > max));
+  const isSelected = Boolean(selected && isSameDay(date, selected));
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={() => onSelect(date)}
+      className={cn(
+        "h-8 rounded-lg text-sm font-medium transition-colors",
+        getDayCellClassName(disabled, isSelected),
+      )}
+    >
+      {date.getDate()}
+    </button>
+  );
+}
+
 interface CalendarProps {
   selected?: Date;
   onSelect: (date: Date) => void;
@@ -52,28 +120,21 @@ export function Calendar({
   const min = minDate ? startOfDay(minDate) : undefined;
   const max = maxDate ? startOfDay(maxDate) : undefined;
 
-  const firstOfMonth = new Date(viewYear, viewMonth, 1);
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const leadingBlanks = firstOfMonth.getDay();
+  const cells = useMemo(
+    () => buildCalendarCells(viewYear, viewMonth),
+    [viewYear, viewMonth],
+  );
 
-  const cells: (Date | null)[] = [
-    ...Array.from({ length: leadingBlanks }, () => null),
-    ...Array.from(
-      { length: daysInMonth },
-      (_, index) => new Date(viewYear, viewMonth, index + 1),
-    ),
-  ];
+  const prevMonthEnd = new Date(viewYear, viewMonth, 0);
+  const nextMonthStart = new Date(viewYear, viewMonth + 1, 1);
+  const canGoPrev = !min || prevMonthEnd >= min;
+  const canGoNext = !max || nextMonthStart <= max;
 
   function goToMonth(offset: number) {
     const next = new Date(viewYear, viewMonth + offset, 1);
     setViewYear(next.getFullYear());
     setViewMonth(next.getMonth());
   }
-
-  const prevMonthEnd = new Date(viewYear, viewMonth, 0);
-  const nextMonthStart = new Date(viewYear, viewMonth + 1, 1);
-  const canGoPrev = !min || prevMonthEnd >= min;
-  const canGoNext = !max || nextMonthStart <= max;
 
   return (
     <div className={cn("w-[264px]", className)}>
@@ -111,33 +172,17 @@ export function Calendar({
       </div>
 
       <div className="grid grid-cols-7 gap-1">
-        {cells.map((date, index) => {
-          if (!date) {
-            return <div key={index} className="h-8" />;
-          }
-
-          const disabled = (min && date < min) || (max && date > max);
-          const isSelected = selected && isSameDay(date, selected);
-
-          return (
-            <button
-              key={index}
-              type="button"
-              disabled={!!disabled}
-              onClick={() => onSelect(date)}
-              className={cn(
-                "h-8 rounded-lg text-sm font-medium transition-colors",
-                disabled
-                  ? "cursor-not-allowed text-muted-foreground/40"
-                  : isSelected
-                    ? "bg-brand-navy text-white"
-                    : "text-foreground hover:bg-muted",
-              )}
-            >
-              {date.getDate()}
-            </button>
-          );
-        })}
+        {cells.map((date, index) => (
+          <CalendarDayCell
+            key={index}
+            date={date}
+            index={index}
+            selected={selected}
+            min={min}
+            max={max}
+            onSelect={onSelect}
+          />
+        ))}
       </div>
     </div>
   );
