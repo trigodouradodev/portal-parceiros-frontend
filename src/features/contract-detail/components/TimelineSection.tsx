@@ -13,12 +13,7 @@ export function TimelineSection({
 }: TimelineSectionProps) {
   const doneCount = detail.timeline.filter((s) => s.status === "done").length;
   const totalCount = detail.timeline.length;
-  const titlePrefix =
-    detail.mode === TaskTab.Charge ? "Histórico de cobrança" : "Jornada";
-  const counterLabel =
-    detail.mode === TaskTab.Charge
-      ? `${doneCount} registro${doneCount !== 1 ? "s" : ""}`
-      : `${doneCount}/${totalCount} concluídas`;
+  const titlePrefix = detail.mode === TaskTab.Charge ? "Cobrança" : "Jornada";
 
   return (
     <div>
@@ -26,7 +21,9 @@ export function TimelineSection({
         <h2 className="text-base font-semibold text-foreground">
           {titlePrefix} — Parcela {detail.installmentNumber}
         </h2>
-        <span className="text-xs text-muted-foreground/80">{counterLabel}</span>
+        <span className="text-xs text-muted-foreground/80">
+          {doneCount}/{totalCount} concluídas
+        </span>
       </div>
       <div className="rounded-2xl border border-border bg-white p-4 shadow-sm md:p-5">
         <Timeline steps={detail.timeline} onRegisterAction={onRegisterAction} />

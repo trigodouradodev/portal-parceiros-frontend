@@ -1,13 +1,8 @@
 import { Briefcase, FileText, MapPin, User } from "lucide-react";
 import type { ContractDetailView } from "@/features/contract-detail/types";
-import type { ResponsibleType } from "@/services/dashboard/dashboard.types";
 
 interface ClientDetailsCardProps {
   detail: ContractDetailView;
-}
-
-function getResponsibleLabel(type: ResponsibleType): string {
-  return type === "COLLECTION_AGENT" ? "Agente de cobrança" : "Consultor";
 }
 
 export function ClientDetailsCard({ detail }: ClientDetailsCardProps) {
@@ -18,7 +13,7 @@ export function ClientDetailsCard({ detail }: ClientDetailsCardProps) {
     responsibleName,
     responsibleType,
   } = detail;
-  const showResponsible = Boolean(responsibleName && responsibleType);
+  const showResponsible = Boolean(responsibleName);
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
@@ -52,20 +47,18 @@ export function ClientDetailsCard({ detail }: ClientDetailsCardProps) {
           <div className="h-px bg-border" />
           <div className="flex flex-col gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-              Responsável
+              Responsáveis
             </p>
             <div className="flex items-center gap-2 text-sm text-foreground/80">
-              <Briefcase
-                size={13}
-                className="shrink-0 text-muted-foreground/80"
-              />
-              <span>
-                {responsibleName}
-                <span className="text-muted-foreground/80">
-                  {" "}
-                  · {getResponsibleLabel(responsibleType!)}
-                </span>
-              </span>
+              {responsibleType === "COLLECTION_AGENT" ? (
+                <Briefcase
+                  size={13}
+                  className="shrink-0 text-muted-foreground/80"
+                />
+              ) : (
+                <User size={13} className="shrink-0 text-muted-foreground/80" />
+              )}
+              <span>{responsibleName}</span>
             </div>
           </div>
         </>

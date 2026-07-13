@@ -15,7 +15,6 @@ import {
   getPreventiveRegisterPath,
 } from "@/features/dashboard/utils/launch-action";
 import { mapPreventiveItemToPrevClient } from "@/features/dashboard/utils/task-mappers";
-import { AlertCard } from "@/features/contract-detail/components/AlertCard";
 import { ClientDetailsCard } from "@/features/contract-detail/components/ClientDetailsCard";
 import { ContractInfoCard } from "@/features/contract-detail/components/ContractInfoCard";
 import { DetailPageHeader } from "@/features/contract-detail/components/DetailPageHeader";
@@ -203,15 +202,6 @@ export function ContractDetailPage() {
             <ContractInfoCard detail={detail} />
 
             <ClientDetailsCard detail={detail} />
-
-            {detail.alertType !== undefined &&
-              detail.alertDays !== undefined && (
-                <AlertCard
-                  type={detail.alertType}
-                  days={detail.alertDays}
-                  onAction={handleRegisterAction}
-                />
-              )}
 
             <div className="md:hidden">
               <TimelineSection

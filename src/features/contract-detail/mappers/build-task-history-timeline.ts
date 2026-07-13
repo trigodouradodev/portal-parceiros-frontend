@@ -1,4 +1,7 @@
-import type { TimelineStep } from "@/features/contract-detail/types";
+import type {
+  TimelineStep,
+  TimelineTone,
+} from "@/features/contract-detail/types";
 import { formatDateTime } from "@/lib/format/date";
 import {
   getActivityInteractionChannelLabel,
@@ -7,56 +10,73 @@ import {
 import {
   ActivityTaskStatus,
   ActivityTaskType,
+  type QueueTone,
 } from "@/services/activities/activity.enums";
 import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
 
-const TASK_STATUS_LABELS: Record<ActivityTaskStatus, string> = {
-  [ActivityTaskStatus.PENDING]: "Pendente",
-  [ActivityTaskStatus.COMPLETED]: "Concluída",
-  [ActivityTaskStatus.SYSTEM_CLOSED]: "Encerrada pelo sistema",
-  [ActivityTaskStatus.CANCELLED]: "Cancelada",
-};
+function mapTone(
+  tone: QueueTone | string | undefined,
+): TimelineTone | undefined {
+  if (tone === "friendly" || tone === "firm" || tone === "severe") {
+    return tone;
+  }
+  return undefined;
+}
 
-function mapTaskStatusLabel(status: ActivityTaskStatus): string {
-  return TASK_STATUS_LABELS[status] ?? status;
+function mapTaskStatus(status: ActivityTaskStatus): TimelineStep["status"] {
+  if (status === ActivityTaskStatus.PENDING) return "current";
+  if (
+    status === ActivityTaskStatus.SYSTEM_CLOSED ||
+    status === ActivityTaskStatus.CANCELLED
+  ) {
+    return "missed";
+  }
+  return "done";
+}
+
+function getTaskChannelLabel(task: TaskHistoryItem): string {
+  if (task.interaction?.channel) {
+    return getActivityInteractionChannelLabel(task.interaction.channel);
+  }
+  return task.taskType === ActivityTaskType.VISIT ? "Visita" : "Contato";
 }
 
 function mapTaskToStep(task: TaskHistoryItem, index: number): TimelineStep {
   const interaction = task.interaction;
-  const isPending = task.status === ActivityTaskStatus.PENDING;
-  const label =
-    interaction?.result != null
-      ? getActivityInteractionResultLabel(interaction.result)
-      : (task.segmentBadgeLabel ?? task.segmentCode);
-
-  const noteParts: string[] = [];
-  if (interaction) {
-    noteParts.push(getActivityInteractionChannelLabel(interaction.channel));
-    if (interaction.observation) {
-      noteParts.push(interaction.observation);
-    }
-  } else if (task.status === ActivityTaskStatus.SYSTEM_CLOSED) {
-    noteParts.push("Encerrada pelo sistema");
-  } else {
-    const channelLabel =
-      task.taskType === ActivityTaskType.VISIT ? "Visita" : "Contato";
-    noteParts.push(`${channelLabel} · ${mapTaskStatusLabel(task.status)}`);
-  }
+  const status = mapTaskStatus(task.status);
+  const channelLabel = getTaskChannelLabel(task);
+  const tone = mapTone(task.tone);
 
   const dateSource =
     interaction?.createdAt ??
     task.completedAt ??
     task.systemClosedAt ??
+    task.cancelledAt ??
     task.createdAt;
+
+  let note: string | undefined;
+  if (status === "missed") {
+    note =
+      task.cancellationReason ||
+      (task.status === ActivityTaskStatus.SYSTEM_CLOSED
+        ? "Janela encerrada sem registro."
+        : "Tarefa cancelada.");
+  } else if (interaction?.observation) {
+    note = interaction.observation;
+  }
 
   return {
     id: `task-${task.id}`,
-    day: `#${index + 1}`,
-    label,
-    status: isPending ? "current" : "done",
+    day: task.segmentBadgeLabel ?? `#${index + 1}`,
+    label: channelLabel,
+    status,
     date: dateSource ? formatDateTime(dateSource) : undefined,
     agent: interaction?.author.name,
-    note: noteParts.join(" · "),
+    note,
+    tone,
+    outcome: interaction?.result
+      ? getActivityInteractionResultLabel(interaction.result)
+      : undefined,
   };
 }
 
@@ -72,13 +92,16 @@ export function buildTaskHistoryTimeline(
     return steps;
   }
 
+  const latestTone = chronological.at(-1)?.tone;
+
   return [
     ...steps,
     {
       id: "next-action",
-      day: "Ação",
+      day: "Atual",
       label: "Registrar próxima ação",
       status: "current",
+      tone: mapTone(latestTone) ?? "firm",
       note:
         steps.length === 0
           ? "Nenhuma interação registrada para esta parcela."
