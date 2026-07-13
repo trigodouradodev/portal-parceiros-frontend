@@ -160,8 +160,8 @@ export function useRegisterChargeActionFlow() {
   ) {
     if (!client || !taskId) return;
 
-    const includeGeo =
-      isVisitTask && location.locationOk && location.coords !== null;
+    const coords = location.coords;
+    const includeGeo = isVisitTask && location.locationOk && coords !== null;
 
     try {
       const payload = buildV2RegisterInteractionPayload({
@@ -171,8 +171,8 @@ export function useRegisterChargeActionFlow() {
         taskChannel,
         note,
         promiseDate: promiseDateValue,
-        latitude: includeGeo ? location.coords.latitude : undefined,
-        longitude: includeGeo ? location.coords.longitude : undefined,
+        latitude: includeGeo ? coords.latitude : undefined,
+        longitude: includeGeo ? coords.longitude : undefined,
       });
       await registerInteraction.mutateAsync({
         taskId,
