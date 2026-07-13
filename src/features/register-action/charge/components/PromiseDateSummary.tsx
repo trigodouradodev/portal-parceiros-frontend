@@ -7,7 +7,10 @@ interface PromiseDateSummaryProps {
   onChange: () => void;
 }
 
-export function PromiseDateSummary({ date, onChange }: PromiseDateSummaryProps) {
+export function PromiseDateSummary({
+  date,
+  onChange,
+}: PromiseDateSummaryProps) {
   return (
     <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border-2 border-success bg-success-bg p-3.5">
       <div className="flex items-center gap-2.5">

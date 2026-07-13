@@ -30,9 +30,7 @@ export function OptionalNoteField({
         <span
           className={cn(
             "font-normal",
-            required
-              ? "text-destructive"
-              : "text-muted-foreground/60",
+            required ? "text-destructive" : "text-muted-foreground/60",
           )}
         >
           {required ? "(obrigatório)" : "(opcional)"}
@@ -48,9 +46,7 @@ export function OptionalNoteField({
           invalid && "border-2 border-destructive focus:border-destructive",
         )}
       />
-      {hint && (
-        <p className="mt-1 text-sm text-destructive">{hint}</p>
-      )}
+      {hint && <p className="mt-1 text-sm text-destructive">{hint}</p>}
     </div>
   );
 }
