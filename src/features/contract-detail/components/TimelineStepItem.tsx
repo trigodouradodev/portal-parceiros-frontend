@@ -1,4 +1,3 @@
-import { MessageCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TimelineStep } from "@/features/contract-detail/types";
 import {
@@ -8,6 +7,7 @@ import {
   getStepIcon,
   TONE_META,
 } from "@/features/contract-detail/components/timeline-styles";
+import { TimelineStepNote } from "@/features/contract-detail/components/TimelineStepNote";
 
 interface TimelineStepItemProps {
   step: TimelineStep;
@@ -67,19 +67,7 @@ export function TimelineStepItem({
         </span>
       )}
 
-      {step.status === "missed" && step.note && (
-        <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-destructive-bg px-3 py-2">
-          <XCircle size={11} className="shrink-0 text-destructive" />
-          <p className="text-xs text-destructive">{step.note}</p>
-        </div>
-      )}
-
-      {step.status !== "missed" && step.note && (
-        <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-muted px-3 py-2">
-          <MessageCircle size={11} className="shrink-0 text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">{step.note}</p>
-        </div>
-      )}
+      {step.note && <TimelineStepNote status={step.status} note={step.note} />}
 
       {step.status === "current" && (
         <Button
