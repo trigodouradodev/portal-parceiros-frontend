@@ -1,4 +1,5 @@
 import { CalendarDays, ChevronRight, MapPinOff } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
 import {
@@ -10,6 +11,33 @@ type Flow = ReturnType<typeof useRegisterChargeActionFlow>;
 
 interface RegisterChargeFooterActionsProps {
   flow: Flow;
+}
+
+function getContactContinueContent(needsLocationConfirm: boolean): ReactNode {
+  if (needsLocationConfirm) {
+    return (
+      <>
+        <MapPinOff size={15} />
+        Confirme a localização
+      </>
+    );
+  }
+
+  return (
+    <>
+      Registrar resultado <ChevronRight size={16} />
+    </>
+  );
+}
+
+function getSaveButtonLabel(needsPromiseDate: boolean): string {
+  if (needsPromiseDate) return "Informe a data prometida";
+  return "Registrar";
+}
+
+function getSaveButtonIcon(needsPromiseDate: boolean): ReactNode | undefined {
+  if (!needsPromiseDate) return undefined;
+  return <CalendarDays size={15} />;
 }
 
 export function RegisterChargeFooterActions({
@@ -27,6 +55,9 @@ export function RegisterChargeFooterActions({
     saving,
     handleSave,
   } = flow;
+
+  const needsLocationConfirm = isVisitTask && !location.locationOk;
+  const saveButtonIcon = getSaveButtonIcon(needsPromiseDate);
 
   return (
     <RegisterActionFooter>
@@ -54,16 +85,7 @@ export function RegisterChargeFooterActions({
             disabled={!canContinueContact}
             onClick={() => setStep("outcome")}
           >
-            {isVisitTask && !location.locationOk ? (
-              <>
-                <MapPinOff size={15} />
-                Confirme a localização
-              </>
-            ) : (
-              <>
-                Registrar resultado <ChevronRight size={16} />
-              </>
-            )}
+            {getContactContinueContent(needsLocationConfirm)}
           </Button>
         </>
       )}
@@ -81,8 +103,8 @@ export function RegisterChargeFooterActions({
             saving={saving}
             disabled={!canSaveOutcome}
             onClick={handleSave}
-            label={needsPromiseDate ? "Informe a data prometida" : "Registrar"}
-            {...(needsPromiseDate ? { icon: <CalendarDays size={15} /> } : {})}
+            label={getSaveButtonLabel(needsPromiseDate)}
+            icon={saveButtonIcon}
           />
         </>
       )}
