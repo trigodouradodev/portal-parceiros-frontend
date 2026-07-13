@@ -10,6 +10,7 @@ import type {
 } from "@/contexts/action/action-context";
 import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
 import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
+import type { PreventiveContactType } from "@/contexts/action/action-context";
 import {
   mapTaskTypeToChannel,
   mapToneToStageCode,
@@ -53,6 +54,9 @@ export function getPendingTaskFromInstallmentDetail(
 export function buildChargeActionPayload(
   item: OverdueCollectionItem,
   onComplete: (result: ActionResult) => void,
+  options?: {
+    contactType?: PreventiveContactType;
+  },
 ): SetActionDataPayload | null {
   const task = item.task;
   if (!task || task.status !== ActivityTaskStatus.PENDING) {
@@ -69,6 +73,8 @@ export function buildChargeActionPayload(
     taskId: task.id,
     taskChannel: task.channel,
     installmentId: installment.id,
+    contactType: options?.contactType,
+    queueTone: item.queueTone,
     client: {
       id: contract.id,
       installmentNumber: installment.number,
@@ -88,6 +94,9 @@ export function buildChargeActionPayload(
 export function buildChargeActionPayloadFromInstallmentDetail(
   detail: InstallmentDetail,
   onComplete: (result: ActionResult) => void,
+  options?: {
+    contactType?: PreventiveContactType;
+  },
 ): SetActionDataPayload | null {
   const pendingTask = getPendingTaskFromInstallmentDetail(detail);
   if (!pendingTask) {
@@ -105,6 +114,8 @@ export function buildChargeActionPayloadFromInstallmentDetail(
     taskId: task.id,
     taskChannel: task.channel,
     installmentId: installment.id,
+    contactType: options?.contactType,
+    queueTone: pendingTask.tone,
     client: {
       id: contract.id,
       installmentNumber: installment.number,

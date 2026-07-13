@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Briefcase, FileText, MapPin, User } from "lucide-react";
 import type { ContractDetailView } from "@/features/contract-detail/types";
 import type { ResponsibleType } from "@/services/dashboard/dashboard.types";
@@ -6,8 +7,14 @@ interface ClientDetailsCardProps {
   detail: ContractDetailView;
 }
 
-function getResponsibleLabel(type: ResponsibleType): string {
-  return type === "COLLECTION_AGENT" ? "Agente de cobrança" : "Consultor";
+const ICON_CLASS = "shrink-0 text-muted-foreground/80";
+
+function getResponsibleIcon(type?: ResponsibleType): ReactNode {
+  if (type === "COLLECTION_AGENT") {
+    return <Briefcase size={13} className={ICON_CLASS} />;
+  }
+
+  return <User size={13} className={ICON_CLASS} />;
 }
 
 export function ClientDetailsCard({ detail }: ClientDetailsCardProps) {
@@ -18,7 +25,7 @@ export function ClientDetailsCard({ detail }: ClientDetailsCardProps) {
     responsibleName,
     responsibleType,
   } = detail;
-  const showResponsible = Boolean(responsibleName && responsibleType);
+  const showResponsible = Boolean(responsibleName);
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
@@ -27,21 +34,18 @@ export function ClientDetailsCard({ detail }: ClientDetailsCardProps) {
           Cliente
         </p>
         <div className="flex items-center gap-2 text-sm text-foreground/80">
-          <User size={13} className="shrink-0 text-muted-foreground/80" />
+          <User size={13} className={ICON_CLASS} />
           <span>{clientName}</span>
         </div>
         {clientTaxId && (
           <div className="flex items-center gap-2 text-sm text-foreground/80">
-            <FileText size={13} className="shrink-0 text-muted-foreground/80" />
+            <FileText size={13} className={ICON_CLASS} />
             <span>{clientTaxId}</span>
           </div>
         )}
         {clientAddress && (
           <div className="flex items-start gap-2 text-sm text-foreground/80">
-            <MapPin
-              size={13}
-              className="mt-0.5 shrink-0 text-muted-foreground/80"
-            />
+            <MapPin size={13} className={`mt-0.5 ${ICON_CLASS}`} />
             <span>{clientAddress}</span>
           </div>
         )}
@@ -52,20 +56,11 @@ export function ClientDetailsCard({ detail }: ClientDetailsCardProps) {
           <div className="h-px bg-border" />
           <div className="flex flex-col gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-              Responsável
+              Responsáveis
             </p>
             <div className="flex items-center gap-2 text-sm text-foreground/80">
-              <Briefcase
-                size={13}
-                className="shrink-0 text-muted-foreground/80"
-              />
-              <span>
-                {responsibleName}
-                <span className="text-muted-foreground/80">
-                  {" "}
-                  · {getResponsibleLabel(responsibleType!)}
-                </span>
-              </span>
+              {getResponsibleIcon(responsibleType)}
+              <span>{responsibleName}</span>
             </div>
           </div>
         </>

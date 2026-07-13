@@ -23,6 +23,9 @@ interface ChargeTasksTabProps {
   items: OverdueCollectionItem[];
   onOpen: (item: OverdueCollectionItem) => void;
   onAction: (item: OverdueCollectionItem) => void;
+  onWhatsApp?: (item: OverdueCollectionItem) => void;
+  onCall?: (item: OverdueCollectionItem) => void;
+  onVisit?: (item: OverdueCollectionItem) => void;
   onPostpone: (item: OverdueCollectionItem) => void;
   onRescheduleVisit: (item: OverdueCollectionItem, date: string) => void;
   isPostponing?: boolean;
@@ -44,6 +47,9 @@ export function ChargeTasksTab({
   items,
   onOpen,
   onAction,
+  onWhatsApp,
+  onCall,
+  onVisit,
   onPostpone,
   onRescheduleVisit,
   isPostponing = false,
@@ -90,9 +96,9 @@ export function ChargeTasksTab({
           canPostpone={hero.canPostpone}
           canRescheduleVisit={hero.canRescheduleVisit}
           onOpen={() => onOpen(hero.item)}
-          onWhatsApp={() => onAction(hero.item)}
-          onCall={() => onAction(hero.item)}
-          onVisit={() => onAction(hero.item)}
+          onWhatsApp={() => (onWhatsApp ?? onAction)(hero.item)}
+          onCall={() => (onCall ?? onAction)(hero.item)}
+          onVisit={() => (onVisit ?? onAction)(hero.item)}
           onPostpone={() => onPostpone(hero.item)}
           onRescheduleVisit={(date) => onRescheduleVisit(hero.item, date)}
           isPostponing={isPostponing}

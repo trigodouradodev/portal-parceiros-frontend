@@ -5,6 +5,7 @@ import {
   ActivityChannel,
   type ClientAddress,
 } from "@/services/dashboard/dashboard.types";
+import type { QueueTone } from "@/services/activities/activity.enums";
 
 export type ActionMode = TaskTab;
 
@@ -40,6 +41,7 @@ export interface SetActionDataPayload {
   taskChannel?: ActivityChannel;
   installmentId?: string;
   contactType?: PreventiveContactType;
+  queueTone?: QueueTone | string;
   onComplete: (result: ActionResult) => void;
 }
 
@@ -51,6 +53,7 @@ export interface ActionContextType {
   taskChannel?: ActivityChannel;
   installmentId?: string;
   contactType?: PreventiveContactType;
+  queueTone?: QueueTone | string;
   onComplete: (result: ActionResult) => void;
   setActionData: (data: SetActionDataPayload) => void;
   clearActionData: () => void;

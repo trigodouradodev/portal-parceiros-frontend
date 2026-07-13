@@ -5,6 +5,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/contexts/toast/toast-context";
 import { useActionContext } from "@/contexts/action";
+import type { PreventiveContactType } from "@/contexts/action/action-context";
 import { SummaryCard } from "@/features/dashboard/components/SummaryCards";
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
 import { ChargeTasksTab } from "@/features/dashboard/components/tasks/ChargeTasksTab";
@@ -105,7 +106,10 @@ export function DashboardPage() {
     );
   };
 
-  const handleChargeAction = (item: OverdueCollectionItem) => {
+  const launchChargeAction = (
+    item: OverdueCollectionItem,
+    contactType?: PreventiveContactType,
+  ) => {
     if (isChargeQueueItemBlocked(chargeQueueView, item)) {
       showToast(
         "Complete a tarefa anterior na fila antes de registrar esta ação.",
@@ -116,9 +120,13 @@ export function DashboardPage() {
       return;
     }
 
-    const payload = buildChargeActionPayload(item, () => {
-      showToast("Ação registrada.");
-    });
+    const payload = buildChargeActionPayload(
+      item,
+      () => {
+        showToast("Ação registrada.");
+      },
+      { contactType },
+    );
     if (!payload) {
       showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
         variant: "destructive",
@@ -127,6 +135,22 @@ export function DashboardPage() {
     }
     setActionData(payload);
     navigate(getChargeRegisterPath());
+  };
+
+  const handleChargeWhatsApp = (item: OverdueCollectionItem) => {
+    launchChargeAction(item, "whatsapp");
+  };
+
+  const handleChargeCall = (item: OverdueCollectionItem) => {
+    launchChargeAction(item, "phone");
+  };
+
+  const handleChargeVisit = (item: OverdueCollectionItem) => {
+    launchChargeAction(item, "visit");
+  };
+
+  const handleChargeAction = (item: OverdueCollectionItem) => {
+    launchChargeAction(item);
   };
 
   const handleChargeOpen = (item: OverdueCollectionItem) => {
@@ -257,6 +281,9 @@ export function DashboardPage() {
             onOpen={handleChargeOpen}
             onOpenDetail={handleDetailOpen}
             onAction={handleChargeAction}
+            onWhatsApp={handleChargeWhatsApp}
+            onCall={handleChargeCall}
+            onVisit={handleChargeVisit}
             onPostpone={handlePostpone}
             onRescheduleVisit={handleRescheduleVisit}
             isPostponing={postponeTask.isPending}
