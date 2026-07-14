@@ -21,7 +21,9 @@ export function CalendarDayCell({
   }
 
   const disabled = Boolean((min && date < min) || (max && date > max));
-  const isSelected = Boolean(selected && isSameDay(date, selected));
+  const isSelected = Boolean(
+    selected instanceof Date && isSameDay(date, selected),
+  );
 
   return (
     <button

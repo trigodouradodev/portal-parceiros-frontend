@@ -1,22 +1,31 @@
 import { CalendarClock, CalendarDays, Lock } from "lucide-react";
 import { getInitials } from "@/lib/user-display";
-import { fmtBRL } from "@/lib/utils";
+import { cn, fmtBRL } from "@/lib/utils";
 import type { ChargeQueueDisplayItem } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
+
+export const QUEUE_HIGHLIGHT_ATTR = "data-queue-highlight-id";
 
 interface ChargeQueueCompactRowProps {
   display: ChargeQueueDisplayItem;
   locked: boolean;
   onOpen: () => void;
+  installmentId: string;
+  highlighted?: boolean;
 }
 
 const rowClassName =
-  "flex w-full items-center gap-3 rounded-xl border border-border bg-white px-3 py-3 text-left shadow-sm transition-opacity border-l-4";
+  "flex w-full items-center gap-3 rounded-xl border border-border bg-white px-3 py-3 text-left shadow-sm transition-[background-color,border-color,opacity] border-l-4";
+
+const highlightedClassName =
+  "border-brand-yellow bg-[#FFFBE6] shadow-[0_0_0_1px_var(--color-brand-yellow)]";
 
 /** Linha compacta bloqueada da fila de cobrança (AUREA-186 / AUREA-189). */
 export function ChargeQueueCompactRow({
   display,
   locked,
   onOpen,
+  installmentId,
+  highlighted = false,
 }: ChargeQueueCompactRowProps) {
   const {
     client,
@@ -29,9 +38,16 @@ export function ChargeQueueCompactRow({
   } = display;
   const initials = getInitials(client.name);
   const overdueLabel = `${client.overdueDays}d atraso`;
-  const className = `${rowClassName} ${segment.borderClassName} ${
-    locked ? "cursor-default select-none opacity-75" : ""
-  }`;
+  const className = cn(
+    rowClassName,
+    segment.borderClassName,
+    locked && "cursor-default select-none opacity-75",
+    highlighted && highlightedClassName,
+  );
+
+  const highlightProps = {
+    [QUEUE_HIGHLIGHT_ATTR]: installmentId,
+  };
 
   const content = (
     <>
@@ -80,11 +96,20 @@ export function ChargeQueueCompactRow({
   );
 
   if (locked) {
-    return <div className={className}>{content}</div>;
+    return (
+      <div className={className} {...highlightProps}>
+        {content}
+      </div>
+    );
   }
 
   return (
-    <button type="button" onClick={onOpen} className={className}>
+    <button
+      type="button"
+      onClick={onOpen}
+      className={className}
+      {...highlightProps}
+    >
       {content}
     </button>
   );

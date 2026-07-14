@@ -1,4 +1,5 @@
-import { useMemo, type RefObject } from "react";
+import { useMemo } from "react";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import {
   ChargeQueueCompactRow,
@@ -8,7 +9,6 @@ import { ChargeQueueHeroCard } from "@/features/dashboard/components/task-cards/
 import { ChargeQueueSectionHeader } from "@/features/dashboard/components/tasks/ChargeQueueSectionHeader";
 import { ChargeQueueSegmentHeader } from "@/features/dashboard/components/tasks/ChargeQueueSegmentHeader";
 import { ChargeQueueSkeleton } from "@/features/dashboard/components/tasks/ChargeQueueSkeleton";
-import { TaskCardSkeleton } from "@/features/dashboard/components/tasks/TaskCardSkeleton";
 import { buildChargeQueueTabView } from "@/features/dashboard/mappers/build-charge-queue-tab-view";
 import { mapOverdueToQueueDisplay } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
 import {
@@ -31,7 +31,8 @@ interface ChargeTasksTabProps {
   isPostponing?: boolean;
   isRescheduling?: boolean;
   hasNextPage: boolean;
-  loadMoreRef: RefObject<HTMLDivElement | null>;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
   /** Quando informado, usa a fila v2 já ordenada pela API. */
   queueView?: ChargeQueueView;
   /** Totais por segmento vindos da API (`TodayQueue.segments`). */
@@ -39,6 +40,8 @@ interface ChargeTasksTabProps {
   scheduledItems?: OverdueCollectionItem[];
   completedTodayItems?: OverdueCollectionItem[];
   onOpenDetail?: (item: OverdueCollectionItem) => void;
+  highlightedInstallmentId?: string | null;
+  pinnedPostponedItem?: OverdueCollectionItem | null;
 }
 
 /** Fila segmentada de cobrança na Home (AUREA-186). */
@@ -55,13 +58,18 @@ export function ChargeTasksTab({
   isPostponing = false,
   isRescheduling = false,
   hasNextPage,
-  loadMoreRef,
+  isFetchingNextPage = false,
+  onLoadMore,
   queueView: queueViewProp,
   segmentCounts,
   scheduledItems = [],
   completedTodayItems = [],
   onOpenDetail,
+  highlightedInstallmentId = null,
+  pinnedPostponedItem = null,
 }: ChargeTasksTabProps) {
+  const pinnedInstallmentId = pinnedPostponedItem?.installment.id ?? null;
+
   const queueView = useMemo(
     () => queueViewProp ?? buildChargeQueue(items),
     [queueViewProp, items],
@@ -81,15 +89,26 @@ export function ChargeTasksTab({
   const hasSecondarySections =
     scheduledItems.length > 0 || completedTodayItems.length > 0;
 
-  if (items.length === 0 && !hasNextPage && !hasSecondarySections) {
+  if (
+    items.length === 0 &&
+    !hasNextPage &&
+    !hasSecondarySections &&
+    !pinnedPostponedItem
+  ) {
     return <EmptyState label="Nenhuma cobrança pendente hoje." />;
   }
 
   const { hero, compactHeader, blocks } = tabView;
+  const pinnedDisplay = pinnedPostponedItem
+    ? mapOverdueToQueueDisplay(
+        pinnedPostponedItem,
+        pinnedPostponedItem.queuePosition ?? 1,
+      )
+    : null;
 
   return (
     <div className="flex flex-col gap-4">
-      {hero && (
+      {hero && hero.item.installment.id !== pinnedInstallmentId && (
         <ChargeQueueHeroCard
           display={hero.display}
           taskChannel={hero.taskChannel}
@@ -106,29 +125,60 @@ export function ChargeTasksTab({
         />
       )}
 
-      {blocks.map((block) => (
-        <section key={block.key} className="flex flex-col gap-2">
-          <ChargeQueueSegmentHeader
-            segment={block.segment}
-            count={block.segmentCount ?? block.rows.length}
-            compact={compactHeader}
+      {pinnedPostponedItem && pinnedDisplay && (
+        <section className="flex flex-col gap-2">
+          <ChargeQueueSectionHeader title="Recém postergada" count={1} />
+          <ChargeQueueCompactRow
+            display={pinnedDisplay}
+            locked={false}
+            installmentId={pinnedPostponedItem.installment.id}
+            highlighted={
+              pinnedPostponedItem.installment.id === highlightedInstallmentId
+            }
+            onOpen={() => openDetail(pinnedPostponedItem)}
           />
-          {block.rows.map((row) => (
-            <ChargeQueueCompactRow
-              key={row.key}
-              display={row.display}
-              locked={row.locked}
-              onOpen={() => onOpen(row.item)}
-            />
-          ))}
         </section>
-      ))}
+      )}
+
+      {blocks.map((block) => {
+        const rows = block.rows.filter(
+          (row) => row.item.installment.id !== pinnedInstallmentId,
+        );
+        if (rows.length === 0) return null;
+
+        return (
+          <section key={block.key} className="flex flex-col gap-2">
+            <ChargeQueueSegmentHeader
+              segment={block.segment}
+              count={block.segmentCount ?? rows.length}
+              compact={compactHeader}
+            />
+            {rows.map((row) => (
+              <ChargeQueueCompactRow
+                key={row.key}
+                display={row.display}
+                locked={row.locked}
+                installmentId={row.item.installment.id}
+                highlighted={
+                  row.item.installment.id === highlightedInstallmentId
+                }
+                onOpen={() => onOpen(row.item)}
+              />
+            ))}
+          </section>
+        );
+      })}
 
       {hasNextPage && (
-        <div ref={loadMoreRef} className="flex flex-col gap-3 pt-1">
-          <TaskCardSkeleton />
-          <TaskCardSkeleton />
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full rounded-xl"
+          disabled={isFetchingNextPage || !onLoadMore}
+          onClick={() => onLoadMore?.()}
+        >
+          {isFetchingNextPage ? "Carregando..." : "Ver mais"}
+        </Button>
       )}
 
       {scheduledItems.length > 0 && (
@@ -137,14 +187,18 @@ export function ChargeTasksTab({
             title="Agendadas"
             count={scheduledItems.length}
           />
-          {scheduledItems.map((item, index) => (
-            <ChargeQueueCompactRow
-              key={item.installment.id}
-              display={mapOverdueToQueueDisplay(item, index + 1)}
-              locked
-              onOpen={() => openDetail(item)}
-            />
-          ))}
+          {scheduledItems
+            .filter((item) => item.installment.id !== pinnedInstallmentId)
+            .map((item, index) => (
+              <ChargeQueueCompactRow
+                key={item.installment.id}
+                display={mapOverdueToQueueDisplay(item, index + 1)}
+                locked
+                installmentId={item.installment.id}
+                highlighted={item.installment.id === highlightedInstallmentId}
+                onOpen={() => openDetail(item)}
+              />
+            ))}
         </section>
       )}
 

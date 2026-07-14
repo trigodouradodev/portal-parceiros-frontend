@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { AlertTriangle, Clock, RefreshCw, FileText } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -9,6 +9,7 @@ import type { PreventiveContactType } from "@/contexts/action/action-context";
 import { SummaryCard } from "@/features/dashboard/components/SummaryCards";
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
 import { ChargeTasksTab } from "@/features/dashboard/components/tasks/ChargeTasksTab";
+import { QUEUE_HIGHLIGHT_ATTR } from "@/features/dashboard/components/task-cards/ChargeQueueCompactRow";
 import {
   TaskTab,
   writeTaskTabCookie,
@@ -20,7 +21,6 @@ import {
 import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
 import { mapQueueTaskCardToOverdueItem } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 import { isChargeQueueItemBlocked } from "@/features/dashboard/utils/charge-queue";
-import { useInfiniteScroll } from "@/features/dashboard/hooks/useInfiniteScroll";
 import {
   buildSegmentCountsFromApi,
   extractTodayQueueMeta,
@@ -34,6 +34,21 @@ import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { formatDate } from "@/lib/format/date";
+
+const POSTPONE_HIGHLIGHT_MS = 5000;
+
+function scrollToHighlightedCard(installmentId: string): boolean {
+  const el = document.querySelector(
+    `[${QUEUE_HIGHLIGHT_ATTR}="${CSS.escape(installmentId)}"]`,
+  );
+  if (!(el instanceof HTMLElement)) return false;
+
+  const rect = el.getBoundingClientRect();
+  const absoluteTop = rect.top + window.scrollY;
+  const targetY = absoluteTop - window.innerHeight / 2 + rect.height / 2;
+  window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+  return true;
+}
 
 interface ShellContext {
   onMobileLogout?: () => void;
@@ -55,12 +70,42 @@ export function DashboardPage() {
   } = useTodayQueueInfinite(30);
   const postponeTask = usePostponeTask();
   const rescheduleTask = useRescheduleTask();
+  const [highlightedInstallmentId, setHighlightedInstallmentId] = useState<
+    string | null
+  >(null);
+  const [pinnedPostponedItem, setPinnedPostponedItem] =
+    useState<OverdueCollectionItem | null>(null);
+  const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const highlightScrolledRef = useRef<string | null>(null);
 
-  const loadMoreRef = useInfiniteScroll({
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  });
+  const clearHighlightTimeout = useCallback(() => {
+    if (highlightTimeoutRef.current) {
+      clearTimeout(highlightTimeoutRef.current);
+      highlightTimeoutRef.current = null;
+    }
+  }, []);
+
+  const clearPostponeHighlight = useCallback(() => {
+    clearHighlightTimeout();
+    setHighlightedInstallmentId(null);
+    setPinnedPostponedItem(null);
+    highlightScrolledRef.current = null;
+  }, [clearHighlightTimeout]);
+
+  const startHighlightTimer = useCallback(() => {
+    clearHighlightTimeout();
+    highlightTimeoutRef.current = setTimeout(() => {
+      clearPostponeHighlight();
+    }, POSTPONE_HIGHLIGHT_MS);
+  }, [clearHighlightTimeout, clearPostponeHighlight]);
+
+  useEffect(() => {
+    return () => {
+      clearHighlightTimeout();
+    };
+  }, [clearHighlightTimeout]);
 
   const chargeQueueData = useMemo(() => {
     const pages = todayQueueData?.pages ?? [];
@@ -87,6 +132,34 @@ export function DashboardPage() {
     scheduledItems,
     completedTodayItems,
   } = chargeQueueData;
+
+  useEffect(() => {
+    if (!highlightedInstallmentId || !pinnedPostponedItem) {
+      highlightScrolledRef.current = null;
+      return;
+    }
+    if (highlightScrolledRef.current === highlightedInstallmentId) return;
+
+    let cancelled = false;
+    let rafOuter = 0;
+    let rafInner = 0;
+
+    rafOuter = window.requestAnimationFrame(() => {
+      rafInner = window.requestAnimationFrame(() => {
+        if (cancelled) return;
+        if (scrollToHighlightedCard(highlightedInstallmentId)) {
+          highlightScrolledRef.current = highlightedInstallmentId;
+          startHighlightTimer();
+        }
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(rafOuter);
+      window.cancelAnimationFrame(rafInner);
+    };
+  }, [highlightedInstallmentId, pinnedPostponedItem, startHighlightTimer]);
 
   const totalActions = chargeCounter;
 
@@ -191,6 +264,15 @@ export function DashboardPage() {
         installmentId: item.installment.id,
       });
       showToast("Tarefa postergada para amanhã.");
+
+      clearHighlightTimeout();
+      highlightScrolledRef.current = null;
+      const pinnedItem: OverdueCollectionItem = {
+        ...item,
+        wasPostponed: true,
+      };
+      setPinnedPostponedItem(pinnedItem);
+      setHighlightedInstallmentId(item.installment.id);
     } catch (err) {
       showToast(
         getTaskActionErrorMessage(err, "Não foi possível postergar a tarefa."),
@@ -299,8 +381,13 @@ export function DashboardPage() {
             onRescheduleVisit={handleRescheduleVisit}
             isPostponing={postponeTask.isPending}
             isRescheduling={rescheduleTask.isPending}
-            hasNextPage={hasNextPage}
-            loadMoreRef={loadMoreRef}
+            highlightedInstallmentId={highlightedInstallmentId}
+            pinnedPostponedItem={pinnedPostponedItem}
+            hasNextPage={Boolean(hasNextPage)}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={() => {
+              void fetchNextPage();
+            }}
           />
         </div>
       </div>
