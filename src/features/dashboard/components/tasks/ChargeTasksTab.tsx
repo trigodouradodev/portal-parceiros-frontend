@@ -40,12 +40,7 @@ interface ChargeTasksTabProps {
   scheduledItems?: OverdueCollectionItem[];
   completedTodayItems?: OverdueCollectionItem[];
   onOpenDetail?: (item: OverdueCollectionItem) => void;
-  /** Parcela recém-postergada — highlight no card compacto. */
   highlightedInstallmentId?: string | null;
-  /**
-   * Card pinado localmente após postergar — sempre no DOM para scroll assertivo,
-   * independente da paginação da fila.
-   */
   pinnedPostponedItem?: OverdueCollectionItem | null;
 }
 

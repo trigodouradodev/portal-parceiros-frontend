@@ -86,7 +86,6 @@ export function usePostponeTask() {
     mutationFn: ({ taskId }: { taskId: string; installmentId?: string }) =>
       activitiesService.postponeTask(taskId),
     onSuccess: async (_data, variables) => {
-      // Aguarda o refetch para o card postergado já existir na lista ao aplicar highlight/scroll.
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: activitiesKeys.all }),
         queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),

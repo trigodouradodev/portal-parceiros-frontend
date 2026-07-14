@@ -132,7 +132,6 @@ export function DashboardPage() {
     completedTodayItems,
   } = chargeQueueData;
 
-  // Pin local sempre no DOM → scroll assertivo, sem depender de paginação.
   useEffect(() => {
     if (!highlightedInstallmentId || !pinnedPostponedItem) {
       highlightScrolledRef.current = null;

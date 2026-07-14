@@ -9,9 +9,7 @@ interface ChargeQueueCompactRowProps {
   display: ChargeQueueDisplayItem;
   locked: boolean;
   onOpen: () => void;
-  /** ID estável da parcela — usado no scroll após postergar. */
   installmentId: string;
-  /** Destaque temporário após postergar (borda/fundo amarelo). */
   highlighted?: boolean;
 }
 
