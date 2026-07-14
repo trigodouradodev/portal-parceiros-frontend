@@ -6,6 +6,7 @@ import {
   buildCalendarCells,
   MONTH_LABELS,
   startOfDay,
+  toValidDate,
   WEEKDAY_LABELS,
 } from "@/components/ui/calendar-utils";
 
@@ -24,12 +25,15 @@ export function Calendar({
   maxDate,
   className,
 }: CalendarProps) {
-  const initialMonth = startOfDay(selected ?? minDate ?? new Date());
+  const selectedDate = toValidDate(selected);
+  const min = toValidDate(minDate);
+  const max = toValidDate(maxDate);
+  const initialMonth = startOfDay(selectedDate ?? min ?? new Date());
   const [viewYear, setViewYear] = useState(initialMonth.getFullYear());
   const [viewMonth, setViewMonth] = useState(initialMonth.getMonth());
 
-  const min = minDate ? startOfDay(minDate) : undefined;
-  const max = maxDate ? startOfDay(maxDate) : undefined;
+  const minDay = min ? startOfDay(min) : undefined;
+  const maxDay = max ? startOfDay(max) : undefined;
 
   const cells = useMemo(
     () => buildCalendarCells(viewYear, viewMonth),
@@ -38,8 +42,8 @@ export function Calendar({
 
   const prevMonthEnd = new Date(viewYear, viewMonth, 0);
   const nextMonthStart = new Date(viewYear, viewMonth + 1, 1);
-  const canGoPrev = !min || prevMonthEnd >= min;
-  const canGoNext = !max || nextMonthStart <= max;
+  const canGoPrev = !minDay || prevMonthEnd >= minDay;
+  const canGoNext = !maxDay || nextMonthStart <= maxDay;
 
   function goToMonth(offset: number) {
     const next = new Date(viewYear, viewMonth + offset, 1);
@@ -87,9 +91,9 @@ export function Calendar({
           <CalendarDayCell
             key={index}
             date={date}
-            selected={selected}
-            min={min}
-            max={max}
+            selected={selectedDate}
+            min={minDay}
+            max={maxDay}
             onSelect={onSelect}
           />
         ))}

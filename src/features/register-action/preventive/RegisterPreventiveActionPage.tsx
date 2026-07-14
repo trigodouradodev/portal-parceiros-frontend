@@ -107,7 +107,7 @@ export function RegisterPreventiveActionPage() {
       });
       await createFollowUp.mutateAsync(payload);
       onComplete({ channel, outcome, note, status: outcome });
-      navigate(-1);
+      navigate("/", { replace: true });
     } catch (err) {
       showToast(getApiErrorMessage(err, "Erro ao registrar contato."), {
         variant: "destructive",

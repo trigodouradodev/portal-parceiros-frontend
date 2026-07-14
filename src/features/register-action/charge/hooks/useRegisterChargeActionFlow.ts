@@ -182,7 +182,7 @@ export function useRegisterChargeActionFlow() {
         installmentId,
       });
       onComplete({ note, outcome: result });
-      navigate(-1);
+      navigate("/", { replace: true });
     } catch (err) {
       showToast(getApiErrorMessage(err, "Erro ao registrar ação."), {
         variant: "destructive",

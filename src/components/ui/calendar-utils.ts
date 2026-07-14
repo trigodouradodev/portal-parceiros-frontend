@@ -16,7 +16,14 @@ export const MONTH_LABELS = [
 ];
 
 export function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const value = date instanceof Date ? date : new Date(date);
+  return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+}
+
+export function toValidDate(value: Date | string | number | undefined | null): Date | undefined {
+  if (value == null || value === "") return undefined;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
 export function isSameDay(a: Date, b: Date) {

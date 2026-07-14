@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { format } from "date-fns";
 import {
   CalendarClock,
   CalendarDays,
@@ -7,6 +8,7 @@ import {
   Phone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +17,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { PostponeControl } from "@/features/dashboard/components/task-cards/PostponeControl";
 import {
   getVisitRescheduleBounds,
@@ -77,7 +78,7 @@ export function ChargeQueueHeroCard({
 }: ChargeQueueHeroCardProps) {
   const [confirmingPostpone, setConfirmingPostpone] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
-  const [draftVisitDate, setDraftVisitDate] = useState("");
+  const [draftVisitDate, setDraftVisitDate] = useState<Date | undefined>();
   const {
     client,
     segment,
@@ -88,18 +89,23 @@ export function ChargeQueueHeroCard({
   const initials = getInitials(client.name);
   const parcelaLabel = client.parcela.replace(/^Parc\.?\s*/i, "Parc ");
   const isVisitTask = taskChannel === ActivityChannel.CLIENT_VISIT;
-  const { minIso, maxIso } = getVisitRescheduleBounds();
+  const { min, max } = getVisitRescheduleBounds();
 
   const handleConfirmPostpone = () => {
     setConfirmingPostpone(false);
     onPostpone();
   };
 
+  const handleRescheduleOpenChange = (open: boolean) => {
+    setRescheduleOpen(open);
+    if (!open) setDraftVisitDate(undefined);
+  };
+
   const handleConfirmReschedule = () => {
     if (!draftVisitDate) return;
-    onRescheduleVisit(draftVisitDate);
+    onRescheduleVisit(format(draftVisitDate, "yyyy-MM-dd"));
     setRescheduleOpen(false);
-    setDraftVisitDate("");
+    setDraftVisitDate(undefined);
   };
 
   const openPostponeConfirm = () => setConfirmingPostpone(true);
@@ -256,7 +262,7 @@ export function ChargeQueueHeroCard({
                     variant="outline"
                     className="h-9 gap-1 px-3 text-xs text-muted-foreground hover:border-brand-navy hover:text-brand-navy"
                     onClick={() => {
-                      setDraftVisitDate("");
+                      setDraftVisitDate(undefined);
                       setRescheduleOpen(true);
                     }}
                     title={`Reagendar a visita para até ${VISIT_RESCHEDULE_WINDOW_DAYS} dias (apenas 1 vez)`}
@@ -282,30 +288,30 @@ export function ChargeQueueHeroCard({
       </div>
 
       {isVisitTask && (
-        <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
+        <Dialog open={rescheduleOpen} onOpenChange={handleRescheduleOpenChange}>
           <DialogContent className="max-w-[340px]">
             <DialogHeader>
               <DialogTitle>Alterar data da visita</DialogTitle>
               <DialogDescription>
-                Escolha uma nova data para a visita, entre amanhã e D+
-                {VISIT_RESCHEDULE_WINDOW_DAYS}. Essa alteração só pode ser feita
-                uma vez.
+                Escolha uma nova data para a visita, dentro de uma janela de até{" "}
+                {VISIT_RESCHEDULE_WINDOW_DAYS} dias. Essa alteração só pode ser
+                feita uma vez.
               </DialogDescription>
             </DialogHeader>
-            <Input
-              type="date"
-              min={minIso}
-              max={maxIso}
-              value={draftVisitDate}
-              onChange={(event) => setDraftVisitDate(event.target.value)}
-              className="h-10"
-            />
+            <div className="flex justify-center">
+              <Calendar
+                selected={draftVisitDate}
+                minDate={min}
+                maxDate={max}
+                onSelect={setDraftVisitDate}
+              />
+            </div>
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
                 className="h-10 rounded-xl"
-                onClick={() => setRescheduleOpen(false)}
+                onClick={() => handleRescheduleOpenChange(false)}
                 disabled={isRescheduling}
               >
                 Cancelar

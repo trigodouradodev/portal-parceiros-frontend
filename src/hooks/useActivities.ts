@@ -85,15 +85,18 @@ export function usePostponeTask() {
   return useMutation({
     mutationFn: ({ taskId }: { taskId: string; installmentId?: string }) =>
       activitiesService.postponeTask(taskId),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
-      queryClient.invalidateQueries({ queryKey: installmentKeys.all });
-      if (variables.installmentId) {
-        queryClient.invalidateQueries({
-          queryKey: installmentKeys.detail(variables.installmentId),
-        });
-      }
+    onSuccess: async (_data, variables) => {
+      // Aguarda o refetch para o card postergado já existir na lista ao aplicar highlight/scroll.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: activitiesKeys.all }),
+        queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
+        queryClient.invalidateQueries({ queryKey: installmentKeys.all }),
+        variables.installmentId
+          ? queryClient.invalidateQueries({
+              queryKey: installmentKeys.detail(variables.installmentId),
+            })
+          : Promise.resolve(),
+      ]);
     },
   });
 }
