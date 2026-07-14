@@ -127,8 +127,9 @@ export function ContractDetailPage() {
 
     if (!detail) return;
 
+    // Charge already returned above; this fallback is preventive-only.
     setActionData({
-      mode,
+      mode: TaskTab.Preventive,
       client: {
         id: detail.contractId,
         installmentNumber: detail.installmentNumber,
@@ -137,23 +138,15 @@ export function ContractDetailPage() {
         parcela: `Parc ${detail.installmentNumber}/${detail.totalInstallments}`,
         value: fmtBRL(detail.installmentValue),
         currentStep: detail.statusLabel,
-        daysInfo: buildDaysInfoFromDetail(mode, detail.alertDays),
+        daysInfo: buildDaysInfoFromDetail(TaskTab.Preventive, detail.alertDays),
         phone: listItem?.client.phone,
         address: listItem?.client.address ?? detail.address,
       },
       onComplete: () => {
-        showToast(
-          mode === TaskTab.Charge
-            ? "Ação registrada."
-            : "Contato preventivo registrado!",
-        );
+        showToast("Contato preventivo registrado!");
       },
     });
-    navigate(
-      mode === TaskTab.Charge
-        ? getChargeRegisterPath()
-        : getPreventiveRegisterPath(),
-    );
+    navigate(getPreventiveRegisterPath());
   };
 
   if (isLoading) {

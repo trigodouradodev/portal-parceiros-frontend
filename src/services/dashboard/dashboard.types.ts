@@ -154,7 +154,10 @@ export interface OverdueCollectionItem {
   responsible?: ContractResponsible;
   task: ActivityTaskSummary | null;
   followup?: FollowupSummary;
-  queueSegmentCode?: QueueSegmentCode;
+  /** Segmento da fila: código API ou alias UI (`late`←`post_letter`, `critical`←`pre_default`). */
+  queueSegmentCode?: QueueSegmentCode | "late" | "critical";
+  /** Código bruto da API quando `queueSegmentCode` foi normalizado para o alias UI. */
+  apiSegmentCode?: QueueSegmentCode;
   queueTone?: QueueTone;
   queuePosition?: number;
   correctedAmount?: number;
