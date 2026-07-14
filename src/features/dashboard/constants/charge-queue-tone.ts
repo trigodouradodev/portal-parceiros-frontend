@@ -44,7 +44,11 @@ export function resolveQueueTone(
   stageCode?: CollectionStageCode,
   overdueDays?: number,
 ): QueueTone {
-  if (queueTone === "friendly" || queueTone === "firm" || queueTone === "severe") {
+  if (
+    queueTone === "friendly" ||
+    queueTone === "firm" ||
+    queueTone === "severe"
+  ) {
     return queueTone;
   }
   if (stageCode && stageCode in STAGE_TO_TONE) {

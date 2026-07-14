@@ -182,7 +182,9 @@ export function ChargeQueueHeroCard({
           {lastActionNote && (
             <div className="mt-2 flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#C8CBD8]" />
-              <p className="truncate text-xs text-[#6B7080]">{lastActionNote}</p>
+              <p className="truncate text-xs text-[#6B7080]">
+                {lastActionNote}
+              </p>
             </div>
           )}
         </button>

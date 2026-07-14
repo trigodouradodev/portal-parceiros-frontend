@@ -126,9 +126,7 @@ export function useRegisterChargeActionFlow() {
 
   const contactPhone = activeParty?.phone ?? "";
   const contactFirstName = activeParty ? getFirstName(activeParty.name) : "";
-  const contactAddress = useGuarantor
-    ? guarantor?.address
-    : client?.address;
+  const contactAddress = useGuarantor ? guarantor?.address : client?.address;
   const callScript = getCallScript(queueTone, {
     contract: client?.contract,
     contactFirstName,
@@ -157,10 +155,10 @@ export function useRegisterChargeActionFlow() {
 
   const guarantorSelectable = Boolean(
     guarantor?.name &&
-      (isVisitTask
-        ? hasValidAddress(guarantor.address)
-        : hasCallablePhone(guarantor.phone) ||
-          hasValidAddress(guarantor.address)),
+    (isVisitTask
+      ? hasValidAddress(guarantor.address)
+      : hasCallablePhone(guarantor.phone) ||
+        hasValidAddress(guarantor.address)),
   );
 
   const canContinueRecipient =
@@ -253,10 +251,7 @@ export function useRegisterChargeActionFlow() {
     }
 
     let promiseDateValue: string | undefined;
-    if (
-      outcome === ActivityInteractionResult.PAYMENT_PROMISE &&
-      promiseDate
-    ) {
+    if (outcome === ActivityInteractionResult.PAYMENT_PROMISE && promiseDate) {
       promiseDateValue = format(promiseDate, "yyyy-MM-dd");
     }
 

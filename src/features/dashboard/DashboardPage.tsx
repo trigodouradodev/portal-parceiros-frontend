@@ -359,7 +359,9 @@ export function DashboardPage() {
                 {totalActions}
               </span>
             </div>
-            <span className="text-xs text-[#9DA3B4]">Ordenado por urgência</span>
+            <span className="text-xs text-[#9DA3B4]">
+              Ordenado por urgência
+            </span>
           </div>
 
           <ChargeTasksTab

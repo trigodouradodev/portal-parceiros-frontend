@@ -39,8 +39,8 @@ export function VisitRescheduleDialog({
           <DialogTitle>Alterar data da visita</DialogTitle>
           <DialogDescription>
             Escolha uma nova data para a visita, dentro de uma janela de até{" "}
-            {VISIT_RESCHEDULE_WINDOW_DAYS} dias. Essa alteração só pode ser feita
-            uma vez.
+            {VISIT_RESCHEDULE_WINDOW_DAYS} dias. Essa alteração só pode ser
+            feita uma vez.
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">
