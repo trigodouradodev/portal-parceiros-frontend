@@ -1,6 +1,6 @@
 ## :ticket: Link do Ticket Jira
 
-https://aureadev.atlassian.net/browse/<issue-key>
+https://aureadev.atlassian.net/browse/AUREA-<número>
 
 ## :clipboard: Descrição
 
