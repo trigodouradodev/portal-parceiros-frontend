@@ -20,7 +20,9 @@ export function startOfDay(date: Date) {
   return new Date(value.getFullYear(), value.getMonth(), value.getDate());
 }
 
-export function toValidDate(value: Date | string | number | undefined | null): Date | undefined {
+export function toValidDate(
+  value: Date | string | number | undefined | null,
+): Date | undefined {
   if (value == null || value === "") return undefined;
   const date = value instanceof Date ? value : new Date(value);
   return Number.isNaN(date.getTime()) ? undefined : date;
