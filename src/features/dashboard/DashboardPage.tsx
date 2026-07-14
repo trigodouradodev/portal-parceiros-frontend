@@ -15,7 +15,7 @@ import {
   writeTaskTabCookie,
 } from "@/features/dashboard/constants/task-tab";
 import {
-  buildChargeActionPayload,
+  resolveChargeActionPayload,
   getChargeRegisterPath,
 } from "@/features/dashboard/utils/launch-action";
 import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
@@ -31,6 +31,7 @@ import {
 } from "@/hooks/useActivities";
 import { useDashboard } from "@/hooks/useDashboard";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { formatDate } from "@/lib/format/date";
 
@@ -179,7 +180,7 @@ export function DashboardPage() {
     );
   };
 
-  const launchChargeAction = (
+  const launchChargeAction = async (
     item: OverdueCollectionItem,
     contactType?: PreventiveContactType,
   ) => {
@@ -193,21 +194,31 @@ export function DashboardPage() {
       return;
     }
 
-    const payload = buildChargeActionPayload(
-      item,
-      () => {
-        showToast("Ação registrada.");
-      },
-      { contactType },
-    );
-    if (!payload) {
-      showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
-        variant: "destructive",
-      });
-      return;
+    try {
+      const payload = await resolveChargeActionPayload(
+        item,
+        () => {
+          showToast("Ação registrada.");
+        },
+        { contactType },
+      );
+      if (!payload) {
+        showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
+          variant: "destructive",
+        });
+        return;
+      }
+      setActionData(payload);
+      navigate(getChargeRegisterPath());
+    } catch (err) {
+      showToast(
+        getApiErrorMessage(
+          err,
+          "Não foi possível carregar os dados da parcela.",
+        ),
+        { variant: "destructive" },
+      );
     }
-    setActionData(payload);
-    navigate(getChargeRegisterPath());
   };
 
   const handleChargeWhatsApp = (item: OverdueCollectionItem) => {

@@ -11,15 +11,18 @@ import type {
 import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
 import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
 import type { PreventiveContactType } from "@/contexts/action/action-context";
+import { activitiesService } from "@/services/activities/activities.service";
 import {
   mapTaskTypeToChannel,
   mapToneToStageCode,
 } from "@/services/activities/activity-task-mapping";
 import { ActivityTaskStatus } from "@/services/activities/activity.enums";
-import type {
-  ActivityTaskSummary,
-  OverdueCollectionItem,
+import {
+  ActivityChannel,
+  type ActivityTaskSummary,
+  type OverdueCollectionItem,
 } from "@/services/dashboard/dashboard.types";
+import { hasValidAddress } from "@/lib/contact-actions";
 import { fmtBRL } from "@/lib/utils";
 
 export const CHARGE_REGISTER_PATH = "/register/charge";
@@ -130,6 +133,44 @@ export function buildChargeActionPayloadFromInstallmentDetail(
     },
     onComplete,
   };
+}
+
+function needsClientAddressForCharge(
+  item: OverdueCollectionItem,
+  contactType?: PreventiveContactType,
+): boolean {
+  if (contactType === "visit") return true;
+  if (item.taskType === "visit") return true;
+  return item.task?.channel === ActivityChannel.CLIENT_VISIT;
+}
+
+/**
+ * Builds charge action payload. Queue cards omit `client.address`, so for visit
+ * flows we load installment detail when the address is missing.
+ */
+export async function resolveChargeActionPayload(
+  item: OverdueCollectionItem,
+  onComplete: (result: ActionResult) => void,
+  options?: {
+    contactType?: PreventiveContactType;
+  },
+): Promise<SetActionDataPayload | null> {
+  const shouldLoadAddress =
+    needsClientAddressForCharge(item, options?.contactType) &&
+    !hasValidAddress(item.client.address);
+
+  if (shouldLoadAddress) {
+    const detail = await activitiesService.getInstallmentDetail(
+      item.installment.id,
+    );
+    return buildChargeActionPayloadFromInstallmentDetail(
+      detail,
+      onComplete,
+      options,
+    );
+  }
+
+  return buildChargeActionPayload(item, onComplete, options);
 }
 
 export function buildPreventiveActionPayload(

@@ -81,15 +81,13 @@ export function ContractDetailPage() {
 
   const handleRegisterAction = () => {
     writeTaskTabCookie(readTaskTabFromCookie());
-
-    if (
-      mode === TaskTab.Charge &&
-      listItem &&
-      isOverdueCollectionItem(listItem)
-    ) {
-      const payload = buildChargeActionPayload(listItem, () => {
-        showToast("Ação registrada.");
-      });
+    if (mode === TaskTab.Charge && installmentDetail) {
+      const payload = buildChargeActionPayloadFromInstallmentDetail(
+        installmentDetail,
+        () => {
+          showToast("Ação registrada.");
+        },
+      );
       if (!payload) {
         showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
           variant: "destructive",
@@ -101,13 +99,14 @@ export function ContractDetailPage() {
       return;
     }
 
-    if (mode === TaskTab.Charge && installmentDetail) {
-      const payload = buildChargeActionPayloadFromInstallmentDetail(
-        installmentDetail,
-        () => {
-          showToast("Ação registrada.");
-        },
-      );
+    if (
+      mode === TaskTab.Charge &&
+      listItem &&
+      isOverdueCollectionItem(listItem)
+    ) {
+      const payload = buildChargeActionPayload(listItem, () => {
+        showToast("Ação registrada.");
+      });
       if (!payload) {
         showToast("Nenhuma tarefa de cobrança pendente para esta parcela.", {
           variant: "destructive",
