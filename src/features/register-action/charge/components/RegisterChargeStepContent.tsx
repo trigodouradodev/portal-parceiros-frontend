@@ -1,16 +1,13 @@
-import {
-  ContactToneBadges,
-  PromiseDateSummary,
-  RecipientPicker,
-} from "@/features/register-action/charge/components";
-import type { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
+import type { ReactNode } from "react";
 import { OutcomeOptionList } from "@/features/register-action";
-import {
-  PhonePanel,
-  VisitLocationPanel,
-  WhatsAppPanel,
-} from "@/features/register-action/preventive/components";
+import type { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
+import { WhatsAppPanel } from "@/features/register-action/preventive/components";
 import { ActivityInteractionResult } from "@/services/activities/activity.enums";
+import { ChargePhoneStep } from "./ChargePhoneStep";
+import { ChargeVisitStep } from "./ChargeVisitStep";
+import { ContactToneBadges } from "./ContactToneBadges";
+import { PromiseDateSummary } from "./PromiseDateSummary";
+import { RecipientPicker } from "./RecipientPicker";
 
 type Flow = ReturnType<typeof useRegisterChargeActionFlow>;
 
@@ -24,6 +21,7 @@ export function RegisterChargeStepContent({
   const {
     step,
     client,
+    guarantor,
     contactType,
     isVisitTask,
     queueTone,
@@ -34,8 +32,14 @@ export function RegisterChargeStepContent({
     setNote,
     promiseDate,
     outcomeOptions,
-    clientPhone,
-    clientFirstName,
+    contactPhone,
+    contactFirstName,
+    contactAddress,
+    addressLabel,
+    phoneLabel,
+    visitScript,
+    callScript,
+    outcomePrompt,
     waTemplates,
     selectedTemplate,
     location,
@@ -53,7 +57,9 @@ export function RegisterChargeStepContent({
         value={recipientType}
         onChange={setRecipientType}
         clientName={client.name}
-        clientPhone={clientPhone}
+        clientPhone={client.phone}
+        guarantor={guarantor}
+        requireAddressForGuarantor={isVisitTask}
       />
     );
   }
@@ -64,10 +70,11 @@ export function RegisterChargeStepContent({
         <ContactToneBadges
           queueTone={queueTone}
           templateTag={selectedTemplate?.tag}
+          variant="compact"
         />
         <WhatsAppPanel
-          phone={clientPhone}
-          clientFirstName={clientFirstName}
+          phone={contactPhone}
+          clientFirstName={contactFirstName}
           templates={waTemplates}
         />
       </div>
@@ -76,18 +83,23 @@ export function RegisterChargeStepContent({
 
   if (step === "contact" && contactType === "phone") {
     return (
-      <PhonePanel
-        phone={clientPhone}
-        clientFirstName={clientFirstName}
-        templates={waTemplates}
+      <ChargePhoneStep
+        queueTone={queueTone}
+        phone={contactPhone}
+        phoneLabel={phoneLabel}
+        contactFirstName={contactFirstName}
+        callScript={callScript}
       />
     );
   }
 
   if (step === "contact" && contactType === "visit") {
     return (
-      <VisitLocationPanel
-        address={client.address}
+      <ChargeVisitStep
+        queueTone={queueTone}
+        address={contactAddress}
+        addressLabel={addressLabel}
+        orientationScript={visitScript}
         status={location.status}
         locationCheckResult={location.result}
         onVerifyLocation={location.verify}
@@ -97,32 +109,37 @@ export function RegisterChargeStepContent({
   }
 
   if (step === "outcome") {
+    const showPromiseSummary =
+      outcome === ActivityInteractionResult.PAYMENT_PROMISE &&
+      Boolean(promiseDate);
+
+    let noteHint: string | undefined;
+    if (showNoteValidation) {
+      noteHint = "Descreva o motivo nas observações para poder registrar.";
+    }
+
+    let afterOptions: ReactNode;
+    if (showPromiseSummary && promiseDate) {
+      afterOptions = (
+        <PromiseDateSummary
+          date={promiseDate}
+          onChange={openPromiseDateEditor}
+        />
+      );
+    }
+
     return (
       <OutcomeOptionList
         options={outcomeOptions}
         value={outcome}
         onChange={(value) => selectOutcome(value as ActivityInteractionResult)}
-        prompt={
-          isVisitTask
-            ? "Qual foi o resultado da visita?"
-            : "Qual foi o resultado do contato?"
-        }
-        afterOptions={
-          outcome === ActivityInteractionResult.PAYMENT_PROMISE &&
-          promiseDate ? (
-            <PromiseDateSummary
-              date={promiseDate}
-              onChange={openPromiseDateEditor}
-            />
-          ) : undefined
-        }
+        prompt={outcomePrompt}
+        afterOptions={afterOptions}
         note={{
           value: note,
           onChange: setNote,
           required: noteRequired,
-          hint: showNoteValidation
-            ? "Descreva o motivo nas observações para poder registrar."
-            : undefined,
+          hint: noteHint,
           invalid: showNoteValidation,
         }}
         compact

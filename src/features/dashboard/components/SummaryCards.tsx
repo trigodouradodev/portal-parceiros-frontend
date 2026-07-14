@@ -4,8 +4,8 @@ type CardVariant = "navy" | "amber" | "red" | "blue";
 
 const cardStyles: Record<CardVariant, string> = {
   navy: "bg-brand-navy text-white",
-  amber: "bg-warning-bg text-warning",
-  red: "bg-destructive-bg text-destructive",
+  amber: "bg-[#FDF3E0] text-[#854F0B]",
+  red: "bg-[#FEECEC] text-[#A32D2D]",
   blue: "bg-brand-yellow/20 text-brand-navy",
 };
 

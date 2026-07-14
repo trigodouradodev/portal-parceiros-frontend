@@ -12,7 +12,7 @@ interface ConfirmedStatusProps {
 export function ConfirmedStatus({
   distanceMeters,
   radiusMeters,
-  partialMatch,
+  partialMatch = false,
 }: ConfirmedStatusProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -20,13 +20,13 @@ export function ConfirmedStatus({
         <CheckCircle2 size={18} />
         Localização confirmada — você está no endereço!
       </div>
+      <ActionHint variant="visit-confirmed" />
       <VisitDistanceLabel
         distanceMeters={distanceMeters}
         radiusMeters={radiusMeters}
         variant="confirmed"
       />
       {partialMatch && <PartialMatchAlert />}
-      <ActionHint variant="visit-confirmed" />
     </div>
   );
 }

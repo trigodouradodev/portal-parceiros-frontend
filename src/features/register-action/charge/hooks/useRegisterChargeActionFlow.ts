@@ -7,6 +7,19 @@ import {
   getV2InteractionOutcomeOptions,
   requiresInteractionObservation,
 } from "@/features/register-action/charge/constants/v2-interaction-outcomes";
+import {
+  getCallScript,
+  getVisitScript,
+} from "@/features/register-action/charge/constants/scripts";
+import {
+  getChargeFlowSteps,
+  getChargeStepTitle,
+  type FlowStep,
+} from "@/features/register-action/charge/utils/flow-steps";
+import {
+  getRecipientAddressLabel,
+  getRecipientPhoneLabel,
+} from "@/features/register-action/charge/utils/recipient-labels";
 import { getWaTemplates } from "@/features/register-action/charge/utils/wa-templates";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 import {
@@ -22,18 +35,11 @@ import { useVisitLocationCheck } from "@/features/register-action/preventive/hoo
 import { useRegisterInteraction } from "@/hooks/useRegisterInteraction";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import { hasCallablePhone, hasValidAddress } from "@/lib/contact-actions";
 import { getFirstName } from "@/lib/user-display";
 import { addDays, startOfDay } from "@/components/ui/calendar-utils";
 
-export type FlowStep = "recipient" | "contact" | "outcome";
-
-export const FLOW_STEPS = ["Destinatário", "Contato", "Resultado"] as const;
-
-export const STEP_TITLES: Record<FlowStep, string> = {
-  recipient: "Destinatário",
-  contact: "Contato",
-  outcome: "Resultado do contato",
-};
+export type { FlowStep };
 
 function resolveContactType(
   contactType: PreventiveContactType | undefined,
@@ -51,6 +57,7 @@ export function useRegisterChargeActionFlow() {
   const registerInteraction = useRegisterInteraction();
   const {
     client,
+    guarantor,
     taskId,
     taskChannel,
     installmentId,
@@ -89,6 +96,11 @@ export function useRegisterChargeActionFlow() {
 
   const contactType = resolveContactType(presetContactType, taskChannel);
   const isVisitTask = contactType === "visit";
+  const flowSteps = getChargeFlowSteps(contactType);
+  const stepTitle = getChargeStepTitle(step, contactType);
+  const visitScript = getVisitScript(queueTone, client?.contract);
+  const addressLabel = getRecipientAddressLabel(recipientType);
+  const phoneLabel = getRecipientPhoneLabel(recipientType);
   const activityTaskType = mapTaskChannelToActivityTaskType(
     taskChannel,
     contactType,
@@ -99,9 +111,37 @@ export function useRegisterChargeActionFlow() {
     [activityTaskType],
   );
 
-  const clientPhone = client?.phone ?? "";
-  const clientFirstName = client ? getFirstName(client.name) : "";
-  const waTemplates = client ? getWaTemplates(client) : [];
+  const useGuarantor =
+    recipientType === ActivityRecipientType.GUARANTOR && Boolean(guarantor);
+
+  const activeParty = useGuarantor
+    ? guarantor
+    : client
+      ? {
+          name: client.name,
+          phone: client.phone,
+          address: client.address,
+        }
+      : null;
+
+  const contactPhone = activeParty?.phone ?? "";
+  const contactFirstName = activeParty ? getFirstName(activeParty.name) : "";
+  const contactAddress = useGuarantor
+    ? guarantor?.address
+    : client?.address;
+  const callScript = getCallScript(queueTone, {
+    contract: client?.contract,
+    contactFirstName,
+  });
+
+  const waTemplates = client
+    ? getWaTemplates({
+        name: activeParty?.name ?? client.name,
+        parcela: client.parcela,
+        value: client.value,
+        daysInfo: client.daysInfo,
+      })
+    : [];
   const selectedTemplate = waTemplates[0];
   const saving = registerInteraction.isPending;
 
@@ -111,10 +151,21 @@ export function useRegisterChargeActionFlow() {
   const visitLocationReady = !isVisitTask || location.locationOk;
   const noteRequired =
     outcome !== null && requiresInteractionObservation(outcome);
-  const showNoteValidation = noteRequired && !note.trim();
+  const showNoteValidation = noteRequired && note.trim().length === 0;
   const needsPromiseDate =
     outcome === ActivityInteractionResult.PAYMENT_PROMISE && !promiseDate;
-  const canContinueRecipient = recipientType === ActivityRecipientType.CLIENT;
+
+  const guarantorSelectable = Boolean(
+    guarantor?.name &&
+      (isVisitTask
+        ? hasValidAddress(guarantor.address)
+        : hasCallablePhone(guarantor.phone) ||
+          hasValidAddress(guarantor.address)),
+  );
+
+  const canContinueRecipient =
+    recipientType === ActivityRecipientType.CLIENT ||
+    (recipientType === ActivityRecipientType.GUARANTOR && guarantorSelectable);
   const canContinueContact = visitLocationReady;
   const canSaveOutcome =
     step === "outcome" &&
@@ -201,22 +252,37 @@ export function useRegisterChargeActionFlow() {
       return;
     }
 
-    const promiseDateValue =
-      outcome === ActivityInteractionResult.PAYMENT_PROMISE && promiseDate
-        ? format(promiseDate, "yyyy-MM-dd")
-        : undefined;
+    let promiseDateValue: string | undefined;
+    if (
+      outcome === ActivityInteractionResult.PAYMENT_PROMISE &&
+      promiseDate
+    ) {
+      promiseDateValue = format(promiseDate, "yyyy-MM-dd");
+    }
 
     await submitInteraction(outcome, promiseDateValue);
   }
 
+  let outcomePrompt = "Qual foi o resultado do contato?";
+  if (isVisitTask) {
+    outcomePrompt = "Qual foi o resultado da visita?";
+  }
+
   return {
     client,
+    guarantor,
     taskId,
     step,
     setStep,
     currentStepIndex,
+    flowSteps,
+    stepTitle,
     contactType,
     isVisitTask,
+    visitScript,
+    callScript,
+    addressLabel,
+    phoneLabel,
     queueTone,
     recipientType,
     setRecipientType,
@@ -228,8 +294,10 @@ export function useRegisterChargeActionFlow() {
     draftPromiseDate,
     setDraftPromiseDate,
     outcomeOptions,
-    clientPhone,
-    clientFirstName,
+    contactPhone,
+    contactFirstName,
+    contactAddress,
+    outcomePrompt,
     waTemplates,
     selectedTemplate,
     saving,

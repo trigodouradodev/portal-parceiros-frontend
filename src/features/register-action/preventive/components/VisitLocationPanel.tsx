@@ -2,6 +2,7 @@ import { hasValidAddress } from "@/lib/contact-actions";
 import type { LocationCheckResult } from "@/services/location-check/location-check.types";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 import type { VisitLocationStatus } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
+import { GuidanceCard } from "@/features/register-action/components/primitives/contact/GuidanceCard";
 import { ClientAddressCard } from "./visit-location/ClientAddressCard";
 import {
   CheckingStatus,
@@ -15,6 +16,8 @@ export type { VisitLocationStatus };
 
 interface VisitLocationPanelProps {
   address?: ClientAddress;
+  addressLabel?: string;
+  orientationScript?: string;
   status: VisitLocationStatus;
   locationCheckResult?: LocationCheckResult | null;
   onVerifyLocation: () => void;
@@ -23,16 +26,30 @@ interface VisitLocationPanelProps {
 
 export function VisitLocationPanel({
   address,
+  addressLabel = "Endereço do cliente",
+  orientationScript,
   status,
   locationCheckResult,
   onVerifyLocation,
   onConfirmManual,
 }: VisitLocationPanelProps) {
   const hasAddress = hasValidAddress(address);
+  const showIdle = hasAddress && status === "idle";
+  const showChecking = hasAddress && status === "checking";
+  const showConfirmed = hasAddress && status === "confirmed";
+  const showManual = hasAddress && status === "manual";
+  const showNotFound = hasAddress && status === "not_found";
 
   return (
     <div className="flex flex-col gap-4">
-      <ClientAddressCard address={address} />
+      <ClientAddressCard address={address} label={addressLabel} />
+
+      {orientationScript && (
+        <GuidanceCard
+          title="Orientações para a visita"
+          body={orientationScript}
+        />
+      )}
 
       {!hasAddress && (
         <p className="rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
@@ -40,19 +57,17 @@ export function VisitLocationPanel({
         </p>
       )}
 
-      {hasAddress && status === "idle" && (
-        <IdleStatus onVerifyLocation={onVerifyLocation} />
-      )}
-      {hasAddress && status === "checking" && <CheckingStatus />}
-      {hasAddress && status === "confirmed" && (
+      {showIdle && <IdleStatus onVerifyLocation={onVerifyLocation} />}
+      {showChecking && <CheckingStatus />}
+      {showConfirmed && (
         <ConfirmedStatus
           distanceMeters={locationCheckResult?.distanceMeters}
           radiusMeters={locationCheckResult?.radiusMeters}
           partialMatch={locationCheckResult?.partialMatch}
         />
       )}
-      {hasAddress && status === "manual" && <ManualStatus />}
-      {hasAddress && status === "not_found" && (
+      {showManual && <ManualStatus />}
+      {showNotFound && (
         <NotFoundStatus
           address={address}
           destinationCoordinates={locationCheckResult?.registeredCoordinates}

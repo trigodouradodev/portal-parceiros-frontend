@@ -153,36 +153,22 @@ export interface OverdueCollectionItem {
   client: ClientInfo;
   responsible?: ContractResponsible;
   task: ActivityTaskSummary | null;
-  /**
-   * O overdue do backend (dev) não retorna `followup` neste endpoint — apenas
-   * `task` (régua). Mantido opcional para compatibilidade e robustez.
-   */
   followup?: FollowupSummary;
-  /** Segmento normalizado para UI (mapeado a partir do code da API v2). */
-  queueSegmentCode?: string;
-  /** segmentCode bruto retornado pela API v2. */
-  apiSegmentCode?: QueueSegmentCode;
-  /** Tom da régua v2. */
+  queueSegmentCode?: QueueSegmentCode;
   queueTone?: QueueTone;
-  /** Posição na fila conforme API v2. */
   queuePosition?: number;
-  /** Valor corrigido hoje (amountOverdue da API v2). */
   correctedAmount?: number;
-  /** Última interação registrada (API v2). */
   lastInteraction?: {
     result: ActivityInteractionResult;
     channel: ActivityInteractionChannel;
     createdAt: string;
+    promiseDate?: string;
   };
-  /** Flags da fila v2 (postergar / reagendar). */
   wasPostponed?: boolean;
   wasRescheduled?: boolean;
   expireDate?: string;
-  /** Tipo da tarefa v2: contact | visit. */
   taskType?: ActivityTaskType;
-  /** Responsável pela tarefa (supervisão gerente/diretor). */
   assignedTo?: { id: string; name: string } | null;
-  /** Se é a tarefa #1 executável do responsável. */
   isActive?: boolean;
 }
 
@@ -199,7 +185,6 @@ export interface OverdueCollectionPage {
   pagination: OverduePagination;
 }
 
-/** @deprecated Legacy ref — removed from new collection shapes */
 export interface CollectionAgentRef {
   id: string;
   name: string;

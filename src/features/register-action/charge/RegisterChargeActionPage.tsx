@@ -1,11 +1,7 @@
 import { PromiseDateModal } from "@/features/register-action/charge/components";
 import { RegisterChargeFooterActions } from "@/features/register-action/charge/components/RegisterChargeFooterActions";
 import { RegisterChargeStepContent } from "@/features/register-action/charge/components/RegisterChargeStepContent";
-import {
-  FLOW_STEPS,
-  STEP_TITLES,
-  useRegisterChargeActionFlow,
-} from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
+import { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
 import {
   RegisterActionLayout,
   RegisterFormCard,
@@ -21,12 +17,12 @@ export function RegisterChargeActionPage() {
 
   return (
     <RegisterActionLayout
-      title={STEP_TITLES[flow.step]}
+      title={flow.stepTitle}
       client={flow.client}
       onBack={flow.handleBack}
       beforeContent={
         <RegisterStepIndicator
-          steps={[...FLOW_STEPS]}
+          steps={[...flow.flowSteps]}
           currentStep={flow.currentStepIndex}
           connectorClassName="mx-2 h-px w-6 bg-border"
         />

@@ -4,6 +4,7 @@ import {
   ActionContext,
   type ActionClient,
   type ActionMode,
+  type ActionParty,
   type ActionResult,
   type SetActionDataPayload,
   type PreventiveContactType,
@@ -12,6 +13,7 @@ import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 export function ActionProvider({ children }: { children: ReactNode }) {
   const [client, setClient] = useState<ActionClient | null>(null);
+  const [guarantor, setGuarantor] = useState<ActionParty | null>(null);
   const [mode, setMode] = useState<ActionMode | null>(null);
   const [chargeStage, setChargeStage] = useState<ChargeStage | undefined>(
     undefined,
@@ -33,6 +35,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
 
   function setActionData(data: SetActionDataPayload) {
     setClient(data.client);
+    setGuarantor(data.guarantor ?? null);
     setMode(data.mode);
     setChargeStage(data.chargeStage);
     setTaskId(data.taskId);
@@ -45,6 +48,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
 
   function clearActionData() {
     setClient(null);
+    setGuarantor(null);
     setMode(null);
     setChargeStage(undefined);
     setTaskId(undefined);
@@ -59,6 +63,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     <ActionContext.Provider
       value={{
         client,
+        guarantor,
         mode,
         chargeStage,
         taskId,

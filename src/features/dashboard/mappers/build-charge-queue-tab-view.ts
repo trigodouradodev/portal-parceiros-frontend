@@ -78,5 +78,5 @@ export function buildChargeQueueTabView(
     blocks[blocks.length - 1].rows.push(row);
   }
 
-  return { hero, compactHeader: hero !== null, blocks };
+  return { hero, blocks };
 }

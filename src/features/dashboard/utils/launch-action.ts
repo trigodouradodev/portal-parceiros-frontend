@@ -5,24 +5,27 @@ import {
   mapTaskToChargeStage,
 } from "@/features/dashboard/utils/task-mappers";
 import type {
+  ActionParty,
   SetActionDataPayload,
   ActionResult,
 } from "@/contexts/action/action-context";
-import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
-import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
 import type { PreventiveContactType } from "@/contexts/action/action-context";
+import type {
+  DetailClient,
+  DetailGuarantor,
+  InstallmentDetail,
+  TaskHistoryItem,
+} from "@/services/activities/installment-detail.types";
 import { activitiesService } from "@/services/activities/activities.service";
 import {
   mapTaskTypeToChannel,
   mapToneToStageCode,
 } from "@/services/activities/activity-task-mapping";
 import { ActivityTaskStatus } from "@/services/activities/activity.enums";
-import {
-  ActivityChannel,
-  type ActivityTaskSummary,
-  type OverdueCollectionItem,
+import type {
+  ActivityTaskSummary,
+  OverdueCollectionItem,
 } from "@/services/dashboard/dashboard.types";
-import { hasValidAddress } from "@/lib/contact-actions";
 import { fmtBRL } from "@/lib/utils";
 
 export const CHARGE_REGISTER_PATH = "/register/charge";
@@ -42,18 +45,41 @@ function mapTaskHistoryToSummary(task: TaskHistoryItem): ActivityTaskSummary {
   };
 }
 
+function mapDetailParty(
+  party: DetailClient | DetailGuarantor | null | undefined,
+): ActionParty | null {
+  if (!party?.name) return null;
+  return {
+    name: party.name,
+    taxId: party.taxId,
+    phone: party.phone,
+    email: party.email,
+    address: party.address,
+  };
+}
+
 export function hasPendingChargeTask(item: OverdueCollectionItem): boolean {
   return item.task?.status === ActivityTaskStatus.PENDING;
 }
 
 export function getPendingTaskFromInstallmentDetail(
   detail: InstallmentDetail,
+  preferredTaskId?: string,
 ): TaskHistoryItem | undefined {
-  return detail.tasks.find(
+  const pending = detail.tasks.filter(
     (task) => task.status === ActivityTaskStatus.PENDING,
   );
+  if (preferredTaskId) {
+    const preferred = pending.find((task) => task.id === preferredTaskId);
+    if (preferred) return preferred;
+  }
+  return pending[0];
 }
 
+/**
+ * @deprecated Prefer `buildChargeActionPayloadFromInstallmentDetail` —
+ * a listagem não traz endereço/avalista. Mantido só como fallback raro.
+ */
 export function buildChargeActionPayload(
   item: OverdueCollectionItem,
   onComplete: (result: ActionResult) => void,
@@ -90,6 +116,7 @@ export function buildChargeActionPayload(
       phone: client.phone,
       address: client.address,
     },
+    guarantor: null,
     onComplete,
   };
 }
@@ -99,9 +126,13 @@ export function buildChargeActionPayloadFromInstallmentDetail(
   onComplete: (result: ActionResult) => void,
   options?: {
     contactType?: PreventiveContactType;
+    preferredTaskId?: string;
   },
 ): SetActionDataPayload | null {
-  const pendingTask = getPendingTaskFromInstallmentDetail(detail);
+  const pendingTask = getPendingTaskFromInstallmentDetail(
+    detail,
+    options?.preferredTaskId,
+  );
   if (!pendingTask) {
     return null;
   }
@@ -131,22 +162,14 @@ export function buildChargeActionPayloadFromInstallmentDetail(
       phone: client.phone,
       address: client.address,
     },
+    guarantor: mapDetailParty(detail.guarantor),
     onComplete,
   };
 }
 
-function needsClientAddressForCharge(
-  item: OverdueCollectionItem,
-  contactType?: PreventiveContactType,
-): boolean {
-  if (contactType === "visit") return true;
-  if (item.taskType === "visit") return true;
-  return item.task?.channel === ActivityChannel.CLIENT_VISIT;
-}
-
 /**
- * Builds charge action payload. Queue cards omit `client.address`, so for visit
- * flows we load installment detail when the address is missing.
+ * Sempre carrega o detalhe da parcela: listagem é enxuta (sem address/guarantor).
+ * Preferência de tarefa: `item.task.id` quando a fila já resolveu a ativa.
  */
 export async function resolveChargeActionPayload(
   item: OverdueCollectionItem,
@@ -155,22 +178,14 @@ export async function resolveChargeActionPayload(
     contactType?: PreventiveContactType;
   },
 ): Promise<SetActionDataPayload | null> {
-  const shouldLoadAddress =
-    needsClientAddressForCharge(item, options?.contactType) &&
-    !hasValidAddress(item.client.address);
+  const detail = await activitiesService.getInstallmentDetail(
+    item.installment.id,
+  );
 
-  if (shouldLoadAddress) {
-    const detail = await activitiesService.getInstallmentDetail(
-      item.installment.id,
-    );
-    return buildChargeActionPayloadFromInstallmentDetail(
-      detail,
-      onComplete,
-      options,
-    );
-  }
-
-  return buildChargeActionPayload(item, onComplete, options);
+  return buildChargeActionPayloadFromInstallmentDetail(detail, onComplete, {
+    contactType: options?.contactType,
+    preferredTaskId: item.task?.id,
+  });
 }
 
 export function buildPreventiveActionPayload(
@@ -191,6 +206,7 @@ export function buildPreventiveActionPayload(
       phone: client.phone,
       address: client.address,
     },
+    guarantor: null,
     onComplete,
   };
 }

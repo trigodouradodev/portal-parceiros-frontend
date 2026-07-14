@@ -9,7 +9,8 @@ import { getActivityInteractionResultLabel } from "@/services/activities/activit
 const OUTCOME_DESCRIPTIONS: Partial<Record<ActivityInteractionResult, string>> =
   {
     [ActivityInteractionResult.NO_RESPONSE]: "Não atendeu ou não respondeu",
-    [ActivityInteractionResult.NOT_LOCATED]: "Cliente não foi localizado",
+    [ActivityInteractionResult.NOT_LOCATED]:
+      "Cliente não encontrado no endereço",
     [ActivityInteractionResult.PAYMENT_PROMISE]: "Confirmou que irá pagar",
     [ActivityInteractionResult.DISPUTE]: "Contesta a dívida ou os valores",
     [ActivityInteractionResult.RENEGOTIATION]:
