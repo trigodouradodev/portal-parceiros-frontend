@@ -24,6 +24,11 @@ interface SummaryCardProps {
 }
 
 export function SummaryCard({ icon, value, label, variant }: SummaryCardProps) {
+  let labelClassName = "mt-1 text-xs text-current opacity-70";
+  if (variant === "navy") {
+    labelClassName = "mt-1 text-xs text-white/70";
+  }
+
   return (
     <div
       className={`w-36 shrink-0 rounded-2xl p-4 shadow-sm md:w-auto ${cardStyles[variant]}`}
@@ -34,11 +39,7 @@ export function SummaryCard({ icon, value, label, variant }: SummaryCardProps) {
       >
         {value}
       </p>
-      <p
-        className={`mt-1 text-xs ${variant === "navy" ? "text-white/70" : "text-current opacity-70"}`}
-      >
-        {label}
-      </p>
+      <p className={labelClassName}>{label}</p>
     </div>
   );
 }

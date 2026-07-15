@@ -7,4 +7,7 @@ export { TonePill } from "./TonePill";
 export { TaskTypeBadge } from "./TaskTypeBadge";
 export { QueuePositionBar } from "./QueuePositionBar";
 export { VisitRescheduleDialog } from "./VisitRescheduleDialog";
+export { HeroPrimaryActions } from "./HeroPrimaryActions";
+export { VisitSecondaryActions } from "./VisitSecondaryActions";
+export { RescheduledVisitBadge } from "./RescheduledVisitBadge";
 export { DoneCard } from "./DoneCard";

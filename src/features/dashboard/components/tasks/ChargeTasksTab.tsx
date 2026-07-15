@@ -43,6 +43,31 @@ interface ChargeTasksTabProps {
   queueTotal?: number;
 }
 
+function LoadMoreButton({
+  isFetchingNextPage = false,
+  onLoadMore,
+}: {
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
+}) {
+  let label = "Ver mais";
+  if (isFetchingNextPage) {
+    label = "Carregando...";
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      className="h-11 w-full rounded-xl"
+      disabled={isFetchingNextPage || !onLoadMore}
+      onClick={() => onLoadMore?.()}
+    >
+      {label}
+    </Button>
+  );
+}
+
 /** Fila segmentada de cobrança na Home (AUREA-186). */
 export function ChargeTasksTab({
   isLoading,
@@ -170,15 +195,10 @@ export function ChargeTasksTab({
       })}
 
       {hasNextPage && (
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 w-full rounded-xl"
-          disabled={isFetchingNextPage || !onLoadMore}
-          onClick={() => onLoadMore?.()}
-        >
-          {isFetchingNextPage ? "Carregando..." : "Ver mais"}
-        </Button>
+        <LoadMoreButton
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={onLoadMore}
+        />
       )}
 
       {scheduledItems.length > 0 && (

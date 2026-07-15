@@ -1,22 +1,14 @@
 import { useState } from "react";
-import {
-  CalendarClock,
-  CalendarDays,
-  MapPin,
-  MessageSquare,
-  Phone,
-} from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HeroPrimaryActions } from "@/features/dashboard/components/task-cards/HeroPrimaryActions";
 import { InitialsAvatar } from "@/features/dashboard/components/task-cards/InitialsAvatar";
-import { PostponeControl } from "@/features/dashboard/components/task-cards/PostponeControl";
 import { QueuePositionBar } from "@/features/dashboard/components/task-cards/QueuePositionBar";
 import { TaskTypeBadge } from "@/features/dashboard/components/task-cards/TaskTypeBadge";
 import { TonePill } from "@/features/dashboard/components/task-cards/TonePill";
 import { VisitRescheduleDialog } from "@/features/dashboard/components/task-cards/VisitRescheduleDialog";
-import {
-  getVisitRescheduleBounds,
-  VISIT_RESCHEDULE_WINDOW_DAYS,
-} from "@/features/dashboard/constants/visit-reschedule";
+import { VisitSecondaryActions } from "@/features/dashboard/components/task-cards/VisitSecondaryActions";
+import { getVisitRescheduleBounds } from "@/features/dashboard/constants/visit-reschedule";
 import { QUEUE_TONE_CORRECTED_CLASS } from "@/features/dashboard/constants/charge-queue-tone";
 import type { ChargeQueueDisplayItem } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
 import { getInitials } from "@/lib/user-display";
@@ -37,25 +29,6 @@ interface ChargeQueueHeroCardProps {
   onRescheduleVisit: (date: string) => void;
   isPostponing?: boolean;
   isRescheduling?: boolean;
-}
-
-function RescheduledVisitBadge({
-  wasRescheduled,
-  rescheduledDateLabel,
-}: {
-  wasRescheduled: boolean;
-  rescheduledDateLabel?: string;
-}) {
-  if (!wasRescheduled) return null;
-
-  return (
-    <span className="flex shrink-0 items-center gap-1 rounded-lg bg-[#E6F7F1] px-2 text-[10px] text-[#0F6E56]">
-      <CalendarDays size={11} />
-      {rescheduledDateLabel
-        ? `Reagendada · ${rescheduledDateLabel}`
-        : "Reagendada"}
-    </span>
-  );
 }
 
 /** Espelha ActiveCobrQueueCard de portal-parceiros-design. */
@@ -93,6 +66,11 @@ export function ChargeQueueHeroCard({
   const corrBg = QUEUE_TONE_CORRECTED_CLASS[tone];
   const { min, max } = getVisitRescheduleBounds();
 
+  let postponeConfirmLabel = "Confirmar postergação";
+  if (isPostponing) {
+    postponeConfirmLabel = "Postergando...";
+  }
+
   const handleConfirmPostpone = () => {
     setConfirmingPostpone(false);
     onPostpone();
@@ -104,6 +82,11 @@ export function ChargeQueueHeroCard({
   };
 
   const openPostponeConfirm = () => setConfirmingPostpone(true);
+
+  const openReschedule = () => {
+    setDraftVisitDate(undefined);
+    setRescheduleOpen(true);
+  };
 
   return (
     <>
@@ -220,7 +203,7 @@ export function ChargeQueueHeroCard({
                 onClick={handleConfirmPostpone}
                 disabled={isPostponing}
               >
-                {isPostponing ? "Postergando..." : "Confirmar postergação"}
+                {postponeConfirmLabel}
               </Button>
             </div>
           </div>
@@ -229,74 +212,25 @@ export function ChargeQueueHeroCard({
         {!confirmingPostpone && (
           <div className="flex flex-col gap-2 border-t border-[#F0F1F5] px-4 pb-3 pt-1">
             <div className="flex gap-2">
-              {isVisitTask ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  className="h-9 flex-1 gap-1.5 bg-brand-navy text-xs text-white hover:bg-brand-navy/90"
-                  onClick={onVisit}
-                >
-                  <MapPin size={11} />
-                  Registrar Visita
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-9 flex-1 gap-1.5 bg-[#25D366] text-xs text-white hover:bg-[#1ebe5a]"
-                    onClick={onWhatsApp}
-                  >
-                    <MessageSquare size={11} />
-                    WhatsApp
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="h-9 flex-1 gap-1.5 bg-brand-navy text-xs text-white hover:bg-brand-navy/90"
-                    onClick={onCall}
-                  >
-                    <Phone size={11} />
-                    Ligar
-                  </Button>
-                  <PostponeControl
-                    canPostpone={canPostpone}
-                    onPostponeClick={openPostponeConfirm}
-                    buttonClassName="h-9 gap-1 border-[#E2E4EC] px-3 text-xs text-[#6B7080] hover:border-[#F5C37A] hover:text-[#854F0B]"
-                  />
-                </>
-              )}
+              <HeroPrimaryActions
+                isVisitTask={isVisitTask}
+                canPostpone={canPostpone}
+                onVisit={onVisit}
+                onWhatsApp={onWhatsApp}
+                onCall={onCall}
+                onPostponeClick={openPostponeConfirm}
+              />
             </div>
 
             {isVisitTask && (
-              <div className="flex justify-end gap-2">
-                {canRescheduleVisit ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="h-9 gap-1 border-[#E2E4EC] px-3 text-xs text-[#6B7080] hover:border-brand-navy hover:text-brand-navy"
-                    onClick={() => {
-                      setDraftVisitDate(undefined);
-                      setRescheduleOpen(true);
-                    }}
-                    title={`Reagendar a visita para até ${VISIT_RESCHEDULE_WINDOW_DAYS} dias (apenas 1 vez)`}
-                  >
-                    <CalendarDays size={13} />
-                    Reagendar · 1×
-                  </Button>
-                ) : (
-                  <RescheduledVisitBadge
-                    wasRescheduled={wasRescheduled}
-                    rescheduledDateLabel={rescheduledDateLabel}
-                  />
-                )}
-                <PostponeControl
-                  canPostpone={canPostpone}
-                  onPostponeClick={openPostponeConfirm}
-                  buttonClassName="h-9 gap-1 border-[#E2E4EC] px-3 text-xs text-[#6B7080] hover:border-[#F5C37A] hover:text-[#854F0B]"
-                />
-              </div>
+              <VisitSecondaryActions
+                canRescheduleVisit={canRescheduleVisit}
+                wasRescheduled={wasRescheduled}
+                rescheduledDateLabel={rescheduledDateLabel}
+                canPostpone={canPostpone}
+                onOpenReschedule={openReschedule}
+                onPostponeClick={openPostponeConfirm}
+              />
             )}
           </div>
         )}

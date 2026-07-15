@@ -32,6 +32,11 @@ export function VisitRescheduleDialog({
   isRescheduling = false,
   onConfirm,
 }: VisitRescheduleDialogProps) {
+  let confirmLabel = "Confirmar";
+  if (isRescheduling) {
+    confirmLabel = "Salvando...";
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[340px]">
@@ -70,7 +75,7 @@ export function VisitRescheduleDialog({
               onConfirm(format(draftDate, "yyyy-MM-dd"));
             }}
           >
-            {isRescheduling ? "Salvando..." : "Confirmar"}
+            {confirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

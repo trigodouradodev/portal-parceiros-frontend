@@ -127,7 +127,6 @@ export function ContractDetailPage() {
 
     if (!detail) return;
 
-    // Charge already returned above; this fallback is preventive-only.
     setActionData({
       mode: TaskTab.Preventive,
       client: {
