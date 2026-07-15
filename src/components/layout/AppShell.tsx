@@ -7,7 +7,11 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuth } from "@/contexts/auth/auth-context";
 
 function pathToNavTab(pathname: string): NavTab {
-  const match = NAV_ITEMS.find((item) => item.path === pathname);
+  const match = NAV_ITEMS.find(
+    (item) =>
+      item.path === pathname ||
+      (item.path !== "/" && pathname.startsWith(`${item.path}/`)),
+  );
   return match?.key ?? "home";
 }
 

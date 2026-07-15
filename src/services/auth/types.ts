@@ -4,13 +4,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  user: {
-    id: string;
-    email: string;
-    full_name: string;
-    role: string;
-    permissions: string[];
-  };
+  user: UserProfile;
   accessToken: string;
   refreshToken: string;
 }
@@ -28,6 +22,14 @@ export interface UserProfile {
   id: string;
   email: string;
   full_name: string;
+  phone_number: string | null;
   role: string;
   permissions: string[];
+}
+
+/** Body de `PATCH /auth/me` (camelCase). */
+export interface UpdateProfileRequest {
+  email?: string;
+  fullName?: string;
+  phoneNumber?: string | null;
 }
