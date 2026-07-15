@@ -1,9 +1,13 @@
 import type { ChargeQueueSegmentMeta } from "@/features/dashboard/constants/charge-queue-segments";
 import { getChargeQueueSegmentMeta } from "@/features/dashboard/constants/charge-queue-segments";
-import { getQueueToneLabel } from "@/features/dashboard/constants/charge-queue-tone";
+import {
+  getQueueToneLabel,
+  resolveQueueTone,
+} from "@/features/dashboard/constants/charge-queue-tone";
 import type { ChargeClient } from "@/features/dashboard/mocks/tasks";
 import { mapOverdueItemToChargeClient } from "@/features/dashboard/utils/task-mappers";
 import { formatDate } from "@/lib/format/date";
+import type { QueueTone } from "@/services/activities/activity.enums";
 import {
   ActivityChannel,
   type OverdueCollectionItem,
@@ -18,6 +22,7 @@ export interface ChargeQueueDisplayItem {
   correctedAmount: number;
   overdueInstallmentCount: number;
   consolidatedOverdueAmount: number;
+  tone: QueueTone;
   toneLabel: string;
   pendingActionLabel: string;
   contractSubtitle: string;
@@ -25,6 +30,7 @@ export interface ChargeQueueDisplayItem {
   wasPostponed: boolean;
   wasRescheduled: boolean;
   rescheduledDateLabel?: string;
+  lastActionNote?: string | null;
 }
 
 function getPendingActionLabel(channel?: ActivityChannel): string {
@@ -43,14 +49,32 @@ function formatContractLabel(contractNumber: string): string {
 function buildContractSubtitle(
   contractNumber: string,
   segment: ChargeQueueSegmentMeta,
-  overdueDays: number,
 ): string {
   const contractLabel = formatContractLabel(contractNumber);
-  const daysLabel = overdueDays === 1 ? "D+1" : `D+${overdueDays}`;
-  if (segment.code === "recent") {
-    return `Contrato ${contractLabel} · ${segment.subtitle || daysLabel} · ${segment.description}`;
+  const contractText = contractLabel.toLowerCase().startsWith("contrato")
+    ? contractLabel
+    : `Contrato ${contractLabel}`;
+  return `${contractText} · ${segment.sublabel}`;
+}
+
+function formatDayMonth(isoDate: string): string {
+  return formatDate(isoDate).slice(0, 5);
+}
+
+function buildLastActionNote(
+  item: OverdueCollectionItem,
+  clientLastAction: string | null,
+): string | null {
+  if (clientLastAction) return clientLastAction;
+
+  const segmentCode = resolveQueueSegment(item);
+  if (segmentCode !== "broken_promise") return null;
+
+  const promiseDate = item.lastInteraction?.promiseDate;
+  if (promiseDate) {
+    return `Promessa para ${formatDayMonth(promiseDate)} não cumprida`;
   }
-  return `Contrato ${contractLabel}`;
+  return "Promessa não cumprida";
 }
 
 export function mapOverdueToQueueDisplay(
@@ -64,6 +88,11 @@ export function mapOverdueToQueueDisplay(
   const pendingAmount = item.installment.pendingAmount;
   const totalAmount = item.installment.totalAmount;
   const correctedAmount = item.correctedAmount ?? pendingAmount;
+  const tone = resolveQueueTone(
+    item.queueTone,
+    stageCode,
+    item.installment.daysOverdue,
+  );
 
   return {
     client,
@@ -73,19 +102,17 @@ export function mapOverdueToQueueDisplay(
     correctedAmount,
     overdueInstallmentCount: 1,
     consolidatedOverdueAmount: correctedAmount,
-    toneLabel: getQueueToneLabel(item.queueTone, stageCode),
+    tone,
+    toneLabel: getQueueToneLabel(tone, stageCode),
     pendingActionLabel: getPendingActionLabel(item.task?.channel),
     contractLabel: formatContractLabel(client.contract),
-    contractSubtitle: buildContractSubtitle(
-      client.contract,
-      segment,
-      item.installment.daysOverdue,
-    ),
+    contractSubtitle: buildContractSubtitle(client.contract, segment),
     wasPostponed: item.wasPostponed ?? false,
     wasRescheduled: item.wasRescheduled ?? false,
     rescheduledDateLabel:
       item.wasRescheduled && item.expireDate
         ? formatDate(item.expireDate)
         : undefined,
+    lastActionNote: buildLastActionNote(item, client.lastAction),
   };
 }

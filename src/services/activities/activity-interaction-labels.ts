@@ -4,7 +4,7 @@ const ACTIVITY_INTERACTION_RESULT_LABELS: Record<
   ActivityInteractionResult,
   string
 > = {
-  [ActivityInteractionResult.NO_RESPONSE]: "Sem retorno",
+  [ActivityInteractionResult.NO_RESPONSE]: "Sem resposta",
   [ActivityInteractionResult.NOT_LOCATED]: "Não localizado",
   [ActivityInteractionResult.PAYMENT_PROMISE]: "Promessa de pagamento",
   [ActivityInteractionResult.DISPUTE]: "Disputa / Contestação",

@@ -77,14 +77,19 @@ export interface DetailClient {
   name: string;
   taxId: string;
   phone?: string;
+  email?: string;
   address?: ClientAddress;
 }
+
+/** Avalista — mesmas infos do client (GET /activities/installments/:id). */
+export type DetailGuarantor = DetailClient;
 
 /** Detalhe da parcela (cobrança v2) — GET /activities/installments/:id */
 export interface InstallmentDetail {
   installment: DetailInstallment;
   contract: DetailContract;
   client: DetailClient;
+  guarantor?: DetailGuarantor | null;
   responsible: ContractResponsible | null;
   tasks: TaskHistoryItem[];
 }

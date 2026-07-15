@@ -1,4 +1,3 @@
-import type { WaTemplate } from "@/features/register-action/types/wa-template";
 import { ActionHint } from "@/features/register-action/components/primitives/contact/ActionHint";
 import { CallClientButton } from "@/features/register-action/components/primitives/contact/CallClientButton";
 import { ClientPhoneCard } from "@/features/register-action/components/primitives/contact/ClientPhoneCard";
@@ -6,7 +5,6 @@ import { ClientPhoneCard } from "@/features/register-action/components/primitive
 interface PhonePanelProps {
   phone: string;
   clientFirstName: string;
-  templates: WaTemplate[];
 }
 
 export function PhonePanel({ phone, clientFirstName }: PhonePanelProps) {

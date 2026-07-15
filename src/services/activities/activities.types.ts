@@ -85,6 +85,7 @@ export interface QueueLastInteraction {
   result: ActivityInteractionResult;
   channel: ActivityInteractionChannel;
   createdAt: string;
+  promiseDate?: string;
 }
 
 export interface QueueAssignee {

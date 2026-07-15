@@ -352,14 +352,14 @@ export function DashboardPage() {
         <div className="mb-4 px-5 md:px-8">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-base font-semibold text-foreground md:text-lg">
+              <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
                 Ações de hoje
               </span>
               <span className="rounded-full bg-brand-navy px-2 py-0.5 text-xs font-semibold text-white">
                 {totalActions}
               </span>
             </div>
-            <span className="text-xs text-muted-foreground/80">
+            <span className="text-xs text-[#9DA3B4]">
               Ordenado por urgência
             </span>
           </div>
@@ -371,6 +371,7 @@ export function DashboardPage() {
             segmentCounts={segmentCounts}
             scheduledItems={scheduledItems}
             completedTodayItems={completedTodayItems}
+            queueTotal={totalActions}
             onOpen={handleChargeOpen}
             onOpenDetail={handleDetailOpen}
             onAction={handleChargeAction}

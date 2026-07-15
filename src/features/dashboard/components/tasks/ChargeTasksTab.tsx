@@ -33,15 +33,39 @@ interface ChargeTasksTabProps {
   hasNextPage: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
-  /** Quando informado, usa a fila v2 já ordenada pela API. */
   queueView?: ChargeQueueView;
-  /** Totais por segmento vindos da API (`TodayQueue.segments`). */
   segmentCounts?: Partial<Record<ChargeQueueSegmentCode, number>>;
   scheduledItems?: OverdueCollectionItem[];
   completedTodayItems?: OverdueCollectionItem[];
   onOpenDetail?: (item: OverdueCollectionItem) => void;
   highlightedInstallmentId?: string | null;
   pinnedPostponedItem?: OverdueCollectionItem | null;
+  queueTotal?: number;
+}
+
+function LoadMoreButton({
+  isFetchingNextPage = false,
+  onLoadMore,
+}: {
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
+}) {
+  let label = "Ver mais";
+  if (isFetchingNextPage) {
+    label = "Carregando...";
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      className="h-11 w-full rounded-xl"
+      disabled={isFetchingNextPage || !onLoadMore}
+      onClick={() => onLoadMore?.()}
+    >
+      {label}
+    </Button>
+  );
 }
 
 /** Fila segmentada de cobrança na Home (AUREA-186). */
@@ -67,6 +91,7 @@ export function ChargeTasksTab({
   onOpenDetail,
   highlightedInstallmentId = null,
   pinnedPostponedItem = null,
+  queueTotal,
 }: ChargeTasksTabProps) {
   const pinnedInstallmentId = pinnedPostponedItem?.installment.id ?? null;
 
@@ -98,7 +123,7 @@ export function ChargeTasksTab({
     return <EmptyState label="Nenhuma cobrança pendente hoje." />;
   }
 
-  const { hero, compactHeader, blocks } = tabView;
+  const { hero, blocks } = tabView;
   const pinnedDisplay = pinnedPostponedItem
     ? mapOverdueToQueueDisplay(
         pinnedPostponedItem,
@@ -107,11 +132,12 @@ export function ChargeTasksTab({
     : null;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-1.5">
       {hero && hero.item.installment.id !== pinnedInstallmentId && (
         <ChargeQueueHeroCard
           display={hero.display}
           taskChannel={hero.taskChannel}
+          queueTotal={queueTotal}
           canPostpone={hero.canPostpone}
           canRescheduleVisit={hero.canRescheduleVisit}
           onOpen={() => onOpen(hero.item)}
@@ -151,7 +177,6 @@ export function ChargeTasksTab({
             <ChargeQueueSegmentHeader
               segment={block.segment}
               count={block.segmentCount ?? rows.length}
-              compact={compactHeader}
             />
             {rows.map((row) => (
               <ChargeQueueCompactRow
@@ -170,15 +195,10 @@ export function ChargeTasksTab({
       })}
 
       {hasNextPage && (
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 w-full rounded-xl"
-          disabled={isFetchingNextPage || !onLoadMore}
-          onClick={() => onLoadMore?.()}
-        >
-          {isFetchingNextPage ? "Carregando..." : "Ver mais"}
-        </Button>
+        <LoadMoreButton
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={onLoadMore}
+        />
       )}
 
       {scheduledItems.length > 0 && (
@@ -209,18 +229,12 @@ export function ChargeTasksTab({
             count={completedTodayItems.length}
           />
           {completedTodayItems.map((item) => (
-            <button
+            <DoneCard
               key={item.installment.id}
-              type="button"
-              className="w-full text-left"
-              onClick={() => openDetail(item)}
-            >
-              <DoneCard
-                name={item.client.name}
-                contract={`${item.contract.number} · ${item.installment.label}`}
-                label="Ação concluída hoje"
-              />
-            </button>
+              name={item.client.name}
+              contract={`${item.contract.number} · ${item.installment.label}`}
+              label="Ação concluída hoje"
+            />
           ))}
         </section>
       )}

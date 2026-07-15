@@ -1,12 +1,16 @@
 import { CheckCircle2 } from "lucide-react";
+import type { ActionParty } from "@/contexts/action/action-context";
 import { ActivityRecipientType } from "@/services/activities/activity.enums";
-import { hasCallablePhone } from "@/lib/contact-actions";
+import { hasCallablePhone, hasValidAddress } from "@/lib/contact-actions";
 
 interface RecipientPickerProps {
   value: ActivityRecipientType;
   onChange: (value: ActivityRecipientType) => void;
   clientName: string;
   clientPhone?: string;
+  guarantor?: ActionParty | null;
+  /** Quando true, avalista precisa de endereço (visita). */
+  requireAddressForGuarantor?: boolean;
 }
 
 interface RecipientOption {
@@ -37,10 +41,34 @@ function getRecipientOptionClassName(
 
 function buildRecipientOptions(
   clientName: string,
-  clientPhone?: string,
+  clientPhone: string | undefined,
+  guarantor: ActionParty | null | undefined,
+  requireAddressForGuarantor: boolean,
 ): RecipientOption[] {
   const formattedPhone =
     clientPhone && hasCallablePhone(clientPhone) ? clientPhone : undefined;
+
+  const hasGuarantor = Boolean(guarantor?.name);
+  const guarantorPhoneOk = hasCallablePhone(guarantor?.phone);
+  const guarantorAddressOk = hasValidAddress(guarantor?.address);
+  const guarantorDisabled =
+    !hasGuarantor ||
+    (requireAddressForGuarantor
+      ? !guarantorAddressOk
+      : !guarantorPhoneOk && !guarantorAddressOk);
+
+  let guarantorSubtitle = "Não cadastrado";
+  let guarantorDetail: string | undefined;
+  if (hasGuarantor && guarantor) {
+    guarantorSubtitle = guarantor.name;
+    if (guarantorPhoneOk && guarantor.phone) {
+      guarantorDetail = guarantor.phone;
+    } else if (requireAddressForGuarantor && !guarantorAddressOk) {
+      guarantorDetail = "Endereço não cadastrado";
+    } else if (!guarantorPhoneOk) {
+      guarantorDetail = "Telefone não cadastrado";
+    }
+  }
 
   return [
     {
@@ -53,8 +81,9 @@ function buildRecipientOptions(
     {
       type: ActivityRecipientType.GUARANTOR,
       title: "Avalista",
-      subtitle: "Não cadastrado",
-      disabled: true,
+      subtitle: guarantorSubtitle,
+      detail: guarantorDetail,
+      disabled: guarantorDisabled,
     },
     {
       type: ActivityRecipientType.OTHER,
@@ -106,8 +135,15 @@ export function RecipientPicker({
   onChange,
   clientName,
   clientPhone,
+  guarantor,
+  requireAddressForGuarantor = false,
 }: RecipientPickerProps) {
-  const options = buildRecipientOptions(clientName, clientPhone);
+  const options = buildRecipientOptions(
+    clientName,
+    clientPhone,
+    guarantor,
+    requireAddressForGuarantor,
+  );
 
   return (
     <div className="flex flex-col gap-3">

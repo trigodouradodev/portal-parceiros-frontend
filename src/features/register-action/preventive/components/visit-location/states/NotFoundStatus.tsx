@@ -1,6 +1,6 @@
 import { MapPinOff } from "lucide-react";
 import { ManualVisitConfirm } from "../ManualVisitConfirm";
-import { NavigateToClientButton } from "../NavigateToClientButton";
+import { NavigateToAddressButton } from "../NavigateToAddressButton";
 import { VisitDistanceLabel } from "../VisitDistanceLabel";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 
@@ -25,7 +25,7 @@ export function NotFoundStatus({
         <MapPinOff size={18} className="mt-0.5 shrink-0 text-destructive" />
         <div>
           <p className="text-sm font-semibold text-destructive">
-            Você não está no endereço do cliente
+            Você não está no endereço
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             <VisitDistanceLabel
@@ -39,7 +39,7 @@ export function NotFoundStatus({
           </p>
         </div>
       </div>
-      <NavigateToClientButton
+      <NavigateToAddressButton
         address={address}
         destinationCoordinates={destinationCoordinates}
       />

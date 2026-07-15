@@ -1,4 +1,5 @@
 import { CalendarClock, CalendarDays, Lock } from "lucide-react";
+import { InitialsAvatar } from "@/features/dashboard/components/task-cards/InitialsAvatar";
 import { getInitials } from "@/lib/user-display";
 import { cn, fmtBRL } from "@/lib/utils";
 import type { ChargeQueueDisplayItem } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
@@ -13,13 +14,7 @@ interface ChargeQueueCompactRowProps {
   highlighted?: boolean;
 }
 
-const rowClassName =
-  "flex w-full items-center gap-3 rounded-xl border border-border bg-white px-3 py-3 text-left shadow-sm transition-[background-color,border-color,opacity] border-l-4";
-
-const highlightedClassName =
-  "border-brand-yellow bg-[#FFFBE6] shadow-[0_0_0_1px_var(--color-brand-yellow)]";
-
-/** Linha compacta bloqueada da fila de cobrança (AUREA-186 / AUREA-189). */
+/** Espelha LockedCobrQueueCard de portal-parceiros-design. */
 export function ChargeQueueCompactRow({
   display,
   locked,
@@ -38,11 +33,14 @@ export function ChargeQueueCompactRow({
   } = display;
   const initials = getInitials(client.name);
   const overdueLabel = `${client.overdueDays}d atraso`;
+
   const className = cn(
-    rowClassName,
-    segment.borderClassName,
-    locked && "cursor-default select-none opacity-75",
-    highlighted && highlightedClassName,
+    "overflow-hidden rounded-xl border transition-all duration-700",
+    highlighted
+      ? "border-brand-yellow bg-brand-yellow/15 opacity-100 ring-2 ring-brand-yellow ring-offset-2"
+      : "border-[#E2E4EC] bg-white",
+    locked && "cursor-default select-none",
+    !locked && "text-left",
   );
 
   const highlightProps = {
@@ -50,21 +48,19 @@ export function ChargeQueueCompactRow({
   };
 
   const content = (
-    <>
-      <div className="flex w-8 shrink-0 flex-col items-center gap-0.5">
-        <span className="text-[10px] font-bold text-muted-foreground">
+    <div className="flex items-center gap-3 px-3 py-2.5">
+      <div className="flex w-5 shrink-0 flex-col items-center gap-0.5">
+        <span className="text-[10px] font-bold text-[#9DA3B4]">
           #{queuePosition}
         </span>
-        {locked && <Lock size={10} className="text-muted-foreground/70" />}
+        {locked && <Lock size={10} className="text-[#C8CBD8]" />}
       </div>
 
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-yellow text-xs font-bold text-brand-navy">
-        {initials}
-      </div>
+      <InitialsAvatar initials={initials} size="sm" variant="muted" />
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <p className="truncate text-sm font-semibold text-foreground">
+          <p className="truncate text-sm font-medium text-[#374151]">
             {client.name}
           </p>
           {wasPostponed && (
@@ -81,23 +77,31 @@ export function ChargeQueueCompactRow({
             </span>
           )}
         </div>
-        <p className="truncate text-xs text-muted-foreground">
-          {display.pendingActionLabel} — Contrato {contractLabel}
+        <p className="truncate text-xs text-[#9DA3B4]">
+          {display.pendingActionLabel} ·{" "}
+          {contractLabel.toLowerCase().startsWith("contrato")
+            ? contractLabel
+            : `Contrato ${contractLabel}`}
         </p>
       </div>
 
       <div className="shrink-0 text-right">
-        <p className="text-sm font-bold text-foreground">
+        <p className="text-xs font-semibold text-[#374151]">
           {fmtBRL(client.value)}
         </p>
-        <p className="text-[10px] font-medium text-[#D84040]">{overdueLabel}</p>
+        <p className="text-[10px] text-[#9DA3B4]">{overdueLabel}</p>
       </div>
-    </>
+    </div>
   );
+
+  const borderStyle = {
+    borderLeftColor: segment.borderColor,
+    borderLeftWidth: 3,
+  };
 
   if (locked) {
     return (
-      <div className={className} {...highlightProps}>
+      <div className={className} style={borderStyle} {...highlightProps}>
         {content}
       </div>
     );
@@ -107,7 +111,8 @@ export function ChargeQueueCompactRow({
     <button
       type="button"
       onClick={onOpen}
-      className={className}
+      className={cn(className, "w-full")}
+      style={borderStyle}
       {...highlightProps}
     >
       {content}

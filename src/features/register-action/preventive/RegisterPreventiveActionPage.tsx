@@ -200,11 +200,7 @@ export function RegisterPreventiveActionPage() {
         )}
 
         {step === "channel_action" && channel === "phone" && (
-          <PhonePanel
-            phone={clientPhone}
-            clientFirstName={clientFirstName}
-            templates={waTemplates}
-          />
+          <PhonePanel phone={clientPhone} clientFirstName={clientFirstName} />
         )}
 
         {step === "channel_action" && channel === "visit" && (

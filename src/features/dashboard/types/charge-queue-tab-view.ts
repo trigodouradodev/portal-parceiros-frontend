@@ -30,6 +30,5 @@ export interface ChargeQueueHeroView {
 
 export interface ChargeQueueTabView {
   hero: ChargeQueueHeroView | null;
-  compactHeader: boolean;
   blocks: ChargeQueueBlockView[];
 }

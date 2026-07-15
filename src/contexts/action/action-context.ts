@@ -11,6 +11,14 @@ export type ActionMode = TaskTab;
 
 export type PreventiveContactType = "phone" | "visit" | "whatsapp";
 
+export interface ActionParty {
+  name: string;
+  taxId?: string;
+  phone?: string;
+  email?: string;
+  address?: ClientAddress;
+}
+
 export interface ActionClient {
   /** contractId */
   id: string;
@@ -35,6 +43,8 @@ export interface ActionResult {
 
 export interface SetActionDataPayload {
   client: ActionClient;
+  /** Avalista do detalhe da parcela (quando existir). */
+  guarantor?: ActionParty | null;
   mode: ActionMode;
   chargeStage?: ChargeStage;
   taskId?: string;
@@ -47,6 +57,7 @@ export interface SetActionDataPayload {
 
 export interface ActionContextType {
   client: ActionClient | null;
+  guarantor: ActionParty | null;
   mode: ActionMode | null;
   chargeStage?: ChargeStage;
   taskId?: string;

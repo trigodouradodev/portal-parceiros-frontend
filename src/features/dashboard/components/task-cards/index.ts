@@ -1,5 +1,12 @@
-export { ChargeTaskCard } from "./ChargeTaskCard";
 export { ChargeQueueHeroCard } from "./ChargeQueueHeroCard";
 export { ChargeQueueCompactRow } from "./ChargeQueueCompactRow";
 export { PostponeControl } from "./PostponeControl";
+export { InitialsAvatar } from "./InitialsAvatar";
+export { TonePill } from "./TonePill";
+export { TaskTypeBadge } from "./TaskTypeBadge";
+export { QueuePositionBar } from "./QueuePositionBar";
+export { VisitRescheduleDialog } from "./VisitRescheduleDialog";
+export { HeroPrimaryActions } from "./HeroPrimaryActions";
+export { VisitSecondaryActions } from "./VisitSecondaryActions";
+export { RescheduledVisitBadge } from "./RescheduledVisitBadge";
 export { DoneCard } from "./DoneCard";
