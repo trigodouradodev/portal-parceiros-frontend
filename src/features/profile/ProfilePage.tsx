@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { isAxiosError } from "axios";
@@ -14,16 +14,21 @@ import {
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { useToast } from "@/contexts/toast/toast-context";
 import { useUpdateProfile } from "@/features/profile/hooks/useUpdateProfile";
-import { getRoleLabel } from "@/features/profile/utils/role-label";
 import {
   digitsOnlyPhone,
   formatPhoneDisplay,
 } from "@/features/profile/utils/phone";
-import { getInitials } from "@/lib/user-display";
+import { getInitials, getRoleLabel } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 import type { UpdateProfileRequest } from "@/services/auth/types";
 import { useOutletContext } from "react-router-dom";
@@ -56,53 +61,71 @@ interface ShellContext {
   onMobileLogout?: () => void;
 }
 
-function FieldInput({
+function ProfileTextField({
+  control,
+  name,
   label,
-  value,
-  onChange,
   icon,
   placeholder,
-  error,
   type = "text",
   autoComplete,
+  transform,
 }: {
+  control: Control<ProfileFormValues>;
+  name: keyof ProfileFormValues;
   label: string;
-  value: string;
-  onChange: (value: string) => void;
   icon: React.ReactNode;
   placeholder?: string;
-  error?: string;
   type?: string;
   autoComplete?: string;
+  transform?: (value: string) => string;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label className="text-sm font-medium text-foreground">{label}</Label>
-      <div
-        className={cn(
-          "flex items-center gap-3 rounded-2xl border-2 bg-[#F5F6FA] px-4 py-3 transition-colors",
-          error
-            ? "border-destructive"
-            : "border-transparent focus-within:border-brand-navy",
-        )}
-      >
-        <span className="shrink-0 text-muted-foreground/60">{icon}</span>
-        <input
-          type={type}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
-        />
-      </div>
-      {error && (
-        <div className="flex items-center gap-1.5 text-xs text-destructive">
-          <AlertCircle size={12} />
-          {error}
-        </div>
+    <FormField
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <FormItem className="flex flex-col gap-1.5 space-y-0">
+          <FormLabel className="text-sm font-medium text-foreground">
+            {label}
+          </FormLabel>
+          <div
+            className={cn(
+              "flex items-center gap-3 rounded-2xl border-2 bg-[#F5F6FA] px-4 py-3 transition-colors",
+              fieldState.error
+                ? "border-destructive"
+                : "border-transparent focus-within:border-brand-navy",
+            )}
+          >
+            <span className="shrink-0 text-muted-foreground/60">{icon}</span>
+            <FormControl>
+              <input
+                type={type}
+                placeholder={placeholder}
+                autoComplete={autoComplete}
+                className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/40"
+                name={field.name}
+                ref={field.ref}
+                value={field.value}
+                onBlur={field.onBlur}
+                onChange={(event) => {
+                  const next = transform
+                    ? transform(event.target.value)
+                    : event.target.value;
+                  field.onChange(next);
+                }}
+              />
+            </FormControl>
+          </div>
+          {fieldState.error?.message && (
+            <div className="flex items-center gap-1.5 text-xs text-destructive">
+              <AlertCircle size={12} />
+              {fieldState.error.message}
+            </div>
+          )}
+        </FormItem>
       )}
-    </div>
+    />
   );
 }
 
@@ -121,7 +144,7 @@ export function ProfilePage() {
     },
   });
 
-  const { reset, watch, setError, formState, handleSubmit } = form;
+  const { reset, watch, setError, formState, handleSubmit, control } = form;
   const values = watch();
 
   useEffect(() => {
@@ -151,7 +174,7 @@ export function ProfilePage() {
     });
   };
 
-  const onSubmit = handleSubmit(async (formValues) => {
+  const onSubmit = async (formValues: ProfileFormValues) => {
     if (!user) return;
 
     const payload: UpdateProfileRequest = {};
@@ -198,10 +221,9 @@ export function ProfilePage() {
         }
 
         if (!err.response) {
-          showToast(
-            "Sem conexão. Verifique sua internet e tente novamente.",
-            { variant: "destructive" },
-          );
+          showToast("Sem conexão. Verifique sua internet e tente novamente.", {
+            variant: "destructive",
+          });
           return;
         }
       }
@@ -210,7 +232,7 @@ export function ProfilePage() {
         variant: "destructive",
       });
     }
-  });
+  };
 
   const displayName = values.fullName.trim() || user?.full_name || "Parceiro";
   const roleLabel = getRoleLabel(user?.role);
@@ -239,83 +261,72 @@ export function ProfilePage() {
         <section className="mb-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
           <h2 className="mb-4 font-semibold text-foreground">Dados pessoais</h2>
 
-          <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-            <FieldInput
-              label="Nome completo"
-              value={values.fullName}
-              onChange={(value) =>
-                form.setValue("fullName", value, {
-                  shouldDirty: true,
-                  shouldValidate: formState.isSubmitted,
-                })
-              }
-              icon={<User size={16} />}
-              placeholder="Seu nome"
-              autoComplete="name"
-              error={formState.errors.fullName?.message}
-            />
-            <FieldInput
-              label="E-mail"
-              value={values.email}
-              onChange={(value) =>
-                form.setValue("email", value, {
-                  shouldDirty: true,
-                  shouldValidate: formState.isSubmitted,
-                })
-              }
-              icon={<Mail size={16} />}
-              placeholder="seu@email.com"
-              type="email"
-              autoComplete="email"
-              error={formState.errors.email?.message}
-            />
-            <FieldInput
-              label="Telefone"
-              value={values.phone}
-              onChange={(value) =>
-                form.setValue("phone", formatPhoneDisplay(value), {
-                  shouldDirty: true,
-                  shouldValidate: formState.isSubmitted,
-                })
-              }
-              icon={<Phone size={16} />}
-              placeholder="(11) 99999-0000"
-              type="tel"
-              autoComplete="tel"
-              error={formState.errors.phone?.message}
-            />
+          <Form {...form}>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={handleSubmit(onSubmit)}
+              noValidate
+            >
+              <ProfileTextField
+                control={control}
+                name="fullName"
+                label="Nome completo"
+                icon={<User size={16} />}
+                placeholder="Seu nome"
+                autoComplete="name"
+              />
+              <ProfileTextField
+                control={control}
+                name="email"
+                label="E-mail"
+                icon={<Mail size={16} />}
+                placeholder="seu@email.com"
+                type="email"
+                autoComplete="email"
+              />
+              <ProfileTextField
+                control={control}
+                name="phone"
+                label="Telefone"
+                icon={<Phone size={16} />}
+                placeholder="(11) 99999-0000"
+                type="tel"
+                autoComplete="tel"
+                transform={formatPhoneDisplay}
+              />
 
-            <div className="mt-1 flex gap-2">
-              {dataChanged && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 rounded-2xl px-5"
-                  disabled={saving}
-                  onClick={handleCancel}
-                >
-                  Cancelar
-                </Button>
-              )}
-              <Button
-                type="submit"
-                className="h-11 flex-1 gap-2 rounded-2xl font-semibold"
-                disabled={saving || !dataChanged}
-              >
-                {saving ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin" />
-                    Salvando…
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 size={15} />
-                    Salvar dados
-                  </>
+              <div className="mt-1 flex gap-2">
+                {dataChanged && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 rounded-2xl px-5"
+                    disabled={saving}
+                    onClick={handleCancel}
+                  >
+                    Cancelar
+                  </Button>
                 )}
-              </Button>
-            </div>
-          </form>
+                <Button
+                  type="submit"
+                  className="h-11 flex-1 gap-2 rounded-2xl font-semibold"
+                  disabled={saving || !dataChanged}
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      Salvando…
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={15} />
+                      Salvar dados
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </section>
       </div>
     </PageContainer>
