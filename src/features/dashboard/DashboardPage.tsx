@@ -71,7 +71,8 @@ export function DashboardPage() {
   } = useTodayQueueInfinite(30);
   const postponeTask = usePostponeTask();
   const rescheduleTask = useRescheduleTask();
-  const summaryScroll = useDragScroll<HTMLDivElement>();
+  const summaryScrollRef = useRef<HTMLDivElement>(null);
+  const summaryScroll = useDragScroll(summaryScrollRef);
   const [highlightedInstallmentId, setHighlightedInstallmentId] = useState<
     string | null
   >(null);
@@ -324,7 +325,7 @@ export function DashboardPage() {
       <div className="-mt-4 px-5 md:-mt-5 md:px-8">
         <div className="relative">
           <div
-            ref={summaryScroll.ref}
+            ref={summaryScrollRef}
             onPointerDown={summaryScroll.onPointerDown}
             onPointerMove={summaryScroll.onPointerMove}
             onPointerUp={summaryScroll.onPointerUp}
