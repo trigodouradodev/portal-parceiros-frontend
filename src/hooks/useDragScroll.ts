@@ -24,7 +24,8 @@ export function useDragScroll<T extends HTMLElement>() {
   function onPointerMove(e: React.PointerEvent) {
     const el = ref.current;
     if (!el || !drag.current.active) return;
-    el.scrollLeft = drag.current.startScroll - (e.clientX - drag.current.startX);
+    el.scrollLeft =
+      drag.current.startScroll - (e.clientX - drag.current.startX);
   }
 
   function endDrag(e: React.PointerEvent) {

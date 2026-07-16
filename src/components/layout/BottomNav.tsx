@@ -16,9 +16,7 @@ export function BottomNav({ activeTab, onNavigate }: BottomNavProps) {
           onClick={() => onNavigate(item.key)}
           className={cn(
             "flex flex-1 flex-col items-center gap-0.5 py-3 text-xs font-medium transition-colors",
-            activeTab === item.key
-              ? "text-brand-navy"
-              : "text-[#9DA3B4]",
+            activeTab === item.key ? "text-brand-navy" : "text-[#9DA3B4]",
           )}
         >
           {item.icon}
