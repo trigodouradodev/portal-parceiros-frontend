@@ -2,7 +2,7 @@ import { LogOut } from "lucide-react";
 import { AureaLogoMark } from "@/components/brand/AureaLogo";
 import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
 import { useAuth } from "@/contexts/auth/auth-context";
-import { getInitials } from "@/lib/user-display";
+import { getInitials, getRoleLabel } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
 interface AppSidebarProps {
@@ -21,7 +21,7 @@ export function AppSidebar({
   const { user } = useAuth();
 
   const displayName = user?.full_name ?? "Parceiro";
-  const roleLabel = user?.role ?? "Agente";
+  const roleLabel = getRoleLabel(user?.role);
 
   return (
     <aside

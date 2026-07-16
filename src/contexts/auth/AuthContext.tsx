@@ -61,6 +61,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("user");
   }, []);
 
+  const updateStoredUser = useCallback((next: User) => {
+    setUser(next);
+    localStorage.setItem("user", JSON.stringify(next));
+  }, []);
+
   // Valida a sessão na inicialização: confirma o token via /auth/me.
   useEffect(() => {
     let active = true;
@@ -124,6 +129,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         authenticated,
         login,
         logout,
+        setUser: updateStoredUser,
       }}
     >
       {children}

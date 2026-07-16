@@ -4,6 +4,7 @@ import type {
   LoginResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
+  UpdateProfileRequest,
   UserProfile,
 } from "@/services/auth/types";
 
@@ -23,6 +24,11 @@ export const authService = {
 
   async getProfile(): Promise<UserProfile> {
     const response = await api.get<UserProfile>("/auth/me");
+    return response.data;
+  },
+
+  async updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {
+    const response = await api.patch<UserProfile>("/auth/me", data);
     return response.data;
   },
 };
