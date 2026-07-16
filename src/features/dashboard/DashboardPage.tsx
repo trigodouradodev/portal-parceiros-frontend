@@ -34,6 +34,7 @@ import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { formatDate } from "@/lib/format/date";
+import { useDragScroll } from "@/hooks/useDragScroll";
 
 const POSTPONE_HIGHLIGHT_MS = 5000;
 
@@ -70,6 +71,7 @@ export function DashboardPage() {
   } = useTodayQueueInfinite(30);
   const postponeTask = usePostponeTask();
   const rescheduleTask = useRescheduleTask();
+  const summaryScroll = useDragScroll<HTMLDivElement>();
   const [highlightedInstallmentId, setHighlightedInstallmentId] = useState<
     string | null
   >(null);
@@ -320,77 +322,85 @@ export function DashboardPage() {
       />
 
       <div className="-mt-4 px-5 md:-mt-5 md:px-8">
-        <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
-          <SummaryCard
-            icon={<FileText size={18} />}
-            value={ativos}
-            label="Contratos ativos"
-            variant="navy"
-          />
-          <SummaryCard
-            icon={<Clock size={18} />}
-            value={vencemHoje}
-            label="Vencem hoje"
-            variant="amber"
-          />
-          <SummaryCard
-            icon={<AlertTriangle size={18} />}
-            value={emAtraso}
-            label="Em atraso"
-            variant="red"
-          />
-          <SummaryCard
-            icon={<RefreshCw size={18} />}
-            value={renovProx}
-            label="Renovação próxima"
-            variant="blue"
-          />
+        <div className="relative">
+          <div
+            ref={summaryScroll.ref}
+            onPointerDown={summaryScroll.onPointerDown}
+            onPointerMove={summaryScroll.onPointerMove}
+            onPointerUp={summaryScroll.onPointerUp}
+            onPointerCancel={summaryScroll.onPointerCancel}
+            className="no-scrollbar flex cursor-grab gap-3 overflow-x-auto pb-1 select-none active:cursor-grabbing md:grid md:cursor-auto md:grid-cols-4 md:overflow-visible md:pb-0"
+          >
+            <SummaryCard
+              icon={<FileText size={18} />}
+              value={ativos}
+              label="Contratos ativos"
+              variant="navy"
+            />
+            <SummaryCard
+              icon={<Clock size={18} />}
+              value={vencemHoje}
+              label="Vencem hoje"
+              variant="amber"
+            />
+            <SummaryCard
+              icon={<AlertTriangle size={18} />}
+              value={emAtraso}
+              label="Em atraso"
+              variant="red"
+            />
+            <SummaryCard
+              icon={<RefreshCw size={18} />}
+              value={renovProx}
+              label="Renovação próxima"
+              variant="blue"
+            />
+          </div>
+          <div className="pointer-events-none absolute top-0 right-0 bottom-1 w-10 bg-gradient-to-l from-[#F5F6FA] md:hidden" />
         </div>
       </div>
 
-      <div className="flex-1 pt-5">
-        <div className="mb-4 px-5 md:px-8">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
-                Ações de hoje
-              </span>
-              <span className="rounded-full bg-brand-navy px-2 py-0.5 text-xs font-semibold text-white">
-                {totalActions}
-              </span>
-            </div>
-            <span className="text-xs text-[#9DA3B4]">
-              Ordenado por urgência
+      <div className="px-5 pt-5 pb-4 md:px-8">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
+              Ações de hoje
+            </span>
+            <span className="rounded-full bg-brand-navy px-2 py-0.5 text-xs font-semibold text-white">
+              {totalActions}
             </span>
           </div>
-
-          <ChargeTasksTab
-            isLoading={isLoadingTodayQueue}
-            items={chargeItems}
-            queueView={chargeQueueView}
-            segmentCounts={segmentCounts}
-            scheduledItems={scheduledItems}
-            completedTodayItems={completedTodayItems}
-            queueTotal={totalActions}
-            onOpen={handleChargeOpen}
-            onOpenDetail={handleDetailOpen}
-            onAction={handleChargeAction}
-            onWhatsApp={handleChargeWhatsApp}
-            onCall={handleChargeCall}
-            onVisit={handleChargeVisit}
-            onPostpone={handlePostpone}
-            onRescheduleVisit={handleRescheduleVisit}
-            isPostponing={postponeTask.isPending}
-            isRescheduling={rescheduleTask.isPending}
-            highlightedInstallmentId={highlightedInstallmentId}
-            pinnedPostponedItem={pinnedPostponedItem}
-            hasNextPage={Boolean(hasNextPage)}
-            isFetchingNextPage={isFetchingNextPage}
-            onLoadMore={() => {
-              void fetchNextPage();
-            }}
-          />
+          <span className="text-xs text-[#9DA3B4]">Ordenado por urgência</span>
         </div>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-2 px-5 md:px-8">
+        <ChargeTasksTab
+          isLoading={isLoadingTodayQueue}
+          items={chargeItems}
+          queueView={chargeQueueView}
+          segmentCounts={segmentCounts}
+          scheduledItems={scheduledItems}
+          completedTodayItems={completedTodayItems}
+          queueTotal={totalActions}
+          onOpen={handleChargeOpen}
+          onOpenDetail={handleDetailOpen}
+          onAction={handleChargeAction}
+          onWhatsApp={handleChargeWhatsApp}
+          onCall={handleChargeCall}
+          onVisit={handleChargeVisit}
+          onPostpone={handlePostpone}
+          onRescheduleVisit={handleRescheduleVisit}
+          isPostponing={postponeTask.isPending}
+          isRescheduling={rescheduleTask.isPending}
+          highlightedInstallmentId={highlightedInstallmentId}
+          pinnedPostponedItem={pinnedPostponedItem}
+          hasNextPage={Boolean(hasNextPage)}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={() => {
+            void fetchNextPage();
+          }}
+        />
       </div>
     </PageContainer>
   );
