@@ -7,14 +7,11 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { useToast } from "@/contexts/toast/toast-context";
-import { PasswordSection } from "@/features/profile/components/PasswordSection";
 import { PersonalDataSection } from "@/features/profile/components/PersonalDataSection";
 import { ProfileAvatarHeader } from "@/features/profile/components/ProfileAvatarHeader";
 import { useUpdateProfile } from "@/features/profile/hooks/useUpdateProfile";
 import {
-  passwordSchema,
   profileSchema,
-  type PasswordFormValues,
   type ProfileFormValues,
 } from "@/features/profile/schemas/profile-form";
 import {
@@ -43,18 +40,8 @@ export function ProfilePage() {
     },
   });
 
-  const passwordForm = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: {
-      currentPwd: "",
-      newPwd: "",
-      confirmPwd: "",
-    },
-  });
-
   const { reset, watch, setError, formState } = form;
   const values = watch();
-  const passwordValues = passwordForm.watch();
 
   useEffect(() => {
     if (!user) return;
@@ -73,11 +60,6 @@ export function ProfilePage() {
     values.fullName.trim() !== baselineName.trim() ||
     values.email.trim().toLowerCase() !== baselineEmail.trim().toLowerCase() ||
     digitsOnlyPhone(values.phone) !== baselinePhoneDigits;
-
-  const passwordFilled =
-    Boolean(passwordValues.currentPwd) ||
-    Boolean(passwordValues.newPwd) ||
-    Boolean(passwordValues.confirmPwd);
 
   const handleCancel = () => {
     if (!user) return;
@@ -148,12 +130,6 @@ export function ProfilePage() {
     }
   };
 
-  const onSubmitPassword = async () => {
-    showToast("Alteração de senha ainda não está disponível.", {
-      variant: "destructive",
-    });
-  };
-
   const displayName = values.fullName.trim() || user?.full_name || "Parceiro";
   const roleLabel = getRoleLabel(user?.role);
   const saving = updateProfile.isPending || formState.isSubmitting;
@@ -184,11 +160,7 @@ export function ProfilePage() {
           onSubmit={onSubmit}
         />
 
-        <PasswordSection
-          form={passwordForm}
-          passwordFilled={passwordFilled}
-          onSubmit={onSubmitPassword}
-        />
+        {/* Seção "Alterar senha" (PasswordSection) oculta até existir API de troca de senha. */}
       </div>
     </PageContainer>
   );
