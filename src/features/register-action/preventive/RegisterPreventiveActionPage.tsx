@@ -62,6 +62,7 @@ export function RegisterPreventiveActionPage() {
     coords: geoCoords,
     verify: verifyLocationCheck,
     confirmManual,
+    reset: resetLocationCheck,
     locationOk,
   } = useVisitLocationCheck({
     contractId: client?.id ?? "",
@@ -133,7 +134,12 @@ export function RegisterPreventiveActionPage() {
             <Button
               className="h-12 flex-1 gap-2 rounded-2xl bg-brand-navy font-semibold text-white"
               disabled={!channel}
-              onClick={() => setStep("channel_action")}
+              onClick={() => {
+                if (channel === "visit") {
+                  resetLocationCheck();
+                }
+                setStep("channel_action");
+              }}
             >
               Continuar <ChevronRight size={16} />
             </Button>
@@ -144,7 +150,12 @@ export function RegisterPreventiveActionPage() {
               <Button
                 variant="outline"
                 className="h-12 rounded-2xl px-5"
-                onClick={() => setStep("channel")}
+                onClick={() => {
+                  if (channel === "visit") {
+                    resetLocationCheck();
+                  }
+                  setStep("channel");
+                }}
               >
                 Voltar
               </Button>

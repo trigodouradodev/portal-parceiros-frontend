@@ -258,6 +258,20 @@ export function useRegisterChargeActionFlow() {
     await submitInteraction(outcome, promiseDateValue);
   }
 
+  function goToContactStep() {
+    if (isVisitTask) {
+      location.reset();
+    }
+    setStep("contact");
+  }
+
+  function goBackToRecipientStep() {
+    if (isVisitTask) {
+      location.reset();
+    }
+    setStep("recipient");
+  }
+
   let outcomePrompt = "Qual foi o resultado do contato?";
   if (isVisitTask) {
     outcomePrompt = "Qual foi o resultado da visita?";
@@ -310,6 +324,8 @@ export function useRegisterChargeActionFlow() {
     confirmPromiseDate,
     openPromiseDateEditor,
     handleSave,
+    goToContactStep,
+    goBackToRecipientStep,
     handleBack: () => navigate(-1),
   };
 }
