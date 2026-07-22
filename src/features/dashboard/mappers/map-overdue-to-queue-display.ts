@@ -8,11 +8,9 @@ import type { ChargeClient } from "@/features/dashboard/mocks/tasks";
 import { mapOverdueItemToChargeClient } from "@/features/dashboard/utils/task-mappers";
 import { formatDate } from "@/lib/format/date";
 import type { QueueTone } from "@/services/activities/activity.enums";
-import {
-  ActivityChannel,
-  type OverdueCollectionItem,
-} from "@/services/dashboard/dashboard.types";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 import { resolveQueueSegment } from "@/features/dashboard/utils/charge-queue";
+import { getPendingActionLabel } from "@/features/dashboard/utils/pending-action-label";
 
 export interface ChargeQueueDisplayItem {
   client: ChargeClient;
@@ -31,11 +29,6 @@ export interface ChargeQueueDisplayItem {
   wasRescheduled: boolean;
   rescheduledDateLabel?: string;
   lastActionNote?: string | null;
-}
-
-function getPendingActionLabel(channel?: ActivityChannel): string {
-  if (channel === ActivityChannel.CLIENT_VISIT) return "Visita pendente";
-  return "Contato pendente";
 }
 
 function formatContractLabel(contractNumber: string): string {
