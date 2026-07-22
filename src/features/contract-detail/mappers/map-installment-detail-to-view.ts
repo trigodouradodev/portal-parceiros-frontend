@@ -127,7 +127,10 @@ export function mapInstallmentDetailToView(
     nextDue: formatDate(detail.installment.dueDate),
     alertDays: Math.max(0, daysOverdue),
     alertType: "overdue" satisfies AlertType,
-    timeline: buildTaskHistoryTimeline(detail.tasks),
+    timeline: buildTaskHistoryTimeline(
+      detail.tasks,
+      detail.installment.dueDate,
+    ),
     source: listItem,
   };
 }

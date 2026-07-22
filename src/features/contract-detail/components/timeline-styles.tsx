@@ -31,7 +31,7 @@ export const TONE_META: Record<
 
 export function getStepIcon(label: string): ReactNode | null {
   const normalized = label.toLowerCase();
-  if (normalized.includes("whatsapp")) {
+  if (normalized.includes("whatsapp") || normalized.includes("contato")) {
     return <MessageSquare size={12} />;
   }
   if (normalized.includes("liga")) {
