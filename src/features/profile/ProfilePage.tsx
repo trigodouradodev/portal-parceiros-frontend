@@ -134,6 +134,12 @@ export function ProfilePage() {
   const roleLabel = getRoleLabel(user?.role);
   const saving = updateProfile.isPending || formState.isSubmitting;
 
+  const handleCameraClick = () => {
+    showToast("Upload de foto ainda não está disponível.", {
+      variant: "destructive",
+    });
+  };
+
   return (
     <PageContainer>
       <PageHeader
@@ -145,11 +151,7 @@ export function ProfilePage() {
         <ProfileAvatarHeader
           displayName={displayName}
           roleLabel={roleLabel}
-          onCameraClick={() =>
-            showToast("Upload de foto ainda não está disponível.", {
-              variant: "destructive",
-            })
-          }
+          onCameraClick={handleCameraClick}
         />
 
         <PersonalDataSection
