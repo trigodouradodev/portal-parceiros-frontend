@@ -85,6 +85,20 @@ export function RegisterPreventiveActionPage() {
   const saving = createFollowUp.isPending;
   const canSaveOutcome = step === "outcome" && outcome !== null;
 
+  const handleContinueToChannelAction = () => {
+    if (channel === "visit") {
+      resetLocationCheck();
+    }
+    setStep("channel_action");
+  };
+
+  const handleBackToChannel = () => {
+    if (channel === "visit") {
+      resetLocationCheck();
+    }
+    setStep("channel");
+  };
+
   async function handleSave() {
     if (!channel || !outcome) return;
 
@@ -134,12 +148,7 @@ export function RegisterPreventiveActionPage() {
             <Button
               className="h-12 flex-1 gap-2 rounded-2xl bg-brand-navy font-semibold text-white"
               disabled={!channel}
-              onClick={() => {
-                if (channel === "visit") {
-                  resetLocationCheck();
-                }
-                setStep("channel_action");
-              }}
+              onClick={handleContinueToChannelAction}
             >
               Continuar <ChevronRight size={16} />
             </Button>
@@ -150,12 +159,7 @@ export function RegisterPreventiveActionPage() {
               <Button
                 variant="outline"
                 className="h-12 rounded-2xl px-5"
-                onClick={() => {
-                  if (channel === "visit") {
-                    resetLocationCheck();
-                  }
-                  setStep("channel");
-                }}
+                onClick={handleBackToChannel}
               >
                 Voltar
               </Button>
