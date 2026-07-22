@@ -133,12 +133,15 @@ export function useRegisterChargeActionFlow() {
   });
 
   const waTemplates = client
-    ? getWaTemplates({
-        name: activeParty?.name ?? client.name,
-        parcela: client.parcela,
-        value: client.value,
-        daysInfo: client.daysInfo,
-      })
+    ? getWaTemplates(
+        {
+          name: activeParty?.name ?? client.name,
+          parcela: client.parcela,
+          value: client.value,
+          daysInfo: client.daysInfo,
+        },
+        queueTone,
+      )
     : [];
   const selectedTemplate = waTemplates[0];
   const saving = registerInteraction.isPending;
