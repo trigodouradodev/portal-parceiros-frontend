@@ -132,7 +132,7 @@ export function ChargeTasksTab({
     : null;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       {hero && hero.item.installment.id !== pinnedInstallmentId && (
         <ChargeQueueHeroCard
           display={hero.display}

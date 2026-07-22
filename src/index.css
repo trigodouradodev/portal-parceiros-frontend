@@ -48,40 +48,40 @@
 }
 
 :root {
-  /* Aurea Theme */
-  --background: 228 33% 97%;
-  --foreground: 228 25% 14%;
+  /* Aurea Theme — hex do portal-parceiros-design */
+  --background: 228 33% 97%; /* #F5F6FA */
+  --foreground: 231 28% 14%; /* #1A1D2E */
 
   --card: 0 0% 100%;
-  --card-foreground: 228 25% 14%;
+  --card-foreground: 231 28% 14%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 228 25% 14%;
+  --popover-foreground: 231 28% 14%;
 
-  --primary: 240 73% 19%;
+  --primary: 240 73% 19%; /* #0D0D53 */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 48 100% 95%;
+  --secondary: 48 100% 91%; /* #FFF6D2 */
   --secondary-foreground: 240 73% 19%;
 
-  --muted: 228 20% 94%;
-  --muted-foreground: 223 9% 46%;
+  --muted: 228 20% 95%; /* #F0F1F5 */
+  --muted-foreground: 226 9% 46%; /* #6B7080 */
 
-  --accent: 48 100% 55%;
+  --accent: 48 100% 56%; /* #FFD320 */
   --accent-foreground: 240 73% 19%;
 
-  --destructive: 0 65% 42%;
+  --destructive: 0 66% 55%; /* #D84040 */
   --destructive-foreground: 0 0% 100%;
-  --destructive-bg: 0 82% 96%;
+  --destructive-bg: 0 90% 96%; /* #FEECEC */
 
-  --success: 162 72% 28%;
-  --success-bg: 158 52% 93%;
+  --success: 161 69% 37%; /* #1D9E75 */
+  --success-bg: 159 52% 94%; /* #E6F7F1 */
 
-  --warning: 32 85% 33%;
-  --warning-bg: 40 88% 93%;
+  --warning: 35 78% 41%; /* #BA7517 */
+  --warning-bg: 39 88% 94%; /* #FDF3E0 */
 
-  --border: 225 15% 90%;
-  --input: 225 12% 82%;
+  --border: 228 21% 91%; /* #E2E4EC */
+  --input: 228 21% 91%; /* #E2E4EC */
   --ring: 240 73% 19%;
 
   --radius: 0.5rem;

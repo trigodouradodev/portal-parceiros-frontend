@@ -1,5 +1,4 @@
 import { TaskTab } from "@/features/dashboard/constants/task-tab";
-import { getQueueToneLabel } from "@/features/dashboard/constants/charge-queue-tone";
 import { buildTaskHistoryTimeline } from "@/features/contract-detail/mappers/build-task-history-timeline";
 import type {
   AlertType,
@@ -7,12 +6,23 @@ import type {
   StatusColor,
 } from "@/features/contract-detail/types";
 import { getReguaBadge } from "@/features/dashboard/utils/collection-stage";
+import { getPendingActionLabel } from "@/features/dashboard/utils/pending-action-label";
 import { formatClientAddress, hasValidAddress } from "@/lib/contact-actions";
 import { formatDate } from "@/lib/format/date";
 import { formatTaxId } from "@/lib/format/tax-id";
-import { mapToneToStageCode } from "@/services/activities/activity-task-mapping";
-import { ActivityTaskStatus } from "@/services/activities/activity.enums";
-import type { InstallmentDetail } from "@/services/activities/installment-detail.types";
+import { getActivityInteractionChannelLabel } from "@/services/activities/activity-interaction-labels";
+import {
+  mapTaskTypeToChannel,
+  mapToneToStageCode,
+} from "@/services/activities/activity-task-mapping";
+import {
+  ActivityTaskStatus,
+  ActivityTaskType,
+} from "@/services/activities/activity.enums";
+import type {
+  InstallmentDetail,
+  TaskHistoryItem,
+} from "@/services/activities/installment-detail.types";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 export interface InstallmentDetailListContext {
@@ -38,30 +48,53 @@ function getPendingOrLatestTask(detail: InstallmentDetail) {
   );
 }
 
+function getTaskStageStatusLabel(task: TaskHistoryItem): string {
+  if (task.status === ActivityTaskStatus.PENDING) {
+    if (task.interaction?.channel) {
+      return `${getActivityInteractionChannelLabel(task.interaction.channel)} pendente`;
+    }
+    return getPendingActionLabel(mapTaskTypeToChannel(task.taskType));
+  }
+
+  const typeLabel =
+    task.taskType === ActivityTaskType.VISIT ? "Visita" : "Contato";
+
+  if (task.status === ActivityTaskStatus.COMPLETED) {
+    return `${typeLabel} concluída`;
+  }
+  if (task.status === ActivityTaskStatus.CANCELLED) {
+    return `${typeLabel} cancelada`;
+  }
+  if (task.status === ActivityTaskStatus.SYSTEM_CLOSED) {
+    return `${typeLabel} encerrada`;
+  }
+
+  return typeLabel;
+}
+
+function getChargeStatusColor(task: TaskHistoryItem): StatusColor {
+  const stageCode = mapToneToStageCode(task.tone);
+  const regua = getReguaBadge(stageCode);
+  if (regua) return mapStageColor(regua.color);
+
+  return mapStageColor(
+    stageCode === "warning"
+      ? "red"
+      : stageCode === "assertive"
+        ? "amber"
+        : "blue",
+  );
+}
+
 function getChargeStatus(detail: InstallmentDetail): {
   label: string;
   color: StatusColor;
 } {
   const currentTask = getPendingOrLatestTask(detail);
   if (currentTask) {
-    const stageCode = mapToneToStageCode(currentTask.tone);
-    const regua = getReguaBadge(stageCode, currentTask.segmentBadgeLabel);
-    if (regua) {
-      return {
-        label: regua.label,
-        color: mapStageColor(regua.color),
-      };
-    }
-
     return {
-      label: getQueueToneLabel(currentTask.tone, stageCode),
-      color: mapStageColor(
-        stageCode === "warning"
-          ? "red"
-          : stageCode === "assertive"
-            ? "amber"
-            : "blue",
-      ),
+      label: getTaskStageStatusLabel(currentTask),
+      color: getChargeStatusColor(currentTask),
     };
   }
 
@@ -127,7 +160,10 @@ export function mapInstallmentDetailToView(
     nextDue: formatDate(detail.installment.dueDate),
     alertDays: Math.max(0, daysOverdue),
     alertType: "overdue" satisfies AlertType,
-    timeline: buildTaskHistoryTimeline(detail.tasks),
+    timeline: buildTaskHistoryTimeline(
+      detail.tasks,
+      detail.installment.dueDate,
+    ),
     source: listItem,
   };
 }
