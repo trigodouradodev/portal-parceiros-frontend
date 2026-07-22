@@ -3,7 +3,7 @@ import type { ContractDetailView } from "@/features/contract-detail/types";
 import { cn } from "@/lib/utils";
 
 const statusBadgeStyle: Record<ContractDetailView["statusColor"], string> = {
-  blue: "bg-brand-yellow/20 text-brand-navy",
+  blue: "bg-brand-yellow text-brand-navy",
   amber: "bg-[#FDF3E0] text-[#854F0B]",
   red: "bg-[#FEECEC] text-[#A32D2D]",
   green: "bg-[#E6F7F1] text-[#0F6E56]",

@@ -65,7 +65,7 @@ export function ChargeQueueCompactRow({
           </p>
           {wasPostponed && (
             <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-[#FDF3E0] px-1.5 py-0.5 text-[9px] text-[#BA7517]">
-              <CalendarClock size={8} /> postergado · amanhã
+              <CalendarClock size={8} /> Postergado · amanhã
             </span>
           )}
           {wasRescheduled && (

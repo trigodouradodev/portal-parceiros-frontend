@@ -5,6 +5,14 @@ interface RegisterClientCardProps {
   client: ActionClient;
 }
 
+function formatContractLabel(contract: string): string {
+  const trimmed = contract.trim();
+  if (!trimmed) return trimmed;
+  if (trimmed.toLowerCase().startsWith("contrato")) return trimmed;
+  if (trimmed.startsWith("#")) return `Contrato ${trimmed}`;
+  return `Contrato #${trimmed}`;
+}
+
 export function RegisterClientCard({ client }: RegisterClientCardProps) {
   return (
     <div className="mb-6 flex items-center gap-3 rounded-2xl border border-border bg-white p-4 shadow-card">
@@ -14,7 +22,7 @@ export function RegisterClientCard({ client }: RegisterClientCardProps) {
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold text-foreground">{client.name}</p>
         <p className="text-sm text-muted-foreground">
-          {client.contract} · {client.daysInfo}
+          {formatContractLabel(client.contract)} · {client.daysInfo}
         </p>
       </div>
       <span className="shrink-0 font-mono-dm text-lg font-semibold text-foreground">

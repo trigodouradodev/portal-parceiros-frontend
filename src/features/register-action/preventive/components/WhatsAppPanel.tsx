@@ -16,11 +16,14 @@ export function WhatsAppPanel({ phone, templates }: WhatsAppPanelProps) {
     useWhatsAppTemplates(templates);
   const callable = hasCallablePhone(phone);
   const showTemplates = callable && templates.length > 0;
+  const singleTemplate = templates.length === 1;
 
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">
-        Selecione uma mensagem e envie pelo WhatsApp.
+        {singleTemplate
+          ? "Confira a mensagem e envie pelo WhatsApp."
+          : "Selecione uma mensagem e envie pelo WhatsApp."}
       </p>
       {!callable && (
         <p className="rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
