@@ -37,9 +37,7 @@ export function ProfileTextField({
       control={control}
       name={name}
       render={({ field, fieldState }) => {
-        const handleChange = (
-          event: React.ChangeEvent<HTMLInputElement>,
-        ) => {
+        const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           const next = transform
             ? transform(event.target.value)
             : event.target.value;
