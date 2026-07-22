@@ -34,8 +34,9 @@ export function NotFoundStatus({
               variant="not_found"
               centered={false}
             />
-            Para registrar a visita, vá ao endereço ou confirme presença
-            manualmente.
+            {distanceMeters === undefined
+              ? "Não foi possível obter sua localização. Vá ao endereço ou confirme presença manualmente."
+              : "Para registrar a visita, vá ao endereço ou confirme presença manualmente."}
           </p>
         </div>
       </div>

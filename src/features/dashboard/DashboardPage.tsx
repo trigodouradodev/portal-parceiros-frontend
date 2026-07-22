@@ -303,6 +303,16 @@ export function DashboardPage() {
         installmentId: item.installment.id,
       });
       showToast(`Visita reagendada para ${formatDate(date)}.`);
+
+      clearHighlightTimeout();
+      highlightScrolledRef.current = null;
+      const pinnedItem: OverdueCollectionItem = {
+        ...item,
+        wasRescheduled: true,
+        expireDate: date,
+      };
+      setPinnedPostponedItem(pinnedItem);
+      setHighlightedInstallmentId(item.installment.id);
     } catch (err) {
       showToast(
         getTaskActionErrorMessage(err, "Não foi possível reagendar a visita."),
@@ -318,7 +328,7 @@ export function DashboardPage() {
   return (
     <PageContainer>
       <PageHeader
-        subtitle={`${totalActions} contrato${totalActions !== 1 ? "s" : ""} precisa${totalActions === 1 ? "" : "m"} de ação hoje`}
+        subtitle={`${emAtraso} contrato${emAtraso !== 1 ? "s" : ""} precisa${emAtraso === 1 ? "" : "m"} de ação hoje`}
         onLogout={onMobileLogout}
       />
 

@@ -131,6 +131,11 @@ export function ChargeTasksTab({
       )
     : null;
 
+  let pinnedSectionTitle = "Recém postergada";
+  if (pinnedPostponedItem?.wasRescheduled) {
+    pinnedSectionTitle = "Recém reagendada";
+  }
+
   return (
     <div className="flex flex-col gap-2">
       {hero && hero.item.installment.id !== pinnedInstallmentId && (
@@ -153,7 +158,7 @@ export function ChargeTasksTab({
 
       {pinnedPostponedItem && pinnedDisplay && (
         <section className="flex flex-col gap-2">
-          <ChargeQueueSectionHeader title="Recém postergada" count={1} />
+          <ChargeQueueSectionHeader title={pinnedSectionTitle} count={1} />
           <ChargeQueueCompactRow
             display={pinnedDisplay}
             locked={false}
