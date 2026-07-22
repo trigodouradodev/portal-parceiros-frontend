@@ -6,7 +6,7 @@ const cardStyles: Record<CardVariant, string> = {
   navy: "bg-brand-navy text-white",
   amber: "bg-[#FDF3E0] text-[#854F0B]",
   red: "bg-[#FEECEC] text-[#A32D2D]",
-  blue: "bg-brand-yellow/20 text-brand-navy",
+  blue: "bg-[#FFF6D2] text-brand-navy",
 };
 
 const cardValueStyles: Record<CardVariant, string> = {

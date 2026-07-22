@@ -2,7 +2,7 @@ import type {
   TimelineStep,
   TimelineTone,
 } from "@/features/contract-detail/types";
-import { formatDateTime } from "@/lib/format/date";
+import { formatDate, formatDateTime } from "@/lib/format/date";
 import {
   getActivityInteractionChannelLabel,
   getActivityInteractionResultLabel,
@@ -14,6 +14,13 @@ import {
 } from "@/services/activities/activity.enums";
 import type { TaskHistoryItem } from "@/services/activities/installment-detail.types";
 
+/** Faixas de dia alinhadas ao protótipo (tom da régua, não nome do segmento). */
+const TONE_DAY_RANGE: Record<QueueTone, string> = {
+  friendly: "D+1–5",
+  firm: "D+6–10",
+  severe: "D+11+",
+};
+
 function mapTone(
   tone: QueueTone | string | undefined,
 ): TimelineTone | undefined {
@@ -21,6 +28,11 @@ function mapTone(
     return tone;
   }
   return undefined;
+}
+
+function getToneDayRange(tone: QueueTone | string | undefined): string {
+  const mapped = mapTone(tone);
+  return mapped ? TONE_DAY_RANGE[mapped] : TONE_DAY_RANGE.friendly;
 }
 
 function mapTaskStatus(status: ActivityTaskStatus): TimelineStep["status"] {
@@ -34,17 +46,35 @@ function mapTaskStatus(status: ActivityTaskStatus): TimelineStep["status"] {
   return "done";
 }
 
-function getTaskChannelLabel(task: TaskHistoryItem): string {
-  if (task.interaction?.channel) {
-    return getActivityInteractionChannelLabel(task.interaction.channel);
-  }
-  return task.taskType === ActivityTaskType.VISIT ? "Visita" : "Contato";
+function getCompletedContactLabel(channel: string): string {
+  const base = getActivityInteractionChannelLabel(channel);
+  if (base === "WhatsApp") return "WhatsApp enviado";
+  if (base === "Ligação") return "Ligação realizada";
+  return base;
 }
 
-function mapTaskToStep(task: TaskHistoryItem, index: number): TimelineStep {
+function getTaskLabel(
+  task: TaskHistoryItem,
+  status: TimelineStep["status"],
+): string {
+  if (task.taskType === ActivityTaskType.VISIT) {
+    return "Visita ao cliente";
+  }
+
+  if (status === "current" || status === "pending") {
+    return "Contato";
+  }
+
+  if (task.interaction?.channel) {
+    return getCompletedContactLabel(task.interaction.channel);
+  }
+
+  return "Contato";
+}
+
+function mapTaskToStep(task: TaskHistoryItem): TimelineStep {
   const interaction = task.interaction;
   const status = mapTaskStatus(task.status);
-  const channelLabel = getTaskChannelLabel(task);
   const tone = mapTone(task.tone);
 
   const dateSource =
@@ -67,8 +97,8 @@ function mapTaskToStep(task: TaskHistoryItem, index: number): TimelineStep {
 
   return {
     id: `task-${task.id}`,
-    day: task.segmentBadgeLabel ?? `#${index + 1}`,
-    label: channelLabel,
+    day: getToneDayRange(task.tone),
+    label: getTaskLabel(task, status),
     status,
     date: dateSource ? formatDateTime(dateSource) : undefined,
     agent: interaction?.author.name,
@@ -80,32 +110,70 @@ function mapTaskToStep(task: TaskHistoryItem, index: number): TimelineStep {
   };
 }
 
-/** Histórico de tarefas da parcela (API: mais recente primeiro). */
+function buildBoletoStep(dueDate: string | undefined): TimelineStep {
+  return {
+    id: "boleto-vencido",
+    day: "Venc",
+    label: "Boleto venceu",
+    status: "done",
+    date: dueDate ? formatDate(dueDate) : undefined,
+  };
+}
+
+function buildVisitPlaceholder(status: "current" | "pending"): TimelineStep {
+  return {
+    id: "visit-upcoming",
+    day: TONE_DAY_RANGE.severe,
+    label: "Visita ao cliente",
+    status,
+    tone: "severe",
+  };
+}
+
+function buildContactCurrentStep(): TimelineStep {
+  return {
+    id: "contact-current",
+    day: TONE_DAY_RANGE.friendly,
+    label: "Contato",
+    status: "current",
+    tone: "friendly",
+  };
+}
+
+/**
+ * Timeline de cobrança reconciliada (3 etapas):
+ * Boleto venceu → Contato (1+ tentativas) → Visita.
+ * Sempre inclui o marco inicial e a Visita futura quando ainda não existe tarefa de visita.
+ */
 export function buildTaskHistoryTimeline(
   tasks: TaskHistoryItem[],
+  dueDate?: string,
 ): TimelineStep[] {
   const chronological = [...tasks].reverse();
-  const steps = chronological.map((task, index) => mapTaskToStep(task, index));
+  const steps: TimelineStep[] = [buildBoletoStep(dueDate)];
 
-  const hasCurrent = steps.some((step) => step.status === "current");
-  if (hasCurrent) {
+  if (chronological.length === 0) {
+    steps.push(buildContactCurrentStep());
+    steps.push(buildVisitPlaceholder("pending"));
     return steps;
   }
 
-  const latestTone = chronological.at(-1)?.tone;
+  steps.push(...chronological.map(mapTaskToStep));
 
-  return [
-    ...steps,
-    {
-      id: "next-action",
-      day: "Atual",
-      label: "Registrar próxima ação",
-      status: "current",
-      tone: mapTone(latestTone) ?? "firm",
-      note:
-        steps.length === 0
-          ? "Nenhuma interação registrada para esta parcela."
-          : undefined,
-    },
-  ];
+  const hasVisitTask = chronological.some(
+    (task) => task.taskType === ActivityTaskType.VISIT,
+  );
+
+  if (!hasVisitTask) {
+    const hasCurrentContact = chronological.some(
+      (task) =>
+        task.taskType === ActivityTaskType.CONTACT &&
+        task.status === ActivityTaskStatus.PENDING,
+    );
+    steps.push(
+      buildVisitPlaceholder(hasCurrentContact ? "pending" : "current"),
+    );
+  }
+
+  return steps;
 }
