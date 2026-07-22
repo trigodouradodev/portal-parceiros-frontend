@@ -52,7 +52,6 @@ export function useVisitLocationCheck({
 
     if (!navigator.geolocation) {
       if (requestId === requestIdRef.current) {
-        // Sem API de localização: libera as mesmas alternativas do "fora do raio".
         setStatus("not_found");
       }
       return;
@@ -107,9 +106,6 @@ export function useVisitLocationCheck({
       },
       () => {
         if (requestId !== requestIdRef.current) return;
-
-        // Sem posição (permissão negada, timeout, GPS indisponível):
-        // mostra aviso + alternativas manuais, em vez de travar no idle.
         setStatus("not_found");
       },
       { timeout: 10000, enableHighAccuracy: true },

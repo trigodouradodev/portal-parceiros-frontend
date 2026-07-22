@@ -36,7 +36,7 @@ import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { formatDate } from "@/lib/format/date";
 import { useDragScroll } from "@/hooks/useDragScroll";
 
-const POSTPONE_HIGHLIGHT_MS = 5000;
+const QUEUE_HIGHLIGHT_MS = 5000;
 
 function scrollToHighlightedCard(installmentId: string): boolean {
   const el = document.querySelector(
@@ -76,7 +76,7 @@ export function DashboardPage() {
   const [highlightedInstallmentId, setHighlightedInstallmentId] = useState<
     string | null
   >(null);
-  const [pinnedPostponedItem, setPinnedPostponedItem] =
+  const [pinnedHighlightItem, setPinnedHighlightItem] =
     useState<OverdueCollectionItem | null>(null);
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -90,19 +90,19 @@ export function DashboardPage() {
     }
   }, []);
 
-  const clearPostponeHighlight = useCallback(() => {
+  const clearPinnedHighlight = useCallback(() => {
     clearHighlightTimeout();
     setHighlightedInstallmentId(null);
-    setPinnedPostponedItem(null);
+    setPinnedHighlightItem(null);
     highlightScrolledRef.current = null;
   }, [clearHighlightTimeout]);
 
   const startHighlightTimer = useCallback(() => {
     clearHighlightTimeout();
     highlightTimeoutRef.current = setTimeout(() => {
-      clearPostponeHighlight();
-    }, POSTPONE_HIGHLIGHT_MS);
-  }, [clearHighlightTimeout, clearPostponeHighlight]);
+      clearPinnedHighlight();
+    }, QUEUE_HIGHLIGHT_MS);
+  }, [clearHighlightTimeout, clearPinnedHighlight]);
 
   useEffect(() => {
     return () => {
@@ -137,7 +137,7 @@ export function DashboardPage() {
   } = chargeQueueData;
 
   useEffect(() => {
-    if (!highlightedInstallmentId || !pinnedPostponedItem) {
+    if (!highlightedInstallmentId || !pinnedHighlightItem) {
       highlightScrolledRef.current = null;
       return;
     }
@@ -162,7 +162,7 @@ export function DashboardPage() {
       window.cancelAnimationFrame(rafOuter);
       window.cancelAnimationFrame(rafInner);
     };
-  }, [highlightedInstallmentId, pinnedPostponedItem, startHighlightTimer]);
+  }, [highlightedInstallmentId, pinnedHighlightItem, startHighlightTimer]);
 
   const totalActions = chargeCounter;
 
@@ -274,7 +274,7 @@ export function DashboardPage() {
         ...item,
         wasPostponed: true,
       };
-      setPinnedPostponedItem(pinnedItem);
+      setPinnedHighlightItem(pinnedItem);
       setHighlightedInstallmentId(item.installment.id);
     } catch (err) {
       showToast(
@@ -311,7 +311,7 @@ export function DashboardPage() {
         wasRescheduled: true,
         expireDate: date,
       };
-      setPinnedPostponedItem(pinnedItem);
+      setPinnedHighlightItem(pinnedItem);
       setHighlightedInstallmentId(item.installment.id);
     } catch (err) {
       showToast(
@@ -405,7 +405,7 @@ export function DashboardPage() {
           isPostponing={postponeTask.isPending}
           isRescheduling={rescheduleTask.isPending}
           highlightedInstallmentId={highlightedInstallmentId}
-          pinnedPostponedItem={pinnedPostponedItem}
+          pinnedHighlightItem={pinnedHighlightItem}
           hasNextPage={Boolean(hasNextPage)}
           isFetchingNextPage={isFetchingNextPage}
           onLoadMore={() => {
