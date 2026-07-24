@@ -51,11 +51,8 @@ export function useVisitLocationCheck({
     setResult(null);
 
     if (!navigator.geolocation) {
-      showToast("Geolocalização não disponível neste dispositivo.", {
-        variant: "destructive",
-      });
       if (requestId === requestIdRef.current) {
-        setStatus("idle");
+        setStatus("not_found");
       }
       return;
     }
@@ -109,11 +106,7 @@ export function useVisitLocationCheck({
       },
       () => {
         if (requestId !== requestIdRef.current) return;
-
-        showToast("Não foi possível obter sua localização.", {
-          variant: "destructive",
-        });
-        setStatus("idle");
+        setStatus("not_found");
       },
       { timeout: 10000, enableHighAccuracy: true },
     );
