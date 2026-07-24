@@ -105,9 +105,7 @@ export function RealPerformanceSection() {
             </CommissionPill>
           )}
           {r.tVal > 0 && (
-            <CommissionPill tone="green">
-              Taxa +{fmtBRL(r.tVal)}
-            </CommissionPill>
+            <CommissionPill tone="green">Taxa +{fmtBRL(r.tVal)}</CommissionPill>
           )}
           {r.perm && (
             <CommissionPill tone="amber">

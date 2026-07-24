@@ -1,7 +1,4 @@
-import {
-  currentPartner,
-  LEVELS,
-} from "@/features/performance/data/commission";
+import { currentPartner, LEVELS } from "@/features/performance/data/commission";
 
 export function PartnerIdentityBar() {
   const p = currentPartner;

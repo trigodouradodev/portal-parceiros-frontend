@@ -1,4 +1,8 @@
-import { bandTone, TONE_CARD, TONE_TEXT } from "@/features/performance/utils/tone";
+import {
+  bandTone,
+  TONE_CARD,
+  TONE_TEXT,
+} from "@/features/performance/utils/tone";
 
 interface RealKpiCardProps {
   label: string;

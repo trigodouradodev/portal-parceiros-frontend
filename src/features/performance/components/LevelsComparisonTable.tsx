@@ -21,8 +21,12 @@ export function LevelsComparisonTable() {
               <th className="pb-2 pr-3 text-left font-semibold">Nível</th>
               <th className="px-3 pb-2 text-right font-semibold">Meta/mês</th>
               <th className="px-3 pb-2 text-right font-semibold">Fixo/mês</th>
-              <th className="px-3 pb-2 text-right font-semibold">Boas-vindas</th>
-              <th className="px-3 pb-2 text-right font-semibold">+ Desembolso</th>
+              <th className="px-3 pb-2 text-right font-semibold">
+                Boas-vindas
+              </th>
+              <th className="px-3 pb-2 text-right font-semibold">
+                + Desembolso
+              </th>
               <th className="px-3 pb-2 text-right font-semibold">+ Risco</th>
               <th className="px-3 pb-2 text-right font-semibold">+ Taxa</th>
               <th className="px-3 pb-2 text-right font-semibold">
@@ -36,8 +40,7 @@ export function LevelsComparisonTable() {
           <tbody>
             {(Object.keys(LEVELS) as PartnerLevel[]).map((key) => {
               const l = LEVELS[key];
-              const maxBonus =
-                0.2 * l.fixo + 0.5 * l.fixo + 0.3 * l.fixo;
+              const maxBonus = 0.2 * l.fixo + 0.5 * l.fixo + 0.3 * l.fixo;
               const totalMes1 = l.fixo + WELCOME_BONUS + maxBonus;
               const perm18 = 6 * l.fixo;
               const isCurrent = key === currentLevel;

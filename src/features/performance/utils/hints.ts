@@ -8,8 +8,7 @@ export function desembolsoHint(
   originacao: number,
   meta: number,
 ): string {
-  if (sim.d.bonus >= 0.2)
-    return "Teto de bônus de desembolso já ativo (+20%).";
+  if (sim.d.bonus >= 0.2) return "Teto de bônus de desembolso já ativo (+20%).";
   const next = sim.pctMeta < 100 ? 100 : sim.pctMeta < 110 ? 110 : 120;
   const nextBonus = next === 100 ? 10 : next === 110 ? 15 : 20;
   const falta = Math.max((next / 100) * meta - originacao, 0);
