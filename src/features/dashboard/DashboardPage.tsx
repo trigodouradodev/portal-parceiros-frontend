@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useLocation } from "react-router-dom";
 import { AlertTriangle, Clock, RefreshCw, FileText } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -21,6 +21,7 @@ import {
 import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
 import { mapQueueTaskCardToOverdueItem } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 import { isChargeQueueItemBlocked } from "@/features/dashboard/utils/charge-queue";
+import type { QueueHighlightNavigationState } from "@/features/dashboard/utils/queue-highlight-navigation";
 import {
   buildSegmentCountsFromApi,
   extractTodayQueueMeta,
@@ -58,6 +59,7 @@ interface ShellContext {
 export function DashboardPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { setActionData } = useActionContext();
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
@@ -137,7 +139,20 @@ export function DashboardPage() {
   } = chargeQueueData;
 
   useEffect(() => {
-    if (!highlightedInstallmentId || !pinnedHighlightItem) {
+    const state = location.state as QueueHighlightNavigationState | null;
+    const completedId = state?.highlightCompletedInstallmentId;
+    if (!completedId) return;
+
+    clearHighlightTimeout();
+    highlightScrolledRef.current = null;
+    setPinnedHighlightItem(null);
+    setHighlightedInstallmentId(completedId);
+    startHighlightTimer();
+    navigate(".", { replace: true, state: null });
+  }, [location.state, navigate, clearHighlightTimeout, startHighlightTimer]);
+
+  useEffect(() => {
+    if (!highlightedInstallmentId) {
       highlightScrolledRef.current = null;
       return;
     }
@@ -152,7 +167,9 @@ export function DashboardPage() {
         if (cancelled) return;
         if (scrollToHighlightedCard(highlightedInstallmentId)) {
           highlightScrolledRef.current = highlightedInstallmentId;
-          startHighlightTimer();
+          if (pinnedHighlightItem) {
+            startHighlightTimer();
+          }
         }
       });
     });
@@ -162,7 +179,13 @@ export function DashboardPage() {
       window.cancelAnimationFrame(rafOuter);
       window.cancelAnimationFrame(rafInner);
     };
-  }, [highlightedInstallmentId, pinnedHighlightItem, startHighlightTimer]);
+  }, [
+    highlightedInstallmentId,
+    pinnedHighlightItem,
+    completedTodayItems,
+    isLoadingTodayQueue,
+    startHighlightTimer,
+  ]);
 
   const totalActions = chargeCounter;
 
