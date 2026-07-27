@@ -180,13 +180,13 @@ export function ContractDetailPage() {
       />
 
       <div className="flex-1 px-5 pb-28 md:px-8 md:pb-10">
-        <div className="md:grid md:grid-cols-[1fr_400px] md:items-start md:gap-6 md:pt-6">
-          <div className="flex flex-col gap-4 pt-4 md:pt-0">
+        <div className="lg:grid lg:grid-cols-[1fr_400px] lg:items-start lg:gap-6 lg:pt-6">
+          <div className="flex flex-col gap-4 pt-4 lg:pt-0">
             <ContractInfoCard detail={detail} />
 
             <ClientDetailsCard detail={detail} />
 
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <TimelineSection
                 detail={detail}
                 onRegisterAction={handleRegisterAction}
@@ -194,7 +194,7 @@ export function ContractDetailPage() {
             </div>
           </div>
 
-          <div className="sticky top-6 hidden md:block">
+          <div className="sticky top-6 hidden lg:block">
             <TimelineSection
               detail={detail}
               onRegisterAction={handleRegisterAction}
