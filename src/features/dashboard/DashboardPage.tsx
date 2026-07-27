@@ -80,10 +80,27 @@ export function DashboardPage() {
   >(null);
   const [pinnedHighlightItem, setPinnedHighlightItem] =
     useState<OverdueCollectionItem | null>(null);
+  const [consumedNavHighlightId, setConsumedNavHighlightId] = useState<
+    string | null
+  >(null);
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
   const highlightScrolledRef = useRef<string | null>(null);
+
+  const navCompletedHighlightId =
+    (location.state as QueueHighlightNavigationState | null)
+      ?.highlightCompletedInstallmentId ?? null;
+
+  // Ajusta state durante o render quando a navegação traz um highlight (evita setState no effect).
+  if (
+    navCompletedHighlightId &&
+    navCompletedHighlightId !== consumedNavHighlightId
+  ) {
+    setConsumedNavHighlightId(navCompletedHighlightId);
+    setPinnedHighlightItem(null);
+    setHighlightedInstallmentId(navCompletedHighlightId);
+  }
 
   const clearHighlightTimeout = useCallback(() => {
     if (highlightTimeoutRef.current) {
@@ -139,17 +156,18 @@ export function DashboardPage() {
   } = chargeQueueData;
 
   useEffect(() => {
-    const state = location.state as QueueHighlightNavigationState | null;
-    const completedId = state?.highlightCompletedInstallmentId;
-    if (!completedId) return;
+    if (!navCompletedHighlightId) return;
 
-    clearHighlightTimeout();
     highlightScrolledRef.current = null;
-    setPinnedHighlightItem(null);
-    setHighlightedInstallmentId(completedId);
+    clearHighlightTimeout();
     startHighlightTimer();
     navigate(".", { replace: true, state: null });
-  }, [location.state, navigate, clearHighlightTimeout, startHighlightTimer]);
+  }, [
+    navCompletedHighlightId,
+    navigate,
+    clearHighlightTimeout,
+    startHighlightTimer,
+  ]);
 
   useEffect(() => {
     if (!highlightedInstallmentId) {
