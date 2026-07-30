@@ -43,7 +43,8 @@ export function riscoHint(
   if (!next || next.maxValue === null) {
     return "Reduza a inadimplência para destravar o próximo bônus.";
   }
-  return `Reduza a inadimplência para até ${fmtPct(next.maxValue)} e destrave +${Math.round(next.bonusPercent)}%.`;
+  const op = next.maxInclusive ? "até" : "abaixo de";
+  return `Reduza a inadimplência para ${op} ${fmtPct(next.maxValue)} e destrave +${Math.round(next.bonusPercent)}%.`;
 }
 
 export function taxaHint(

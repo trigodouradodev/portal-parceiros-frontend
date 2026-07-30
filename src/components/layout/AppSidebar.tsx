@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { LogOut } from "lucide-react";
 import { AureaLogoMark } from "@/components/brand/AureaLogo";
 import { type NavTab } from "@/components/layout/nav-config";
@@ -7,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface NavItem {
   key: NavTab;
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   path: string;
 }
@@ -67,23 +68,30 @@ export function AppSidebar({
         </div>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
-        {items.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => onNavigate(item.key)}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all",
-              activeTab === item.key
-                ? "bg-white/10 text-white"
-                : "text-white/50 hover:bg-white/5 hover:text-white/80",
-            )}
-          >
-            {item.icon}
-            {item.label}
-          </button>
-        ))}
+      <nav
+        className="flex flex-1 flex-col gap-1 px-3 py-4"
+        aria-label="Navegação principal"
+      >
+        {items.map((item) => {
+          const isActive = activeTab === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onNavigate(item.key)}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all",
+                isActive
+                  ? "bg-white/10 text-white"
+                  : "text-white/50 hover:bg-white/5 hover:text-white/80",
+              )}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          );
+        })}
       </nav>
 
       <div className="px-3 pb-6">

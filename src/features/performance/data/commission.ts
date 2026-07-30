@@ -79,9 +79,12 @@ export function bandLabel(
 
   if (bonusPercent === 0) {
     if (pillar === Pillar.RISK) {
-      return maxValue === null
-        ? `acima de ${formatNumber(minValue)}${suffix} · risco alto`
-        : `acima de ${formatNumber(maxInclusive ? maxValue : minValue)}${suffix} · risco alto`;
+      if (maxValue === null) {
+        const op = minInclusive ? "≥" : ">";
+        return `${op} ${formatNumber(minValue)}${suffix} · risco alto`;
+      }
+      const op = maxInclusive ? ">" : "≥";
+      return `${op} ${formatNumber(maxValue)}${suffix} · risco alto`;
     }
     if (pillar === Pillar.DISBURSEMENT && maxValue !== null) {
       return `abaixo de ${formatNumber(maxValue)}${suffix}`;

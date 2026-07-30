@@ -29,25 +29,6 @@ export interface PortfolioDashboard {
   upcomingRenewals: UpcomingRenewals;
 }
 
-export interface OriginationSummary {
-  count: number;
-  amount: number;
-}
-
-export interface DelinquencySummary {
-  rate: number; // 0-100 percentage
-  overdueAmount: number;
-  portfolioOpenAmount: number;
-}
-
-export interface MonthPerformance {
-  month: string; // 'YYYY-MM'
-  origination: OriginationSummary;
-  averageRate: number | null; // percentage, null if no origination
-  delinquency: DelinquencySummary;
-  renewals: number;
-}
-
 export type InstallmentStatus = "not_paid" | "partially_paid";
 
 export type CollectionStageCode =

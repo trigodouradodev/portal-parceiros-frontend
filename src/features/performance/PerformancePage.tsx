@@ -72,6 +72,10 @@ export function PerformancePage() {
   }
 
   const profile = profileQuery.data;
+  if (!profile) {
+    return <PerformanceSkeleton onLogout={onMobileLogout} />;
+  }
+
   const program = programQuery.data;
   const current = currentQuery.data;
 

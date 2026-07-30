@@ -1,26 +1,14 @@
-import { useState } from "react";
 import { BreakdownRow } from "@/features/performance/components/BreakdownRow";
 import { KpiLadderCard } from "@/features/performance/components/KpiLadderCard";
 import { PermanenceTrail } from "@/features/performance/components/PermanenceTrail";
 import { SliderControl } from "@/features/performance/components/SliderControl";
-import {
-  bandsOf,
-  computeCommission,
-  maxBonusPercent,
-} from "@/features/performance/data/commission";
+import { useSimulatorModel } from "@/features/performance/hooks/useSimulatorModel";
 import { fmtPct } from "@/features/performance/utils/format";
-import {
-  desembolsoHint,
-  nextMilestoneLabel,
-  riscoHint,
-  taxaHint,
-} from "@/features/performance/utils/hints";
 import { fmtBRL } from "@/lib/utils";
-import {
-  BonusPillar,
-  type CurrentPerformance,
-  type PartnerProfile,
-  type PartnerProgram,
+import type {
+  CurrentPerformance,
+  PartnerProfile,
+  PartnerProgram,
 } from "@/services/performance/performance.types";
 
 interface SimulatorSectionProps {
@@ -34,26 +22,25 @@ export function SimulatorSection({
   current,
   program,
 }: SimulatorSectionProps) {
-  const level = profile.level;
-  // null na API = sem medição (bônus 0). Não usar 0%/9,5%: 0% de
-  // inadimplência cairia no teto de risco (+50%). Partimos de valores
-  // típicos da faixa zerada (risco >5%, taxa <9,5%).
-  // Remount via `key` no pai quando os dados reais mudam.
-  const [originacao, setOriginacao] = useState(current.origination.amount);
-  const [inad, setInad] = useState(current.delinquency.rate ?? 6);
-  const [taxa, setTaxa] = useState(current.averageRate.rate ?? 9);
-  const [mes, setMes] = useState(profile.partnership.monthNumber);
-
-  const sim = computeCommission(level, program, originacao, inad, taxa, mes);
-  const delta = sim.total - current.commission.total;
-
-  const dMax = maxBonusPercent(bandsOf(program, BonusPillar.DISBURSEMENT));
-  const rMax = maxBonusPercent(bandsOf(program, BonusPillar.RISK));
-  const tMax = maxBonusPercent(bandsOf(program, BonusPillar.RATE));
-
-  const dMarker = (Math.min(sim.pctMeta, 140) / 140) * 100;
-  const rMarker = (Math.min(inad, 8) / 8) * 100;
-  const tMarker = ((Math.min(Math.max(taxa, 7), 12) - 7) / 5) * 100;
+  const model = useSimulatorModel(profile, current, program);
+  const {
+    level,
+    originacao,
+    setOriginacao,
+    inad,
+    setInad,
+    taxa,
+    setTaxa,
+    mes,
+    setMes,
+    sim,
+    delta,
+    originacaoMax,
+    monthHint,
+    disbursement,
+    risk,
+    rate,
+  } = model;
 
   return (
     <div className="rounded-2xl border border-[#D6D9E3] bg-white p-5 shadow">
@@ -76,7 +63,7 @@ export function SimulatorSection({
           label="Originação no mês"
           value={originacao}
           min={0}
-          max={Math.round(level.monthlyTarget * 1.6)}
+          max={originacaoMax}
           step={2000}
           onChange={setOriginacao}
           valueLabel={fmtBRL(originacao)}
@@ -85,8 +72,8 @@ export function SimulatorSection({
         <SliderControl
           label="Inadimplência"
           value={inad}
-          min={0}
-          max={8}
+          min={risk.sliderMin}
+          max={risk.sliderMax}
           step={0.1}
           onChange={setInad}
           valueLabel={fmtPct(inad)}
@@ -95,8 +82,8 @@ export function SimulatorSection({
         <SliderControl
           label="Taxa média"
           value={taxa}
-          min={7}
-          max={12}
+          min={rate.sliderMin}
+          max={rate.sliderMax}
           step={0.1}
           onChange={setTaxa}
           valueLabel={fmtPct(taxa)}
@@ -110,9 +97,7 @@ export function SimulatorSection({
           step={1}
           onChange={setMes}
           valueLabel={`${mes} ${mes === 1 ? "mês" : "meses"}`}
-          hint={
-            mes === 1 ? "Boas-vindas ativa" : nextMilestoneLabel(mes, program)
-          }
+          hint={monthHint}
         />
       </div>
 
@@ -122,47 +107,33 @@ export function SimulatorSection({
           value={`${Math.round(sim.pctMeta)}%`}
           sub={`${fmtBRL(originacao)} de ${fmtBRL(level.monthlyTarget)} · ${sim.d.label}`}
           bonus={sim.d.bonusPercent}
-          maxBonus={dMax}
-          segments={[
-            { color: "#D84040", width: 100 },
-            { color: "#BA7517", width: 10 },
-            { color: "#8FCB6B", width: 10 },
-            { color: "#1D9E75", width: 20 },
-          ]}
-          markerPct={dMarker}
-          scale={["0%", "100%", "120%+"]}
-          hint={desembolsoHint(sim, originacao, level.monthlyTarget, program)}
+          maxBonus={disbursement.maxBonus}
+          segments={disbursement.segments}
+          markerPct={disbursement.markerPct(sim.pctMeta)}
+          scale={disbursement.scale}
+          hint={disbursement.hint}
         />
         <KpiLadderCard
           label="Risco · Inadimplência"
           value={fmtPct(inad)}
-          sub={`peso de 50% nos adicionais · ${sim.r.label}`}
+          sub={`peso de ${Math.round(risk.maxBonus)}% nos adicionais · ${sim.r.label}`}
           bonus={sim.r.bonusPercent}
-          maxBonus={rMax}
-          segments={[
-            { color: "#1D9E75", width: 2 },
-            { color: "#8FCB6B", width: 1.5 },
-            { color: "#BA7517", width: 1.5 },
-            { color: "#D84040", width: 3 },
-          ]}
-          markerPct={rMarker}
-          scale={["0%", "3,5%", "8%+"]}
-          hint={riscoHint(sim, inad, program)}
+          maxBonus={risk.maxBonus}
+          segments={risk.segments}
+          markerPct={risk.markerPct(inad)}
+          scale={risk.scale}
+          hint={risk.hint}
         />
         <KpiLadderCard
           label="Taxa média"
           value={fmtPct(taxa)}
           sub={sim.t.label}
           bonus={sim.t.bonusPercent}
-          maxBonus={tMax}
-          segments={[
-            { color: "#D84040", width: 2.5 },
-            { color: "#8FCB6B", width: 0.5 },
-            { color: "#1D9E75", width: 2 },
-          ]}
-          markerPct={tMarker}
-          scale={["7%", "9,5%", "12%"]}
-          hint={taxaHint(sim, taxa, program)}
+          maxBonus={rate.maxBonus}
+          segments={rate.segments}
+          markerPct={rate.markerPct(taxa)}
+          scale={rate.scale}
+          hint={rate.hint}
         />
       </div>
 

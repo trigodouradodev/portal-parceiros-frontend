@@ -23,16 +23,16 @@ export function AppShell() {
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
   const profileQuery = usePartnerProfile({ enabled: authenticated });
-  const showDesempenho =
-    Boolean(profileQuery.data) &&
-    !(profileQuery.isError && isNotFoundError(profileQuery.error));
+  // Mantém a aba enquanto /me carrega; só remove no 404 confirmado (evita pop-in).
+  const hideDesempenho =
+    profileQuery.isError && isNotFoundError(profileQuery.error);
 
   const navItems = useMemo(
     () =>
-      showDesempenho
-        ? NAV_ITEMS
-        : NAV_ITEMS.filter((item) => item.key !== "desempenho"),
-    [showDesempenho],
+      hideDesempenho
+        ? NAV_ITEMS.filter((item) => item.key !== "desempenho")
+        : NAV_ITEMS,
+    [hideDesempenho],
   );
 
   const activeTab = pathToNavTab(location.pathname, navItems);

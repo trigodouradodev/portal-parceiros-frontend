@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 interface SliderControlProps {
   label: string;
   value: number;
@@ -19,10 +21,15 @@ export function SliderControl({
   valueLabel,
   hint,
 }: SliderControlProps) {
+  const id = useId();
+
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-xs font-semibold text-[#6B7080]">{label}</label>
+      <label htmlFor={id} className="text-xs font-semibold text-[#6B7080]">
+        {label}
+      </label>
       <input
+        id={id}
         type="range"
         min={min}
         max={max}
