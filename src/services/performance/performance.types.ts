@@ -2,20 +2,26 @@
  * Types matching portal-parceiros-backend/src/performance/interfaces/
  */
 
-export enum BonusPillar {
-  DISBURSEMENT = "DISBURSEMENT",
-  RISK = "RISK",
-  RATE = "RATE",
-}
+export const BonusPillar = {
+  DISBURSEMENT: "DISBURSEMENT",
+  RISK: "RISK",
+  RATE: "RATE",
+} as const;
 
-export enum CommissionComponentKind {
-  FIXED = "FIXED",
-  WELCOME = "WELCOME",
-  DISBURSEMENT_BONUS = "DISBURSEMENT_BONUS",
-  RISK_BONUS = "RISK_BONUS",
-  RATE_BONUS = "RATE_BONUS",
-  PERMANENCE_BONUS = "PERMANENCE_BONUS",
-}
+export type BonusPillar = (typeof BonusPillar)[keyof typeof BonusPillar];
+
+export const CommissionComponentKind = {
+  FIXED: "FIXED",
+  WELCOME: "WELCOME",
+  DISBURSEMENT_BONUS: "DISBURSEMENT_BONUS",
+  RISK_BONUS: "RISK_BONUS",
+  RATE_BONUS: "RATE_BONUS",
+  PERMANENCE_BONUS: "PERMANENCE_BONUS",
+} as const;
+
+export type CommissionComponentKind =
+  (typeof CommissionComponentKind)[keyof typeof CommissionComponentKind];
+
 
 export interface PartnerIdentity {
   id: string;
