@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useLocation } from "react-router-dom";
 import { AlertTriangle, Clock, RefreshCw, FileText } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -21,6 +21,7 @@ import {
 import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
 import { mapQueueTaskCardToOverdueItem } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 import { isChargeQueueItemBlocked } from "@/features/dashboard/utils/charge-queue";
+import type { QueueHighlightNavigationState } from "@/features/dashboard/utils/queue-highlight-navigation";
 import {
   buildSegmentCountsFromApi,
   extractTodayQueueMeta,
@@ -58,6 +59,7 @@ interface ShellContext {
 export function DashboardPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { setActionData } = useActionContext();
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
@@ -78,10 +80,27 @@ export function DashboardPage() {
   >(null);
   const [pinnedHighlightItem, setPinnedHighlightItem] =
     useState<OverdueCollectionItem | null>(null);
+  const [consumedNavHighlightId, setConsumedNavHighlightId] = useState<
+    string | null
+  >(null);
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
   const highlightScrolledRef = useRef<string | null>(null);
+
+  const navCompletedHighlightId =
+    (location.state as QueueHighlightNavigationState | null)
+      ?.highlightCompletedInstallmentId ?? null;
+
+  // Ajusta state durante o render quando a navegação traz um highlight (evita setState no effect).
+  if (
+    navCompletedHighlightId &&
+    navCompletedHighlightId !== consumedNavHighlightId
+  ) {
+    setConsumedNavHighlightId(navCompletedHighlightId);
+    setPinnedHighlightItem(null);
+    setHighlightedInstallmentId(navCompletedHighlightId);
+  }
 
   const clearHighlightTimeout = useCallback(() => {
     if (highlightTimeoutRef.current) {
@@ -137,7 +156,21 @@ export function DashboardPage() {
   } = chargeQueueData;
 
   useEffect(() => {
-    if (!highlightedInstallmentId || !pinnedHighlightItem) {
+    if (!navCompletedHighlightId) return;
+
+    highlightScrolledRef.current = null;
+    clearHighlightTimeout();
+    startHighlightTimer();
+    navigate(".", { replace: true, state: null });
+  }, [
+    navCompletedHighlightId,
+    navigate,
+    clearHighlightTimeout,
+    startHighlightTimer,
+  ]);
+
+  useEffect(() => {
+    if (!highlightedInstallmentId) {
       highlightScrolledRef.current = null;
       return;
     }
@@ -152,7 +185,9 @@ export function DashboardPage() {
         if (cancelled) return;
         if (scrollToHighlightedCard(highlightedInstallmentId)) {
           highlightScrolledRef.current = highlightedInstallmentId;
-          startHighlightTimer();
+          if (pinnedHighlightItem) {
+            startHighlightTimer();
+          }
         }
       });
     });
@@ -162,7 +197,13 @@ export function DashboardPage() {
       window.cancelAnimationFrame(rafOuter);
       window.cancelAnimationFrame(rafInner);
     };
-  }, [highlightedInstallmentId, pinnedHighlightItem, startHighlightTimer]);
+  }, [
+    highlightedInstallmentId,
+    pinnedHighlightItem,
+    completedTodayItems,
+    isLoadingTodayQueue,
+    startHighlightTimer,
+  ]);
 
   const totalActions = chargeCounter;
 
