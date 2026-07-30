@@ -38,6 +38,7 @@ import { getApiErrorMessage } from "@/lib/api/errors";
 import { hasCallablePhone, hasValidAddress } from "@/lib/contact-actions";
 import { getFirstName } from "@/lib/user-display";
 import { addDays, startOfDay } from "@/components/ui/calendar-utils";
+import { buildCompletedHighlightNavigationState } from "@/features/dashboard/utils/queue-highlight-navigation";
 
 export type { FlowStep };
 
@@ -234,7 +235,10 @@ export function useRegisterChargeActionFlow() {
         installmentId,
       });
       onComplete({ note, outcome: result });
-      navigate("/", { replace: true });
+      navigate("/", {
+        replace: true,
+        state: buildCompletedHighlightNavigationState(installmentId),
+      });
     } catch (err) {
       showToast(getApiErrorMessage(err, "Erro ao registrar ação."), {
         variant: "destructive",

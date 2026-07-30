@@ -239,6 +239,8 @@ export function ChargeTasksTab({
               name={item.client.name}
               contract={`${item.contract.number} · ${item.installment.label}`}
               label="Ação concluída hoje"
+              installmentId={item.installment.id}
+              highlighted={item.installment.id === highlightedInstallmentId}
             />
           ))}
         </section>
