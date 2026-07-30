@@ -1,5 +1,7 @@
 import { api } from "@/lib/api/axios";
 import type {
+  ChangePasswordRequest,
+  ChangePasswordResponse,
   LoginRequest,
   LoginResponse,
   RefreshTokenRequest,
@@ -29,6 +31,16 @@ export const authService = {
 
   async updateProfile(data: UpdateProfileRequest): Promise<UserProfile> {
     const response = await api.patch<UserProfile>("/auth/me", data);
+    return response.data;
+  },
+
+  async changePassword(
+    data: ChangePasswordRequest,
+  ): Promise<ChangePasswordResponse> {
+    const response = await api.patch<ChangePasswordResponse>(
+      "/auth/me/password",
+      data,
+    );
     return response.data;
   },
 };

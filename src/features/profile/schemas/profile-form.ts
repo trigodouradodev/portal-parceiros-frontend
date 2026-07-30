@@ -26,12 +26,19 @@ export const profileSchema = z.object({
 export const passwordSchema = z
   .object({
     currentPwd: z.string().min(1, "Informe a senha atual."),
-    newPwd: z.string().min(8, "A senha deve ter ao menos 8 caracteres."),
+    newPwd: z
+      .string()
+      .min(8, "A senha deve ter ao menos 8 caracteres.")
+      .max(72, "A senha deve ter no máximo 72 caracteres."),
     confirmPwd: z.string().min(1, "Confirme a nova senha."),
   })
   .refine((values) => values.newPwd === values.confirmPwd, {
     message: "As senhas não coincidem.",
     path: ["confirmPwd"],
+  })
+  .refine((values) => values.newPwd !== values.currentPwd, {
+    message: "A nova senha deve ser diferente da atual.",
+    path: ["newPwd"],
   });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;

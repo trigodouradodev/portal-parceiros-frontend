@@ -7,11 +7,15 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { useToast } from "@/contexts/toast/toast-context";
+import { PasswordSection } from "@/features/profile/components/PasswordSection";
 import { PersonalDataSection } from "@/features/profile/components/PersonalDataSection";
 import { ProfileAvatarHeader } from "@/features/profile/components/ProfileAvatarHeader";
+import { useChangePassword } from "@/features/profile/hooks/useChangePassword";
 import { useUpdateProfile } from "@/features/profile/hooks/useUpdateProfile";
 import {
+  passwordSchema,
   profileSchema,
+  type PasswordFormValues,
   type ProfileFormValues,
 } from "@/features/profile/schemas/profile-form";
 import {
@@ -25,11 +29,20 @@ interface ShellContext {
   onMobileLogout?: () => void;
 }
 
+function apiErrorMessage(err: unknown): string | undefined {
+  if (!isAxiosError(err)) return undefined;
+  const message = err.response?.data?.message;
+  if (Array.isArray(message)) return message.join(",");
+  if (typeof message === "string") return message;
+  return undefined;
+}
+
 export function ProfilePage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const { onMobileLogout } = useOutletContext<ShellContext>();
   const updateProfile = useUpdateProfile();
+  const changePassword = useChangePassword();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -40,8 +53,25 @@ export function ProfilePage() {
     },
   });
 
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPwd: "",
+      newPwd: "",
+      confirmPwd: "",
+    },
+  });
+
   const { reset, watch, setError, formState } = form;
   const values = watch();
+
+  const {
+    reset: resetPassword,
+    watch: watchPassword,
+    setError: setPasswordError,
+    formState: passwordFormState,
+  } = passwordForm;
+  const passwordValues = watchPassword();
 
   useEffect(() => {
     if (!user) return;
@@ -60,6 +90,11 @@ export function ProfilePage() {
     values.fullName.trim() !== baselineName.trim() ||
     values.email.trim().toLowerCase() !== baselineEmail.trim().toLowerCase() ||
     digitsOnlyPhone(values.phone) !== baselinePhoneDigits;
+
+  const passwordFilled =
+    passwordValues.currentPwd.length > 0 ||
+    passwordValues.newPwd.length > 0 ||
+    passwordValues.confirmPwd.length > 0;
 
   const handleCancel = () => {
     if (!user) return;
@@ -98,8 +133,7 @@ export function ProfilePage() {
       showToast("Dados atualizados com sucesso.");
     } catch (err: unknown) {
       if (isAxiosError(err)) {
-        const message = err.response?.data?.message;
-        const code = Array.isArray(message) ? message.join(",") : message;
+        const code = apiErrorMessage(err);
 
         if (err.response?.status === 409 || code === "email_already_in_use") {
           setError("email", {
@@ -130,9 +164,56 @@ export function ProfilePage() {
     }
   };
 
+  const onPasswordSubmit = async (formValues: PasswordFormValues) => {
+    try {
+      await changePassword.mutateAsync({
+        currentPassword: formValues.currentPwd,
+        newPassword: formValues.newPwd,
+      });
+      resetPassword();
+      showToast("Senha alterada com sucesso.");
+    } catch (err: unknown) {
+      if (isAxiosError(err)) {
+        const message = apiErrorMessage(err) ?? "";
+
+        if (err.response?.status === 401) {
+          setPasswordError("currentPwd", {
+            type: "server",
+            message: "Senha atual incorreta.",
+          });
+          return;
+        }
+
+        if (
+          err.response?.status === 400 &&
+          message.toLowerCase().includes("diferente")
+        ) {
+          setPasswordError("newPwd", {
+            type: "server",
+            message: "A nova senha deve ser diferente da atual.",
+          });
+          return;
+        }
+
+        if (!err.response) {
+          showToast("Sem conexão. Verifique sua internet e tente novamente.", {
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      showToast("Não foi possível alterar a senha. Tente novamente.", {
+        variant: "destructive",
+      });
+    }
+  };
+
   const displayName = values.fullName.trim() || user?.full_name || "Parceiro";
   const roleLabel = getRoleLabel(user?.role);
   const saving = updateProfile.isPending || formState.isSubmitting;
+  const passwordSaving =
+    changePassword.isPending || passwordFormState.isSubmitting;
 
   const handleCameraClick = () => {
     showToast("Upload de foto ainda não está disponível.", {
@@ -162,7 +243,12 @@ export function ProfilePage() {
           onSubmit={onSubmit}
         />
 
-        {/* Seção "Alterar senha" (PasswordSection) oculta até existir API de troca de senha. */}
+        <PasswordSection
+          form={passwordForm}
+          passwordFilled={passwordFilled}
+          saving={passwordSaving}
+          onSubmit={onPasswordSubmit}
+        />
       </div>
     </PageContainer>
   );

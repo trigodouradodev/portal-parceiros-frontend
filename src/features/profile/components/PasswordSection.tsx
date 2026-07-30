@@ -1,4 +1,4 @@
-import { Lock } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -8,12 +8,14 @@ import type { PasswordFormValues } from "@/features/profile/schemas/profile-form
 interface PasswordSectionProps {
   form: UseFormReturn<PasswordFormValues>;
   passwordFilled: boolean;
+  saving: boolean;
   onSubmit: (values: PasswordFormValues) => void;
 }
 
 export function PasswordSection({
   form,
   passwordFilled,
+  saving,
   onSubmit,
 }: PasswordSectionProps) {
   return (
@@ -49,10 +51,14 @@ export function PasswordSection({
           <Button
             type="submit"
             className="mt-5 h-11 w-full gap-2 rounded-2xl bg-brand-navy font-semibold text-white"
-            disabled={!passwordFilled}
+            disabled={!passwordFilled || saving}
           >
-            <Lock size={15} />
-            Alterar senha
+            {saving ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <Lock size={15} />
+            )}
+            {saving ? "Alterando..." : "Alterar senha"}
           </Button>
         </form>
       </Form>
