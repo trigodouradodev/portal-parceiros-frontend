@@ -1,13 +1,27 @@
 import {
-  currentPartner,
-  LEVELS,
-  WELCOME_BONUS,
-  type PartnerLevel,
+  bandsOf,
+  maxBonusPercent,
+  permanenceTotalMultiplier,
 } from "@/features/performance/data/commission";
 import { fmtBRL } from "@/lib/utils";
+import {
+  BonusPillar,
+  type PartnerProgram,
+} from "@/services/performance/performance.types";
 
-export function LevelsComparisonTable() {
-  const currentLevel = currentPartner.level;
+interface LevelsComparisonTableProps {
+  program: PartnerProgram;
+  currentLevelKey: string;
+}
+
+export function LevelsComparisonTable({
+  program,
+  currentLevelKey,
+}: LevelsComparisonTableProps) {
+  const dMax = maxBonusPercent(bandsOf(program, BonusPillar.DISBURSEMENT));
+  const rMax = maxBonusPercent(bandsOf(program, BonusPillar.RISK));
+  const tMax = maxBonusPercent(bandsOf(program, BonusPillar.RATE));
+  const permMult = permanenceTotalMultiplier(program.permanenceMilestones);
 
   return (
     <div className="rounded-2xl border border-[#D6D9E3] bg-white p-5 shadow">
@@ -38,21 +52,27 @@ export function LevelsComparisonTable() {
             </tr>
           </thead>
           <tbody>
-            {(Object.keys(LEVELS) as PartnerLevel[]).map((key) => {
-              const l = LEVELS[key];
-              const maxBonus = 0.2 * l.fixo + 0.5 * l.fixo + 0.3 * l.fixo;
-              const totalMes1 = l.fixo + WELCOME_BONUS + maxBonus;
-              const perm18 = 6 * l.fixo;
-              const isCurrent = key === currentLevel;
+            {program.levels.map((level) => {
+              const dBonus = (dMax / 100) * level.monthlyFixed;
+              const rBonus = (rMax / 100) * level.monthlyFixed;
+              const tBonus = (tMax / 100) * level.monthlyFixed;
+              const totalMes1 =
+                level.monthlyFixed +
+                program.welcomeBonusAmount +
+                dBonus +
+                rBonus +
+                tBonus;
+              const perm18 = permMult * level.monthlyFixed;
+              const isCurrent = level.key === currentLevelKey;
               return (
                 <tr
-                  key={key}
+                  key={level.key}
                   className={`border-t border-[#EBEDF3] ${isCurrent ? "bg-brand-yellow/10" : ""}`}
                 >
                   <td
                     className={`py-2.5 pr-3 font-bold ${isCurrent ? "text-brand-navy" : "text-[#1A1D2E]"}`}
                   >
-                    {l.label}
+                    {level.label}
                     {isCurrent && (
                       <span className="ml-1.5 align-middle rounded-full bg-brand-navy px-1.5 py-0.5 text-[9px] font-bold tracking-wide text-white uppercase">
                         você
@@ -60,22 +80,22 @@ export function LevelsComparisonTable() {
                     )}
                   </td>
                   <td className="px-3 py-2.5 text-right text-[#1A1D2E]">
-                    {fmtBRL(l.meta)}
+                    {fmtBRL(level.monthlyTarget)}
                   </td>
                   <td className="px-3 py-2.5 text-right text-[#1A1D2E]">
-                    {fmtBRL(l.fixo)}
+                    {fmtBRL(level.monthlyFixed)}
                   </td>
                   <td className="px-3 py-2.5 text-right text-[#1A1D2E]">
-                    {fmtBRL(WELCOME_BONUS)}
+                    {fmtBRL(program.welcomeBonusAmount)}
                   </td>
                   <td className="px-3 py-2.5 text-right text-[#1A1D2E]">
-                    {fmtBRL(0.2 * l.fixo)}
+                    {fmtBRL(dBonus)}
                   </td>
                   <td className="px-3 py-2.5 text-right text-[#1A1D2E]">
-                    {fmtBRL(0.5 * l.fixo)}
+                    {fmtBRL(rBonus)}
                   </td>
                   <td className="px-3 py-2.5 text-right text-[#1A1D2E]">
-                    {fmtBRL(0.3 * l.fixo)}
+                    {fmtBRL(tBonus)}
                   </td>
                   <td className="px-3 py-2.5 text-right font-mono-dm font-bold text-[#1A1D2E]">
                     {fmtBRL(totalMes1)}

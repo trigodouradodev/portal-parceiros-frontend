@@ -2,27 +2,78 @@ import { useRef } from "react";
 import { CommissionPill } from "@/features/performance/components/CommissionPill";
 import { RealKpiCard } from "@/features/performance/components/RealKpiCard";
 import {
-  computeCommission,
-  currentPartner,
-  LEVELS,
+  bandLabel,
+  bandsOf,
+  maxBonusPercent,
 } from "@/features/performance/data/commission";
 import { fmtPct } from "@/features/performance/utils/format";
 import { useDragScroll } from "@/hooks/useDragScroll";
 import { fmtBRL } from "@/lib/utils";
+import {
+  BonusPillar,
+  CommissionComponentKind,
+  type CurrentPerformance,
+  type PartnerProfile,
+  type PartnerProgram,
+} from "@/services/performance/performance.types";
 
-export function RealPerformanceSection() {
-  const p = currentPartner;
-  const lvl = LEVELS[p.level];
-  const r = computeCommission(
-    p.level,
-    p.real.originacao,
-    p.real.inad,
-    p.real.taxa,
-    p.tenureMonths,
+interface RealPerformanceSectionProps {
+  profile: PartnerProfile;
+  current: CurrentPerformance;
+  program: PartnerProgram;
+}
+
+function formatPeriodLegend(periodStart: string, periodEnd: string): string {
+  const start = new Date(`${periodStart}T12:00:00`);
+  const end = new Date(`${periodEnd}T12:00:00`);
+  const dayStart = start.getDate();
+  const dayEnd = end.getDate();
+  const month = end.toLocaleDateString("pt-BR", { month: "long" });
+  if (dayStart === dayEnd) return `${dayEnd} de ${month}`;
+  return `${dayStart} a ${dayEnd} de ${month}`;
+}
+
+function componentAmount(
+  current: CurrentPerformance,
+  kind: CommissionComponentKind,
+): number {
+  return (
+    current.commission.components.find((c) => c.kind === kind)?.amount ?? 0
   );
-  const now = new Date();
+}
+
+export function RealPerformanceSection({
+  profile,
+  current,
+  program,
+}: RealPerformanceSectionProps) {
+  const { level } = profile;
   const kpiScrollRef = useRef<HTMLDivElement>(null);
   const kpiScroll = useDragScroll(kpiScrollRef);
+
+  const dBands = bandsOf(program, BonusPillar.DISBURSEMENT);
+  const rBands = bandsOf(program, BonusPillar.RISK);
+  const tBands = bandsOf(program, BonusPillar.RATE);
+
+  const dMax = maxBonusPercent(dBands);
+  const rMax = maxBonusPercent(rBands);
+  const tMax = maxBonusPercent(tBands);
+
+  const delinquencyRate = current.delinquency.rate;
+  const averageRate = current.averageRate.rate;
+
+  const fixed = componentAmount(current, CommissionComponentKind.FIXED);
+  const welcome = componentAmount(current, CommissionComponentKind.WELCOME);
+  const disbursement = componentAmount(
+    current,
+    CommissionComponentKind.DISBURSEMENT_BONUS,
+  );
+  const risk = componentAmount(current, CommissionComponentKind.RISK_BONUS);
+  const rate = componentAmount(current, CommissionComponentKind.RATE_BONUS);
+  const permanence = componentAmount(
+    current,
+    CommissionComponentKind.PERMANENCE_BONUS,
+  );
 
   return (
     <div className="rounded-2xl border border-[#D6D9E3] bg-white p-5 shadow">
@@ -36,12 +87,12 @@ export function RealPerformanceSection() {
           </span>
         </div>
         <span className="text-xs text-[#6B7080]">
-          1 a {now.getDate()} de{" "}
-          {now.toLocaleDateString("pt-BR", { month: "long" })}
+          {formatPeriodLegend(current.periodStart, current.periodEnd)}
         </span>
       </div>
       <p className="mb-3 text-xs text-[#6B7080]">
-        Meta {fmtBRL(lvl.meta)} · fixo {fmtBRL(lvl.fixo)}/mês
+        Meta {fmtBRL(level.monthlyTarget)} · fixo {fmtBRL(level.monthlyFixed)}
+        /mês
       </p>
 
       <div className="relative">
@@ -55,24 +106,32 @@ export function RealPerformanceSection() {
         >
           <RealKpiCard
             label="Desembolso vs. meta"
-            value={`${Math.round(r.pctMeta)}%`}
-            sub={`${fmtBRL(p.real.originacao)} de ${fmtBRL(lvl.meta)}`}
-            bonus={r.d.bonus}
-            maxBonus={0.2}
+            value={`${Math.round(current.origination.targetPercent)}%`}
+            sub={`${fmtBRL(current.origination.amount)} de ${fmtBRL(level.monthlyTarget)}`}
+            bonus={current.origination.bonusPercent}
+            maxBonus={dMax}
           />
           <RealKpiCard
             label="Inadimplência"
-            value={fmtPct(p.real.inad)}
-            sub={r.r.label}
-            bonus={r.r.bonus}
-            maxBonus={0.5}
+            value={delinquencyRate !== null ? fmtPct(delinquencyRate) : "N/A"}
+            sub={
+              delinquencyRate !== null
+                ? bandLabel(delinquencyRate, rBands, BonusPillar.RISK)
+                : "Sem carteira para medir"
+            }
+            bonus={current.delinquency.bonusPercent}
+            maxBonus={rMax}
           />
           <RealKpiCard
             label="Taxa média"
-            value={fmtPct(p.real.taxa)}
-            sub={r.t.label}
-            bonus={r.t.bonus}
-            maxBonus={0.3}
+            value={averageRate !== null ? fmtPct(averageRate) : "N/A"}
+            sub={
+              averageRate !== null
+                ? bandLabel(averageRate, tBands, BonusPillar.RATE)
+                : "Sem originação no mês"
+            }
+            bonus={current.averageRate.bonusPercent}
+            maxBonus={tMax}
           />
         </div>
         <div className="pointer-events-none absolute top-0 right-0 bottom-1 w-10 bg-gradient-to-l from-white md:hidden" />
@@ -84,32 +143,32 @@ export function RealPerformanceSection() {
             Comissão real acumulada até hoje
           </p>
           <p className="mt-0.5 font-fraunces text-2xl font-bold leading-tight text-white">
-            {fmtBRL(r.total)}
+            {fmtBRL(current.commission.total)}
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-1.5">
-          <CommissionPill tone="navy">Fixo {fmtBRL(lvl.fixo)}</CommissionPill>
-          {r.boasVindas > 0 && (
+          {fixed > 0 && (
+            <CommissionPill tone="navy">Fixo {fmtBRL(fixed)}</CommissionPill>
+          )}
+          {welcome > 0 && (
             <CommissionPill tone="yellow">
-              Boas-vindas {fmtBRL(r.boasVindas)}
+              Boas-vindas {fmtBRL(welcome)}
             </CommissionPill>
           )}
-          {r.dVal > 0 && (
+          {disbursement > 0 && (
             <CommissionPill tone="green">
-              Desembolso +{fmtBRL(r.dVal)}
+              Desembolso +{fmtBRL(disbursement)}
             </CommissionPill>
           )}
-          {r.rVal > 0 && (
-            <CommissionPill tone="green">
-              Risco +{fmtBRL(r.rVal)}
-            </CommissionPill>
+          {risk > 0 && (
+            <CommissionPill tone="green">Risco +{fmtBRL(risk)}</CommissionPill>
           )}
-          {r.tVal > 0 && (
-            <CommissionPill tone="green">Taxa +{fmtBRL(r.tVal)}</CommissionPill>
+          {rate > 0 && (
+            <CommissionPill tone="green">Taxa +{fmtBRL(rate)}</CommissionPill>
           )}
-          {r.perm && (
+          {permanence > 0 && (
             <CommissionPill tone="amber">
-              Permanência +{fmtBRL(r.permVal)}
+              Permanência +{fmtBRL(permanence)}
             </CommissionPill>
           )}
         </div>

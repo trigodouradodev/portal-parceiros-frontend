@@ -1,15 +1,21 @@
-import { nextMilestone } from "@/features/performance/data/commission";
+import { findNextMilestone } from "@/features/performance/data/commission";
 import { fmtBRL } from "@/lib/utils";
+import type { ProgramMilestone } from "@/services/performance/performance.types";
 
 interface PermanenceTrailProps {
   mes: number;
   fixo: number;
+  milestones: ProgramMilestone[];
 }
 
-export function PermanenceTrail({ mes, fixo }: PermanenceTrailProps) {
-  const milestones = [6, 12, 18];
-  const pos = (Math.min(mes, 18) / 18) * 100;
-  const next = nextMilestone(mes);
+export function PermanenceTrail({
+  mes,
+  fixo,
+  milestones,
+}: PermanenceTrailProps) {
+  const lastMonth = milestones[milestones.length - 1]?.month ?? 18;
+  const pos = (Math.min(mes, lastMonth) / lastMonth) * 100;
+  const next = findNextMilestone(mes, milestones);
 
   return (
     <div className="mt-5 border-t border-[#D6D9E3] pt-5">
@@ -24,15 +30,15 @@ export function PermanenceTrail({ mes, fixo }: PermanenceTrailProps) {
         />
         <div className="relative flex justify-between">
           {milestones.map((m) => {
-            const done = mes >= m;
-            const isNext = !done && next === m;
-            const value = (m / 6) * fixo;
+            const done = mes >= m.month;
+            const isNext = !done && next?.month === m.month;
+            const value = m.multiplier * fixo;
             return (
               <div
-                key={m}
+                key={m.month}
                 className="relative flex w-24 flex-col items-center gap-2 text-center"
               >
-                {mes === m && (
+                {mes === m.month && (
                   <span className="absolute -top-5 rounded-full bg-brand-yellow px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-brand-navy">
                     você está aqui
                   </span>
@@ -47,10 +53,10 @@ export function PermanenceTrail({ mes, fixo }: PermanenceTrailProps) {
                   }`}
                 />
                 <span className="text-xs font-bold text-[#1A1D2E]">
-                  {m} meses
+                  {m.month} meses
                 </span>
                 <span className="text-[11px] text-[#6B7080]">
-                  {m / 6}× fixo · {fmtBRL(value)}
+                  {m.multiplier}× fixo · {fmtBRL(value)}
                 </span>
               </div>
             );

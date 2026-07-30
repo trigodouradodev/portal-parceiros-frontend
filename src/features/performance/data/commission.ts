@@ -1,78 +1,24 @@
-// Modelo de remuneração do Programa de Parceiros Exclusivos.
-// Fonte: portal-parceiros-design/src/data/commission.ts
-// (Parceiros Exclusivos Oficial.pptx — Trigo Dourado, abril/2026).
-
-export type PartnerLevel = "bronze" | "prata" | "ouro" | "platinum";
-
-export const LEVEL_ORDER: PartnerLevel[] = [
-  "bronze",
-  "prata",
-  "ouro",
-  "platinum",
-];
-
-export const LEVELS: Record<
+import type {
+  BonusBand,
+  BonusPillar,
   PartnerLevel,
-  { label: string; meta: number; fixo: number }
-> = {
-  bronze: { label: "Bronze", meta: 100_000, fixo: 4_000 },
-  prata: { label: "Prata", meta: 150_000, fixo: 6_000 },
-  ouro: { label: "Ouro", meta: 200_000, fixo: 8_000 },
-  platinum: { label: "Platinum", meta: 300_000, fixo: 12_000 },
-};
+  PartnerProgram,
+  ProgramMilestone,
+} from "@/services/performance/performance.types";
+import { BonusPillar as Pillar } from "@/services/performance/performance.types";
 
-export const WELCOME_BONUS = 4_000;
-
-export interface Band {
-  bonus: number;
+export interface BandResult {
+  /** Bônus em % sobre o fixo (0–100), igual ao backend. */
+  bonusPercent: number;
   label: string;
-}
-
-export function desembolsoBand(pctMeta: number): Band {
-  if (pctMeta >= 120) return { bonus: 0.2, label: "≥ 120% da meta" };
-  if (pctMeta >= 110) return { bonus: 0.15, label: "110–119% da meta" };
-  if (pctMeta >= 100) return { bonus: 0.1, label: "100–109% da meta" };
-  return { bonus: 0, label: "abaixo de 100% da meta" };
-}
-
-export function riscoBand(inad: number): Band {
-  if (inad <= 2) return { bonus: 0.5, label: "até 2% · risco baixo" };
-  if (inad <= 3.5) return { bonus: 0.33, label: "2% a 3,5%" };
-  if (inad <= 5) return { bonus: 0.15, label: "3,5% a 5%" };
-  return { bonus: 0, label: "acima de 5% · risco alto" };
-}
-
-export function taxaBand(taxa: number): Band {
-  if (taxa > 10) return { bonus: 0.3, label: "acima de 10%" };
-  if (taxa > 9.5) return { bonus: 0.2, label: "9,5% a 10%" };
-  if (taxa === 9.5) return { bonus: 0.1, label: "exatamente 9,5%" };
-  return { bonus: 0, label: "abaixo de 9,5%" };
-}
-
-export function permanenciaBonus(
-  mes: number,
-  fixo: number,
-): { mult: number; value: number } | null {
-  if (mes === 6) return { mult: 1, value: 1 * fixo };
-  if (mes === 12) return { mult: 2, value: 2 * fixo };
-  if (mes === 18) return { mult: 3, value: 3 * fixo };
-  return null;
-}
-
-export function nextMilestone(mes: number): number | null {
-  if (mes < 6) return 6;
-  if (mes < 12) return 12;
-  if (mes < 18) return 18;
-  return null;
 }
 
 export interface CommissionBreakdown {
   level: PartnerLevel;
-  fixo: number;
   pctMeta: number;
-  d: Band;
-  r: Band;
-  t: Band;
+  d: BandResult;
+  r: BandResult;
+  t: BandResult;
   perm: { mult: number; value: number } | null;
   boasVindas: number;
   dVal: number;
@@ -82,29 +28,157 @@ export interface CommissionBreakdown {
   total: number;
 }
 
+function containsValue(band: BonusBand, value: number): boolean {
+  const aboveMin = band.minInclusive
+    ? value >= band.minValue
+    : value > band.minValue;
+  if (!aboveMin) return false;
+  if (band.maxValue === null) return true;
+  return band.maxInclusive ? value <= band.maxValue : value < band.maxValue;
+}
+
+export function bandsOf(
+  program: PartnerProgram,
+  pillar: BonusPillar,
+): BonusBand[] {
+  return program.bonusPillars.find((p) => p.pillar === pillar)?.bands ?? [];
+}
+
+export function resolveBonusPercent(value: number, bands: BonusBand[]): number {
+  const band = bands.find((candidate) => containsValue(candidate, value));
+  return band?.bonusPercent ?? 0;
+}
+
+export function maxBonusPercent(bands: BonusBand[]): number {
+  if (bands.length === 0) return 0;
+  return Math.max(...bands.map((b) => b.bonusPercent));
+}
+
+function formatNumber(value: number): string {
+  return value.toLocaleString("pt-BR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+  });
+}
+
+/** Rótulo legível da faixa em que o valor cai. */
+export function bandLabel(
+  value: number,
+  bands: BonusBand[],
+  pillar: BonusPillar,
+): string {
+  const band = bands.find((candidate) => containsValue(candidate, value));
+  if (!band) return "fora das faixas";
+
+  const { minValue, maxValue, minInclusive, maxInclusive, bonusPercent } = band;
+  const suffix = pillar === Pillar.DISBURSEMENT ? "% da meta" : "%";
+
+  if (maxValue !== null && minValue === maxValue) {
+    return `exatamente ${formatNumber(minValue)}${suffix}`;
+  }
+
+  if (bonusPercent === 0) {
+    if (pillar === Pillar.RISK) {
+      return maxValue === null
+        ? `acima de ${formatNumber(minValue)}${suffix} · risco alto`
+        : `acima de ${formatNumber(maxInclusive ? maxValue : minValue)}${suffix} · risco alto`;
+    }
+    if (pillar === Pillar.DISBURSEMENT && maxValue !== null) {
+      return `abaixo de ${formatNumber(maxValue)}${suffix}`;
+    }
+    if (pillar === Pillar.RATE && maxValue !== null) {
+      return `abaixo de ${formatNumber(maxValue)}${suffix}`;
+    }
+  }
+
+  if (maxValue === null) {
+    const op = minInclusive ? "≥" : ">";
+    return `${op} ${formatNumber(minValue)}${suffix}`;
+  }
+
+  if (pillar === Pillar.RISK && minValue === 0 && minInclusive) {
+    return `até ${formatNumber(maxValue)}${suffix} · risco baixo`;
+  }
+
+  // Intervalo aberto no teto [100,110) → "100–109"
+  const hi =
+    !maxInclusive && Number.isInteger(maxValue) ? maxValue - 1 : maxValue;
+  return `${formatNumber(minValue)}–${formatNumber(hi)}${suffix}`;
+}
+
+function resolveBand(
+  value: number,
+  bands: BonusBand[],
+  pillar: BonusPillar,
+): BandResult {
+  return {
+    bonusPercent: resolveBonusPercent(value, bands),
+    label: bandLabel(value, bands, pillar),
+  };
+}
+
+export function findNextMilestone(
+  monthNumber: number,
+  milestones: ProgramMilestone[],
+): ProgramMilestone | null {
+  return milestones.find((m) => m.month > monthNumber) ?? null;
+}
+
+export function permanenceBonus(
+  monthNumber: number,
+  monthlyFixed: number,
+  milestones: ProgramMilestone[],
+): { mult: number; value: number } | null {
+  const milestone = milestones.find((m) => m.month === monthNumber);
+  if (!milestone) return null;
+  return {
+    mult: milestone.multiplier,
+    value: Math.round(monthlyFixed * milestone.multiplier * 100) / 100,
+  };
+}
+
+/** Soma dos multiplicadores (ex.: 1+2+3 = 6) para a coluna Permanência 18M. */
+export function permanenceTotalMultiplier(
+  milestones: ProgramMilestone[],
+): number {
+  return milestones.reduce((sum, m) => sum + m.multiplier, 0);
+}
+
+/**
+ * Comissão simulada a partir dos parâmetros do programa (mesmas faixas do backend).
+ * `inad` e `taxa` em %; `originacao` em R$.
+ */
 export function computeCommission(
   level: PartnerLevel,
+  program: PartnerProgram,
   originacao: number,
   inad: number,
   taxa: number,
   mes: number,
 ): CommissionBreakdown {
-  const { fixo, meta } = LEVELS[level];
-  const pctMeta = (originacao / meta) * 100;
-  const d = desembolsoBand(pctMeta);
-  const r = riscoBand(inad);
-  const t = taxaBand(taxa);
-  const perm = permanenciaBonus(mes, fixo);
-  const boasVindas = mes === 1 ? WELCOME_BONUS : 0;
+  const { monthlyFixed, monthlyTarget } = level;
+  const pctMeta =
+    monthlyTarget > 0
+      ? Math.round((originacao / monthlyTarget) * 10000) / 100
+      : 0;
 
-  const dVal = d.bonus * fixo;
-  const rVal = r.bonus * fixo;
-  const tVal = t.bonus * fixo;
-  const permVal = perm ? perm.value : 0;
+  const dBands = bandsOf(program, Pillar.DISBURSEMENT);
+  const rBands = bandsOf(program, Pillar.RISK);
+  const tBands = bandsOf(program, Pillar.RATE);
+
+  const d = resolveBand(pctMeta, dBands, Pillar.DISBURSEMENT);
+  const r = resolveBand(inad, rBands, Pillar.RISK);
+  const t = resolveBand(taxa, tBands, Pillar.RATE);
+  const perm = permanenceBonus(mes, monthlyFixed, program.permanenceMilestones);
+  const boasVindas = mes === 1 ? program.welcomeBonusAmount : 0;
+
+  const dVal = Math.round(((monthlyFixed * d.bonusPercent) / 100) * 100) / 100;
+  const rVal = Math.round(((monthlyFixed * r.bonusPercent) / 100) * 100) / 100;
+  const tVal = Math.round(((monthlyFixed * t.bonusPercent) / 100) * 100) / 100;
+  const permVal = perm?.value ?? 0;
 
   return {
     level,
-    fixo,
     pctMeta,
     d,
     r,
@@ -115,18 +189,33 @@ export function computeCommission(
     rVal,
     tVal,
     permVal,
-    total: fixo + boasVindas + dVal + rVal + tVal + permVal,
+    total:
+      Math.round(
+        (monthlyFixed + boasVindas + dVal + rVal + tVal + permVal) * 100,
+      ) / 100,
   };
 }
 
-/** Mock do parceiro logado — substituir por API depois. */
-export const currentPartner = {
-  name: "Roger Santos",
-  role: "Agente de cobrança",
-  initials: "RS",
-  level: "ouro" as PartnerLevel,
-  sinceLabel: "novembro de 2025",
-  sinceShort: "11/25",
-  tenureMonths: 8,
-  real: { originacao: 134_000, inad: 3.1, taxa: 9.8 },
-};
+/** Próxima faixa com bônus maior que o atual (para hints do simulador). */
+export function nextBetterBand(
+  value: number,
+  bands: BonusBand[],
+  direction: "higher" | "lower",
+): BonusBand | null {
+  const current = resolveBonusPercent(value, bands);
+  const better = bands.filter((b) => b.bonusPercent > current);
+  if (better.length === 0) return null;
+
+  if (direction === "higher") {
+    // Desembolso / taxa: precisa subir o valor até o piso da próxima faixa melhor
+    return better.reduce((best, b) => (b.minValue < best.minValue ? b : best));
+  }
+
+  // Risco: precisa baixar — a próxima faixa melhor é a de teto mais alto
+  // (a primeira que se entra ao reduzir o valor).
+  return better.reduce((best, b) => {
+    const bestMax = best.maxValue ?? -Infinity;
+    const bMax = b.maxValue ?? -Infinity;
+    return bMax > bestMax ? b : best;
+  });
+}

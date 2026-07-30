@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuth } from "@/contexts/auth/auth-context";
+import { isNotFoundError, usePartnerProfile } from "@/hooks/usePerformanceData";
 
-function pathToNavTab(pathname: string): NavTab {
-  const match = NAV_ITEMS.find(
+function pathToNavTab(pathname: string, items: typeof NAV_ITEMS): NavTab {
+  const match = items.find(
     (item) =>
       item.path === pathname ||
       (item.path !== "/" && pathname.startsWith(`${item.path}/`)),
@@ -18,12 +19,26 @@ function pathToNavTab(pathname: string): NavTab {
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, authenticated } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
-  const activeTab = pathToNavTab(location.pathname);
+
+  const profileQuery = usePartnerProfile({ enabled: authenticated });
+  const showDesempenho =
+    Boolean(profileQuery.data) &&
+    !(profileQuery.isError && isNotFoundError(profileQuery.error));
+
+  const navItems = useMemo(
+    () =>
+      showDesempenho
+        ? NAV_ITEMS
+        : NAV_ITEMS.filter((item) => item.key !== "desempenho"),
+    [showDesempenho],
+  );
+
+  const activeTab = pathToNavTab(location.pathname, navItems);
 
   const handleNavigate = (tab: NavTab) => {
-    const item = NAV_ITEMS.find((nav) => nav.key === tab);
+    const item = navItems.find((nav) => nav.key === tab);
     if (item) {
       navigate(item.path);
     }
@@ -42,6 +57,7 @@ export function AppShell() {
     <div className="flex min-h-screen bg-background font-sans md:flex">
       <AppSidebar
         activeTab={activeTab}
+        items={navItems}
         onNavigate={handleNavigate}
         onRequestLogout={handleRequestLogout}
       />
@@ -50,7 +66,11 @@ export function AppShell() {
         <Outlet context={{ onMobileLogout: handleRequestLogout }} />
       </div>
 
-      <BottomNav activeTab={activeTab} onNavigate={handleNavigate} />
+      <BottomNav
+        activeTab={activeTab}
+        items={navItems}
+        onNavigate={handleNavigate}
+      />
 
       <ConfirmDialog
         open={confirmLogoutOpen}

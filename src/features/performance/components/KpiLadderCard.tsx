@@ -33,7 +33,7 @@ export function KpiLadderCard({
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${TONE_CHIP[tone]}`}
         >
-          +{Math.round(bonus * 100)}%
+          +{Math.round(bonus)}%
         </span>
       </div>
       <div>

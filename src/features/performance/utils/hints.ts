@@ -1,38 +1,80 @@
-import type { CommissionBreakdown } from "@/features/performance/data/commission";
-import { nextMilestone } from "@/features/performance/data/commission";
+import {
+  bandsOf,
+  findNextMilestone,
+  maxBonusPercent,
+  nextBetterBand,
+  type CommissionBreakdown,
+} from "@/features/performance/data/commission";
 import { fmtPct } from "@/features/performance/utils/format";
 import { fmtBRL } from "@/lib/utils";
+import {
+  BonusPillar,
+  type PartnerProgram,
+} from "@/services/performance/performance.types";
 
 export function desembolsoHint(
   sim: CommissionBreakdown,
   originacao: number,
   meta: number,
+  program: PartnerProgram,
 ): string {
-  if (sim.d.bonus >= 0.2) return "Teto de bônus de desembolso já ativo (+20%).";
-  const next = sim.pctMeta < 100 ? 100 : sim.pctMeta < 110 ? 110 : 120;
-  const nextBonus = next === 100 ? 10 : next === 110 ? 15 : 20;
-  const falta = Math.max((next / 100) * meta - originacao, 0);
-  return `Faltam ${fmtBRL(falta)} para ${next}% da meta e destravar +${nextBonus}%.`;
+  const bands = bandsOf(program, BonusPillar.DISBURSEMENT);
+  const max = maxBonusPercent(bands);
+  if (sim.d.bonusPercent >= max && max > 0) {
+    return `Teto de bônus de desembolso já ativo (+${Math.round(max)}%).`;
+  }
+  const next = nextBetterBand(sim.pctMeta, bands, "higher");
+  if (!next) return "Continue acompanhando a originação.";
+  const falta = Math.max((next.minValue / 100) * meta - originacao, 0);
+  return `Faltam ${fmtBRL(falta)} para ${formatThreshold(next.minValue)}% da meta e destravar +${Math.round(next.bonusPercent)}%.`;
 }
 
-export function riscoHint(sim: CommissionBreakdown, inad: number): string {
-  if (sim.r.bonus >= 0.5)
-    return "Teto de bônus de risco já ativo (+50%) — carteira saudável.";
-  const next = inad > 5 ? 5 : inad > 3.5 ? 3.5 : 2;
-  const nextBonus = next === 5 ? 15 : next === 3.5 ? 33 : 50;
-  return `Reduza a inadimplência para até ${fmtPct(next)} e destrave +${nextBonus}%.`;
+export function riscoHint(
+  sim: CommissionBreakdown,
+  inad: number,
+  program: PartnerProgram,
+): string {
+  const bands = bandsOf(program, BonusPillar.RISK);
+  const max = maxBonusPercent(bands);
+  if (sim.r.bonusPercent >= max && max > 0) {
+    return `Teto de bônus de risco já ativo (+${Math.round(max)}%) — carteira saudável.`;
+  }
+  const next = nextBetterBand(inad, bands, "lower");
+  if (!next || next.maxValue === null) {
+    return "Reduza a inadimplência para destravar o próximo bônus.";
+  }
+  return `Reduza a inadimplência para até ${fmtPct(next.maxValue)} e destrave +${Math.round(next.bonusPercent)}%.`;
 }
 
-export function taxaHint(sim: CommissionBreakdown, taxa: number): string {
-  if (sim.t.bonus >= 0.3) return "Teto de bônus de taxa já ativo (+30%).";
-  if (taxa < 9.5)
-    return "Suba a taxa média para 9,5% e destrave +10% (ou acima de 9,5% para +20%).";
-  return "Suba a taxa média para acima de 10% e destrave o teto de +30%.";
+export function taxaHint(
+  sim: CommissionBreakdown,
+  taxa: number,
+  program: PartnerProgram,
+): string {
+  const bands = bandsOf(program, BonusPillar.RATE);
+  const max = maxBonusPercent(bands);
+  if (sim.t.bonusPercent >= max && max > 0) {
+    return `Teto de bônus de taxa já ativo (+${Math.round(max)}%).`;
+  }
+  const next = nextBetterBand(taxa, bands, "higher");
+  if (!next) return "Continue acompanhando a taxa média.";
+  if (next.maxValue !== null && next.minValue === next.maxValue) {
+    return `Ajuste a taxa média para ${fmtPct(next.minValue)} e destrave +${Math.round(next.bonusPercent)}%.`;
+  }
+  const op = next.minInclusive ? "a partir de" : "acima de";
+  return `Suba a taxa média para ${op} ${fmtPct(next.minValue)} e destrave +${Math.round(next.bonusPercent)}%.`;
 }
 
-export function nextMilestoneLabel(mes: number): string {
-  const m = nextMilestone(mes);
+export function nextMilestoneLabel(
+  mes: number,
+  program: PartnerProgram,
+): string {
+  const m = findNextMilestone(mes, program.permanenceMilestones);
   return m
-    ? `Próximo marco: ${m - mes} meses (${m} meses)`
+    ? `Próximo marco: ${m.month - mes} meses (${m.month} meses)`
     : "Marcos de permanência concluídos";
+}
+
+function formatThreshold(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
