@@ -52,7 +52,9 @@ export function PasswordTextField({
                 type={show ? "text" : "password"}
                 placeholder={placeholder}
                 autoComplete={
-                  name === "currentPwd" ? "current-password" : "new-password"
+                  name === "currentPassword"
+                    ? "current-password"
+                    : "new-password"
                 }
                 className="flex-1 bg-transparent text-sm text-[#1A1D2E] outline-none placeholder:text-[#C8CBD8]"
                 name={field.name}

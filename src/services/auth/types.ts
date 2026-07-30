@@ -33,3 +33,13 @@ export interface UpdateProfileRequest {
   fullName?: string;
   phoneNumber?: string | null;
 }
+
+/** Body de `PATCH /auth/change-password` (camelCase). */
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
+}
