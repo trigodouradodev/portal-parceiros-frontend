@@ -22,7 +22,6 @@ export const CommissionComponentKind = {
 export type CommissionComponentKind =
   (typeof CommissionComponentKind)[keyof typeof CommissionComponentKind];
 
-
 export interface PartnerIdentity {
   id: string;
   fullName: string;
