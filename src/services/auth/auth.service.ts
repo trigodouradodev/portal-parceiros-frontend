@@ -38,7 +38,7 @@ export const authService = {
     data: ChangePasswordRequest,
   ): Promise<ChangePasswordResponse> {
     const response = await api.patch<ChangePasswordResponse>(
-      "/auth/me/password",
+      "/auth/change-password",
       data,
     );
     return response.data;

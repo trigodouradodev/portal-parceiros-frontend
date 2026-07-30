@@ -34,7 +34,7 @@ export interface UpdateProfileRequest {
   phoneNumber?: string | null;
 }
 
-/** Body de `PATCH /auth/me/password` (camelCase). */
+/** Body de `PATCH /auth/change-password` (camelCase). */
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;

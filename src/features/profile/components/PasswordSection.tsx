@@ -30,20 +30,20 @@ export function PasswordSection({
         >
           <PasswordTextField
             control={form.control}
-            name="currentPwd"
+            name="currentPassword"
             label="Senha atual"
             placeholder="••••••••"
           />
           <PasswordTextField
             control={form.control}
-            name="newPwd"
+            name="newPassword"
             label="Nova senha"
             placeholder="••••••••"
             hint="Mínimo de 8 caracteres."
           />
           <PasswordTextField
             control={form.control}
-            name="confirmPwd"
+            name="confirmPassword"
             label="Confirmar nova senha"
             placeholder="••••••••"
           />

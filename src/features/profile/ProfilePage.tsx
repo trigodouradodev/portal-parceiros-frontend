@@ -56,9 +56,9 @@ export function ProfilePage() {
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
-      currentPwd: "",
-      newPwd: "",
-      confirmPwd: "",
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
     },
   });
 
@@ -92,9 +92,9 @@ export function ProfilePage() {
     digitsOnlyPhone(values.phone) !== baselinePhoneDigits;
 
   const passwordFilled =
-    passwordValues.currentPwd.length > 0 ||
-    passwordValues.newPwd.length > 0 ||
-    passwordValues.confirmPwd.length > 0;
+    passwordValues.currentPassword.length > 0 ||
+    passwordValues.newPassword.length > 0 ||
+    passwordValues.confirmPassword.length > 0;
 
   const handleCancel = () => {
     if (!user) return;
@@ -167,8 +167,8 @@ export function ProfilePage() {
   const onPasswordSubmit = async (formValues: PasswordFormValues) => {
     try {
       await changePassword.mutateAsync({
-        currentPassword: formValues.currentPwd,
-        newPassword: formValues.newPwd,
+        currentPassword: formValues.currentPassword,
+        newPassword: formValues.newPassword,
       });
       resetPassword();
       showToast("Senha alterada com sucesso.");
@@ -177,7 +177,7 @@ export function ProfilePage() {
         const message = apiErrorMessage(err) ?? "";
 
         if (err.response?.status === 401) {
-          setPasswordError("currentPwd", {
+          setPasswordError("currentPassword", {
             type: "server",
             message: "Senha atual incorreta.",
           });
@@ -188,7 +188,7 @@ export function ProfilePage() {
           err.response?.status === 400 &&
           message.toLowerCase().includes("diferente")
         ) {
-          setPasswordError("newPwd", {
+          setPasswordError("newPassword", {
             type: "server",
             message: "A nova senha deve ser diferente da atual.",
           });
