@@ -1,3 +1,4 @@
+import { PERMANENCE_FALLBACK_HORIZON_MONTHS } from "@/features/performance/constants/simulator.constants";
 import {
   bandsOf,
   maxBonusPercent,
@@ -35,7 +36,8 @@ export function buildLevelComparisonRows(
   const tMax = maxBonusPercent(bandsOf(program, BonusPillar.RATE));
   const permMult = permanenceTotalMultiplier(program.permanenceMilestones);
   const permanenceHorizonMonths =
-    program.permanenceMilestones.at(-1)?.month ?? 18;
+    program.permanenceMilestones.at(-1)?.month ??
+    PERMANENCE_FALLBACK_HORIZON_MONTHS;
 
   const rows = program.levels.map((level: PartnerLevel) => {
     const disbursementBonus = (dMax / 100) * level.monthlyFixed;

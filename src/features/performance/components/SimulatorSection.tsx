@@ -2,6 +2,7 @@ import { BreakdownRow } from "@/features/performance/components/BreakdownRow";
 import { KpiLadderCard } from "@/features/performance/components/KpiLadderCard";
 import { PermanenceTrail } from "@/features/performance/components/PermanenceTrail";
 import { SliderControl } from "@/features/performance/components/SliderControl";
+import { SIMULATOR_HINTS } from "@/features/performance/constants/simulator.constants";
 import { useSimulatorModel } from "@/features/performance/hooks/useSimulatorModel";
 import { fmtPct } from "@/features/performance/utils/format";
 import { fmtBRL } from "@/lib/utils";
@@ -77,7 +78,7 @@ export function SimulatorSection({
           step={0.1}
           onChange={setInad}
           valueLabel={fmtPct(inad)}
-          hint="Meta interna < 3,5%"
+          hint={SIMULATOR_HINTS.inad}
         />
         <SliderControl
           label="Taxa média"
@@ -87,7 +88,7 @@ export function SimulatorSection({
           step={0.1}
           onChange={setTaxa}
           valueLabel={fmtPct(taxa)}
-          hint="Referência 9,5–10%"
+          hint={SIMULATOR_HINTS.taxa}
         />
         <SliderControl
           label="Projetar para o mês"

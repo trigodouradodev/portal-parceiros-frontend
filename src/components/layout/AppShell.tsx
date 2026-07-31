@@ -1,14 +1,13 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuth } from "@/contexts/auth/auth-context";
-import { isNotFoundError, usePartnerProfile } from "@/hooks/usePerformanceData";
 
-function pathToNavTab(pathname: string, items: typeof NAV_ITEMS): NavTab {
-  const match = items.find(
+function pathToNavTab(pathname: string): NavTab {
+  const match = NAV_ITEMS.find(
     (item) =>
       item.path === pathname ||
       (item.path !== "/" && pathname.startsWith(`${item.path}/`)),
@@ -19,26 +18,13 @@ function pathToNavTab(pathname: string, items: typeof NAV_ITEMS): NavTab {
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout, authenticated } = useAuth();
+  const { logout } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
-  const profileQuery = usePartnerProfile({ enabled: authenticated });
-  // Mantém a aba enquanto /me carrega; só remove no 404 confirmado (evita pop-in).
-  const hideDesempenho =
-    profileQuery.isError && isNotFoundError(profileQuery.error);
-
-  const navItems = useMemo(
-    () =>
-      hideDesempenho
-        ? NAV_ITEMS.filter((item) => item.key !== "desempenho")
-        : NAV_ITEMS,
-    [hideDesempenho],
-  );
-
-  const activeTab = pathToNavTab(location.pathname, navItems);
+  const activeTab = pathToNavTab(location.pathname);
 
   const handleNavigate = (tab: NavTab) => {
-    const item = navItems.find((nav) => nav.key === tab);
+    const item = NAV_ITEMS.find((nav) => nav.key === tab);
     if (item) {
       navigate(item.path);
     }
@@ -57,7 +43,7 @@ export function AppShell() {
     <div className="flex min-h-screen bg-background font-sans md:flex">
       <AppSidebar
         activeTab={activeTab}
-        items={navItems}
+        items={NAV_ITEMS}
         onNavigate={handleNavigate}
         onRequestLogout={handleRequestLogout}
       />
@@ -68,7 +54,7 @@ export function AppShell() {
 
       <BottomNav
         activeTab={activeTab}
-        items={navItems}
+        items={NAV_ITEMS}
         onNavigate={handleNavigate}
       />
 

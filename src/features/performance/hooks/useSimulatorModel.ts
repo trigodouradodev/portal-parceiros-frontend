@@ -1,20 +1,25 @@
 import { useMemo, useState } from "react";
 import {
+  SIMULATOR_DEFAULT_INAD,
+  SIMULATOR_DEFAULT_TAXA,
+  SIMULATOR_ORIGINACAO_MAX_FACTOR,
+} from "@/features/performance/constants/simulator.constants";
+import {
   computeCommission,
   type CommissionBreakdown,
 } from "@/features/performance/data/commission";
-import {
-  buildDisbursementLadder,
-  buildRateLadder,
-  buildRiskLadder,
-  type PillarLadderView,
-} from "@/features/performance/utils/ladder";
 import {
   desembolsoHint,
   nextMilestoneLabel,
   riscoHint,
   taxaHint,
 } from "@/features/performance/utils/hints";
+import {
+  buildDisbursementLadder,
+  buildRateLadder,
+  buildRiskLadder,
+  type PillarLadderView,
+} from "@/features/performance/utils/ladder";
 import type {
   CurrentPerformance,
   PartnerLevel,
@@ -51,11 +56,14 @@ export function useSimulatorModel(
   program: PartnerProgram,
 ): SimulatorModel {
   const level = profile.level;
-  // null na API = sem medição (bônus 0). Não usar 0%/9,5%: 0% de
-  // inadimplência cairia no teto de risco. Partimos da faixa zerada.
+  // null na API = sem medição (bônus 0). Defaults em simulator.constants.
   const [originacao, setOriginacao] = useState(current.origination.amount);
-  const [inad, setInad] = useState(current.delinquency.rate ?? 6);
-  const [taxa, setTaxa] = useState(current.averageRate.rate ?? 9);
+  const [inad, setInad] = useState(
+    current.delinquency.rate ?? SIMULATOR_DEFAULT_INAD,
+  );
+  const [taxa, setTaxa] = useState(
+    current.averageRate.rate ?? SIMULATOR_DEFAULT_TAXA,
+  );
   const [mes, setMes] = useState(profile.partnership.monthNumber);
 
   const ladders = useMemo(
@@ -73,7 +81,9 @@ export function useSimulatorModel(
   );
 
   const delta = sim.total - current.commission.total;
-  const originacaoMax = Math.round(level.monthlyTarget * 1.6);
+  const originacaoMax = Math.round(
+    level.monthlyTarget * SIMULATOR_ORIGINACAO_MAX_FACTOR,
+  );
 
   const monthHint =
     mes === 1 ? "Boas-vindas ativa" : nextMilestoneLabel(mes, program);

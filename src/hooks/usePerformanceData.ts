@@ -14,7 +14,7 @@ export function isNotFoundError(err: unknown): boolean {
 }
 
 /**
- * Perfil do parceiro no programa. 404 = não inscrito (esconder aba Desempenho).
+ * Perfil do parceiro no programa. 404 = não inscrito.
  */
 export function usePartnerProfile(options?: { enabled?: boolean }) {
   return useQuery({
@@ -31,6 +31,7 @@ export function usePartnerProgram(options?: { enabled?: boolean }) {
     queryKey: performanceKeys.program(),
     queryFn: performanceService.getProgram,
     staleTime: 5 * 60 * 1000,
+    retry: false,
     enabled: options?.enabled ?? true,
   });
 }
