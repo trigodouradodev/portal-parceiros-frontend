@@ -26,7 +26,7 @@ interface ChargeQueueHeroCardProps {
   onVisit: () => void;
   onOpen: () => void;
   onPostpone: () => void;
-  onRescheduleVisit: (date: string) => void | Promise<void>;
+  onRescheduleVisit: (date: string) => boolean | Promise<boolean>;
   isPostponing?: boolean;
   isRescheduling?: boolean;
 }
@@ -86,6 +86,13 @@ export function ChargeQueueHeroCard({
   const openReschedule = () => {
     setDraftVisitDate(undefined);
     setRescheduleOpen(true);
+  };
+
+  const handleConfirmReschedule = async (isoDate: string) => {
+    const success = await onRescheduleVisit(isoDate);
+    if (!success) return;
+    setRescheduleOpen(false);
+    setDraftVisitDate(undefined);
   };
 
   return (
@@ -245,15 +252,7 @@ export function ChargeQueueHeroCard({
           minDate={min}
           maxDate={max}
           isRescheduling={isRescheduling}
-          onConfirm={async (isoDate) => {
-            try {
-              await onRescheduleVisit(isoDate);
-              setRescheduleOpen(false);
-              setDraftVisitDate(undefined);
-            } catch {
-              // Mantém o dialog aberto; o toast de erro vem do handler.
-            }
-          }}
+          onConfirm={handleConfirmReschedule}
         />
       )}
     </>

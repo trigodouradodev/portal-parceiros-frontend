@@ -30,7 +30,7 @@ interface ChargeTasksTabProps {
   onRescheduleVisit: (
     item: OverdueCollectionItem,
     date: string,
-  ) => void | Promise<void>;
+  ) => boolean | Promise<boolean>;
   isPostponing?: boolean;
   isRescheduling?: boolean;
   hasNextPage: boolean;

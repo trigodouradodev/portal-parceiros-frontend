@@ -335,13 +335,13 @@ export function DashboardPage() {
   const handleRescheduleVisit = async (
     item: OverdueCollectionItem,
     date: string,
-  ) => {
+  ): Promise<boolean> => {
     const taskId = item.task?.id;
     if (!taskId) {
       showToast("Nenhuma tarefa de visita pendente para reagendar.", {
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     try {
@@ -368,12 +368,13 @@ export function DashboardPage() {
         setPinnedHighlightItem(pinnedItem);
         setHighlightedInstallmentId(item.installment.id);
       }, 250);
+      return true;
     } catch (err) {
       showToast(
         getTaskActionErrorMessage(err, "Não foi possível reagendar a visita."),
         { variant: "destructive" },
       );
-      throw err;
+      return false;
     }
   };
 
