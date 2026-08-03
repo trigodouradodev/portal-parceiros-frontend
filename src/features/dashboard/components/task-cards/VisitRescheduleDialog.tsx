@@ -19,7 +19,7 @@ interface VisitRescheduleDialogProps {
   minDate: Date;
   maxDate: Date;
   isRescheduling?: boolean;
-  onConfirm: (isoDate: string) => void;
+  onConfirm: (isoDate: string) => void | Promise<void>;
 }
 
 export function VisitRescheduleDialog({

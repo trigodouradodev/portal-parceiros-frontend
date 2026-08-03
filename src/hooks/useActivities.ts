@@ -112,15 +112,17 @@ export function useRescheduleTask() {
       payload: RescheduleTaskPayload;
       installmentId?: string;
     }) => activitiesService.rescheduleTask(taskId, payload),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
-      queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
-      queryClient.invalidateQueries({ queryKey: installmentKeys.all });
-      if (variables.installmentId) {
-        queryClient.invalidateQueries({
-          queryKey: installmentKeys.detail(variables.installmentId),
-        });
-      }
+    onSuccess: async (_data, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: activitiesKeys.all }),
+        queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
+        queryClient.invalidateQueries({ queryKey: installmentKeys.all }),
+        variables.installmentId
+          ? queryClient.invalidateQueries({
+              queryKey: installmentKeys.detail(variables.installmentId),
+            })
+          : Promise.resolve(),
+      ]);
     },
   });
 }

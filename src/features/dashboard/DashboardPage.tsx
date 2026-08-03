@@ -87,6 +87,9 @@ export function DashboardPage() {
     null,
   );
   const highlightScrolledRef = useRef<string | null>(null);
+  const rescheduleHighlightTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const navCompletedHighlightId =
     (location.state as QueueHighlightNavigationState | null)
@@ -126,6 +129,10 @@ export function DashboardPage() {
   useEffect(() => {
     return () => {
       clearHighlightTimeout();
+      if (rescheduleHighlightTimeoutRef.current) {
+        clearTimeout(rescheduleHighlightTimeoutRef.current);
+        rescheduleHighlightTimeoutRef.current = null;
+      }
     };
   }, [clearHighlightTimeout]);
 
@@ -328,13 +335,13 @@ export function DashboardPage() {
   const handleRescheduleVisit = async (
     item: OverdueCollectionItem,
     date: string,
-  ) => {
+  ): Promise<boolean> => {
     const taskId = item.task?.id;
     if (!taskId) {
       showToast("Nenhuma tarefa de visita pendente para reagendar.", {
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     try {
@@ -345,20 +352,29 @@ export function DashboardPage() {
       });
       showToast(`Visita reagendada para ${formatDate(date)}.`);
 
-      clearHighlightTimeout();
-      highlightScrolledRef.current = null;
-      const pinnedItem: OverdueCollectionItem = {
-        ...item,
-        wasRescheduled: true,
-        expireDate: date,
-      };
-      setPinnedHighlightItem(pinnedItem);
-      setHighlightedInstallmentId(item.installment.id);
+      // Adia o highlight até o dialog fechar e liberar o scroll lock do Radix.
+      if (rescheduleHighlightTimeoutRef.current) {
+        clearTimeout(rescheduleHighlightTimeoutRef.current);
+      }
+      rescheduleHighlightTimeoutRef.current = setTimeout(() => {
+        rescheduleHighlightTimeoutRef.current = null;
+        clearHighlightTimeout();
+        highlightScrolledRef.current = null;
+        const pinnedItem: OverdueCollectionItem = {
+          ...item,
+          wasRescheduled: true,
+          expireDate: date,
+        };
+        setPinnedHighlightItem(pinnedItem);
+        setHighlightedInstallmentId(item.installment.id);
+      }, 250);
+      return true;
     } catch (err) {
       showToast(
         getTaskActionErrorMessage(err, "Não foi possível reagendar a visita."),
         { variant: "destructive" },
       );
+      return false;
     }
   };
 
