@@ -9,7 +9,6 @@ import { dashboardService } from "@/services/dashboard/dashboard.service";
 export const dashboardKeys = {
   all: ["dashboard"] as const,
   kpis: () => [...dashboardKeys.all, "kpis"] as const,
-  performance: () => [...dashboardKeys.all, "performance"] as const,
   overdue: (page: number, limit: number) =>
     [...dashboardKeys.all, "overdue", page, limit] as const,
   overdueInfinite: () => [...dashboardKeys.all, "overdue", "infinite"] as const,
@@ -24,17 +23,6 @@ export function useDashboard() {
   return useQuery({
     queryKey: dashboardKeys.kpis(),
     queryFn: dashboardService.getDashboard,
-    staleTime: 60 * 1000, // 1 minute
-  });
-}
-
-/**
- * Hook to fetch month performance metrics (origination, average rate, delinquency, renewals)
- */
-export function usePerformance() {
-  return useQuery({
-    queryKey: dashboardKeys.performance(),
-    queryFn: dashboardService.getPerformance,
     staleTime: 60 * 1000, // 1 minute
   });
 }

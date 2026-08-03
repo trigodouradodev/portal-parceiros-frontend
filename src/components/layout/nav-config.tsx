@@ -1,6 +1,6 @@
-import { Home, User } from "lucide-react";
+import { BarChart2, Home, User } from "lucide-react";
 
-export type NavTab = "home" | "perfil";
+export type NavTab = "home" | "desempenho" | "perfil";
 
 export const NAV_ITEMS: {
   key: NavTab;
@@ -9,6 +9,12 @@ export const NAV_ITEMS: {
   path: string;
 }[] = [
   { key: "home", icon: <Home size={20} />, label: "Home", path: "/" },
+  {
+    key: "desempenho",
+    icon: <BarChart2 size={20} />,
+    label: "Desempenho",
+    path: "/performance",
+  },
   {
     key: "perfil",
     icon: <User size={20} />,
