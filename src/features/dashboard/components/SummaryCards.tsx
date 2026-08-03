@@ -31,7 +31,7 @@ export function SummaryCard({ icon, value, label, variant }: SummaryCardProps) {
 
   return (
     <div
-      className={`w-36 shrink-0 rounded-2xl p-4 shadow-sm md:w-auto ${cardStyles[variant]}`}
+      className={`w-[calc((100%-1.25rem-0.75rem-3rem)/2)] shrink-0 snap-start rounded-2xl p-4 shadow-sm md:w-auto md:snap-align-none ${cardStyles[variant]}`}
     >
       <div className="mb-2 opacity-80">{icon}</div>
       <p

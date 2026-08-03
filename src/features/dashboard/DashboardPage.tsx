@@ -389,7 +389,7 @@ export function DashboardPage() {
         onLogout={onMobileLogout}
       />
 
-      <div className="-mt-4 px-5 md:-mt-5 md:px-8">
+      <div className="-mt-4 md:-mt-5 md:px-8">
         <div className="relative">
           <div
             ref={summaryScrollRef}
@@ -397,7 +397,7 @@ export function DashboardPage() {
             onPointerMove={summaryScroll.onPointerMove}
             onPointerUp={summaryScroll.onPointerUp}
             onPointerCancel={summaryScroll.onPointerCancel}
-            className="no-scrollbar flex cursor-grab gap-3 overflow-x-auto pb-1 select-none active:cursor-grabbing md:grid md:cursor-auto md:grid-cols-4 md:overflow-visible md:pb-0"
+            className="no-scrollbar flex cursor-grab snap-x snap-mandatory gap-3 overflow-x-auto scroll-pl-5 pb-1 select-none active:cursor-grabbing md:grid md:cursor-auto md:snap-none md:grid-cols-4 md:overflow-visible md:scroll-pl-0 md:pb-0 [&>*:first-child]:ml-5 md:[&>*:first-child]:ml-0 [&>*:last-child]:mr-5 md:[&>*:last-child]:mr-0"
           >
             <SummaryCard
               icon={<FileText size={18} />}
@@ -424,7 +424,6 @@ export function DashboardPage() {
               variant="blue"
             />
           </div>
-          <div className="pointer-events-none absolute top-0 right-0 bottom-1 w-10 bg-gradient-to-l from-[#F5F6FA] md:hidden" />
         </div>
       </div>
 
