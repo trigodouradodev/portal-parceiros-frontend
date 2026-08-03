@@ -1,7 +1,6 @@
 import api from "@/lib/api/axios";
 import type {
   PortfolioDashboard,
-  MonthPerformance,
   OverdueCollectionPage,
   PreventiveCollectionPage,
   CollectionDetail,
@@ -18,15 +17,6 @@ export const dashboardService = {
    */
   async getDashboard(): Promise<PortfolioDashboard> {
     const { data } = await api.get<PortfolioDashboard>("/dashboard");
-    return data;
-  },
-
-  /**
-   * Get month performance metrics (origination, average rate, delinquency, renewals)
-   * GET /dashboard/performance
-   */
-  async getPerformance(): Promise<MonthPerformance> {
-    const { data } = await api.get<MonthPerformance>("/dashboard/performance");
     return data;
   },
 

@@ -1,12 +1,21 @@
+import type { ReactNode } from "react";
 import { LogOut } from "lucide-react";
 import { AureaLogoMark } from "@/components/brand/AureaLogo";
-import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
+import { type NavTab } from "@/components/layout/nav-config";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getInitials, getRoleLabel } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
+interface NavItem {
+  key: NavTab;
+  icon: ReactNode;
+  label: string;
+  path: string;
+}
+
 interface AppSidebarProps {
   activeTab: NavTab;
+  items: NavItem[];
   onNavigate: (tab: NavTab) => void;
   onRequestLogout: () => void;
   className?: string;
@@ -14,6 +23,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({
   activeTab,
+  items,
   onNavigate,
   onRequestLogout,
   className,
@@ -26,18 +36,18 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "fixed bottom-0 left-0 top-0 z-20 hidden w-56 flex-col bg-brand-navy md:flex",
+        "fixed top-0 bottom-0 left-0 z-20 hidden w-56 flex-col bg-brand-navy md:flex",
         className,
       )}
     >
-      <div className="border-b border-white/10 px-6 pb-6 pt-8">
+      <div className="border-b border-white/10 px-6 pt-8 pb-6">
         <div className="flex items-center gap-2">
           <AureaLogoMark />
           <div>
-            <p className="font-fraunces text-lg font-bold leading-tight text-white">
+            <p className="font-fraunces text-lg leading-tight font-bold text-white">
               aurea
             </p>
-            <p className="text-[10px] uppercase tracking-widest text-white/40">
+            <p className="text-[10px] tracking-widest text-white/40 uppercase">
               Portal Parceiro
             </p>
           </div>
@@ -58,23 +68,30 @@ export function AppSidebar({
         </div>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => onNavigate(item.key)}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all",
-              activeTab === item.key
-                ? "bg-white/10 text-white"
-                : "text-white/50 hover:bg-white/5 hover:text-white/80",
-            )}
-          >
-            {item.icon}
-            {item.label}
-          </button>
-        ))}
+      <nav
+        className="flex flex-1 flex-col gap-1 px-3 py-4"
+        aria-label="Navegação principal"
+      >
+        {items.map((item) => {
+          const isActive = activeTab === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onNavigate(item.key)}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all",
+                isActive
+                  ? "bg-white/10 text-white"
+                  : "text-white/50 hover:bg-white/5 hover:text-white/80",
+              )}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          );
+        })}
       </nav>
 
       <div className="px-3 pb-6">
