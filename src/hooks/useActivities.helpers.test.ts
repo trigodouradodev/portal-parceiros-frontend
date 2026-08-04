@@ -139,7 +139,7 @@ describe("extractTodayQueueMeta / buildSegmentCountsFromApi", () => {
       buildSegmentCountsFromApi([
         { code: QueueSegmentCode.POST_LETTER, priority: 1, count: 2 },
         { code: QueueSegmentCode.EARLY, priority: 2, count: 3 },
-        { code: "late", priority: 1, count: 1 },
+        { code: QueueSegmentCode.POST_LETTER, priority: 1, count: 1 },
       ]),
     ).toEqual({
       late: 3,
