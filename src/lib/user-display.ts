@@ -19,12 +19,22 @@ export function getFirstName(fullName: string): string {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  ROLE_CONSULTANT: "Consultor",
-  ROLE_COLLECTION_AGENT: "Agente de cobrança",
-  ROLE_ADMIN: "Administrador",
+  CONSULTANT: "Consultor",
+  CONSULT: "Consultor",
+  COLLECTION_AGENT: "Agente de cobrança",
+  ADMIN: "Administrador",
 };
+
+function normalizeRoleKey(role: string): string {
+  return role
+    .trim()
+    .toUpperCase()
+    .replace(/^ROLE_/, "")
+    .replace(/[\s-]+/g, "_");
+}
 
 export function getRoleLabel(role: string | undefined | null): string {
   if (!role) return "Agente";
-  return ROLE_LABELS[role] ?? role.replace(/^ROLE_/, "").replace(/_/g, " ");
+  const key = normalizeRoleKey(role);
+  return ROLE_LABELS[key] ?? ROLE_LABELS[role] ?? "Agente";
 }

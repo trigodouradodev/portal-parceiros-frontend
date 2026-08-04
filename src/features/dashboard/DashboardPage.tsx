@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, useLocation } from "react-router-dom";
 import { AlertTriangle, Clock, RefreshCw, FileText } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -21,6 +21,7 @@ import {
 import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
 import { mapQueueTaskCardToOverdueItem } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 import { isChargeQueueItemBlocked } from "@/features/dashboard/utils/charge-queue";
+import type { QueueHighlightNavigationState } from "@/features/dashboard/utils/queue-highlight-navigation";
 import {
   buildSegmentCountsFromApi,
   extractTodayQueueMeta,
@@ -34,8 +35,9 @@ import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { formatDate } from "@/lib/format/date";
+import { useDragScroll } from "@/hooks/useDragScroll";
 
-const POSTPONE_HIGHLIGHT_MS = 5000;
+const QUEUE_HIGHLIGHT_MS = 5000;
 
 function scrollToHighlightedCard(installmentId: string): boolean {
   const el = document.querySelector(
@@ -57,6 +59,7 @@ interface ShellContext {
 export function DashboardPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { setActionData } = useActionContext();
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
@@ -70,15 +73,37 @@ export function DashboardPage() {
   } = useTodayQueueInfinite(30);
   const postponeTask = usePostponeTask();
   const rescheduleTask = useRescheduleTask();
+  const summaryScrollRef = useRef<HTMLDivElement>(null);
+  const summaryScroll = useDragScroll(summaryScrollRef);
   const [highlightedInstallmentId, setHighlightedInstallmentId] = useState<
     string | null
   >(null);
-  const [pinnedPostponedItem, setPinnedPostponedItem] =
+  const [pinnedHighlightItem, setPinnedHighlightItem] =
     useState<OverdueCollectionItem | null>(null);
+  const [consumedNavHighlightId, setConsumedNavHighlightId] = useState<
+    string | null
+  >(null);
   const highlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
   const highlightScrolledRef = useRef<string | null>(null);
+  const rescheduleHighlightTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
+
+  const navCompletedHighlightId =
+    (location.state as QueueHighlightNavigationState | null)
+      ?.highlightCompletedInstallmentId ?? null;
+
+  // Ajusta state durante o render quando a navegação traz um highlight (evita setState no effect).
+  if (
+    navCompletedHighlightId &&
+    navCompletedHighlightId !== consumedNavHighlightId
+  ) {
+    setConsumedNavHighlightId(navCompletedHighlightId);
+    setPinnedHighlightItem(null);
+    setHighlightedInstallmentId(navCompletedHighlightId);
+  }
 
   const clearHighlightTimeout = useCallback(() => {
     if (highlightTimeoutRef.current) {
@@ -87,23 +112,27 @@ export function DashboardPage() {
     }
   }, []);
 
-  const clearPostponeHighlight = useCallback(() => {
+  const clearPinnedHighlight = useCallback(() => {
     clearHighlightTimeout();
     setHighlightedInstallmentId(null);
-    setPinnedPostponedItem(null);
+    setPinnedHighlightItem(null);
     highlightScrolledRef.current = null;
   }, [clearHighlightTimeout]);
 
   const startHighlightTimer = useCallback(() => {
     clearHighlightTimeout();
     highlightTimeoutRef.current = setTimeout(() => {
-      clearPostponeHighlight();
-    }, POSTPONE_HIGHLIGHT_MS);
-  }, [clearHighlightTimeout, clearPostponeHighlight]);
+      clearPinnedHighlight();
+    }, QUEUE_HIGHLIGHT_MS);
+  }, [clearHighlightTimeout, clearPinnedHighlight]);
 
   useEffect(() => {
     return () => {
       clearHighlightTimeout();
+      if (rescheduleHighlightTimeoutRef.current) {
+        clearTimeout(rescheduleHighlightTimeoutRef.current);
+        rescheduleHighlightTimeoutRef.current = null;
+      }
     };
   }, [clearHighlightTimeout]);
 
@@ -134,7 +163,21 @@ export function DashboardPage() {
   } = chargeQueueData;
 
   useEffect(() => {
-    if (!highlightedInstallmentId || !pinnedPostponedItem) {
+    if (!navCompletedHighlightId) return;
+
+    highlightScrolledRef.current = null;
+    clearHighlightTimeout();
+    startHighlightTimer();
+    navigate(".", { replace: true, state: null });
+  }, [
+    navCompletedHighlightId,
+    navigate,
+    clearHighlightTimeout,
+    startHighlightTimer,
+  ]);
+
+  useEffect(() => {
+    if (!highlightedInstallmentId) {
       highlightScrolledRef.current = null;
       return;
     }
@@ -149,7 +192,9 @@ export function DashboardPage() {
         if (cancelled) return;
         if (scrollToHighlightedCard(highlightedInstallmentId)) {
           highlightScrolledRef.current = highlightedInstallmentId;
-          startHighlightTimer();
+          if (pinnedHighlightItem) {
+            startHighlightTimer();
+          }
         }
       });
     });
@@ -159,7 +204,13 @@ export function DashboardPage() {
       window.cancelAnimationFrame(rafOuter);
       window.cancelAnimationFrame(rafInner);
     };
-  }, [highlightedInstallmentId, pinnedPostponedItem, startHighlightTimer]);
+  }, [
+    highlightedInstallmentId,
+    pinnedHighlightItem,
+    completedTodayItems,
+    isLoadingTodayQueue,
+    startHighlightTimer,
+  ]);
 
   const totalActions = chargeCounter;
 
@@ -271,7 +322,7 @@ export function DashboardPage() {
         ...item,
         wasPostponed: true,
       };
-      setPinnedPostponedItem(pinnedItem);
+      setPinnedHighlightItem(pinnedItem);
       setHighlightedInstallmentId(item.installment.id);
     } catch (err) {
       showToast(
@@ -284,13 +335,13 @@ export function DashboardPage() {
   const handleRescheduleVisit = async (
     item: OverdueCollectionItem,
     date: string,
-  ) => {
+  ): Promise<boolean> => {
     const taskId = item.task?.id;
     if (!taskId) {
       showToast("Nenhuma tarefa de visita pendente para reagendar.", {
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     try {
@@ -300,11 +351,30 @@ export function DashboardPage() {
         installmentId: item.installment.id,
       });
       showToast(`Visita reagendada para ${formatDate(date)}.`);
+
+      // Adia o highlight até o dialog fechar e liberar o scroll lock do Radix.
+      if (rescheduleHighlightTimeoutRef.current) {
+        clearTimeout(rescheduleHighlightTimeoutRef.current);
+      }
+      rescheduleHighlightTimeoutRef.current = setTimeout(() => {
+        rescheduleHighlightTimeoutRef.current = null;
+        clearHighlightTimeout();
+        highlightScrolledRef.current = null;
+        const pinnedItem: OverdueCollectionItem = {
+          ...item,
+          wasRescheduled: true,
+          expireDate: date,
+        };
+        setPinnedHighlightItem(pinnedItem);
+        setHighlightedInstallmentId(item.installment.id);
+      }, 250);
+      return true;
     } catch (err) {
       showToast(
         getTaskActionErrorMessage(err, "Não foi possível reagendar a visita."),
         { variant: "destructive" },
       );
+      return false;
     }
   };
 
@@ -315,82 +385,89 @@ export function DashboardPage() {
   return (
     <PageContainer>
       <PageHeader
-        subtitle={`${totalActions} contrato${totalActions !== 1 ? "s" : ""} precisa${totalActions === 1 ? "" : "m"} de ação hoje`}
+        subtitle={`${emAtraso} contrato${emAtraso !== 1 ? "s" : ""} precisa${emAtraso === 1 ? "" : "m"} de ação hoje`}
         onLogout={onMobileLogout}
       />
 
-      <div className="-mt-4 px-5 md:-mt-5 md:px-8">
-        <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
-          <SummaryCard
-            icon={<FileText size={18} />}
-            value={ativos}
-            label="Contratos ativos"
-            variant="navy"
-          />
-          <SummaryCard
-            icon={<Clock size={18} />}
-            value={vencemHoje}
-            label="Vencem hoje"
-            variant="amber"
-          />
-          <SummaryCard
-            icon={<AlertTriangle size={18} />}
-            value={emAtraso}
-            label="Em atraso"
-            variant="red"
-          />
-          <SummaryCard
-            icon={<RefreshCw size={18} />}
-            value={renovProx}
-            label="Renovação próxima"
-            variant="blue"
-          />
+      <div className="-mt-4 md:-mt-5 md:px-8">
+        <div className="relative">
+          <div
+            ref={summaryScrollRef}
+            onPointerDown={summaryScroll.onPointerDown}
+            onPointerMove={summaryScroll.onPointerMove}
+            onPointerUp={summaryScroll.onPointerUp}
+            onPointerCancel={summaryScroll.onPointerCancel}
+            className="no-scrollbar flex cursor-grab snap-x snap-mandatory gap-3 overflow-x-auto scroll-pl-5 pb-1 select-none active:cursor-grabbing md:grid md:cursor-auto md:snap-none md:grid-cols-4 md:overflow-visible md:scroll-pl-0 md:pb-0 [&>*:first-child]:ml-5 md:[&>*:first-child]:ml-0 [&>*:last-child]:mr-5 md:[&>*:last-child]:mr-0"
+          >
+            <SummaryCard
+              icon={<FileText size={18} />}
+              value={ativos}
+              label="Contratos ativos"
+              variant="navy"
+            />
+            <SummaryCard
+              icon={<Clock size={18} />}
+              value={vencemHoje}
+              label="Vencem hoje"
+              variant="amber"
+            />
+            <SummaryCard
+              icon={<AlertTriangle size={18} />}
+              value={emAtraso}
+              label="Em atraso"
+              variant="red"
+            />
+            <SummaryCard
+              icon={<RefreshCw size={18} />}
+              value={renovProx}
+              label="Renovação próxima"
+              variant="blue"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 pt-5">
-        <div className="mb-4 px-5 md:px-8">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
-                Ações de hoje
-              </span>
-              <span className="rounded-full bg-brand-navy px-2 py-0.5 text-xs font-semibold text-white">
-                {totalActions}
-              </span>
-            </div>
-            <span className="text-xs text-[#9DA3B4]">
-              Ordenado por urgência
+      <div className="px-5 pt-5 pb-4 md:px-8">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
+              Ações de hoje
+            </span>
+            <span className="rounded-full bg-brand-navy px-2 py-0.5 text-xs font-semibold text-white">
+              {totalActions}
             </span>
           </div>
-
-          <ChargeTasksTab
-            isLoading={isLoadingTodayQueue}
-            items={chargeItems}
-            queueView={chargeQueueView}
-            segmentCounts={segmentCounts}
-            scheduledItems={scheduledItems}
-            completedTodayItems={completedTodayItems}
-            queueTotal={totalActions}
-            onOpen={handleChargeOpen}
-            onOpenDetail={handleDetailOpen}
-            onAction={handleChargeAction}
-            onWhatsApp={handleChargeWhatsApp}
-            onCall={handleChargeCall}
-            onVisit={handleChargeVisit}
-            onPostpone={handlePostpone}
-            onRescheduleVisit={handleRescheduleVisit}
-            isPostponing={postponeTask.isPending}
-            isRescheduling={rescheduleTask.isPending}
-            highlightedInstallmentId={highlightedInstallmentId}
-            pinnedPostponedItem={pinnedPostponedItem}
-            hasNextPage={Boolean(hasNextPage)}
-            isFetchingNextPage={isFetchingNextPage}
-            onLoadMore={() => {
-              void fetchNextPage();
-            }}
-          />
+          <span className="text-xs text-[#9DA3B4]">Ordenado por urgência</span>
         </div>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-2 px-5 md:px-8">
+        <ChargeTasksTab
+          isLoading={isLoadingTodayQueue}
+          items={chargeItems}
+          queueView={chargeQueueView}
+          segmentCounts={segmentCounts}
+          scheduledItems={scheduledItems}
+          completedTodayItems={completedTodayItems}
+          queueTotal={totalActions}
+          onOpen={handleChargeOpen}
+          onOpenDetail={handleDetailOpen}
+          onAction={handleChargeAction}
+          onWhatsApp={handleChargeWhatsApp}
+          onCall={handleChargeCall}
+          onVisit={handleChargeVisit}
+          onPostpone={handlePostpone}
+          onRescheduleVisit={handleRescheduleVisit}
+          isPostponing={postponeTask.isPending}
+          isRescheduling={rescheduleTask.isPending}
+          highlightedInstallmentId={highlightedInstallmentId}
+          pinnedHighlightItem={pinnedHighlightItem}
+          hasNextPage={Boolean(hasNextPage)}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={() => {
+            void fetchNextPage();
+          }}
+        />
       </div>
     </PageContainer>
   );

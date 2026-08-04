@@ -20,7 +20,7 @@ export function Toast({ children, variant = "info", className }: ToastProps) {
     <div
       role="status"
       className={cn(
-        "animate-toast-in flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg",
+        "animate-toast-in flex max-w-full items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-medium shadow-lg",
         variantStyles[variant],
         className,
       )}
@@ -28,7 +28,9 @@ export function Toast({ children, variant = "info", className }: ToastProps) {
       <Icon
         size={14}
         className={
-          variant === "destructive" ? "text-[#FCA5A5]" : "text-[#6EE7B7]"
+          variant === "destructive"
+            ? "shrink-0 text-[#FCA5A5]"
+            : "shrink-0 text-[#6EE7B7]"
         }
       />
       {children}

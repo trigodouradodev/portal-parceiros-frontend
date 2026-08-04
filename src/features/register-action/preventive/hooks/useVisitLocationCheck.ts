@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useToast } from "@/contexts/toast/toast-context";
 import { useVerifyLocation } from "@/hooks/useVerifyLocation";
 import { getApiErrorMessage } from "@/lib/api/errors";
@@ -24,6 +24,7 @@ export function useVisitLocationCheck({
 }: UseVisitLocationCheckOptions) {
   const { showToast } = useToast();
   const verifyLocation = useVerifyLocation();
+  const requestIdRef = useRef(0);
   const [status, setStatus] = useState<VisitLocationStatus>("idle");
   const [coords, setCoords] = useState<{
     latitude: number;
@@ -33,24 +34,33 @@ export function useVisitLocationCheck({
 
   const locationOk = status === "confirmed" || status === "manual";
 
+  const reset = useCallback(() => {
+    requestIdRef.current += 1;
+    setStatus("idle");
+    setCoords(null);
+    setResult(null);
+  }, []);
+
   const confirmManual = useCallback(() => {
     setStatus("manual");
   }, []);
 
   const verify = useCallback(() => {
+    const requestId = ++requestIdRef.current;
     setStatus("checking");
     setResult(null);
 
     if (!navigator.geolocation) {
-      showToast("Geolocalização não disponível neste dispositivo.", {
-        variant: "destructive",
-      });
-      setStatus("idle");
+      if (requestId === requestIdRef.current) {
+        setStatus("not_found");
+      }
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (requestId !== requestIdRef.current) return;
+
         const positionCoords = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -64,6 +74,8 @@ export function useVisitLocationCheck({
             longitude: positionCoords.longitude,
           })
           .then((checkResult) => {
+            if (requestId !== requestIdRef.current) return;
+
             setCoords(positionCoords);
             setResult(checkResult);
             setStatus(checkResult.withinRadius ? "confirmed" : "not_found");
@@ -80,6 +92,8 @@ export function useVisitLocationCheck({
             }
           })
           .catch((err) => {
+            if (requestId !== requestIdRef.current) return;
+
             showToast(
               getApiErrorMessage(
                 err,
@@ -91,10 +105,8 @@ export function useVisitLocationCheck({
           });
       },
       () => {
-        showToast("Não foi possível obter sua localização.", {
-          variant: "destructive",
-        });
-        setStatus("idle");
+        if (requestId !== requestIdRef.current) return;
+        setStatus("not_found");
       },
       { timeout: 10000, enableHighAccuracy: true },
     );
@@ -112,6 +124,7 @@ export function useVisitLocationCheck({
     coords,
     verify,
     confirmManual,
+    reset,
     locationOk,
   };
 }

@@ -54,6 +54,8 @@ export function RegisterChargeFooterActions({
     needsPromiseDate,
     saving,
     handleSave,
+    goToContactStep,
+    goBackToRecipientStep,
   } = flow;
 
   const needsLocationConfirm = isVisitTask && !location.locationOk;
@@ -65,7 +67,7 @@ export function RegisterChargeFooterActions({
         <Button
           className="h-12 flex-1 gap-2 rounded-2xl bg-brand-navy font-semibold text-white"
           disabled={!canContinueRecipient}
-          onClick={() => setStep("contact")}
+          onClick={goToContactStep}
         >
           Continuar <ChevronRight size={16} />
         </Button>
@@ -76,7 +78,7 @@ export function RegisterChargeFooterActions({
           <Button
             variant="outline"
             className="h-12 rounded-2xl px-5"
-            onClick={() => setStep("recipient")}
+            onClick={goBackToRecipientStep}
           >
             Voltar
           </Button>

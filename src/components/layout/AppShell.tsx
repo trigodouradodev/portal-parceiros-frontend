@@ -20,6 +20,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+
   const activeTab = pathToNavTab(location.pathname);
 
   const handleNavigate = (tab: NavTab) => {
@@ -42,6 +43,7 @@ export function AppShell() {
     <div className="flex min-h-screen bg-background font-sans md:flex">
       <AppSidebar
         activeTab={activeTab}
+        items={NAV_ITEMS}
         onNavigate={handleNavigate}
         onRequestLogout={handleRequestLogout}
       />
@@ -50,7 +52,11 @@ export function AppShell() {
         <Outlet context={{ onMobileLogout: handleRequestLogout }} />
       </div>
 
-      <BottomNav activeTab={activeTab} onNavigate={handleNavigate} />
+      <BottomNav
+        activeTab={activeTab}
+        items={NAV_ITEMS}
+        onNavigate={handleNavigate}
+      />
 
       <ConfirmDialog
         open={confirmLogoutOpen}

@@ -1,4 +1,5 @@
 import type { WaTemplate } from "@/features/register-action/types/wa-template";
+import { cn } from "@/lib/utils";
 import { CopyTemplateButton } from "./CopyTemplateButton";
 
 interface WhatsAppTemplatePickerProps {
@@ -9,6 +10,65 @@ interface WhatsAppTemplatePickerProps {
   onSelect: (index: number) => void;
   onCopy: (index: number) => void;
   variant: "compact" | "cards";
+}
+
+interface WhatsAppTemplateCardProps {
+  template: WaTemplate;
+  selected: boolean;
+  interactive: boolean;
+  showTag: boolean;
+  copied: boolean;
+  onSelect: () => void;
+  onCopy: () => void;
+}
+
+function WhatsAppTemplateCard({
+  template,
+  selected,
+  interactive,
+  showTag,
+  copied,
+  onSelect,
+  onCopy,
+}: WhatsAppTemplateCardProps) {
+  return (
+    <div
+      onClick={interactive ? onSelect : undefined}
+      className={cn(
+        "rounded-2xl border-2 p-4 transition-all",
+        interactive && "cursor-pointer",
+        selected
+          ? "border-brand-navy bg-brand-yellow/10"
+          : "border-border bg-white hover:border-input",
+      )}
+    >
+      <div className="mb-2 flex items-center justify-between">
+        {showTag && (
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+              selected
+                ? "bg-brand-navy text-white"
+                : "bg-muted text-muted-foreground",
+            )}
+          >
+            {template.tag}
+          </span>
+        )}
+        <CopyTemplateButton
+          copied={copied}
+          onClick={onCopy}
+          className={cn(
+            "flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-brand-navy",
+            !showTag && "ml-auto",
+          )}
+        />
+      </div>
+      <p className="text-sm leading-relaxed text-foreground">
+        {template.message}
+      </p>
+    </div>
+  );
 }
 
 export function WhatsAppTemplatePicker({
@@ -34,11 +94,12 @@ export function WhatsAppTemplatePicker({
               key={template.tag}
               type="button"
               onClick={() => onSelect(index)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
                 selectedIndex === index
                   ? "bg-brand-navy text-white"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
+                  : "bg-muted text-muted-foreground hover:bg-muted/80",
+              )}
             >
               {template.tag}
             </button>
@@ -55,38 +116,22 @@ export function WhatsAppTemplatePicker({
     );
   }
 
+  const singleTemplate = templates.length === 1;
+  const interactive = !singleTemplate;
+
   return (
     <>
       {templates.map((template, index) => (
-        <div
+        <WhatsAppTemplateCard
           key={template.tag}
-          onClick={() => onSelect(index)}
-          className={`cursor-pointer rounded-2xl border-2 p-4 transition-all ${
-            selectedIndex === index
-              ? "border-brand-navy bg-brand-yellow/10"
-              : "border-border bg-white hover:border-input"
-          }`}
-        >
-          <div className="mb-2 flex items-center justify-between">
-            <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                selectedIndex === index
-                  ? "bg-brand-navy text-white"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {template.tag}
-            </span>
-            <CopyTemplateButton
-              copied={copiedIndex === index}
-              onClick={() => onCopy(index)}
-              className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-brand-navy"
-            />
-          </div>
-          <p className="text-sm leading-relaxed text-foreground">
-            {template.message}
-          </p>
-        </div>
+          template={template}
+          selected={selectedIndex === index}
+          interactive={interactive}
+          showTag={!singleTemplate}
+          copied={copiedIndex === index}
+          onSelect={() => onSelect(index)}
+          onCopy={() => onCopy(index)}
+        />
       ))}
     </>
   );

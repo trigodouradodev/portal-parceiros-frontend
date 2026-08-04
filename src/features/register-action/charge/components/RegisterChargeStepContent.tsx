@@ -41,7 +41,6 @@ export function RegisterChargeStepContent({
     callScript,
     outcomePrompt,
     waTemplates,
-    selectedTemplate,
     location,
     noteRequired,
     showNoteValidation,
@@ -67,11 +66,7 @@ export function RegisterChargeStepContent({
   if (step === "contact" && contactType === "whatsapp") {
     return (
       <div className="flex flex-col gap-4">
-        <ContactToneBadges
-          queueTone={queueTone}
-          templateTag={selectedTemplate?.tag}
-          variant="compact"
-        />
+        <ContactToneBadges queueTone={queueTone} variant="withDescription" />
         <WhatsAppPanel
           phone={contactPhone}
           clientFirstName={contactFirstName}

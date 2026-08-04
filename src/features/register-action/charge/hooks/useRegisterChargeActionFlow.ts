@@ -38,6 +38,7 @@ import { getApiErrorMessage } from "@/lib/api/errors";
 import { hasCallablePhone, hasValidAddress } from "@/lib/contact-actions";
 import { getFirstName } from "@/lib/user-display";
 import { addDays, startOfDay } from "@/components/ui/calendar-utils";
+import { buildCompletedHighlightNavigationState } from "@/features/dashboard/utils/queue-highlight-navigation";
 
 export type { FlowStep };
 
@@ -133,12 +134,15 @@ export function useRegisterChargeActionFlow() {
   });
 
   const waTemplates = client
-    ? getWaTemplates({
-        name: activeParty?.name ?? client.name,
-        parcela: client.parcela,
-        value: client.value,
-        daysInfo: client.daysInfo,
-      })
+    ? getWaTemplates(
+        {
+          name: activeParty?.name ?? client.name,
+          parcela: client.parcela,
+          value: client.value,
+          daysInfo: client.daysInfo,
+        },
+        queueTone,
+      )
     : [];
   const selectedTemplate = waTemplates[0];
   const saving = registerInteraction.isPending;
@@ -231,7 +235,10 @@ export function useRegisterChargeActionFlow() {
         installmentId,
       });
       onComplete({ note, outcome: result });
-      navigate("/", { replace: true });
+      navigate("/", {
+        replace: true,
+        state: buildCompletedHighlightNavigationState(installmentId),
+      });
     } catch (err) {
       showToast(getApiErrorMessage(err, "Erro ao registrar ação."), {
         variant: "destructive",
@@ -256,6 +263,20 @@ export function useRegisterChargeActionFlow() {
     }
 
     await submitInteraction(outcome, promiseDateValue);
+  }
+
+  function goToContactStep() {
+    if (isVisitTask) {
+      location.reset();
+    }
+    setStep("contact");
+  }
+
+  function goBackToRecipientStep() {
+    if (isVisitTask) {
+      location.reset();
+    }
+    setStep("recipient");
   }
 
   let outcomePrompt = "Qual foi o resultado do contato?";
@@ -310,6 +331,8 @@ export function useRegisterChargeActionFlow() {
     confirmPromiseDate,
     openPromiseDateEditor,
     handleSave,
+    goToContactStep,
+    goBackToRecipientStep,
     handleBack: () => navigate(-1),
   };
 }

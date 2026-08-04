@@ -27,7 +27,10 @@ interface ChargeTasksTabProps {
   onCall?: (item: OverdueCollectionItem) => void;
   onVisit?: (item: OverdueCollectionItem) => void;
   onPostpone: (item: OverdueCollectionItem) => void;
-  onRescheduleVisit: (item: OverdueCollectionItem, date: string) => void;
+  onRescheduleVisit: (
+    item: OverdueCollectionItem,
+    date: string,
+  ) => boolean | Promise<boolean>;
   isPostponing?: boolean;
   isRescheduling?: boolean;
   hasNextPage: boolean;
@@ -39,7 +42,7 @@ interface ChargeTasksTabProps {
   completedTodayItems?: OverdueCollectionItem[];
   onOpenDetail?: (item: OverdueCollectionItem) => void;
   highlightedInstallmentId?: string | null;
-  pinnedPostponedItem?: OverdueCollectionItem | null;
+  pinnedHighlightItem?: OverdueCollectionItem | null;
   queueTotal?: number;
 }
 
@@ -90,10 +93,10 @@ export function ChargeTasksTab({
   completedTodayItems = [],
   onOpenDetail,
   highlightedInstallmentId = null,
-  pinnedPostponedItem = null,
+  pinnedHighlightItem = null,
   queueTotal,
 }: ChargeTasksTabProps) {
-  const pinnedInstallmentId = pinnedPostponedItem?.installment.id ?? null;
+  const pinnedInstallmentId = pinnedHighlightItem?.installment.id ?? null;
 
   const queueView = useMemo(
     () => queueViewProp ?? buildChargeQueue(items),
@@ -118,21 +121,26 @@ export function ChargeTasksTab({
     items.length === 0 &&
     !hasNextPage &&
     !hasSecondarySections &&
-    !pinnedPostponedItem
+    !pinnedHighlightItem
   ) {
     return <EmptyState label="Nenhuma cobrança pendente hoje." />;
   }
 
   const { hero, blocks } = tabView;
-  const pinnedDisplay = pinnedPostponedItem
+  const pinnedDisplay = pinnedHighlightItem
     ? mapOverdueToQueueDisplay(
-        pinnedPostponedItem,
-        pinnedPostponedItem.queuePosition ?? 1,
+        pinnedHighlightItem,
+        pinnedHighlightItem.queuePosition ?? 1,
       )
     : null;
 
+  let pinnedSectionTitle = "Recém postergada";
+  if (pinnedHighlightItem?.wasRescheduled) {
+    pinnedSectionTitle = "Recém reagendada";
+  }
+
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       {hero && hero.item.installment.id !== pinnedInstallmentId && (
         <ChargeQueueHeroCard
           display={hero.display}
@@ -151,17 +159,17 @@ export function ChargeTasksTab({
         />
       )}
 
-      {pinnedPostponedItem && pinnedDisplay && (
+      {pinnedHighlightItem && pinnedDisplay && (
         <section className="flex flex-col gap-2">
-          <ChargeQueueSectionHeader title="Recém postergada" count={1} />
+          <ChargeQueueSectionHeader title={pinnedSectionTitle} count={1} />
           <ChargeQueueCompactRow
             display={pinnedDisplay}
             locked={false}
-            installmentId={pinnedPostponedItem.installment.id}
+            installmentId={pinnedHighlightItem.installment.id}
             highlighted={
-              pinnedPostponedItem.installment.id === highlightedInstallmentId
+              pinnedHighlightItem.installment.id === highlightedInstallmentId
             }
-            onOpen={() => openDetail(pinnedPostponedItem)}
+            onOpen={() => openDetail(pinnedHighlightItem)}
           />
         </section>
       )}
@@ -234,6 +242,8 @@ export function ChargeTasksTab({
               name={item.client.name}
               contract={`${item.contract.number} · ${item.installment.label}`}
               label="Ação concluída hoje"
+              installmentId={item.installment.id}
+              highlighted={item.installment.id === highlightedInstallmentId}
             />
           ))}
         </section>

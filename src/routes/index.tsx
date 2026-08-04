@@ -6,6 +6,7 @@ import { PublicRoute } from "@/components/PublicRoute";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { LoginPage } from "@/features/login/LoginPage";
 import { ContractDetailPage } from "@/features/contract-detail";
+import { PerformancePage } from "@/features/performance";
 import { ProfilePage } from "@/features/profile";
 import { RegisterChargeActionPage } from "@/features/register-action/charge";
 import { RegisterPreventiveActionPage } from "@/features/register-action/preventive";
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
         element: <Layout />,
         children: [
           { index: true, element: <DashboardPage /> },
+          { path: "/performance", element: <PerformancePage /> },
           { path: "/profile", element: <ProfilePage /> },
           {
             path: "/contracts/:contractId",

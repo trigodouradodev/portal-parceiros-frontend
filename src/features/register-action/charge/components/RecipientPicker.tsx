@@ -1,7 +1,9 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, User, UserPlus, Users } from "lucide-react";
+import type { ReactNode } from "react";
 import type { ActionParty } from "@/contexts/action/action-context";
 import { ActivityRecipientType } from "@/services/activities/activity.enums";
 import { hasCallablePhone, hasValidAddress } from "@/lib/contact-actions";
+import { cn } from "@/lib/utils";
 
 interface RecipientPickerProps {
   value: ActivityRecipientType;
@@ -19,6 +21,8 @@ interface RecipientOption {
   subtitle: string;
   detail?: string;
   disabled: boolean;
+  icon: ReactNode;
+  iconClassName: string;
 }
 
 function getRecipientOptionClassName(
@@ -77,6 +81,8 @@ function buildRecipientOptions(
       subtitle: clientName,
       detail: formattedPhone,
       disabled: false,
+      icon: <User size={18} />,
+      iconClassName: "bg-[#E8EEF9] text-[#3B6FBF]",
     },
     {
       type: ActivityRecipientType.GUARANTOR,
@@ -84,12 +90,16 @@ function buildRecipientOptions(
       subtitle: guarantorSubtitle,
       detail: guarantorDetail,
       disabled: guarantorDisabled,
+      icon: <Users size={18} />,
+      iconClassName: "bg-[#FDF3E0] text-[#BA7517]",
     },
     {
       type: ActivityRecipientType.OTHER,
       title: "Outros contatos",
       subtitle: "Nenhum contato enriquecido encontrado",
       disabled: true,
+      icon: <UserPlus size={18} />,
+      iconClassName: "bg-muted text-muted-foreground",
     },
   ];
 }
@@ -112,6 +122,14 @@ function RecipientOptionCard({
       onClick={() => onSelect(option.type)}
       className={getRecipientOptionClassName(option.disabled, selected)}
     >
+      <div
+        className={cn(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+          option.iconClassName,
+        )}
+      >
+        {option.icon}
+      </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-foreground">{option.title}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">

@@ -36,37 +36,39 @@ export function ContractInfoCard({ detail }: ContractInfoCardProps) {
         )}
       </div>
       <div className="my-3 h-px bg-border" />
-      <div className="grid grid-cols-2 gap-y-3">
-        <div>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+        <div className="min-w-0">
           <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
             Parcela
           </p>
-          <p className="text-sm font-semibold text-foreground">
+          <p className="truncate text-sm font-semibold text-foreground">
             {fmtBRL(installmentTotalAmount)}
           </p>
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
             Próx. vencimento
           </p>
-          <p className="text-sm font-semibold text-foreground">{nextDue}</p>
+          <p className="truncate text-sm font-semibold text-foreground">
+            {nextDue}
+          </p>
         </div>
         {contractStartDate && (
-          <div>
+          <div className="min-w-0">
             <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
               Início
             </p>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="truncate text-sm font-semibold text-foreground">
               {contractStartDate}
             </p>
           </div>
         )}
         {contractEndDate && (
-          <div>
+          <div className="min-w-0">
             <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
               Término
             </p>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="truncate text-sm font-semibold text-foreground">
               {contractEndDate}
             </p>
           </div>
