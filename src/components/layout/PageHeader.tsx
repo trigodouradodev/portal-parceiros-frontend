@@ -1,4 +1,3 @@
-import { Search } from "lucide-react";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getFirstName, getGreeting, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
@@ -27,15 +26,8 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
             <p className="mt-0.5 text-sm text-white/60">{subtitle}</p>
           )}
         </div>
-        <div className="mt-1 flex items-center gap-3">
-          <button
-            type="button"
-            className="text-white/70 transition-colors hover:text-white"
-            aria-label="Buscar"
-          >
-            <Search size={20} />
-          </button>
-          {onLogout && (
+        {onLogout && (
+          <div className="mt-1 flex items-center gap-3">
             <button
               type="button"
               onClick={onLogout}
@@ -44,8 +36,8 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
             >
               {getInitials(displayName)}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
