@@ -48,9 +48,9 @@ describe("mapTaskChannelToActivityTaskType", () => {
     expect(mapTaskChannelToActivityTaskType(undefined, "visit")).toBe(
       ActivityTaskType.VISIT,
     );
-    expect(
-      mapTaskChannelToActivityTaskType(ActivityChannel.CLIENT_VISIT),
-    ).toBe(ActivityTaskType.VISIT);
+    expect(mapTaskChannelToActivityTaskType(ActivityChannel.CLIENT_VISIT)).toBe(
+      ActivityTaskType.VISIT,
+    );
   });
 
   it("defaults to CONTACT", () => {

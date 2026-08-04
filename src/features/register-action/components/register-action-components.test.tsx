@@ -30,9 +30,7 @@ describe("RegisterClientCard", () => {
 
   it("keeps contract labels that already include Contrato", () => {
     render(
-      <RegisterClientCard
-        client={{ ...client, contract: "Contrato #99" }}
-      />,
+      <RegisterClientCard client={{ ...client, contract: "Contrato #99" }} />,
     );
     expect(
       screen.getByText("Contrato #99 · 10 dias em atraso"),
@@ -82,9 +80,7 @@ describe("OutcomeOptionList", () => {
 
 describe("VisitDistanceLabel", () => {
   it("returns null without distance data", () => {
-    const { container } = render(
-      <VisitDistanceLabel variant="confirmed" />,
-    );
+    const { container } = render(<VisitDistanceLabel variant="confirmed" />);
     expect(container).toBeEmptyDOMElement();
   });
 
