@@ -1,4 +1,5 @@
 import { AxiosError } from "axios";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { screen } from "@testing-library/react";
 import { PerformancePage } from "@/features/performance/PerformancePage";
 import {
@@ -41,31 +42,31 @@ const mockedUsePartnerProfile = vi.mocked(usePartnerProfile);
 const mockedUsePartnerProgram = vi.mocked(usePartnerProgram);
 const mockedUseCurrentPerformance = vi.mocked(useCurrentPerformance);
 
-function pendingQuery() {
+function pendingQuery<T = unknown>(): UseQueryResult<T, Error> {
   return {
     isPending: true,
     isError: false,
     data: undefined,
     error: null,
-  } as ReturnType<typeof usePartnerProfile>;
+  } as UseQueryResult<T, Error>;
 }
 
-function errorQuery(error: unknown) {
+function errorQuery<T = unknown>(error: unknown): UseQueryResult<T, Error> {
   return {
     isPending: false,
     isError: true,
     data: undefined,
     error,
-  } as ReturnType<typeof usePartnerProfile>;
+  } as UseQueryResult<T, Error>;
 }
 
-function successQuery<T>(data: T) {
+function successQuery<T>(data: T): UseQueryResult<T, Error> {
   return {
     isPending: false,
     isError: false,
     data,
     error: null,
-  } as ReturnType<typeof usePartnerProfile> & { data: T };
+  } as UseQueryResult<T, Error>;
 }
 
 function notFoundError() {
