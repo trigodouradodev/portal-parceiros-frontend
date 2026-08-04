@@ -29,9 +29,9 @@ describe("getApiErrorMessage", () => {
     expect(getApiErrorMessage(axiosError(400, "Inválido"), "fallback")).toBe(
       "Inválido",
     );
-    expect(
-      getApiErrorMessage(axiosError(400, ["A", "B"]), "fallback"),
-    ).toBe("A, B");
+    expect(getApiErrorMessage(axiosError(400, ["A", "B"]), "fallback")).toBe(
+      "A, B",
+    );
     expect(getApiErrorMessage(axiosError(400), "fallback")).toBe("fallback");
   });
 });

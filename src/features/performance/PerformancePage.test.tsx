@@ -6,10 +6,7 @@ import {
   usePartnerProfile,
   usePartnerProgram,
 } from "@/hooks/usePerformanceData";
-import {
-  testLevel,
-  testProgram,
-} from "@/test/fixtures/performance";
+import { testLevel, testProgram } from "@/test/fixtures/performance";
 import { renderWithProviders } from "@/test/render";
 import {
   CommissionComponentKind,
@@ -18,9 +15,10 @@ import {
 } from "@/services/performance/performance.types";
 
 vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>(
-    "react-router-dom",
-  );
+  const actual =
+    await vi.importActual<typeof import("react-router-dom")>(
+      "react-router-dom",
+    );
   return {
     ...actual,
     useOutletContext: () => ({ onMobileLogout: vi.fn() }),
@@ -71,19 +69,13 @@ function successQuery<T>(data: T) {
 }
 
 function notFoundError() {
-  return new AxiosError(
-    "Not Found",
-    "ERR_BAD_REQUEST",
-    undefined,
-    undefined,
-    {
-      status: 404,
-      data: { message: "Not enrolled" },
-      statusText: "Not Found",
-      headers: {},
-      config: { headers: {} as never },
-    },
-  );
+  return new AxiosError("Not Found", "ERR_BAD_REQUEST", undefined, undefined, {
+    status: 404,
+    data: { message: "Not enrolled" },
+    statusText: "Not Found",
+    headers: {},
+    config: { headers: {} as never },
+  });
 }
 
 const profile: PartnerProfile = {

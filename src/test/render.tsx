@@ -50,9 +50,7 @@ export function renderWithProviders(
 
     if (!withRouter) return content;
 
-    return (
-      <MemoryRouter initialEntries={[route]}>{content}</MemoryRouter>
-    );
+    return <MemoryRouter initialEntries={[route]}>{content}</MemoryRouter>;
   }
 
   return render(ui, { wrapper: Wrapper, ...renderOptions });

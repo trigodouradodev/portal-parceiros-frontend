@@ -1,8 +1,5 @@
 import { buildRealPerformanceView } from "@/features/performance/utils/build-real-performance-view";
-import {
-  testLevel,
-  testProgram,
-} from "@/test/fixtures/performance";
+import { testLevel, testProgram } from "@/test/fixtures/performance";
 import {
   CommissionComponentKind,
   type CurrentPerformance,
