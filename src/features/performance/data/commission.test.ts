@@ -7,10 +7,7 @@ import {
   permanenceBonus,
   resolveBonusPercent,
 } from "@/features/performance/data/commission";
-import {
-  testLevel,
-  testProgram,
-} from "@/test/fixtures/performance";
+import { testLevel, testProgram } from "@/test/fixtures/performance";
 import { BonusPillar } from "@/services/performance/performance.types";
 
 describe("bandsOf / maxBonusPercent / resolveBonusPercent", () => {
@@ -66,7 +63,9 @@ describe("findNextMilestone / permanenceBonus", () => {
   });
 
   it("computes permanence bonus only on milestone months", () => {
-    expect(permanenceBonus(5, 2000, testProgram.permanenceMilestones)).toBeNull();
+    expect(
+      permanenceBonus(5, 2000, testProgram.permanenceMilestones),
+    ).toBeNull();
     expect(permanenceBonus(6, 2000, testProgram.permanenceMilestones)).toEqual({
       mult: 1,
       value: 2000,
@@ -96,14 +95,7 @@ describe("computeCommission", () => {
   });
 
   it("skips welcome bonus after month 1", () => {
-    const sim = computeCommission(
-      testLevel,
-      testProgram,
-      50_000,
-      5,
-      8,
-      3,
-    );
+    const sim = computeCommission(testLevel, testProgram, 50_000, 5, 8, 3);
     expect(sim.boasVindas).toBe(0);
   });
 });

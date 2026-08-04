@@ -5,38 +5,21 @@ import {
   riscoHint,
   taxaHint,
 } from "@/features/performance/utils/hints";
-import {
-  testLevel,
-  testProgram,
-} from "@/test/fixtures/performance";
+import { testLevel, testProgram } from "@/test/fixtures/performance";
 
 describe("desembolsoHint", () => {
   it("reports ceiling when max bonus is active", () => {
-    const sim = computeCommission(
-      testLevel,
-      testProgram,
-      150_000,
-      1,
-      10.5,
-      3,
-    );
-    expect(desembolsoHint(sim, 150_000, testLevel.monthlyTarget, testProgram)).toContain(
-      "Teto de bônus de desembolso",
-    );
+    const sim = computeCommission(testLevel, testProgram, 150_000, 1, 10.5, 3);
+    expect(
+      desembolsoHint(sim, 150_000, testLevel.monthlyTarget, testProgram),
+    ).toContain("Teto de bônus de desembolso");
   });
 
   it("reports remaining amount to next band", () => {
-    const sim = computeCommission(
-      testLevel,
-      testProgram,
-      90_000,
-      1,
-      10.5,
-      3,
-    );
-    expect(desembolsoHint(sim, 90_000, testLevel.monthlyTarget, testProgram)).toMatch(
-      /Faltam/,
-    );
+    const sim = computeCommission(testLevel, testProgram, 90_000, 1, 10.5, 3);
+    expect(
+      desembolsoHint(sim, 90_000, testLevel.monthlyTarget, testProgram),
+    ).toMatch(/Faltam/);
   });
 });
 
