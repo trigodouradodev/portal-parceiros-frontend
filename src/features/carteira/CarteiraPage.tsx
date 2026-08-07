@@ -15,7 +15,9 @@ function SectionPlaceholder({
 }) {
   return (
     <section className="rounded-2xl border border-dashed border-[#D6D9E3] bg-white px-4 py-8 md:px-6">
-      <h2 className="font-fraunces text-lg font-bold text-[#1A1D2E]">{title}</h2>
+      <h2 className="font-fraunces text-lg font-bold text-[#1A1D2E]">
+        {title}
+      </h2>
       <p className="mt-1 text-sm text-[#6B7080]">{description}</p>
     </section>
   );
