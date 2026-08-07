@@ -1,8 +1,5 @@
 import { api } from "@/lib/api/axios";
-import type {
-  ContractsListQuery,
-  ContractsPage,
-} from "./contracts.types";
+import type { ContractsListQuery, ContractsPage } from "./contracts.types";
 
 function buildContractsParams(
   query: ContractsListQuery,
