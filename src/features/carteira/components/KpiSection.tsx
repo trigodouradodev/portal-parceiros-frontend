@@ -8,19 +8,13 @@ import {
   Wallet,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ContractListDialog } from "@/features/carteira/components/ContractListDialog";
 import { KpiCard } from "@/features/carteira/components/KpiCard";
 import { fmtInt, fmtPct, inadTone } from "@/features/carteira/utils/kpi";
 import { usePortfolioSummary } from "@/hooks/usePortfolioSummary";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { fmtBRL } from "@/lib/utils";
-import type { CarteiraDrillDownFilter } from "@/services/portfolio/portfolio.types";
+import type { CarteiraDrillDownFilter } from "@/services/contracts/contracts.types";
 
 interface DrillDownState {
   title: string;
@@ -149,27 +143,14 @@ export function KpiSection() {
         />
       </div>
 
-      <Dialog
+      <ContractListDialog
         open={drillDown != null}
+        title={drillDown?.title ?? ""}
+        initialFilter={drillDown?.filter}
         onOpenChange={(open) => {
           if (!open) setDrillDown(null);
         }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{drillDown?.title}</DialogTitle>
-            <DialogDescription>
-              A lista de contratos com filtros entra na próxima entrega.
-              {drillDown?.filter.onlyDelinquency
-                ? " Pré-filtro: só em atraso."
-                : null}
-              {drillDown?.filter.onlyRenegotiated
-                ? " Pré-filtro: só renegociados."
-                : null}
-            </DialogDescription>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+      />
     </section>
   );
 }
