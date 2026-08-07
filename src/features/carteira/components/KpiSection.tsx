@@ -42,7 +42,9 @@ export function KpiSection() {
           <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
             Carteira
           </span>
-          <span className="text-xs text-[#9DA3B4]">Carregando indicadores…</span>
+          <span className="text-xs text-[#9DA3B4]">
+            Carregando indicadores…
+          </span>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
