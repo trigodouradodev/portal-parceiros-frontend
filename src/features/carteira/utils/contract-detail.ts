@@ -1,12 +1,4 @@
-/** Interpreta data ISO (`YYYY-MM-DD` ou datetime) em calendário local. */
-export function parseDateOnly(value: string): Date | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-  if (match) {
-    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-  }
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
+import { parseCalendarDate } from "@/lib/format/date";
 
 /**
  * Dias em atraso a partir do próximo vencimento (parcela aberta mais antiga).
@@ -14,7 +6,7 @@ export function parseDateOnly(value: string): Date | null {
  */
 export function daysOverdueFromDueDate(dueDate?: string): number | null {
   if (!dueDate) return null;
-  const due = parseDateOnly(dueDate);
+  const due = parseCalendarDate(dueDate);
   if (!due) return null;
   const today = new Date();
   const startToday = new Date(

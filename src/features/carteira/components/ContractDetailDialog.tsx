@@ -5,20 +5,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { fmtBRL } from "@/lib/utils";
-import type { ContractListItem } from "@/services/contracts/contracts.types";
 import {
   daysOverdueFromDueDate,
   formatDaysOverdue,
   formatRenegotiated,
-  parseDateOnly,
 } from "@/features/carteira/utils/contract-detail";
+import { formatDate } from "@/lib/format/date";
+import { fmtBRL } from "@/lib/utils";
+import type { ContractListItem } from "@/services/contracts/contracts.types";
 
 function fmtDate(value?: string): string {
   if (!value) return "—";
-  const d = parseDateOnly(value);
-  if (!d) return "—";
-  return d.toLocaleDateString("pt-BR");
+  return formatDate(value);
 }
 
 function daysOverdueLabel(contract: ContractListItem): string {

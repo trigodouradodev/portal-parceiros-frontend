@@ -13,9 +13,15 @@ export interface ContractListItem {
   disbursementDate?: string;
   nextInstallmentId?: string;
   nextDueDate?: string;
-  /** Presente quando o BE enriquecer a lista / detalhe. */
+  /**
+   * Opcional / forward-compat: a API ainda não devolve este campo.
+   * Enquanto isso, a UI deriva atraso a partir de `nextDueDate`.
+   */
   daysOverdue?: number;
-  /** Presente quando o BE enriquecer a lista / detalhe. */
+  /**
+   * Opcional / forward-compat: a API ainda não devolve este campo.
+   * Enquanto isso, a UI exibe "—".
+   */
   renegotiated?: boolean;
 }
 
