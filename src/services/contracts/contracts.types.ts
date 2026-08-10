@@ -13,6 +13,10 @@ export interface ContractListItem {
   disbursementDate?: string;
   nextInstallmentId?: string;
   nextDueDate?: string;
+  /** Presente quando o BE enriquecer a lista / detalhe. */
+  daysOverdue?: number;
+  /** Presente quando o BE enriquecer a lista / detalhe. */
+  renegotiated?: boolean;
 }
 
 export interface ContractsPagination {
