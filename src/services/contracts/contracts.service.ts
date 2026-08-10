@@ -1,7 +1,7 @@
 import { api } from "@/lib/api/axios";
 import type { ContractsListQuery, ContractsPage } from "./contracts.types";
 
-function buildContractsParams(
+export function buildContractsParams(
   query: ContractsListQuery,
 ): Record<string, string | number | boolean> {
   const params: Record<string, string | number | boolean> = {

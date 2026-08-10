@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Pagination } from "@/components/data-table/Pagination";
 import {
   Dialog,
   DialogContent,
@@ -6,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -14,45 +16,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  ALL_PRODUCTS,
+  SEARCH_DEBOUNCE_MS,
+  applyDebouncedSearch,
+  buildContractsListQuery,
+  buildInitialFilters,
+  type ContractsUiFilters,
+} from "@/features/carteira/utils/contracts-list";
 import { useContractsList } from "@/hooks/useContractsList";
 import { useDragScroll } from "@/hooks/useDragScroll";
 import { useProducts } from "@/hooks/useProducts";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { cn, fmtBRL } from "@/lib/utils";
 import type { CarteiraDrillDownFilter } from "@/services/contracts/contracts.types";
-
-const ALL_PRODUCTS = "TODOS";
-const PAGE_SIZE = 30;
-
-interface UiFilters {
-  search: string;
-  productId: string;
-  startDate: string;
-  endDate: string;
-  onlyDelinquency: boolean;
-  onlyRenegotiated: boolean;
-  page: number;
-}
-
-const EMPTY_FILTERS: UiFilters = {
-  search: "",
-  productId: ALL_PRODUCTS,
-  startDate: "",
-  endDate: "",
-  onlyDelinquency: false,
-  onlyRenegotiated: false,
-  page: 1,
-};
-
-function buildInitialFilters(
-  initialFilter?: CarteiraDrillDownFilter,
-): UiFilters {
-  return {
-    ...EMPTY_FILTERS,
-    onlyDelinquency: Boolean(initialFilter?.onlyDelinquency),
-    onlyRenegotiated: Boolean(initialFilter?.onlyRenegotiated),
-  };
-}
 
 function fmtDate(value?: string): string {
   if (!value) return "—";
@@ -111,33 +88,17 @@ function ContractListDialogBody({
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setFilters((prev) => {
-        if (prev.search === searchInput) return prev;
-        return { ...prev, search: searchInput, page: 1 };
-      });
-    }, 300);
+      setFilters((prev) => applyDebouncedSearch(prev, searchInput) ?? prev);
+    }, SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
-  const listQuery = useMemo(
-    () => ({
-      page: filters.page,
-      limit: PAGE_SIZE,
-      search: filters.search || undefined,
-      products:
-        filters.productId !== ALL_PRODUCTS ? [filters.productId] : undefined,
-      startDate: filters.startDate || undefined,
-      endDate: filters.endDate || undefined,
-      onlyDelinquency: filters.onlyDelinquency || undefined,
-      onlyRenegotiated: filters.onlyRenegotiated || undefined,
-    }),
-    [filters],
-  );
+  const listQuery = useMemo(() => buildContractsListQuery(filters), [filters]);
 
   const contractsQuery = useContractsList(listQuery);
   const productsQuery = useProducts();
 
-  function patchFilters(patch: Partial<UiFilters>) {
+  function patchFilters(patch: Partial<ContractsUiFilters>) {
     setFilters((prev) => ({
       ...prev,
       ...patch,
@@ -160,12 +121,13 @@ function ContractListDialogBody({
       </DialogHeader>
 
       <div className="mb-4 flex flex-col gap-2.5 md:flex-row">
-        <input
+        <Input
           type="text"
           placeholder="Buscar cliente ou contrato…"
+          aria-label="Buscar cliente ou contrato"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
-          className="h-9 w-full rounded border border-[#C8CBD8] bg-white px-3 text-sm text-[#1A1D2E] outline-none placeholder:text-[#9DA3B4] focus:border-brand-navy md:flex-1"
+          className="md:flex-1"
         />
         <Select
           value={filters.productId}
@@ -183,18 +145,18 @@ function ContractListDialogBody({
             ))}
           </SelectContent>
         </Select>
-        <input
+        <Input
           type="date"
           value={filters.startDate}
           onChange={(e) => patchFilters({ startDate: e.target.value })}
-          className="h-9 rounded border border-[#C8CBD8] bg-white px-2 text-sm text-[#1A1D2E] outline-none focus:border-brand-navy"
+          className="w-auto"
           aria-label="Data inicial de desembolso"
         />
-        <input
+        <Input
           type="date"
           value={filters.endDate}
           onChange={(e) => patchFilters({ endDate: e.target.value })}
-          className="h-9 rounded border border-[#C8CBD8] bg-white px-2 text-sm text-[#1A1D2E] outline-none focus:border-brand-navy"
+          className="w-auto"
           aria-label="Data final de desembolso"
         />
       </div>
@@ -226,6 +188,11 @@ function ContractListDialogBody({
         <span>↔</span> Arraste a lista para o lado pra ver todas as colunas
       </div>
 
+      {/*
+        Tabela custom (não DataTable): coluna sticky + drag-scroll horizontal,
+        que o DataTable compartilhado ainda não cobre. Paginação reusa o
+        componente de data-table.
+      */}
       <div
         ref={scrollRef}
         {...dragScroll}
@@ -336,34 +303,15 @@ function ContractListDialogBody({
       </div>
 
       {pagination && pagination.totalPages > 1 ? (
-        <div className="mt-4 flex items-center justify-end gap-3 border-t border-[#EBEDF3] pt-3 text-[11px] text-[#9DA3B4]">
-          <span>
-            {pagination.page}/{pagination.totalPages}
-          </span>
-          <button
-            type="button"
-            disabled={pagination.page <= 1 || contractsQuery.isFetching}
-            onClick={() =>
-              setFilters((prev) => ({
-                ...prev,
-                page: Math.max(1, prev.page - 1),
-              }))
-            }
-            className="text-brand-navy underline decoration-brand-navy/30 disabled:opacity-40 hover:decoration-brand-navy"
-          >
-            Anterior
-          </button>
-          <button
-            type="button"
-            disabled={!pagination.hasNextPage || contractsQuery.isFetching}
-            onClick={() =>
-              setFilters((prev) => ({ ...prev, page: prev.page + 1 }))
-            }
-            className="text-brand-navy underline decoration-brand-navy/30 disabled:opacity-40 hover:decoration-brand-navy"
-          >
-            Próxima
-          </button>
-        </div>
+        <Pagination
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          onPageChange={(page) => {
+            if (contractsQuery.isFetching) return;
+            setFilters((prev) => ({ ...prev, page }));
+          }}
+          className="mt-4 border-t border-[#EBEDF3] pt-3"
+        />
       ) : null}
     </DialogContent>
   );
