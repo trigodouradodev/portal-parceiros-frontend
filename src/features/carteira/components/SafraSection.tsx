@@ -46,6 +46,8 @@ export function SafraSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragScroll = useDragScroll(scrollRef);
 
+  // Não exibir série ilustrativa em ambientes reais (homolog/prod) até BE-02.
+  if (safra.isMock) return null;
   if (!current || !previous) return null;
 
   const deltaInad = current.delinquencyPercent - previous.delinquencyPercent;
