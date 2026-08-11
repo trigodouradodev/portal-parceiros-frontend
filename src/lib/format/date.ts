@@ -6,7 +6,7 @@ import { ptBR } from "date-fns/locale";
  * `YYYY-MM-DDT00:00:00.000Z`. Formatar com o fuso local (ex.: BRT) desloca o dia.
  * Extrai ano/mês/dia do prefixo ISO e monta um Date em horário local.
  */
-function parseCalendarDate(isoDate: string): Date | null {
+export function parseCalendarDate(isoDate: string): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(isoDate.trim());
   if (!match) return null;
 
