@@ -14,6 +14,13 @@ export const ICON_CIRCLE: Record<KpiTone, string> = {
   crit: "bg-[#D84040] text-white",
 };
 
+export const TONE_TEXT: Record<KpiTone, string> = {
+  neutral: "text-[#4B5165]",
+  ok: "text-[#0F6E56]",
+  warn: "text-[#854F0B]",
+  crit: "text-[#A32D2D]",
+};
+
 export const fmtPct = (v: number, digits = 2) =>
   v.toLocaleString("pt-BR", {
     minimumFractionDigits: digits,

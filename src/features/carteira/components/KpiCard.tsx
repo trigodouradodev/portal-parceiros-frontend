@@ -1,5 +1,9 @@
 import type { LucideIcon } from "lucide-react";
-import { ICON_CIRCLE, type KpiTone } from "@/features/carteira/utils/kpi";
+import {
+  ICON_CIRCLE,
+  TONE_TEXT,
+  type KpiTone,
+} from "@/features/carteira/utils/kpi";
 
 interface KpiCardProps {
   icon: LucideIcon;
@@ -35,7 +39,7 @@ export function KpiCard({
       <span className="font-fraunces text-xl leading-tight font-bold text-[#1A1D2E]">
         {value}
       </span>
-      <span className="text-[11px] leading-snug text-[#9DA3B4]">{sub}</span>
+      <span className={`text-xs opacity-90 ${TONE_TEXT[tone]}`}>{sub}</span>
     </button>
   );
 }

@@ -18,8 +18,4 @@ export interface PortfolioSummary {
   renegotiatedOutstandingAmount: number;
 }
 
-/** Pré-filtro do drill-down (contrato alinhado ao GET /contracts). */
-export interface CarteiraDrillDownFilter {
-  onlyDelinquency?: boolean;
-  onlyRenegotiated?: boolean;
-}
+export type { CarteiraDrillDownFilter } from "@/services/contracts/contracts.types";
