@@ -13,6 +13,16 @@ export interface ContractListItem {
   disbursementDate?: string;
   nextInstallmentId?: string;
   nextDueDate?: string;
+  /**
+   * Opcional / forward-compat: a API ainda não devolve este campo.
+   * Enquanto isso, a UI deriva atraso a partir de `nextDueDate`.
+   */
+  daysOverdue?: number;
+  /**
+   * Opcional / forward-compat: a API ainda não devolve este campo.
+   * Enquanto isso, a UI exibe "—".
+   */
+  renegotiated?: boolean;
 }
 
 export interface ContractsPagination {
