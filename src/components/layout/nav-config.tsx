@@ -1,6 +1,11 @@
-import { BarChart2, Briefcase, Home, User } from "lucide-react";
+import { BarChart2, Briefcase, Home, User, UserCheck } from "lucide-react";
 
-export type NavTab = "home" | "carteira" | "desempenho" | "perfil";
+export type NavTab =
+  | "home"
+  | "carteira"
+  | "originacao"
+  | "desempenho"
+  | "perfil";
 
 export const NAV_ITEMS: {
   key: NavTab;
@@ -14,6 +19,12 @@ export const NAV_ITEMS: {
     icon: <Briefcase size={20} />,
     label: "Carteira",
     path: "/carteira",
+  },
+  {
+    key: "originacao",
+    icon: <UserCheck size={20} />,
+    label: "Originação",
+    path: "/originacao",
   },
   {
     key: "desempenho",

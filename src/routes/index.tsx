@@ -7,6 +7,7 @@ import { CarteiraPage } from "@/features/carteira";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { LoginPage } from "@/features/login/LoginPage";
 import { ContractDetailPage } from "@/features/contract-detail";
+import { OriginacaoPage } from "@/features/originacao";
 import { PerformancePage } from "@/features/performance";
 import { ProfilePage } from "@/features/profile";
 import { RegisterChargeActionPage } from "@/features/register-action/charge";
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardPage /> },
           { path: "/carteira", element: <CarteiraPage /> },
+          { path: "/originacao", element: <OriginacaoPage /> },
           { path: "/performance", element: <PerformancePage /> },
           { path: "/profile", element: <ProfilePage /> },
           {
