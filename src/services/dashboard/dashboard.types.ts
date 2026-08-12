@@ -154,6 +154,7 @@ export interface OverdueCollectionItem {
   taskType?: ActivityTaskType;
   assignedTo?: { id: string; name: string } | null;
   isActive?: boolean;
+  isRecommended?: boolean;
 }
 
 export interface OverduePagination {

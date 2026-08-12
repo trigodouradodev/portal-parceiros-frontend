@@ -57,11 +57,7 @@ export function buildChargeQueueTabView(
       key: entry.item.installment.id,
       item: entry.item,
       display: mapOverdueToQueueDisplay(entry.item, entry.globalIndex + 1),
-      locked: !isQueueItemActionable(
-        entry.globalIndex,
-        queue.actionableIndex,
-        hasPendingTask,
-      ),
+      locked: !isQueueItemActionable(entry.unlocked, hasPendingTask),
     };
 
     if (entry.segmentCode !== currentCode) {
