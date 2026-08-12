@@ -125,8 +125,11 @@ describe("isQueueItemActionable / isChargeQueueItemBlocked", () => {
     });
     const queue = buildChargeQueue([pending, other]);
 
-    expect(isQueueItemActionable(0, queue.actionableIndex, true)).toBe(true);
-    expect(isQueueItemActionable(1, queue.actionableIndex, true)).toBe(false);
+    // AUREA-319: isQueueItemActionable agora recebe `unlocked` já resolvido
+    // por entrada, não mais um índice pra comparar contra actionableIndex.
+    // No fluxo legado, só a #1 da fila fica unlocked (inalterado).
+    expect(isQueueItemActionable(queue.flat[0].unlocked, true)).toBe(true);
+    expect(isQueueItemActionable(queue.flat[1].unlocked, true)).toBe(false);
     expect(isChargeQueueItemBlocked(queue, pending)).toBe(false);
     expect(isChargeQueueItemBlocked(queue, other)).toBe(true);
   });
