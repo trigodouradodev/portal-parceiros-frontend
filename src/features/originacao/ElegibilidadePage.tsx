@@ -34,8 +34,7 @@ export function ElegibilidadePage() {
   const cpfDigits = cpf.replace(/\D/g, "");
   const cpfComplete = cpfDigits.length === 11;
   const cpfValid = isValidCpf(cpf);
-  const cpfError =
-    cpfComplete && !cpfValid ? "CPF inválido" : undefined;
+  const cpfError = cpfComplete && !cpfValid ? "CPF inválido" : undefined;
 
   const age = calcAge(birthDate);
   const birthDateValid = isAdultAge(age);
