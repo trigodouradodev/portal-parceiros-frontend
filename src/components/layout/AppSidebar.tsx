@@ -42,7 +42,9 @@ export function AppSidebar({
     >
       <div className="border-b border-white/10 px-6 pt-8 pb-6">
         <div className="flex items-center gap-2">
-          <AureaLogoMark />
+          {/* Fundo escuro: sem asset oficial "Negativa" (branca) ainda — usa a
+              geometria oficial da estrela em branco até chegar o arquivo certo. */}
+          <AureaLogoMark className="text-white" />
           <div>
             <p className="font-fraunces text-lg leading-tight font-bold text-white">
               aurea
