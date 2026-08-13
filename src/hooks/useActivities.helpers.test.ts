@@ -27,6 +27,7 @@ function makeCard(
     taskType: ActivityTaskType.CONTACT,
     status: ActivityTaskStatus.PENDING,
     isActive: false,
+    isRecommended: false,
     assignedTo: null,
     expireDate: "2026-03-01",
     wasPostponed: false,

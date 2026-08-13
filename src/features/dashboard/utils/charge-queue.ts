@@ -19,6 +19,13 @@ export interface ChargeQueueFlatEntry {
   item: OverdueCollectionItem;
   globalIndex: number;
   segmentCode: ChargeQueueSegmentCode;
+  /**
+   * Executável agora (AUREA-319). No fluxo v2 (`buildChargeQueueFromApiCards`),
+   * vale para toda pendente do segmento ativo do responsável, não só a #1 —
+   * ver `card.isActive`. No fluxo legado (`buildChargeQueue`), continua valendo
+   * só pra entrada em `actionableIndex` (comportamento inalterado).
+   */
+  unlocked: boolean;
 }
 
 export interface ChargeQueueView {
@@ -96,7 +103,7 @@ export function buildChargeQueue(
     });
 
     for (const item of segmentItems) {
-      flat.push({ item, globalIndex, segmentCode: code });
+      flat.push({ item, globalIndex, segmentCode: code, unlocked: false });
       globalIndex += 1;
     }
   }
@@ -105,15 +112,19 @@ export function buildChargeQueue(
     flat.find((entry) => entry.item.task?.status === ActivityTaskStatus.PENDING)
       ?.globalIndex ?? null;
 
+  // Fluxo legado: só a #1 da fila fica desbloqueada (comportamento inalterado).
+  if (actionableIndex !== null) {
+    flat[actionableIndex].unlocked = true;
+  }
+
   return { groups, flat, actionableIndex };
 }
 
 export function isQueueItemActionable(
-  globalIndex: number,
-  actionableIndex: number | null,
+  unlocked: boolean,
   hasPendingTask: boolean,
 ): boolean {
-  return hasPendingTask && actionableIndex === globalIndex;
+  return hasPendingTask && unlocked;
 }
 
 export function isChargeQueueItemBlocked(
@@ -126,9 +137,5 @@ export function isChargeQueueItemBlocked(
   if (!entry) return true;
 
   const hasPendingTask = item.task?.status === ActivityTaskStatus.PENDING;
-  return !isQueueItemActionable(
-    entry.globalIndex,
-    queue.actionableIndex,
-    hasPendingTask,
-  );
+  return !isQueueItemActionable(entry.unlocked, hasPendingTask);
 }

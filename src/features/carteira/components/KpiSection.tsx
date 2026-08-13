@@ -83,7 +83,9 @@ export function KpiSection() {
           label="Carteira Ativa (DC)"
           value={fmtBRL(summary.active.outstandingAmount)}
           sub="Total a receber da carteira ativa"
-          onClick={() => openDrillDown("Carteira Ativa (DC)")}
+          onClick={() =>
+            openDrillDown("Carteira Ativa (DC)", { onlyActive: true })
+          }
         />
         <KpiCard
           icon={FileText}
@@ -91,7 +93,9 @@ export function KpiSection() {
           label="Contratos Ativos"
           value={fmtInt(summary.active.contracts)}
           sub="Com saldo pendente hoje"
-          onClick={() => openDrillDown("Contratos Ativos")}
+          onClick={() =>
+            openDrillDown("Contratos Ativos", { onlyActive: true })
+          }
         />
         <KpiCard
           icon={Percent}
