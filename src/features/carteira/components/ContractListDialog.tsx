@@ -74,6 +74,7 @@ export function ContractListDialog({
 }: ContractListDialogProps) {
   const sessionKey = [
     title,
+    initialFilter?.onlyActive ? "a" : "",
     initialFilter?.onlyDelinquency ? "d" : "",
     initialFilter?.onlyRenegotiated ? "r" : "",
   ].join("|");
@@ -186,7 +187,15 @@ function ContractListDialogBody({
           />
         </div>
 
-        <div className="mb-4 flex gap-4">
+        <div className="mb-4 flex flex-wrap gap-4">
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-[#374151]">
+            <input
+              type="checkbox"
+              checked={filters.onlyActive}
+              onChange={(e) => patchFilters({ onlyActive: e.target.checked })}
+            />
+            Só com saldo pendente
+          </label>
           <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-[#374151]">
             <input
               type="checkbox"

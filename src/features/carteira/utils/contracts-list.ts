@@ -10,6 +10,7 @@ export interface ContractsUiFilters {
   productId: string;
   startDate: string;
   endDate: string;
+  onlyActive: boolean;
   onlyDelinquency: boolean;
   onlyRenegotiated: boolean;
   page: number;
@@ -20,6 +21,7 @@ export const EMPTY_CONTRACTS_FILTERS: ContractsUiFilters = {
   productId: ALL_PRODUCTS,
   startDate: "",
   endDate: "",
+  onlyActive: false,
   onlyDelinquency: false,
   onlyRenegotiated: false,
   page: 1,
@@ -30,6 +32,7 @@ export function buildInitialFilters(
 ): ContractsUiFilters {
   return {
     ...EMPTY_CONTRACTS_FILTERS,
+    onlyActive: Boolean(initialFilter?.onlyActive),
     onlyDelinquency: Boolean(initialFilter?.onlyDelinquency),
     onlyRenegotiated: Boolean(initialFilter?.onlyRenegotiated),
   };
@@ -55,6 +58,7 @@ export function buildContractsListQuery(
       filters.productId !== ALL_PRODUCTS ? [filters.productId] : undefined,
     startDate: filters.startDate || undefined,
     endDate: filters.endDate || undefined,
+    onlyActive: filters.onlyActive || undefined,
     onlyDelinquency: filters.onlyDelinquency || undefined,
     onlyRenegotiated: filters.onlyRenegotiated || undefined,
   };

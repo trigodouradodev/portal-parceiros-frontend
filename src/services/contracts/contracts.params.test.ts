@@ -15,6 +15,7 @@ describe("buildContractsParams", () => {
         products: ["a", "b"],
         startDate: "2026-01-01",
         endDate: "2026-02-01",
+        onlyActive: true,
         onlyDelinquency: true,
         onlyRenegotiated: false,
       }),
@@ -25,6 +26,7 @@ describe("buildContractsParams", () => {
       products: "a,b",
       startDate: "2026-01-01",
       endDate: "2026-02-01",
+      onlyActive: true,
       onlyDelinquency: true,
     });
   });
