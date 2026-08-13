@@ -88,5 +88,6 @@ export function mapQueueTaskCardToOverdueItem(
     taskType: card.taskType,
     assignedTo: card.assignedTo,
     isActive: card.isActive,
+    isRecommended: card.isRecommended,
   };
 }

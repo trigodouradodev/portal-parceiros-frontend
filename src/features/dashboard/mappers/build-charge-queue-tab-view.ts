@@ -21,6 +21,7 @@ export interface BuildChargeQueueTabViewOptions {
 function buildHeroView(entry: {
   item: OverdueCollectionItem;
   globalIndex: number;
+  segmentCode: ChargeQueueSegmentCode;
 }) {
   const taskChannel = entry.item.task?.channel;
   return {
@@ -31,6 +32,7 @@ function buildHeroView(entry: {
     canRescheduleVisit:
       taskChannel === ActivityChannel.CLIENT_VISIT &&
       !entry.item.wasRescheduled,
+    segmentCode: entry.segmentCode,
   };
 }
 
@@ -53,15 +55,13 @@ export function buildChargeQueueTabView(
 
     const hasPendingTask =
       entry.item.task?.status === ActivityTaskStatus.PENDING;
+    // AUREA-319: mesmos campos do Hero — uma linha desbloqueada (mesmo
+    // segmento da recomendada) precisa dos mesmos dados pra renderizar como
+    // card de ação completo, não só como linha compacta.
     const row: ChargeQueueRowView = {
       key: entry.item.installment.id,
-      item: entry.item,
-      display: mapOverdueToQueueDisplay(entry.item, entry.globalIndex + 1),
-      locked: !isQueueItemActionable(
-        entry.globalIndex,
-        queue.actionableIndex,
-        hasPendingTask,
-      ),
+      ...buildHeroView(entry),
+      locked: !isQueueItemActionable(entry.unlocked, hasPendingTask),
     };
 
     if (entry.segmentCode !== currentCode) {

@@ -237,7 +237,7 @@ export function DashboardPage() {
   ) => {
     if (isChargeQueueItemBlocked(chargeQueueView, item)) {
       showToast(
-        "Complete a tarefa anterior na fila antes de registrar esta ação.",
+        "Esta tarefa está bloqueada. Complete as tarefas do segmento atual (mais prioritário) para liberá-la.",
         {
           variant: "destructive",
         },
@@ -291,7 +291,7 @@ export function DashboardPage() {
   const handleChargeOpen = (item: OverdueCollectionItem) => {
     if (isChargeQueueItemBlocked(chargeQueueView, item)) {
       showToast(
-        "Complete a tarefa anterior na fila antes de abrir este contrato.",
+        "Esta tarefa está bloqueada. Complete as tarefas do segmento atual (mais prioritário) para liberá-la.",
         { variant: "destructive" },
       );
       return;

@@ -13,6 +13,7 @@ export function buildContractsParams(
   if (search) params.search = search;
   if (query.startDate) params.startDate = query.startDate;
   if (query.endDate) params.endDate = query.endDate;
+  if (query.onlyActive) params.onlyActive = true;
   if (query.onlyDelinquency) params.onlyDelinquency = true;
   if (query.onlyRenegotiated) params.onlyRenegotiated = true;
   // Nest aceita lista separada por vírgula (ver ContractsQueryDto).

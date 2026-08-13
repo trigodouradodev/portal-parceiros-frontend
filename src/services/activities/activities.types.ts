@@ -101,7 +101,10 @@ export interface QueueTaskCard {
   tone: QueueTone;
   taskType: ActivityTaskType;
   status: ActivityTaskStatus;
+  /** Executável agora: pertence ao segmento ativo do responsável (AUREA-319). */
   isActive: boolean;
+  /** É a tarefa sugerida (maior prioridade do segmento ativo). Só uma por responsável. */
+  isRecommended: boolean;
   assignedTo: QueueAssignee | null;
   expireDate: string;
   wasPostponed: boolean;

@@ -46,12 +46,15 @@ export interface ContractsListQuery {
   products?: string[];
   startDate?: string;
   endDate?: string;
+  /** Contratos com saldo pendente hoje (KPI Carteira/Contratos Ativos). */
+  onlyActive?: boolean;
   onlyDelinquency?: boolean;
   onlyRenegotiated?: boolean;
 }
 
 /** Pré-filtro ao abrir o modal a partir de um KPI. */
 export interface CarteiraDrillDownFilter {
+  onlyActive?: boolean;
   onlyDelinquency?: boolean;
   onlyRenegotiated?: boolean;
 }

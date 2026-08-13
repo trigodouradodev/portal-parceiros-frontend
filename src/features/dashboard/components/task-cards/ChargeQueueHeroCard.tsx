@@ -29,6 +29,8 @@ interface ChargeQueueHeroCardProps {
   onRescheduleVisit: (date: string) => boolean | Promise<boolean>;
   isPostponing?: boolean;
   isRescheduling?: boolean;
+  /** Presente só nas secundárias do segmento ativo — recolhe de volta à linha compacta (AUREA-319). */
+  onCollapse?: () => void;
 }
 
 /** Espelha ActiveCobrQueueCard de portal-parceiros-design. */
@@ -46,6 +48,7 @@ export function ChargeQueueHeroCard({
   onRescheduleVisit,
   isPostponing = false,
   isRescheduling = false,
+  onCollapse,
 }: ChargeQueueHeroCardProps) {
   const [confirmingPostpone, setConfirmingPostpone] = useState(false);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
@@ -103,6 +106,7 @@ export function ChargeQueueHeroCard({
           total={queueTotal}
           segmentLabel={segment.label}
           segmentBadgeClassName={segment.badgeClassName}
+          onCollapse={onCollapse}
         />
 
         <button type="button" onClick={onOpen} className="w-full p-4 text-left">

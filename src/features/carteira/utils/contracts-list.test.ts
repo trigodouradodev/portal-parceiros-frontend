@@ -14,12 +14,20 @@ describe("buildInitialFilters", () => {
   });
 
   it("applies RN03 pre-filters from KPI drill-down", () => {
+    expect(buildInitialFilters({ onlyActive: true })).toMatchObject({
+      onlyActive: true,
+      onlyDelinquency: false,
+      onlyRenegotiated: false,
+      page: 1,
+    });
     expect(buildInitialFilters({ onlyDelinquency: true })).toMatchObject({
+      onlyActive: false,
       onlyDelinquency: true,
       onlyRenegotiated: false,
       page: 1,
     });
     expect(buildInitialFilters({ onlyRenegotiated: true })).toMatchObject({
+      onlyActive: false,
       onlyDelinquency: false,
       onlyRenegotiated: true,
     });
@@ -51,6 +59,7 @@ describe("buildContractsListQuery", () => {
       products: undefined,
       startDate: undefined,
       endDate: undefined,
+      onlyActive: undefined,
       onlyDelinquency: undefined,
       onlyRenegotiated: undefined,
     });
@@ -62,6 +71,7 @@ describe("buildContractsListQuery", () => {
         ...EMPTY_CONTRACTS_FILTERS,
         productId: "prod-1",
         search: "joão",
+        onlyActive: true,
         onlyDelinquency: true,
         page: 2,
       }),
@@ -72,6 +82,7 @@ describe("buildContractsListQuery", () => {
       products: ["prod-1"],
       startDate: undefined,
       endDate: undefined,
+      onlyActive: true,
       onlyDelinquency: true,
       onlyRenegotiated: undefined,
     });

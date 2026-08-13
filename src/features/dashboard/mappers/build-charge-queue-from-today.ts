@@ -24,6 +24,9 @@ export function buildChargeQueueFromApiCards(
       item,
       globalIndex,
       segmentCode: normalizeQueueSegmentCode(card.segmentCode),
+      // AUREA-319: toda pendente do segmento ativo do responsável é executável,
+      // não só a recomendada — is_active já vem assim calculado do backend.
+      unlocked: card.isActive,
     };
   });
 
@@ -43,10 +46,12 @@ export function buildChargeQueueFromApiCards(
     groups[groups.length - 1].items.push(entry.item);
   }
 
-  const activeIndex = cards.findIndex((card) => card.isActive);
+  // Hero = a recomendada (isRecommended), não "a primeira com isActive" — desde
+  // AUREA-319 isActive pode valer para várias tarefas do mesmo segmento.
+  const recommendedIndex = cards.findIndex((card) => card.isRecommended);
   const actionableIndex =
-    activeIndex >= 0
-      ? activeIndex
+    recommendedIndex >= 0
+      ? recommendedIndex
       : (flat.find(
           (entry) => entry.item.task?.status === ActivityTaskStatus.PENDING,
         )?.globalIndex ?? null);
