@@ -4,15 +4,26 @@ import {
   type OriginacaoContextValue,
 } from "@/features/originacao/originacao-context";
 import type {
+  DadosElegibilidade,
   OriginacaoTab,
   SimulacaoSnapshot,
 } from "@/features/originacao/types";
 
 export function OriginacaoProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState<OriginacaoTab>("elegibilidade");
+  const [dadosIniciais, setDadosIniciaisState] =
+    useState<DadosElegibilidade | null>(null);
   const [simulacoes, setSimulacoes] = useState<SimulacaoSnapshot[]>([]);
   const [propostaSimulacao, setPropostaSimulacao] =
     useState<SimulacaoSnapshot | null>(null);
+
+  const setDadosIniciais = useCallback((dados: DadosElegibilidade) => {
+    setDadosIniciaisState(dados);
+  }, []);
+
+  const consumeDadosIniciais = useCallback(() => {
+    setDadosIniciaisState(null);
+  }, []);
 
   const addSimulacao = useCallback((snapshot: SimulacaoSnapshot) => {
     setSimulacoes((prev) => [...prev, snapshot]);
@@ -31,6 +42,9 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
     () => ({
       activeTab,
       setActiveTab,
+      dadosIniciais,
+      setDadosIniciais,
+      consumeDadosIniciais,
       simulacoes,
       addSimulacao,
       propostaSimulacao,
@@ -39,6 +53,9 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
     }),
     [
       activeTab,
+      dadosIniciais,
+      setDadosIniciais,
+      consumeDadosIniciais,
       simulacoes,
       addSimulacao,
       propostaSimulacao,

@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type {
+  DadosElegibilidade,
   OriginacaoTab,
   SimulacaoSnapshot,
 } from "@/features/originacao/types";
@@ -7,6 +8,10 @@ import type {
 export interface OriginacaoContextValue {
   activeTab: OriginacaoTab;
   setActiveTab: (tab: OriginacaoTab) => void;
+  /** Prefill one-shot da elegibilidade → simulação (consumido na PR3). */
+  dadosIniciais: DadosElegibilidade | null;
+  setDadosIniciais: (dados: DadosElegibilidade) => void;
+  consumeDadosIniciais: () => void;
   simulacoes: SimulacaoSnapshot[];
   addSimulacao: (snapshot: SimulacaoSnapshot) => void;
   propostaSimulacao: SimulacaoSnapshot | null;
