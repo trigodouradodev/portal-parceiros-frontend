@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import {
@@ -11,6 +11,7 @@ import { ChargeQueueSegmentHeader } from "@/features/dashboard/components/tasks/
 import { ChargeQueueSkeleton } from "@/features/dashboard/components/tasks/ChargeQueueSkeleton";
 import { buildChargeQueueTabView } from "@/features/dashboard/mappers/build-charge-queue-tab-view";
 import { mapOverdueToQueueDisplay } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
+import type { ChargeQueueBlockView } from "@/features/dashboard/types/charge-queue-tab-view";
 import {
   buildChargeQueue,
   type ChargeQueueView,
@@ -98,6 +99,24 @@ export function ChargeTasksTab({
 }: ChargeTasksTabProps) {
   const pinnedInstallmentId = pinnedHighlightItem?.installment.id ?? null;
 
+  // AUREA-319: secundárias do segmento ativo nascem recolhidas (linha
+  // compacta) e só abrem o card completo quando o usuário clica — evita a
+  // fila ficar poluída com tudo expandido de uma vez. A #1 (Hero) nunca
+  // recolhe.
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  function toggleExpanded(installmentId: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(installmentId)) {
+        next.delete(installmentId);
+      } else {
+        next.add(installmentId);
+      }
+      return next;
+    });
+  }
+
   const queueView = useMemo(
     () => queueViewProp ?? buildChargeQueue(items),
     [queueViewProp, items],
@@ -139,24 +158,109 @@ export function ChargeTasksTab({
     pinnedSectionTitle = "Recém reagendada";
   }
 
+  // AUREA-319: o bloco do mesmo segmento da recomendada agrupa visualmente
+  // com o Hero (borda comum) — é o "segmento ativo", onde qualquer pendente
+  // é executável. Os demais blocos (outros segmentos) seguem travados.
+  const heroSegmentBlockIndex = hero
+    ? blocks.findIndex((block) => block.segment.code === hero.segmentCode)
+    : -1;
+  const heroSegmentBlock =
+    heroSegmentBlockIndex >= 0 ? blocks[heroSegmentBlockIndex] : null;
+
+  function renderRow(row: ChargeQueueBlockView["rows"][number]) {
+    const installmentId = row.item.installment.id;
+    const highlighted = installmentId === highlightedInstallmentId;
+
+    // Travada (outro segmento): sem alteração, sem clique.
+    if (row.locked) {
+      return (
+        <ChargeQueueCompactRow
+          key={row.key}
+          display={row.display}
+          locked
+          installmentId={installmentId}
+          highlighted={highlighted}
+          onOpen={() => onOpen(row.item)}
+        />
+      );
+    }
+
+    // Desbloqueada (mesmo segmento da recomendada) mas ainda recolhida:
+    // linha compacta clicável que expande em vez de navegar.
+    if (!expandedIds.has(installmentId)) {
+      return (
+        <ChargeQueueCompactRow
+          key={row.key}
+          display={row.display}
+          locked={false}
+          expandable
+          installmentId={installmentId}
+          highlighted={highlighted}
+          onOpen={() => toggleExpanded(installmentId)}
+        />
+      );
+    }
+
+    // Expandida: card de ação completo, igual ao Hero.
+    return (
+      <ChargeQueueHeroCard
+        key={row.key}
+        display={row.display}
+        taskChannel={row.taskChannel}
+        queueTotal={queueTotal}
+        canPostpone={row.canPostpone}
+        canRescheduleVisit={row.canRescheduleVisit}
+        onOpen={() => onOpen(row.item)}
+        onCollapse={() => toggleExpanded(installmentId)}
+        onWhatsApp={() => (onWhatsApp ?? onAction)(row.item)}
+        onCall={() => (onCall ?? onAction)(row.item)}
+        onVisit={() => (onVisit ?? onAction)(row.item)}
+        onPostpone={() => onPostpone(row.item)}
+        onRescheduleVisit={(date) => onRescheduleVisit(row.item, date)}
+        isPostponing={isPostponing}
+        isRescheduling={isRescheduling}
+      />
+    );
+  }
+
+  function renderBlock(block: ChargeQueueBlockView) {
+    const rows = block.rows.filter(
+      (row) => row.item.installment.id !== pinnedInstallmentId,
+    );
+    if (rows.length === 0) return null;
+
+    return (
+      <section key={block.key} className="flex flex-col gap-2">
+        <ChargeQueueSegmentHeader
+          segment={block.segment}
+          count={block.segmentCount ?? rows.length}
+        />
+        {rows.map(renderRow)}
+      </section>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       {hero && hero.item.installment.id !== pinnedInstallmentId && (
-        <ChargeQueueHeroCard
-          display={hero.display}
-          taskChannel={hero.taskChannel}
-          queueTotal={queueTotal}
-          canPostpone={hero.canPostpone}
-          canRescheduleVisit={hero.canRescheduleVisit}
-          onOpen={() => onOpen(hero.item)}
-          onWhatsApp={() => (onWhatsApp ?? onAction)(hero.item)}
-          onCall={() => (onCall ?? onAction)(hero.item)}
-          onVisit={() => (onVisit ?? onAction)(hero.item)}
-          onPostpone={() => onPostpone(hero.item)}
-          onRescheduleVisit={(date) => onRescheduleVisit(hero.item, date)}
-          isPostponing={isPostponing}
-          isRescheduling={isRescheduling}
-        />
+        <div className="flex flex-col gap-2 rounded-2xl border-2 border-dashed border-brand-navy/25 bg-brand-navy/[0.03] p-2">
+          <ChargeQueueHeroCard
+            display={hero.display}
+            taskChannel={hero.taskChannel}
+            queueTotal={queueTotal}
+            canPostpone={hero.canPostpone}
+            canRescheduleVisit={hero.canRescheduleVisit}
+            onOpen={() => onOpen(hero.item)}
+            onWhatsApp={() => (onWhatsApp ?? onAction)(hero.item)}
+            onCall={() => (onCall ?? onAction)(hero.item)}
+            onVisit={() => (onVisit ?? onAction)(hero.item)}
+            onPostpone={() => onPostpone(hero.item)}
+            onRescheduleVisit={(date) => onRescheduleVisit(hero.item, date)}
+            isPostponing={isPostponing}
+            isRescheduling={isRescheduling}
+          />
+          {heroSegmentBlock && renderBlock(heroSegmentBlock)}
+        </div>
       )}
 
       {pinnedHighlightItem && pinnedDisplay && (
@@ -174,33 +278,9 @@ export function ChargeTasksTab({
         </section>
       )}
 
-      {blocks.map((block) => {
-        const rows = block.rows.filter(
-          (row) => row.item.installment.id !== pinnedInstallmentId,
-        );
-        if (rows.length === 0) return null;
-
-        return (
-          <section key={block.key} className="flex flex-col gap-2">
-            <ChargeQueueSegmentHeader
-              segment={block.segment}
-              count={block.segmentCount ?? rows.length}
-            />
-            {rows.map((row) => (
-              <ChargeQueueCompactRow
-                key={row.key}
-                display={row.display}
-                locked={row.locked}
-                installmentId={row.item.installment.id}
-                highlighted={
-                  row.item.installment.id === highlightedInstallmentId
-                }
-                onOpen={() => onOpen(row.item)}
-              />
-            ))}
-          </section>
-        );
-      })}
+      {blocks.map((block, index) =>
+        index === heroSegmentBlockIndex ? null : renderBlock(block),
+      )}
 
       {hasNextPage && (
         <LoadMoreButton

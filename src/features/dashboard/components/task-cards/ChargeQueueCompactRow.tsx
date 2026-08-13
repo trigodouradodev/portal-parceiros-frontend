@@ -1,4 +1,4 @@
-import { CalendarClock, CalendarDays, Lock } from "lucide-react";
+import { CalendarClock, CalendarDays, ChevronDown, Lock } from "lucide-react";
 import { InitialsAvatar } from "@/features/dashboard/components/task-cards/InitialsAvatar";
 import { getInitials } from "@/lib/user-display";
 import { cn, fmtBRL } from "@/lib/utils";
@@ -12,6 +12,8 @@ interface ChargeQueueCompactRowProps {
   onOpen: () => void;
   installmentId: string;
   highlighted?: boolean;
+  /** Executável mas recolhida (segmento ativo): mostra seta de "expandir" em vez do cadeado (AUREA-319). */
+  expandable?: boolean;
 }
 
 /** Espelha LockedCobrQueueCard de portal-parceiros-design. */
@@ -21,6 +23,7 @@ export function ChargeQueueCompactRow({
   onOpen,
   installmentId,
   highlighted = false,
+  expandable = false,
 }: ChargeQueueCompactRowProps) {
   const {
     client,
@@ -54,6 +57,9 @@ export function ChargeQueueCompactRow({
           #{queuePosition}
         </span>
         {locked && <Lock size={10} className="text-[#C8CBD8]" />}
+        {!locked && expandable && (
+          <ChevronDown size={10} className="text-brand-navy/50" />
+        )}
       </div>
 
       <InitialsAvatar initials={initials} size="sm" variant="muted" />
@@ -99,14 +105,9 @@ export function ChargeQueueCompactRow({
     borderLeftWidth: 3,
   };
 
-  if (locked) {
-    return (
-      <div className={className} style={borderStyle} {...highlightProps}>
-        {content}
-      </div>
-    );
-  }
-
+  // AUREA-319: mesmo travada, o toque chama `onOpen` — quem chama decide o
+  // que fazer (o guard de fila mostra o toast explicando o motivo do bloqueio
+  // em vez de deixar o toque sem nenhuma resposta).
   return (
     <button
       type="button"
