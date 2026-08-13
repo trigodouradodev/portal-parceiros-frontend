@@ -28,13 +28,31 @@ import {
 import { useContractsList } from "@/hooks/useContractsList";
 import { useDragScroll } from "@/hooks/useDragScroll";
 import { useProducts } from "@/hooks/useProducts";
-import { getApiErrorMessage } from "@/lib/api/errors";
+import { getContractsListErrorMessage } from "@/lib/api/contracts-list-errors";
 import { formatDate } from "@/lib/format/date";
 import { cn, fmtBRL } from "@/lib/utils";
 import type {
   CarteiraDrillDownFilter,
   ContractListItem,
 } from "@/services/contracts/contracts.types";
+
+const CONTRACT_TABLE_HEADERS = [
+  "Contrato",
+  "Cliente",
+  "Produto",
+  "Valor Desembolsado",
+  "Valor Projetado",
+  "Saldo Pendente",
+  "Parcelas Totais",
+  "Data",
+  "Próximo Vencimento",
+] as const;
+
+const MONEY_HEADERS = new Set([
+  "Valor Desembolsado",
+  "Valor Projetado",
+  "Saldo Pendente",
+]);
 
 function fmtDate(value?: string): string {
   if (!value) return "—";
@@ -213,38 +231,23 @@ function ContractListDialogBody({
             </div>
           ) : contractsQuery.isError ? (
             <p className="p-6 text-center text-sm text-[#A32D2D]">
-              {getApiErrorMessage(
+              {getContractsListErrorMessage(
                 contractsQuery.error,
                 "Não foi possível carregar os contratos.",
               )}
             </p>
           ) : (
-            <table className="w-full min-w-[1000px] text-xs">
+            <table className="w-full min-w-[900px] text-xs">
               <thead className="bg-brand-navy">
                 <tr>
-                  {[
-                    "Contrato",
-                    "Cliente",
-                    "Empresa",
-                    "Produto",
-                    "Valor Desembolsado",
-                    "Valor Projetado",
-                    "Saldo Pendente",
-                    "Parcelas Totais",
-                    "Data",
-                    "Próximo Vencimento",
-                  ].map((header) => (
+                  {CONTRACT_TABLE_HEADERS.map((header) => (
                     <th
                       key={header}
                       className={cn(
                         "whitespace-nowrap px-3 py-2.5 font-semibold text-white/90",
                         header === "Parcelas Totais"
                           ? "text-center"
-                          : [
-                                "Valor Desembolsado",
-                                "Valor Projetado",
-                                "Saldo Pendente",
-                              ].includes(header)
+                          : MONEY_HEADERS.has(header)
                             ? "text-right"
                             : "text-left",
                         header === "Contrato" &&
@@ -275,9 +278,6 @@ function ContractListDialogBody({
                       {contract.clientName}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-[#6B7080]">
-                      {contract.companyName ?? "CELCOIN"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-[#6B7080]">
                       {contract.productName}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-right text-[#1A1D2E]">
@@ -303,7 +303,7 @@ function ContractListDialogBody({
                 {items.length === 0 && (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={CONTRACT_TABLE_HEADERS.length}
                       className="py-8 text-center text-[#9DA3B4]"
                     >
                       Nenhum contrato encontrado com esses filtros.
