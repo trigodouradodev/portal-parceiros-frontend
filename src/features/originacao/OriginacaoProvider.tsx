@@ -1,5 +1,9 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import {
+  createProposalFromSimulation,
+  type ProposalSnapshot,
+} from "@/features/originacao/data/proposal";
+import {
   OriginacaoContext,
   type OriginacaoContextValue,
 } from "@/features/originacao/originacao-context";
@@ -14,8 +18,8 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
   const [dadosIniciais, setDadosIniciaisState] =
     useState<DadosElegibilidade | null>(null);
   const [simulacoes, setSimulacoes] = useState<SimulacaoSnapshot[]>([]);
-  const [propostaSimulacao, setPropostaSimulacao] =
-    useState<SimulacaoSnapshot | null>(null);
+  const [proposals, setProposals] = useState<ProposalSnapshot[]>([]);
+  const [openProposalId, setOpenProposalId] = useState<string | null>(null);
 
   const setDadosIniciais = useCallback((dados: DadosElegibilidade) => {
     setDadosIniciaisState(dados);
@@ -29,13 +33,25 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
     setSimulacoes((prev) => [...prev, snapshot]);
   }, []);
 
-  const iniciarProposta = useCallback((snapshot: SimulacaoSnapshot) => {
-    setPropostaSimulacao(snapshot);
+  const startProposal = useCallback((simulation: SimulacaoSnapshot) => {
+    const proposal = createProposalFromSimulation(simulation);
+    setProposals((prev) => [...prev, proposal]);
+    setOpenProposalId(proposal.id);
     setActiveTab("proposta");
   }, []);
 
-  const clearProposta = useCallback(() => {
-    setPropostaSimulacao(null);
+  const openProposal = useCallback((id: string) => {
+    setOpenProposalId(id);
+  }, []);
+
+  const closeProposal = useCallback(() => {
+    setOpenProposalId(null);
+  }, []);
+
+  const updateProposal = useCallback((proposal: ProposalSnapshot) => {
+    setProposals((prev) =>
+      prev.map((item) => (item.id === proposal.id ? proposal : item)),
+    );
   }, []);
 
   const value = useMemo<OriginacaoContextValue>(
@@ -47,9 +63,12 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
       consumeDadosIniciais,
       simulacoes,
       addSimulacao,
-      propostaSimulacao,
-      iniciarProposta,
-      clearProposta,
+      proposals,
+      openProposalId,
+      startProposal,
+      openProposal,
+      closeProposal,
+      updateProposal,
     }),
     [
       activeTab,
@@ -58,9 +77,12 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
       consumeDadosIniciais,
       simulacoes,
       addSimulacao,
-      propostaSimulacao,
-      iniciarProposta,
-      clearProposta,
+      proposals,
+      openProposalId,
+      startProposal,
+      openProposal,
+      closeProposal,
+      updateProposal,
     ],
   );
 

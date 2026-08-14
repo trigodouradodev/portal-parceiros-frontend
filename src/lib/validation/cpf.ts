@@ -17,3 +17,16 @@ export function isValidCpf(value: string): boolean {
   const d2 = calcDigit(digits.slice(0, 10), 11);
   return d1 === Number(digits[9]) && d2 === Number(digits[10]);
 }
+
+/** Campo opcional: vazio ou incompleto ok; 11 dígitos precisam ser um CPF válido. */
+export function isOptionalCpfValid(value: string): boolean {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length < 11) return true;
+  return isValidCpf(value);
+}
+
+export function cpfFieldError(value: string): string | undefined {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 11 && !isValidCpf(value)) return "CPF inválido";
+  return undefined;
+}

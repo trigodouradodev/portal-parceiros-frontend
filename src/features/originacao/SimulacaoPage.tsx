@@ -10,7 +10,7 @@ export function SimulacaoPage() {
     consumeDadosIniciais,
     simulacoes,
     addSimulacao,
-    iniciarProposta,
+    startProposal,
   } = useOriginacao();
   const [mode, setMode] = useState<"list" | "form">(
     dadosIniciais ? "form" : "list",
@@ -38,7 +38,7 @@ export function SimulacaoPage() {
       <SimulacaoList
         simulations={simulacoes}
         onNewSimulation={handleNewSimulation}
-        onStartProposal={iniciarProposta}
+        onStartProposal={startProposal}
       />
     );
   }
