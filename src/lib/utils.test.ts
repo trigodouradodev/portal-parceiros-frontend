@@ -1,4 +1,4 @@
-import { calcParcela, cn, fmtBRL } from "@/lib/utils";
+import { calcInstallment, cn, fmtBRL } from "@/lib/utils";
 
 describe("cn", () => {
   it("merges class names and resolves tailwind conflicts", () => {
@@ -14,22 +14,22 @@ describe("fmtBRL", () => {
   });
 });
 
-describe("calcParcela", () => {
+describe("calcInstallment", () => {
   it("returns 0 for non-positive principal or installments", () => {
-    expect(calcParcela(0, 10, 3.39)).toBe(0);
-    expect(calcParcela(5000, 0, 3.39)).toBe(0);
-    expect(calcParcela(-100, 10, 3.39)).toBe(0);
+    expect(calcInstallment(0, 10, 3.39)).toBe(0);
+    expect(calcInstallment(5000, 0, 3.39)).toBe(0);
+    expect(calcInstallment(-100, 10, 3.39)).toBe(0);
   });
 
   it("divides principal when rate is 0", () => {
-    expect(calcParcela(5000, 10, 0)).toBe(500);
+    expect(calcInstallment(5000, 10, 0)).toBe(500);
   });
 
   it("computes PRICE installment for a positive rate", () => {
-    const parcela = calcParcela(5000, 10, 3.39);
+    const installment = calcInstallment(5000, 10, 3.39);
     const i = 0.0339;
     const expected = (5000 * i) / (1 - Math.pow(1 + i, -10));
-    expect(parcela).toBeCloseTo(expected, 6);
-    expect(parcela).toBeGreaterThan(500);
+    expect(installment).toBeCloseTo(expected, 6);
+    expect(installment).toBeGreaterThan(500);
   });
 });

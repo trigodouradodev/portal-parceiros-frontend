@@ -12,8 +12,8 @@ export function SimulacaoPage() {
     addSimulacao,
     iniciarProposta,
   } = useOriginacao();
-  const [mode, setMode] = useState<"lista" | "form">(
-    dadosIniciais ? "form" : "lista",
+  const [mode, setMode] = useState<"list" | "form">(
+    dadosIniciais ? "form" : "list",
   );
   const [formKey, setFormKey] = useState(0);
   const [formPrefill, setFormPrefill] = useState(dadosIniciais);
@@ -22,23 +22,23 @@ export function SimulacaoPage() {
     if (dadosIniciais) consumeDadosIniciais();
   }, [dadosIniciais, consumeDadosIniciais]);
 
-  function handleNovaSimulacao() {
+  function handleNewSimulation() {
     setFormPrefill(null);
     setFormKey((key) => key + 1);
     setMode("form");
   }
 
-  function handleConcluida(snapshot: SimulacaoSnapshot) {
+  function handleCompleted(snapshot: SimulacaoSnapshot) {
     addSimulacao(snapshot);
-    setMode("lista");
+    setMode("list");
   }
 
-  if (mode === "lista") {
+  if (mode === "list") {
     return (
       <SimulacaoList
-        simulacoes={simulacoes}
-        onNovaSimulacao={handleNovaSimulacao}
-        onIniciarProposta={iniciarProposta}
+        simulations={simulacoes}
+        onNewSimulation={handleNewSimulation}
+        onStartProposal={iniciarProposta}
       />
     );
   }
@@ -47,9 +47,9 @@ export function SimulacaoPage() {
     <SimulacaoForm
       key={formKey}
       prefill={formPrefill}
-      hasLista={simulacoes.length > 0}
-      onVerLista={() => setMode("lista")}
-      onConcluida={handleConcluida}
+      hasList={simulacoes.length > 0}
+      onViewList={() => setMode("list")}
+      onCompleted={handleCompleted}
     />
   );
 }

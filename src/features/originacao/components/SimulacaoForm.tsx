@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { addDays } from "@/components/ui/calendar-utils";
 import {
   Dialog,
   DialogContent,
@@ -28,63 +29,62 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { addDays } from "@/components/ui/calendar-utils";
 import { ChipButton } from "@/features/originacao/components/ChipButton";
 import { OriginacaoFieldInput } from "@/features/originacao/components/OriginacaoFieldInput";
 import {
-  ehDiaVencimentoPermitido,
-  LIMITE_DIAS_PRIMEIRA_PARCELA,
-  PARCELAS_OPCOES,
-  PRODUTOS,
-  TAXA_PRODUTO,
-  VALOR_MAX,
-  VALOR_MIN,
-  VALOR_PADRAO,
-  VALOR_STEP,
-  type ProdutoSimulacao,
+  AMOUNT_DEFAULT,
+  AMOUNT_MAX,
+  AMOUNT_MIN,
+  AMOUNT_STEP,
+  FIRST_INSTALLMENT_MAX_DAYS,
+  INSTALLMENT_OPTIONS,
+  isAllowedDueDate,
+  PRODUCT_RATE,
+  PRODUCTS,
+  type SimulationProduct,
 } from "@/features/originacao/data/simulacao";
-import { formatCpf } from "@/features/originacao/utils/format-cpf";
-import { formatPhone } from "@/features/originacao/utils/format-phone";
-import { calcParcela, fmtBRL } from "@/lib/utils";
 import type {
   DadosElegibilidade,
   SimulacaoSnapshot,
 } from "@/features/originacao/types";
+import { formatCpf } from "@/features/originacao/utils/format-cpf";
+import { formatPhone } from "@/features/originacao/utils/format-phone";
+import { calcInstallment, fmtBRL } from "@/lib/utils";
 
 interface SimulacaoFormProps {
   prefill: DadosElegibilidade | null;
-  hasLista: boolean;
-  onVerLista: () => void;
-  onConcluida: (snapshot: SimulacaoSnapshot) => void;
+  hasList: boolean;
+  onViewList: () => void;
+  onCompleted: (snapshot: SimulacaoSnapshot) => void;
 }
 
 export function SimulacaoForm({
   prefill,
-  hasLista,
-  onVerLista,
-  onConcluida,
+  hasList,
+  onViewList,
+  onCompleted,
 }: SimulacaoFormProps) {
   const [nome, setNome] = useState(prefill?.nome ?? "");
   const [nascimento, setNascimento] = useState(prefill?.nascimento ?? "");
   const [email, setEmail] = useState("");
   const [celular, setCelular] = useState("");
-  const [produto, setProduto] = useState<ProdutoSimulacao>("Pessoal");
-  const [trocandoProduto, setTrocandoProduto] = useState(false);
+  const [product, setProduct] = useState<SimulationProduct>("Pessoal");
+  const [changingProduct, setChangingProduct] = useState(false);
   const [cpf, setCpf] = useState(prefill?.cpf ?? "");
-  const [valor, setValor] = useState(VALOR_PADRAO);
-  const [parcelas, setParcelas] = useState<number | null>(null);
-  const [vencimentoData, setVencimentoData] = useState<Date | null>(null);
-  const [draftVencimentoData, setDraftVencimentoData] = useState<
-    Date | undefined
-  >(undefined);
-  const [vencimentoDialogOpen, setVencimentoDialogOpen] = useState(false);
-  const [mostrarTaxa, setMostrarTaxa] = useState(false);
+  const [amount, setAmount] = useState(AMOUNT_DEFAULT);
+  const [installments, setInstallments] = useState<number | null>(null);
+  const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [draftDueDate, setDraftDueDate] = useState<Date | undefined>(undefined);
+  const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
+  const [showRate, setShowRate] = useState(false);
 
-  const hoje = new Date();
-  const limiteVencimento = addDays(hoje, LIMITE_DIAS_PRIMEIRA_PARCELA);
-  const vencimento = vencimentoData?.getDate() ?? null;
-  const taxa = TAXA_PRODUTO[produto];
-  const parcelaCalc = parcelas ? calcParcela(valor, parcelas, taxa) : 0;
+  const today = new Date();
+  const dueDateLimit = addDays(today, FIRST_INSTALLMENT_MAX_DAYS);
+  const dueDay = dueDate?.getDate() ?? null;
+  const rate = PRODUCT_RATE[product];
+  const installmentAmount = installments
+    ? calcInstallment(amount, installments, rate)
+    : 0;
 
   const canSubmit =
     nome.trim() !== "" &&
@@ -92,36 +92,36 @@ export function SimulacaoForm({
     email.trim() !== "" &&
     celular.trim() !== "" &&
     cpf.trim() !== "" &&
-    parcelas !== null &&
-    vencimento !== null;
+    installments !== null &&
+    dueDay !== null;
 
-  function abrirDialogVencimento() {
-    setDraftVencimentoData(vencimentoData ?? undefined);
-    setVencimentoDialogOpen(true);
+  function openDueDateDialog() {
+    setDraftDueDate(dueDate ?? undefined);
+    setDueDateDialogOpen(true);
   }
 
-  function confirmarVencimento() {
-    if (!draftVencimentoData) return;
-    setVencimentoData(draftVencimentoData);
-    setVencimentoDialogOpen(false);
+  function confirmDueDate() {
+    if (!draftDueDate) return;
+    setDueDate(draftDueDate);
+    setDueDateDialogOpen(false);
   }
 
-  function handleContinuar() {
-    if (!canSubmit || parcelas === null || vencimento === null) return;
-    onConcluida({
+  function handleContinue() {
+    if (!canSubmit || installments === null || dueDay === null) return;
+    onCompleted({
       id: crypto.randomUUID(),
       criadaEm: new Date().toLocaleString("pt-BR"),
       nome,
       nascimento,
       email,
       celular,
-      produto,
-      taxa,
+      produto: product,
+      taxa: rate,
       cpf,
-      valor,
-      parcelas,
-      vencimento,
-      parcelaCalc,
+      valor: amount,
+      parcelas: installments,
+      vencimento: dueDay,
+      parcelaCalc: installmentAmount,
     });
   }
 
@@ -134,10 +134,10 @@ export function SimulacaoForm({
         <p className="mt-1 text-sm text-[#6B7080]">
           Simule uma cotação de crédito para o cliente.
         </p>
-        {hasLista ? (
+        {hasList ? (
           <button
             type="button"
-            onClick={onVerLista}
+            onClick={onViewList}
             className="mt-2 flex items-center gap-1 text-sm font-semibold text-brand-navy"
           >
             <ArrowLeft size={14} />
@@ -193,27 +193,27 @@ export function SimulacaoForm({
             <Label className="text-sm font-medium text-[#1A1D2E]">
               Produto
             </Label>
-            {!trocandoProduto ? (
+            {!changingProduct ? (
               <div className="flex items-start justify-between gap-3 rounded-2xl bg-[#F5F6FA] px-4 py-3">
                 <div>
                   <span className="mb-1 inline-block rounded-full bg-[#FDF3E0] px-2 py-0.5 text-[11px] font-semibold text-[#854F0B]">
                     Sugerido
                   </span>
-                  <p className="font-semibold text-[#1A1D2E]">{produto}</p>
+                  <p className="font-semibold text-[#1A1D2E]">{product}</p>
                   <button
                     type="button"
-                    onClick={() => setMostrarTaxa((v) => !v)}
+                    onClick={() => setShowRate((v) => !v)}
                     className="flex items-center gap-1 text-xs text-[#6B7080]"
                   >
-                    {mostrarTaxa ? <EyeOff size={12} /> : <Eye size={12} />}
-                    {mostrarTaxa
-                      ? `Taxa de ${taxa.toFixed(2).replace(".", ",")}% ao mês · definida pelo produto`
+                    {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
+                    {showRate
+                      ? `Taxa de ${rate.toFixed(2).replace(".", ",")}% ao mês · definida pelo produto`
                       : "Mostrar taxa"}
                   </button>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setTrocandoProduto(true)}
+                  onClick={() => setChangingProduct(true)}
                   className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy"
                 >
                   <RefreshCw size={13} />
@@ -222,19 +222,19 @@ export function SimulacaoForm({
               </div>
             ) : (
               <Select
-                value={produto}
+                value={product}
                 onValueChange={(v) => {
-                  setProduto(v as ProdutoSimulacao);
-                  setTrocandoProduto(false);
+                  setProduct(v as SimulationProduct);
+                  setChangingProduct(false);
                 }}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {PRODUTOS.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
+                  {PRODUCTS.map((item) => (
+                    <SelectItem key={item} value={item}>
+                      {item}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -247,15 +247,15 @@ export function SimulacaoForm({
               Quanto o cliente precisa?
             </Label>
             <p className="font-fraunces text-3xl font-bold text-brand-navy">
-              {fmtBRL(valor)}
+              {fmtBRL(amount)}
             </p>
             <input
               type="range"
-              min={VALOR_MIN}
-              max={VALOR_MAX}
-              step={VALOR_STEP}
-              value={valor}
-              onChange={(e) => setValor(Number(e.target.value))}
+              min={AMOUNT_MIN}
+              max={AMOUNT_MAX}
+              step={AMOUNT_STEP}
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
               className="w-full accent-brand-navy"
             />
             <div className="flex justify-between text-xs text-[#9DA3B4]">
@@ -269,11 +269,11 @@ export function SimulacaoForm({
               Em quantas parcelas?
             </Label>
             <div className="grid grid-cols-6 gap-2">
-              {PARCELAS_OPCOES.map((n) => (
+              {INSTALLMENT_OPTIONS.map((n) => (
                 <ChipButton
                   key={n}
-                  active={parcelas === n}
-                  onClick={() => setParcelas(n)}
+                  active={installments === n}
+                  onClick={() => setInstallments(n)}
                 >
                   {n}x
                 </ChipButton>
@@ -287,24 +287,22 @@ export function SimulacaoForm({
             </Label>
             <p className="text-xs text-[#9DA3B4]">
               Vencimento sempre no dia 5, 10, 15 ou 20, dentro de uma janela de
-              até {LIMITE_DIAS_PRIMEIRA_PARCELA} dias (D+
-              {LIMITE_DIAS_PRIMEIRA_PARCELA}) a partir de hoje.
+              até {FIRST_INSTALLMENT_MAX_DAYS} dias (D+
+              {FIRST_INSTALLMENT_MAX_DAYS}) a partir de hoje.
             </p>
             <button
               type="button"
-              onClick={abrirDialogVencimento}
+              onClick={openDueDateDialog}
               className="flex items-center gap-2 rounded-2xl bg-[#F5F6FA] px-4 py-3 text-left transition-colors hover:bg-[#EFF0F5]"
             >
               <CalendarDays size={16} className="shrink-0 text-[#6B7080]" />
               <span
                 className={
-                  vencimentoData
-                    ? "font-semibold text-[#1A1D2E]"
-                    : "text-[#9DA3B4]"
+                  dueDate ? "font-semibold text-[#1A1D2E]" : "text-[#9DA3B4]"
                 }
               >
-                {vencimentoData
-                  ? vencimentoData.toLocaleDateString("pt-BR", {
+                {dueDate
+                  ? dueDate.toLocaleDateString("pt-BR", {
                       day: "2-digit",
                       month: "long",
                       year: "numeric",
@@ -314,12 +312,12 @@ export function SimulacaoForm({
             </button>
           </div>
 
-          {parcelas !== null && vencimento !== null ? (
+          {installments !== null && dueDay !== null ? (
             <div className="rounded-2xl bg-[#F5F6FA] px-4 py-3">
               <div className="flex items-baseline justify-between">
                 <span className="text-sm text-[#6B7080]">Parcela</span>
                 <span className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-                  {fmtBRL(parcelaCalc)}/mês
+                  {fmtBRL(installmentAmount)}/mês
                 </span>
               </div>
             </div>
@@ -331,43 +329,40 @@ export function SimulacaoForm({
           variant="yellow"
           className="mt-5 h-11 w-full rounded-2xl"
           disabled={!canSubmit}
-          onClick={handleContinuar}
+          onClick={handleContinue}
         >
           Continuar
         </Button>
       </section>
 
-      <Dialog
-        open={vencimentoDialogOpen}
-        onOpenChange={setVencimentoDialogOpen}
-      >
+      <Dialog open={dueDateDialogOpen} onOpenChange={setDueDateDialogOpen}>
         <DialogContent className="max-w-[340px]">
           <DialogHeader>
             <DialogTitle>Selecionar o dia de vencimento</DialogTitle>
             <DialogDescription>
               Sempre no dia 5, 10, 15 ou 20, dentro de uma janela de até{" "}
-              {LIMITE_DIAS_PRIMEIRA_PARCELA} dias a partir de hoje.
+              {FIRST_INSTALLMENT_MAX_DAYS} dias a partir de hoje.
             </DialogDescription>
           </DialogHeader>
           <Calendar
-            selected={draftVencimentoData}
-            minDate={hoje}
-            maxDate={limiteVencimento}
-            isDayAllowed={ehDiaVencimentoPermitido}
-            onSelect={setDraftVencimentoData}
+            selected={draftDueDate}
+            minDate={today}
+            maxDate={dueDateLimit}
+            isDayAllowed={isAllowedDueDate}
+            onSelect={setDraftDueDate}
           />
           <DialogFooter>
             <Button
               variant="outline"
               className="h-10 rounded-xl"
-              onClick={() => setVencimentoDialogOpen(false)}
+              onClick={() => setDueDateDialogOpen(false)}
             >
               Cancelar
             </Button>
             <Button
               className="h-10 rounded-xl font-semibold"
-              disabled={!draftVencimentoData}
-              onClick={confirmarVencimento}
+              disabled={!draftDueDate}
+              onClick={confirmDueDate}
             >
               Confirmar
             </Button>
