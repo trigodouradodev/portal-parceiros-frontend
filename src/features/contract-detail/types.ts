@@ -6,7 +6,17 @@ import type {
   ResponsibleType,
 } from "@/services/dashboard/dashboard.types";
 
-export type DetailMode = typeof TaskTab.Charge | typeof TaskTab.Preventive;
+/**
+ * AUREA-330: "carteira" é um 3º modo — visualização somente-leitura vinda da
+ * Carteira (não é uma aba do dashboard como Charge/Preventive, então fica
+ * fora de `TaskTab` propositalmente).
+ */
+export const CARTEIRA_DETAIL_MODE = "carteira" as const;
+
+export type DetailMode =
+  | typeof TaskTab.Charge
+  | typeof TaskTab.Preventive
+  | typeof CARTEIRA_DETAIL_MODE;
 
 export type StatusColor = "blue" | "amber" | "red" | "green";
 

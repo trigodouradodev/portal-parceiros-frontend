@@ -1,4 +1,5 @@
 import { api } from "@/lib/api/axios";
+import type { CollectionDetail } from "@/services/dashboard/dashboard.types";
 import type { ContractsListQuery, ContractsPage } from "./contracts.types";
 
 export function buildContractsParams(
@@ -30,6 +31,19 @@ export const contractsService = {
     const { data } = await api.get<ContractsPage>("/contracts", {
       params: buildContractsParams(query),
     });
+    return data;
+  },
+
+  /**
+   * AUREA-330: detalhe rico do contrato pra tela de visualização da Carteira.
+   * O backend resolve sozinho qual parcela mostrar (aberta mais próxima; sem
+   * nenhuma, a última) — não precisa de installmentNumber aqui.
+   * GET /contracts/:id
+   */
+  async getContractDetail(contractId: string): Promise<CollectionDetail> {
+    const { data } = await api.get<CollectionDetail>(
+      `/contracts/${contractId}`,
+    );
     return data;
   },
 };
