@@ -5,11 +5,14 @@ import { Timeline } from "@/features/contract-detail/components/Timeline";
 interface TimelineSectionProps {
   detail: ContractDetailView;
   onRegisterAction: () => void;
+  /** AUREA-330: falso na visualização somente-leitura da Carteira. */
+  showAction?: boolean;
 }
 
 export function TimelineSection({
   detail,
   onRegisterAction,
+  showAction = true,
 }: TimelineSectionProps) {
   const doneCount = detail.timeline.filter((s) => s.status === "done").length;
   const totalCount = detail.timeline.length;
@@ -26,7 +29,11 @@ export function TimelineSection({
         </span>
       </div>
       <div className="rounded-2xl border border-border bg-white p-4 shadow-sm md:p-5">
-        <Timeline steps={detail.timeline} onRegisterAction={onRegisterAction} />
+        <Timeline
+          steps={detail.timeline}
+          onRegisterAction={onRegisterAction}
+          showAction={showAction}
+        />
       </div>
     </div>
   );

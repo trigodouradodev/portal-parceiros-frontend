@@ -6,9 +6,14 @@ import { TimelineStepItem } from "@/features/contract-detail/components/Timeline
 interface TimelineProps {
   steps: TimelineStep[];
   onRegisterAction: () => void;
+  showAction?: boolean;
 }
 
-export function Timeline({ steps, onRegisterAction }: TimelineProps) {
+export function Timeline({
+  steps,
+  onRegisterAction,
+  showAction = true,
+}: TimelineProps) {
   return (
     <div className="flex flex-col">
       {steps.map((step, index) => (
@@ -17,6 +22,7 @@ export function Timeline({ steps, onRegisterAction }: TimelineProps) {
           step={step}
           isLast={index === steps.length - 1}
           onRegisterAction={onRegisterAction}
+          showAction={showAction}
         />
       ))}
     </div>
@@ -27,9 +33,15 @@ interface TimelineRowProps {
   step: TimelineStep;
   isLast: boolean;
   onRegisterAction: () => void;
+  showAction: boolean;
 }
 
-function TimelineRow({ step, isLast, onRegisterAction }: TimelineRowProps) {
+function TimelineRow({
+  step,
+  isLast,
+  onRegisterAction,
+  showAction,
+}: TimelineRowProps) {
   const isEvent = !step.tone;
 
   return (
@@ -47,6 +59,7 @@ function TimelineRow({ step, isLast, onRegisterAction }: TimelineRowProps) {
         step={step}
         isLast={isLast}
         onRegisterAction={onRegisterAction}
+        showAction={showAction}
       />
     </div>
   );
