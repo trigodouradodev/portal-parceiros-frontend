@@ -451,7 +451,6 @@ export function DashboardPage() {
           completedTodayItems={completedTodayItems}
           queueTotal={totalActions}
           onOpen={handleChargeOpen}
-          onOpenDetail={handleDetailOpen}
           onAction={handleChargeAction}
           onWhatsApp={handleChargeWhatsApp}
           onCall={handleChargeCall}

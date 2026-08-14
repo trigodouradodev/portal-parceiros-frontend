@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   AlertTriangle,
   FileText,
@@ -7,26 +6,24 @@ import {
   RefreshCw,
   Wallet,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ContractListDialog } from "@/features/carteira/components/ContractListDialog";
 import { KpiCard } from "@/features/carteira/components/KpiCard";
+import { buildContractListPath } from "@/features/carteira/utils/contract-list-route";
 import { fmtInt, fmtPct, inadTone } from "@/features/carteira/utils/kpi";
 import { usePortfolioSummary } from "@/hooks/usePortfolioSummary";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { fmtBRL } from "@/lib/utils";
 import type { CarteiraDrillDownFilter } from "@/services/contracts/contracts.types";
 
-interface DrillDownState {
-  title: string;
-  filter: CarteiraDrillDownFilter;
-}
-
 export function KpiSection() {
   const summaryQuery = usePortfolioSummary();
-  const [drillDown, setDrillDown] = useState<DrillDownState | null>(null);
+  const navigate = useNavigate();
 
+  // AUREA-330: drill-down é tela própria (ContractListPage), não modal —
+  // o clique navega em vez de abrir um Dialog.
   function openDrillDown(title: string, filter: CarteiraDrillDownFilter = {}) {
-    setDrillDown({ title, filter });
+    navigate(buildContractListPath(title, filter));
   }
 
   if (summaryQuery.isPending) {
@@ -146,15 +143,6 @@ export function KpiSection() {
           }
         />
       </div>
-
-      <ContractListDialog
-        open={drillDown != null}
-        title={drillDown?.title ?? ""}
-        initialFilter={drillDown?.filter}
-        onOpenChange={(open) => {
-          if (!open) setDrillDown(null);
-        }}
-      />
     </section>
   );
 }

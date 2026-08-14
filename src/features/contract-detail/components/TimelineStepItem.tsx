@@ -13,12 +13,14 @@ interface TimelineStepItemProps {
   step: TimelineStep;
   isLast: boolean;
   onRegisterAction: () => void;
+  showAction?: boolean;
 }
 
 export function TimelineStepItem({
   step,
   isLast,
   onRegisterAction,
+  showAction = true,
 }: TimelineStepItemProps) {
   const isEvent = !step.tone;
   const toneMeta = step.tone ? TONE_META[step.tone] : null;
@@ -69,7 +71,7 @@ export function TimelineStepItem({
 
       {step.note && <TimelineStepNote status={step.status} note={step.note} />}
 
-      {step.status === "current" && (
+      {step.status === "current" && showAction && (
         <Button
           type="button"
           onClick={onRegisterAction}

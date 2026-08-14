@@ -4,6 +4,7 @@ import { NotFound } from "@/components/NotFound";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 import { CarteiraPage } from "@/features/carteira";
+import { ContractListPage } from "@/features/carteira/ContractListPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { LoginPage } from "@/features/login/LoginPage";
 import { ContractDetailPage } from "@/features/contract-detail";
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <DashboardPage /> },
           { path: "/carteira", element: <CarteiraPage /> },
+          { path: "/carteira/contratos", element: <ContractListPage /> },
           { path: "/originacao", element: <OriginacaoPage /> },
           { path: "/performance", element: <PerformancePage /> },
           { path: "/profile", element: <ProfilePage /> },
