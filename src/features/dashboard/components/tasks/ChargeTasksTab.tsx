@@ -41,7 +41,6 @@ interface ChargeTasksTabProps {
   segmentCounts?: Partial<Record<ChargeQueueSegmentCode, number>>;
   scheduledItems?: OverdueCollectionItem[];
   completedTodayItems?: OverdueCollectionItem[];
-  onOpenDetail?: (item: OverdueCollectionItem) => void;
   highlightedInstallmentId?: string | null;
   pinnedHighlightItem?: OverdueCollectionItem | null;
   queueTotal?: number;
@@ -92,7 +91,6 @@ export function ChargeTasksTab({
   segmentCounts,
   scheduledItems = [],
   completedTodayItems = [],
-  onOpenDetail,
   highlightedInstallmentId = null,
   pinnedHighlightItem = null,
   queueTotal,
@@ -126,8 +124,6 @@ export function ChargeTasksTab({
     () => buildChargeQueueTabView(queueView, { segmentCounts }),
     [queueView, segmentCounts],
   );
-
-  const openDetail = onOpenDetail ?? onOpen;
 
   if (isLoading) {
     return <ChargeQueueSkeleton />;
@@ -273,7 +269,7 @@ export function ChargeTasksTab({
             highlighted={
               pinnedHighlightItem.installment.id === highlightedInstallmentId
             }
-            onOpen={() => openDetail(pinnedHighlightItem)}
+            onOpen={() => onOpen(pinnedHighlightItem)}
           />
         </section>
       )}
@@ -304,7 +300,7 @@ export function ChargeTasksTab({
                 locked
                 installmentId={item.installment.id}
                 highlighted={item.installment.id === highlightedInstallmentId}
-                onOpen={() => openDetail(item)}
+                onOpen={() => onOpen(item)}
               />
             ))}
         </section>

@@ -23,6 +23,7 @@ import {
   parseDetailMode,
   useContractDetail,
 } from "@/features/contract-detail/hooks/useContractDetail";
+import { CARTEIRA_DETAIL_MODE } from "@/features/contract-detail/types";
 import { useActionContext } from "@/contexts/action";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { useToast } from "@/contexts/toast/toast-context";
@@ -73,12 +74,24 @@ export function ContractDetailPage() {
   const { detail, listItem, installmentDetail, isLoading, isNotFound } =
     useContractDetail(contractId, mode);
 
+  const isCarteiraView = mode === CARTEIRA_DETAIL_MODE;
+
   const handleBack = () => {
+    // AUREA-330: veio da Carteira (não é aba do dashboard) — só volta na
+    // história, sem gravar o cookie de aba do charge/preventive.
+    if (isCarteiraView) {
+      navigate(-1);
+      return;
+    }
     writeTaskTabCookie(mode);
     navigate("/");
   };
 
   const handleRegisterAction = () => {
+    // Visualização somente-leitura da Carteira: sem ação de cobrança/
+    // preventivo pra registrar (o botão já não aparece — guarda defensiva).
+    if (isCarteiraView) return;
+
     writeTaskTabCookie(readTaskTabFromCookie());
 
     if (mode === TaskTab.Charge) {
@@ -190,6 +203,7 @@ export function ContractDetailPage() {
               <TimelineSection
                 detail={detail}
                 onRegisterAction={handleRegisterAction}
+                showAction={!isCarteiraView}
               />
             </div>
           </div>
@@ -198,6 +212,7 @@ export function ContractDetailPage() {
             <TimelineSection
               detail={detail}
               onRegisterAction={handleRegisterAction}
+              showAction={!isCarteiraView}
             />
           </div>
         </div>
