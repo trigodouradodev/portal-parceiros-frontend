@@ -1,8 +1,13 @@
 import {
   addDays,
   buildCalendarCells,
+  buildYearPage,
+  getCalendarYearBounds,
   getDayCellClassName,
+  getYearPageStart,
+  isMonthInRange,
   isSameDay,
+  isYearInRange,
   startOfDay,
   toValidDate,
 } from "@/components/ui/calendar-utils";
@@ -62,5 +67,45 @@ describe("getDayCellClassName", () => {
     expect(getDayCellClassName(true, false)).toContain("cursor-not-allowed");
     expect(getDayCellClassName(false, true)).toContain("bg-brand-navy");
     expect(getDayCellClassName(false, false)).toContain("hover:bg-muted");
+  });
+});
+
+describe("month / year range", () => {
+  const min = new Date(2026, 8, 1);
+  const max = new Date(2026, 10, 15);
+
+  it("keeps months that overlap the range", () => {
+    expect(isMonthInRange(2026, 7, min, max)).toBe(false);
+    expect(isMonthInRange(2026, 8, min, max)).toBe(true);
+    expect(isMonthInRange(2026, 10, min, max)).toBe(true);
+    expect(isMonthInRange(2026, 11, min, max)).toBe(false);
+  });
+
+  it("keeps years that overlap the range", () => {
+    expect(isYearInRange(2025, min, max)).toBe(false);
+    expect(isYearInRange(2026, min, max)).toBe(true);
+    expect(isYearInRange(2027, min, max)).toBe(false);
+  });
+
+  it("uses min/max years when provided", () => {
+    expect(getCalendarYearBounds(min, max)).toEqual({
+      minYear: 2026,
+      maxYear: 2026,
+    });
+  });
+
+  it("falls back to a lookback window", () => {
+    const today = new Date(2026, 7, 17);
+    expect(getCalendarYearBounds(undefined, undefined, today)).toEqual({
+      minYear: 2011,
+      maxYear: 2026,
+    });
+  });
+
+  it("pages years from the lower bound", () => {
+    expect(getYearPageStart(2026, 2011)).toBe(2023);
+    expect(buildYearPage(2023)).toEqual([
+      2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034,
+    ]);
   });
 });

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ContractListCard } from "@/features/carteira/components/ContractListCard";
+import { DateFilterField } from "@/features/carteira/components/DateFilterField";
 import {
   ALL_PRODUCTS,
   SEARCH_DEBOUNCE_MS,
@@ -151,20 +152,24 @@ export function ContractListPage() {
               ))}
             </SelectContent>
           </Select>
-          <Input
-            type="date"
-            value={filters.startDate}
-            onChange={(e) => patchFilters({ startDate: e.target.value })}
-            className="w-auto"
-            aria-label="Data inicial de desembolso"
-          />
-          <Input
-            type="date"
-            value={filters.endDate}
-            onChange={(e) => patchFilters({ endDate: e.target.value })}
-            className="w-auto"
-            aria-label="Data final de desembolso"
-          />
+          <div className="grid grid-cols-2 gap-2.5 md:contents">
+            <DateFilterField
+              label="Data inicial"
+              value={filters.startDate}
+              onChange={(startDate) => patchFilters({ startDate })}
+              maxDate={filters.endDate}
+              dialogTitle="Data inicial de desembolso"
+              dialogDescription="Filtra contratos desembolsados a partir desta data."
+            />
+            <DateFilterField
+              label="Data final"
+              value={filters.endDate}
+              onChange={(endDate) => patchFilters({ endDate })}
+              minDate={filters.startDate}
+              dialogTitle="Data final de desembolso"
+              dialogDescription="Filtra contratos desembolsados até esta data."
+            />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-4">
