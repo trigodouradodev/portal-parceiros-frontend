@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatCpf } from "@/features/originacao/utils/format-cpf";
+import { formatCpf } from "@/lib/format/tax-id";
 import { fmtBRL } from "@/lib/utils";
 import type { SimulacaoSnapshot } from "@/features/originacao/types";
 
