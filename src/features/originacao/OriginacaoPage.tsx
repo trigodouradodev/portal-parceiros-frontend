@@ -1,7 +1,8 @@
+import { Lock } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { OriginacaoTabButton } from "@/features/originacao/components/OriginacaoTabButton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ElegibilidadePage } from "@/features/originacao/ElegibilidadePage";
 import { OriginacaoProvider } from "@/features/originacao/OriginacaoProvider";
 import { useOriginacao } from "@/features/originacao/originacao-context";
@@ -17,39 +18,43 @@ function OriginacaoTabs() {
   const { activeTab, setActiveTab, propostaSimulacao } = useOriginacao();
   const propostaLocked = propostaSimulacao == null;
 
-  function goTo(tab: OriginacaoTab) {
+  function goTo(tab: string) {
     if (tab === "proposta" && propostaLocked) return;
-    setActiveTab(tab);
+    setActiveTab(tab as OriginacaoTab);
   }
 
   return (
-    <>
+    <Tabs value={activeTab} onValueChange={goTo}>
       <div className="px-5 pt-5 md:px-8">
-        <div className="flex gap-1 rounded-xl bg-[#EBEBF0] p-1 md:w-[26rem]">
-          <OriginacaoTabButton
-            label="Elegibilidade"
-            active={activeTab === "elegibilidade"}
-            onClick={() => goTo("elegibilidade")}
-          />
-          <OriginacaoTabButton
-            label="Simulação"
-            active={activeTab === "simulacao"}
-            onClick={() => goTo("simulacao")}
-          />
-          <OriginacaoTabButton
-            label="Proposta"
-            active={activeTab === "proposta"}
+        <TabsList className="md:w-[26rem]">
+          <TabsTrigger value="elegibilidade">Elegibilidade</TabsTrigger>
+          <TabsTrigger value="simulacao">Simulação</TabsTrigger>
+          <TabsTrigger
+            value="proposta"
             disabled={propostaLocked}
-            locked={propostaLocked}
-            onClick={() => goTo("proposta")}
-          />
-        </div>
+            title={
+              propostaLocked
+                ? "Conclua uma simulação para liberar a proposta"
+                : undefined
+            }
+            className="disabled:cursor-not-allowed disabled:opacity-100 disabled:text-[#C8CBD8]"
+          >
+            {propostaLocked ? <Lock size={12} aria-hidden /> : null}
+            Proposta
+          </TabsTrigger>
+        </TabsList>
       </div>
 
-      {activeTab === "elegibilidade" ? <ElegibilidadePage /> : null}
-      {activeTab === "simulacao" ? <SimulacaoPage /> : null}
-      {activeTab === "proposta" ? <PropostaPage /> : null}
-    </>
+      <TabsContent value="elegibilidade" className="mt-0">
+        <ElegibilidadePage />
+      </TabsContent>
+      <TabsContent value="simulacao" className="mt-0">
+        <SimulacaoPage />
+      </TabsContent>
+      <TabsContent value="proposta" className="mt-0">
+        <PropostaPage />
+      </TabsContent>
+    </Tabs>
   );
 }
 
