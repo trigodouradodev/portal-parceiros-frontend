@@ -1,4 +1,4 @@
-import { isValidCpf } from "@/features/originacao/utils/is-valid-cpf";
+import { isValidCpf } from "@/lib/validation/cpf";
 
 /**
  * Mock de elegibilidade: resultado determinístico por CPF

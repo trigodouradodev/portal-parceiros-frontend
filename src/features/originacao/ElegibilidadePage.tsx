@@ -17,7 +17,7 @@ import {
   isAdultAge,
   todayIsoLocal,
 } from "@/features/originacao/utils/calc-age";
-import { isValidCpf } from "@/features/originacao/utils/is-valid-cpf";
+import { isValidCpf } from "@/lib/validation/cpf";
 import { cn } from "@/lib/utils";
 
 type Status = "idle" | "loading" | "valid" | "invalid";
