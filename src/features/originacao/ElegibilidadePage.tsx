@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { isEligibleCpf } from "@/features/originacao/data/eligibility";
 import { useOriginacao } from "@/features/originacao/originacao-context";
-import { formatCpf } from "@/features/originacao/utils/format-cpf";
+import { formatCpf } from "@/lib/format/tax-id";
 import {
   calcAge,
   isAdultAge,
