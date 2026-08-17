@@ -1,3 +1,4 @@
+import { useForm } from "react-hook-form";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -7,6 +8,7 @@ import {
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
 import { OriginacaoProgress } from "@/features/originacao/components/OriginacaoProgress";
 import { ActivityIncomeSection } from "@/features/originacao/components/proposta/ActivityIncomeSection";
 import { AddressSection } from "@/features/originacao/components/proposta/AddressSection";
@@ -18,10 +20,17 @@ import { RegistrationSection } from "@/features/originacao/components/proposta/R
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import {
   PROPOSAL_STEPS,
+  isActivityIncomeValid,
+  isAddressValid,
+  isDocumentsValid,
+  isFinancialValid,
+  isGuarantorValid,
+  isPartnerOpinionValid,
+  isRegistrationValid,
   type ProposalFormData,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
-import { formatCpf } from "@/features/originacao/utils/format-cpf";
+import { formatCpf } from "@/lib/format/tax-id";
 import { fmtBRL } from "@/lib/utils";
 import type { SimulacaoSnapshot } from "@/features/originacao/types";
 
@@ -240,41 +249,67 @@ export function PropostaPage() {
     return <ProposalSuccess proposal={proposal} onBackToList={closeProposal} />;
   }
 
-  const { simulation, data, step, stepValid } = proposal;
+  return (
+    <ProposalWizard
+      key={proposal.id}
+      proposal={proposal}
+      onUpdate={updateProposal}
+      onClose={closeProposal}
+    />
+  );
+}
 
-  function save(patch: Partial<ProposalSnapshot>) {
-    updateProposal({
-      ...proposal!,
-      ...patch,
+function ProposalWizard({
+  proposal,
+  onUpdate,
+  onClose,
+}: {
+  proposal: ProposalSnapshot;
+  onUpdate: (proposal: ProposalSnapshot) => void;
+  onClose: () => void;
+}) {
+  const form = useForm<ProposalFormData>({
+    defaultValues: proposal.data,
+  });
+
+  const data = form.watch();
+  const { simulation, step } = proposal;
+  const stepValid = [
+    isRegistrationValid(data.registration),
+    isActivityIncomeValid(data.activityIncome),
+    isAddressValid(data.address),
+    isPartnerOpinionValid(data.partnerOpinion),
+    isGuarantorValid(data.guarantor),
+    isFinancialValid(),
+    isDocumentsValid(data.documents),
+  ];
+
+  function persist(patch: Partial<ProposalSnapshot> = {}) {
+    onUpdate({
+      ...proposal,
+      data: form.getValues(),
+      stepValid,
       updatedAt: new Date().toLocaleString("pt-BR"),
+      ...patch,
     });
-  }
-
-  function setSectionData<K extends keyof ProposalFormData>(
-    key: K,
-    value: ProposalFormData[K],
-  ) {
-    save({ data: { ...data, [key]: value } });
-  }
-
-  function setValidAt(index: number, valid: boolean) {
-    if (stepValid[index] === valid) return;
-    const next = [...stepValid];
-    next[index] = valid;
-    save({ stepValid: next });
   }
 
   function handleNext() {
     if (!stepValid[step]) return;
     if (step === PROPOSAL_STEPS.length - 1) {
-      save({ status: "completed" });
+      persist({ status: "completed" });
     } else {
-      save({ step: step + 1 });
+      persist({ step: step + 1 });
     }
   }
 
   function handleBack() {
-    save({ step: Math.max(0, step - 1) });
+    persist({ step: Math.max(0, step - 1) });
+  }
+
+  function handleClose() {
+    persist();
+    onClose();
   }
 
   return (
@@ -291,7 +326,7 @@ export function PropostaPage() {
 
       <button
         type="button"
-        onClick={closeProposal}
+        onClick={handleClose}
         className="mb-4 flex items-center gap-1 text-sm font-semibold text-brand-navy"
       >
         <ArrowLeft size={14} />
@@ -302,62 +337,37 @@ export function PropostaPage() {
       <StepHeader current={step} />
 
       <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <div className={step === 0 ? "" : "hidden"}>
-          <RegistrationSection
-            product={simulation.produto}
-            rate={simulation.taxa}
-            cpf={simulation.cpf}
-            name={simulation.nome}
-            birthDate={simulation.nascimento}
-            email={simulation.email}
-            phone={simulation.celular}
-            data={data.registration}
-            onChange={(value) => setSectionData("registration", value)}
-            onValidChange={(valid) => setValidAt(0, valid)}
-          />
-        </div>
-        <div className={step === 1 ? "" : "hidden"}>
-          <ActivityIncomeSection
-            data={data.activityIncome}
-            onChange={(value) => setSectionData("activityIncome", value)}
-            onValidChange={(valid) => setValidAt(1, valid)}
-          />
-        </div>
-        <div className={step === 2 ? "" : "hidden"}>
-          <AddressSection
-            data={data.address}
-            onChange={(value) => setSectionData("address", value)}
-            onValidChange={(valid) => setValidAt(2, valid)}
-          />
-        </div>
-        <div className={step === 3 ? "" : "hidden"}>
-          <PartnerOpinionSection
-            data={data.partnerOpinion}
-            onChange={(value) => setSectionData("partnerOpinion", value)}
-            onValidChange={(valid) => setValidAt(3, valid)}
-          />
-        </div>
-        <div className={step === 4 ? "" : "hidden"}>
-          <GuarantorSection
-            data={data.guarantor}
-            onChange={(value) => setSectionData("guarantor", value)}
-            onValidChange={(valid) => setValidAt(4, valid)}
-          />
-        </div>
-        <div className={step === 5 ? "" : "hidden"}>
-          <FinancialSection
-            data={data.financial}
-            onChange={(value) => setSectionData("financial", value)}
-            onValidChange={(valid) => setValidAt(5, valid)}
-          />
-        </div>
-        <div className={step === 6 ? "" : "hidden"}>
-          <DocumentsSection
-            data={data.documents}
-            onChange={(value) => setSectionData("documents", value)}
-            onValidChange={(valid) => setValidAt(6, valid)}
-          />
-        </div>
+        <Form {...form}>
+          <div className={step === 0 ? "" : "hidden"}>
+            <RegistrationSection
+              product={simulation.produto}
+              rate={simulation.taxa}
+              cpf={simulation.cpf}
+              name={simulation.nome}
+              birthDate={simulation.nascimento}
+              email={simulation.email}
+              phone={simulation.celular}
+            />
+          </div>
+          <div className={step === 1 ? "" : "hidden"}>
+            <ActivityIncomeSection />
+          </div>
+          <div className={step === 2 ? "" : "hidden"}>
+            <AddressSection />
+          </div>
+          <div className={step === 3 ? "" : "hidden"}>
+            <PartnerOpinionSection />
+          </div>
+          <div className={step === 4 ? "" : "hidden"}>
+            <GuarantorSection />
+          </div>
+          <div className={step === 5 ? "" : "hidden"}>
+            <FinancialSection />
+          </div>
+          <div className={step === 6 ? "" : "hidden"}>
+            <DocumentsSection />
+          </div>
+        </Form>
 
         <div className="mt-5 flex gap-2">
           {step > 0 ? (

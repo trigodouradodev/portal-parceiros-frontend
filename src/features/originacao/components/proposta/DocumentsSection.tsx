@@ -1,51 +1,54 @@
-import { useEffect } from "react";
+import { useFormContext } from "react-hook-form";
+import { FormField } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { ChipButton } from "@/features/originacao/components/ChipButton";
 import { FileUploadField } from "@/features/originacao/components/FileUploadField";
 import {
   INCOME_DOCUMENT_TYPE_OPTIONS,
-  isDocumentsValid,
   toggleItem,
-  type DocumentsData,
+  type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 
-interface DocumentsSectionProps {
-  data: DocumentsData;
-  onChange: (data: DocumentsData) => void;
-  onValidChange: (valid: boolean) => void;
-}
-
-export function DocumentsSection({
-  data,
-  onChange,
-  onValidChange,
-}: DocumentsSectionProps) {
-  function set<K extends keyof DocumentsData>(key: K, value: DocumentsData[K]) {
-    onChange({ ...data, [key]: value });
-  }
-
-  useEffect(() => {
-    onValidChange(isDocumentsValid(data));
-  }, [data, onValidChange]);
+export function DocumentsSection() {
+  const { control, setValue, watch } = useFormContext<ProposalFormData>();
+  const incomeProofTypes = watch("documents.incomeProofTypes");
 
   return (
     <div className="flex flex-col gap-5">
-      <FileUploadField
-        label="Documentos de Identificação"
-        value={data.identification}
-        onChange={(value) => set("identification", value)}
+      <FormField
+        control={control}
+        name="documents.identification"
+        render={({ field }) => (
+          <FileUploadField
+            label="Documentos de Identificação"
+            value={field.value}
+            onChange={field.onChange}
+          />
+        )}
       />
-      <FileUploadField
-        label="Comprovante de Residência"
-        note="Até 90 dias"
-        value={data.proofOfResidence}
-        onChange={(value) => set("proofOfResidence", value)}
+      <FormField
+        control={control}
+        name="documents.proofOfResidence"
+        render={({ field }) => (
+          <FileUploadField
+            label="Comprovante de Residência"
+            note="Até 90 dias"
+            value={field.value}
+            onChange={field.onChange}
+          />
+        )}
       />
-      <FileUploadField
-        label="Fotos da Atividade"
-        note="Fachada, local de trabalho ou estoque"
-        value={data.activityPhotos}
-        onChange={(value) => set("activityPhotos", value)}
+      <FormField
+        control={control}
+        name="documents.activityPhotos"
+        render={({ field }) => (
+          <FileUploadField
+            label="Fotos da Atividade"
+            note="Fachada, local de trabalho ou estoque"
+            value={field.value}
+            onChange={field.onChange}
+          />
+        )}
       />
 
       <div className="flex flex-col gap-1.5">
@@ -59,11 +62,12 @@ export function DocumentsSection({
           {INCOME_DOCUMENT_TYPE_OPTIONS.map((option) => (
             <ChipButton
               key={option}
-              active={data.incomeProofTypes.includes(option)}
+              active={incomeProofTypes.includes(option)}
               onClick={() =>
-                set(
-                  "incomeProofTypes",
-                  toggleItem(data.incomeProofTypes, option),
+                setValue(
+                  "documents.incomeProofTypes",
+                  toggleItem(incomeProofTypes, option),
+                  { shouldDirty: true },
                 )
               }
             >
@@ -71,10 +75,16 @@ export function DocumentsSection({
             </ChipButton>
           ))}
         </div>
-        <FileUploadField
-          label="Comprovantes"
-          value={data.incomeProofs}
-          onChange={(value) => set("incomeProofs", value)}
+        <FormField
+          control={control}
+          name="documents.incomeProofs"
+          render={({ field }) => (
+            <FileUploadField
+              label="Comprovantes"
+              value={field.value}
+              onChange={field.onChange}
+            />
+          )}
         />
       </div>
     </div>

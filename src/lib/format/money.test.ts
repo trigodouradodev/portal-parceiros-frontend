@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMoneyBrl } from "@/features/originacao/utils/format-money-brl";
+import { formatMoneyBrl } from "@/lib/format/money";
 
 describe("formatMoneyBrl", () => {
   it("treats digits as cents and formats pt-BR", () => {

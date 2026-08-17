@@ -1,10 +1,7 @@
 import type { SimulacaoSnapshot } from "@/features/originacao/types";
 import { calcAge, isAdultAge } from "@/features/originacao/utils/calc-age";
 import { isCompleteCep } from "@/features/originacao/utils/format-cep";
-import {
-  isOptionalCpfValid,
-  isValidCpf,
-} from "@/features/originacao/utils/is-valid-cpf";
+import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
 
 export const PROPOSAL_STEPS = [
   "Cadastro",

@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+import { useFormContext } from "react-hook-form";
 import { AlertCircle, CreditCard, Mail, Phone, User } from "lucide-react";
+import { FormField } from "@/components/ui/form";
+import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -8,89 +10,103 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MockAddressFields } from "@/features/originacao/components/MockAddressFields";
-import { OriginacaoFieldInput } from "@/features/originacao/components/OriginacaoFieldInput";
+import { AddressFields } from "@/features/originacao/components/AddressFields";
 import {
   GUARANTOR_MOCK_ADDRESS,
   KINSHIP_OPTIONS,
-  isGuarantorValid,
-  type GuarantorData,
+  type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 import { calcAge, isAdultAge } from "@/features/originacao/utils/calc-age";
-import { formatCpf } from "@/features/originacao/utils/format-cpf";
-import { formatPhone } from "@/features/originacao/utils/format-phone";
-import { cpfFieldError } from "@/features/originacao/utils/is-valid-cpf";
+import { formatPhone } from "@/lib/format/phone";
+import { formatCpf } from "@/lib/format/tax-id";
+import { cpfFieldError } from "@/lib/validation/cpf";
 
-interface GuarantorSectionProps {
-  data: GuarantorData;
-  onChange: (data: GuarantorData) => void;
-  onValidChange: (valid: boolean) => void;
-}
-
-export function GuarantorSection({
-  data,
-  onChange,
-  onValidChange,
-}: GuarantorSectionProps) {
-  const age = calcAge(data.birthDate);
-  const ageInvalid = age !== null && !isAdultAge(age);
-
-  function set<K extends keyof GuarantorData>(key: K, value: GuarantorData[K]) {
-    onChange({ ...data, [key]: value });
-  }
-
-  useEffect(() => {
-    onValidChange(isGuarantorValid(data));
-  }, [data, onValidChange]);
+export function GuarantorSection() {
+  const { control } = useFormContext<ProposalFormData>();
 
   return (
     <div className="flex flex-col gap-5">
-      <OriginacaoFieldInput
-        label="Nome do avalista"
-        value={data.name}
-        onChange={(value) => set("name", value)}
-        icon={<User size={16} />}
-        placeholder="Nome completo"
+      <FormField
+        control={control}
+        name="guarantor.name"
+        render={({ field }) => (
+          <InputField
+            label="Nome do avalista"
+            value={field.value}
+            onChange={field.onChange}
+            icon={<User size={16} />}
+            placeholder="Nome completo"
+          />
+        )}
       />
-      <OriginacaoFieldInput
-        label="CPF do avalista"
-        value={data.cpf}
-        onChange={(value) => set("cpf", formatCpf(value))}
-        icon={<CreditCard size={16} />}
-        placeholder="000.000.000-00"
-        inputMode="numeric"
-        maxLength={14}
-        error={cpfFieldError(data.cpf)}
+      <FormField
+        control={control}
+        name="guarantor.cpf"
+        render={({ field }) => (
+          <InputField
+            label="CPF do avalista"
+            value={field.value}
+            onChange={(value) => field.onChange(formatCpf(value))}
+            icon={<CreditCard size={16} />}
+            placeholder="000.000.000-00"
+            inputMode="numeric"
+            maxLength={14}
+            error={cpfFieldError(field.value)}
+          />
+        )}
       />
-      <div className="flex flex-col gap-1.5">
-        <OriginacaoFieldInput
-          label="Data de nascimento"
-          value={data.birthDate}
-          onChange={(value) => set("birthDate", value)}
-          icon={<User size={16} />}
-          type="date"
-        />
-        {ageInvalid ? (
-          <div className="flex items-center gap-1.5 text-xs text-[#D84040]">
-            <AlertCircle size={12} />O avalista deve ter entre 18 e 120 anos.
-          </div>
-        ) : null}
-      </div>
-      <OriginacaoFieldInput
-        label="Email do avalista"
-        value={data.email}
-        onChange={(value) => set("email", value)}
-        icon={<Mail size={16} />}
-        placeholder="avalista@email.com"
-        type="email"
+      <FormField
+        control={control}
+        name="guarantor.birthDate"
+        render={({ field }) => {
+          const age = calcAge(field.value);
+          const ageInvalid = age !== null && !isAdultAge(age);
+          return (
+            <div className="flex flex-col gap-1.5">
+              <InputField
+                label="Data de nascimento"
+                value={field.value}
+                onChange={field.onChange}
+                icon={<User size={16} />}
+                type="date"
+              />
+              {ageInvalid ? (
+                <div className="flex items-center gap-1.5 text-xs text-[#D84040]">
+                  <AlertCircle size={12} />O avalista deve ter entre 18 e 120
+                  anos.
+                </div>
+              ) : null}
+            </div>
+          );
+        }}
       />
-      <OriginacaoFieldInput
-        label="Telefone do avalista"
-        value={data.phone}
-        onChange={(value) => set("phone", formatPhone(value))}
-        icon={<Phone size={16} />}
-        placeholder="(11) 99999-0000"
-        inputMode="tel"
+      <FormField
+        control={control}
+        name="guarantor.email"
+        render={({ field }) => (
+          <InputField
+            label="Email do avalista"
+            value={field.value}
+            onChange={field.onChange}
+            icon={<Mail size={16} />}
+            placeholder="avalista@email.com"
+            type="email"
+          />
+        )}
+      />
+      <FormField
+        control={control}
+        name="guarantor.phone"
+        render={({ field }) => (
+          <InputField
+            label="Telefone do avalista"
+            value={field.value}
+            onChange={(value) => field.onChange(formatPhone(value))}
+            icon={<Phone size={16} />}
+            placeholder="(11) 99999-0000"
+            inputMode="tel"
+          />
+        )}
       />
 
       <div className="border-t border-[#E2E4EC] pt-2">
@@ -98,42 +114,36 @@ export function GuarantorSection({
           Endereço do avalista
         </p>
         <div className="flex flex-col gap-5">
-          <MockAddressFields
-            address={{
-              zipCode: data.zipCode,
-              street: data.street,
-              number: data.number,
-              complement: data.complement,
-              neighborhood: data.neighborhood,
-              city: data.city,
-              state: data.state,
-            }}
-            onAddressChange={(address) => onChange({ ...data, ...address })}
-            mock={GUARANTOR_MOCK_ADDRESS}
-          />
+          <AddressFields namePrefix="guarantor" mock={GUARANTOR_MOCK_ADDRESS} />
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-sm font-medium text-[#1A1D2E]">
-          Grau de parentesco com o tomador
-        </Label>
-        <Select
-          value={data.kinship || undefined}
-          onValueChange={(value) => set("kinship", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione" />
-          </SelectTrigger>
-          <SelectContent>
-            {KINSHIP_OPTIONS.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <FormField
+        control={control}
+        name="guarantor.kinship"
+        render={({ field }) => (
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-sm font-medium text-[#1A1D2E]">
+              Grau de parentesco com o tomador
+            </Label>
+            <Select
+              value={field.value || undefined}
+              onValueChange={field.onChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {KINSHIP_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      />
     </div>
   );
 }

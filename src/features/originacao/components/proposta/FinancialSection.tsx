@@ -1,6 +1,8 @@
-import { useEffect } from "react";
+import { useFieldArray, useFormContext } from "react-hook-form";
 import { AlertTriangle, Plus, Trash2, Wallet } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { FormField } from "@/components/ui/form";
+import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -9,99 +11,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { OriginacaoFieldInput } from "@/features/originacao/components/OriginacaoFieldInput";
 import {
   AGIOTA_CREDITOR,
   CREDITOR_INSTITUTION_OPTIONS,
   EXPENSE_CATEGORY_OPTIONS,
   LOAN_CATEGORY_OPTIONS,
   LOAN_FREQUENCY_OPTIONS,
-  isFinancialValid,
-  type ExpenseItem,
-  type FinancialData,
-  type LoanItem,
+  type ProposalFormData,
 } from "@/features/originacao/data/proposal";
-import { formatMoneyBrl } from "@/features/originacao/utils/format-money-brl";
+import { formatMoneyBrl } from "@/lib/format/money";
 
-interface FinancialSectionProps {
-  data: FinancialData;
-  onChange: (data: FinancialData) => void;
-  onValidChange: (valid: boolean) => void;
-}
+const EMPTY_EXPENSE = {
+  category: "",
+  amount: "",
+  description: "",
+};
 
-export function FinancialSection({
-  data,
-  onChange,
-  onValidChange,
-}: FinancialSectionProps) {
-  useEffect(() => {
-    onValidChange(isFinancialValid());
-  }, [onValidChange]);
+const EMPTY_LOAN = {
+  installmentAmount: "",
+  frequency: "",
+  institution: "",
+  category: "",
+  description: "",
+};
+
+export function FinancialSection() {
+  const { control, setValue, watch } = useFormContext<ProposalFormData>();
+  const nextId = watch("financial.nextId");
+  const {
+    fields: expenses,
+    append: appendExpense,
+    remove: removeExpense,
+  } = useFieldArray({
+    control,
+    name: "financial.expenses",
+    keyName: "fieldId",
+  });
+  const {
+    fields: loans,
+    append: appendLoan,
+    remove: removeLoan,
+  } = useFieldArray({
+    control,
+    name: "financial.loans",
+    keyName: "fieldId",
+  });
+
+  const hasAgiota = loans.some((loan) => loan.institution === AGIOTA_CREDITOR);
 
   function addExpense() {
-    onChange({
-      ...data,
-      expenses: [
-        ...data.expenses,
-        { id: data.nextId, category: "", amount: "", description: "" },
-      ],
-      nextId: data.nextId + 1,
-    });
-  }
-
-  function updateExpense(id: number, patch: Partial<ExpenseItem>) {
-    onChange({
-      ...data,
-      expenses: data.expenses.map((item) =>
-        item.id === id ? { ...item, ...patch } : item,
-      ),
-    });
-  }
-
-  function removeExpense(id: number) {
-    onChange({
-      ...data,
-      expenses: data.expenses.filter((item) => item.id !== id),
-    });
+    appendExpense({ id: nextId, ...EMPTY_EXPENSE });
+    setValue("financial.nextId", nextId + 1, { shouldDirty: true });
   }
 
   function addLoan() {
-    onChange({
-      ...data,
-      loans: [
-        ...data.loans,
-        {
-          id: data.nextId,
-          installmentAmount: "",
-          frequency: "",
-          institution: "",
-          category: "",
-          description: "",
-        },
-      ],
-      nextId: data.nextId + 1,
-    });
+    appendLoan({ id: nextId, ...EMPTY_LOAN });
+    setValue("financial.nextId", nextId + 1, { shouldDirty: true });
   }
-
-  function updateLoan(id: number, patch: Partial<LoanItem>) {
-    onChange({
-      ...data,
-      loans: data.loans.map((item) =>
-        item.id === id ? { ...item, ...patch } : item,
-      ),
-    });
-  }
-
-  function removeLoan(id: number) {
-    onChange({
-      ...data,
-      loans: data.loans.filter((item) => item.id !== id),
-    });
-  }
-
-  const hasAgiota = data.loans.some(
-    (loan) => loan.institution === AGIOTA_CREDITOR,
-  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -119,40 +85,44 @@ export function FinancialSection({
             Adicionar despesa
           </button>
         </div>
-        {data.expenses.length === 0 ? (
+        {expenses.length === 0 ? (
           <p className="mb-1 text-xs text-[#9DA3B4]">
             Nenhuma despesa adicionada.
           </p>
         ) : null}
         <div className="flex flex-col gap-3">
-          {data.expenses.map((expense) => (
+          {expenses.map((expense, index) => (
             <div
-              key={expense.id}
+              key={expense.fieldId}
               className="flex flex-col gap-3 rounded-2xl bg-[#F5F6FA] p-3"
             >
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <Select
-                    value={expense.category || undefined}
-                    onValueChange={(value) =>
-                      updateExpense(expense.id, { category: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXPENSE_CATEGORY_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormField
+                    control={control}
+                    name={`financial.expenses.${index}.category`}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EXPENSE_CATEGORY_OPTIONS.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 <button
                   type="button"
-                  onClick={() => removeExpense(expense.id)}
+                  onClick={() => removeExpense(index)}
                   className="shrink-0 p-2 text-[#D84040]"
                   aria-label="Remover despesa"
                 >
@@ -160,26 +130,34 @@ export function FinancialSection({
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <OriginacaoFieldInput
-                  label="Valor"
-                  value={expense.amount}
-                  onChange={(value) =>
-                    updateExpense(expense.id, {
-                      amount: formatMoneyBrl(value),
-                    })
-                  }
-                  icon={<Wallet size={14} />}
-                  placeholder="R$ 0,00"
-                  inputMode="numeric"
+                <FormField
+                  control={control}
+                  name={`financial.expenses.${index}.amount`}
+                  render={({ field }) => (
+                    <InputField
+                      label="Valor"
+                      value={field.value}
+                      onChange={(value) =>
+                        field.onChange(formatMoneyBrl(value))
+                      }
+                      icon={<Wallet size={14} />}
+                      placeholder="R$ 0,00"
+                      inputMode="numeric"
+                    />
+                  )}
                 />
-                <OriginacaoFieldInput
-                  label="Descrição"
-                  value={expense.description}
-                  onChange={(value) =>
-                    updateExpense(expense.id, { description: value })
-                  }
-                  icon={<Wallet size={14} />}
-                  placeholder="Opcional"
+                <FormField
+                  control={control}
+                  name={`financial.expenses.${index}.description`}
+                  render={({ field }) => (
+                    <InputField
+                      label="Descrição"
+                      value={field.value}
+                      onChange={field.onChange}
+                      icon={<Wallet size={14} />}
+                      placeholder="Opcional"
+                    />
+                  )}
                 />
               </div>
             </div>
@@ -201,40 +179,44 @@ export function FinancialSection({
             Adicionar empréstimo
           </button>
         </div>
-        {data.loans.length === 0 ? (
+        {loans.length === 0 ? (
           <p className="mb-1 text-xs text-[#9DA3B4]">
             Nenhum empréstimo adicionado.
           </p>
         ) : null}
         <div className="flex flex-col gap-3">
-          {data.loans.map((loan) => (
+          {loans.map((loan, index) => (
             <div
-              key={loan.id}
+              key={loan.fieldId}
               className="flex flex-col gap-3 rounded-2xl bg-[#F5F6FA] p-3"
             >
               <div className="flex items-center gap-2">
                 <div className="flex-1">
-                  <Select
-                    value={loan.institution || undefined}
-                    onValueChange={(value) =>
-                      updateLoan(loan.id, { institution: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Instituição/Credor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CREDITOR_INSTITUTION_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormField
+                    control={control}
+                    name={`financial.loans.${index}.institution`}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Instituição/Credor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CREDITOR_INSTITUTION_OPTIONS.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 <button
                   type="button"
-                  onClick={() => removeLoan(loan.id)}
+                  onClick={() => removeLoan(index)}
                   className="shrink-0 p-2 text-[#D84040]"
                   aria-label="Remover empréstimo"
                 >
@@ -242,72 +224,88 @@ export function FinancialSection({
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <OriginacaoFieldInput
-                  label="Valor da parcela"
-                  value={loan.installmentAmount}
-                  onChange={(value) =>
-                    updateLoan(loan.id, {
-                      installmentAmount: formatMoneyBrl(value),
-                    })
-                  }
-                  icon={<Wallet size={14} />}
-                  placeholder="R$ 0,00"
-                  inputMode="numeric"
+                <FormField
+                  control={control}
+                  name={`financial.loans.${index}.installmentAmount`}
+                  render={({ field }) => (
+                    <InputField
+                      label="Valor da parcela"
+                      value={field.value}
+                      onChange={(value) =>
+                        field.onChange(formatMoneyBrl(value))
+                      }
+                      icon={<Wallet size={14} />}
+                      placeholder="R$ 0,00"
+                      inputMode="numeric"
+                    />
+                  )}
                 />
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-[#1A1D2E]">
-                    Frequência
-                  </Label>
-                  <Select
-                    value={loan.frequency || undefined}
-                    onValueChange={(value) =>
-                      updateLoan(loan.id, { frequency: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOAN_FREQUENCY_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormField
+                  control={control}
+                  name={`financial.loans.${index}.frequency`}
+                  render={({ field }) => (
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-xs font-medium text-[#1A1D2E]">
+                        Frequência
+                      </Label>
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LOAN_FREQUENCY_OPTIONS.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-xs font-medium text-[#1A1D2E]">
-                    Categoria
-                  </Label>
-                  <Select
-                    value={loan.category || undefined}
-                    onValueChange={(value) =>
-                      updateLoan(loan.id, { category: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOAN_CATEGORY_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <OriginacaoFieldInput
-                  label="Descrição"
-                  value={loan.description}
-                  onChange={(value) =>
-                    updateLoan(loan.id, { description: value })
-                  }
-                  icon={<Wallet size={14} />}
-                  placeholder="Opcional"
+                <FormField
+                  control={control}
+                  name={`financial.loans.${index}.category`}
+                  render={({ field }) => (
+                    <div className="flex flex-col gap-1.5">
+                      <Label className="text-xs font-medium text-[#1A1D2E]">
+                        Categoria
+                      </Label>
+                      <Select
+                        value={field.value || undefined}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LOAN_CATEGORY_OPTIONS.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name={`financial.loans.${index}.description`}
+                  render={({ field }) => (
+                    <InputField
+                      label="Descrição"
+                      value={field.value}
+                      onChange={field.onChange}
+                      icon={<Wallet size={14} />}
+                      placeholder="Opcional"
+                    />
+                  )}
                 />
               </div>
             </div>
