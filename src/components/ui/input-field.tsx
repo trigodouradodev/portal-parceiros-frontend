@@ -1,22 +1,23 @@
+import type { HTMLAttributes, ReactNode } from "react";
 import { AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-interface OriginacaoFieldInputProps {
+interface InputFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  icon: React.ReactNode;
+  icon: ReactNode;
   placeholder?: string;
   type?: string;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"];
   maxLength?: number;
   max?: string;
   disabled?: boolean;
   error?: string;
 }
 
-export function OriginacaoFieldInput({
+export function InputField({
   label,
   value,
   onChange,
@@ -28,7 +29,7 @@ export function OriginacaoFieldInput({
   max,
   disabled,
   error,
-}: OriginacaoFieldInputProps) {
+}: InputFieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>

@@ -8,7 +8,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { OriginacaoFieldInput } from "@/features/originacao/components/OriginacaoFieldInput";
+import { InputField } from "@/components/ui/input-field";
 import { isEligibleCpf } from "@/features/originacao/data/eligibility";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { formatCpf } from "@/features/originacao/utils/format-cpf";
@@ -78,7 +78,7 @@ export function ElegibilidadePage() {
 
       <section className="max-w-xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4">
-          <OriginacaoFieldInput
+          <InputField
             label="Nome completo"
             value={name}
             onChange={setName}
@@ -86,7 +86,7 @@ export function ElegibilidadePage() {
             placeholder="Nome do cliente"
             disabled={status === "loading" || status === "valid"}
           />
-          <OriginacaoFieldInput
+          <InputField
             label="CPF"
             value={cpf}
             onChange={(v) => setCpf(formatCpf(v))}
@@ -97,7 +97,7 @@ export function ElegibilidadePage() {
             error={cpfError}
             disabled={status === "loading" || status === "valid"}
           />
-          <OriginacaoFieldInput
+          <InputField
             label="Data de nascimento"
             value={birthDate}
             onChange={setBirthDate}
