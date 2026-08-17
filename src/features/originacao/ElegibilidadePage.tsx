@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CalendarDays,
   CheckCircle2,
@@ -8,60 +10,61 @@ import {
   XCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Form, FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { isEligibleCpf } from "@/features/originacao/data/eligibility";
 import { useOriginacao } from "@/features/originacao/originacao-context";
-import { formatCpf } from "@/lib/format/tax-id";
 import {
-  calcAge,
-  isAdultAge,
-  todayIsoLocal,
-} from "@/features/originacao/utils/calc-age";
-import { isValidCpf } from "@/lib/validation/cpf";
+  eligibilitySchema,
+  type EligibilityFormValues,
+} from "@/features/originacao/schemas/eligibility-form";
+import { todayIsoLocal } from "@/features/originacao/utils/calc-age";
+import { formatCpf } from "@/lib/format/tax-id";
 import { cn } from "@/lib/utils";
 
 type Status = "idle" | "loading" | "valid" | "invalid";
 
 const TODAY_ISO = todayIsoLocal();
 
+const EMPTY_VALUES: EligibilityFormValues = {
+  name: "",
+  cpf: "",
+  birthDate: "",
+};
+
 export function ElegibilidadePage() {
   const { setDadosIniciais, setActiveTab } = useOriginacao();
-  const [name, setName] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [birthDate, setBirthDate] = useState("");
   const [status, setStatus] = useState<Status>("idle");
 
-  const cpfDigits = cpf.replace(/\D/g, "");
-  const cpfComplete = cpfDigits.length === 11;
-  const cpfValid = isValidCpf(cpf);
-  const cpfError = cpfComplete && !cpfValid ? "CPF inválido" : undefined;
+  const form = useForm<EligibilityFormValues>({
+    resolver: zodResolver(eligibilitySchema),
+    mode: "onChange",
+    defaultValues: EMPTY_VALUES,
+  });
 
-  const age = calcAge(birthDate);
-  const birthDateValid = isAdultAge(age);
-  const birthDateError =
-    birthDate.trim() !== "" && !birthDateValid
-      ? "O cliente deve ter entre 18 e 120 anos."
-      : undefined;
+  const fieldsLocked = status === "loading" || status === "valid";
+  const canSubmit = form.formState.isValid && status !== "loading";
 
-  const canSubmit = name.trim() !== "" && cpfValid && birthDateValid;
-
-  function handleConsultar() {
-    if (!canSubmit || status === "loading") return;
+  function onConsultar(values: EligibilityFormValues) {
+    if (status === "loading") return;
     setStatus("loading");
     window.setTimeout(() => {
-      setStatus(isEligibleCpf(cpf) ? "valid" : "invalid");
+      setStatus(isEligibleCpf(values.cpf) ? "valid" : "invalid");
     }, 1200);
   }
 
   function handleReset() {
-    setName("");
-    setCpf("");
-    setBirthDate("");
+    form.reset(EMPTY_VALUES);
     setStatus("idle");
   }
 
   function handleIniciarSimulacao() {
-    setDadosIniciais({ nome: name, cpf, nascimento: birthDate });
+    const values = form.getValues();
+    setDadosIniciais({
+      nome: values.name,
+      cpf: values.cpf,
+      nascimento: values.birthDate,
+    });
     setActiveTab("simulacao");
   }
 
@@ -77,55 +80,85 @@ export function ElegibilidadePage() {
       </div>
 
       <section className="max-w-xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-4">
-          <InputField
-            label="Nome completo"
-            value={name}
-            onChange={setName}
-            icon={<User size={16} />}
-            placeholder="Nome do cliente"
-            disabled={status === "loading" || status === "valid"}
-          />
-          <InputField
-            label="CPF"
-            value={cpf}
-            onChange={(v) => setCpf(formatCpf(v))}
-            icon={<CreditCard size={16} />}
-            placeholder="000.000.000-00"
-            inputMode="numeric"
-            maxLength={14}
-            error={cpfError}
-            disabled={status === "loading" || status === "valid"}
-          />
-          <InputField
-            label="Data de nascimento"
-            value={birthDate}
-            onChange={setBirthDate}
-            icon={<CalendarDays size={16} />}
-            type="date"
-            max={TODAY_ISO}
-            error={birthDateError}
-            disabled={status === "loading" || status === "valid"}
-          />
-        </div>
-
-        {status === "idle" || status === "loading" ? (
-          <Button
-            type="button"
-            className="mt-5 h-11 w-full rounded-2xl font-semibold"
-            disabled={!canSubmit || status === "loading"}
-            onClick={handleConsultar}
+        <Form {...form}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={form.handleSubmit(onConsultar)}
+            noValidate
           >
-            {status === "loading" ? (
-              <>
-                <Loader2 size={15} className="animate-spin" />
-                Consultando…
-              </>
-            ) : (
-              "Consultar"
-            )}
-          </Button>
-        ) : (
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field, fieldState }) => (
+                <InputField
+                  label="Nome completo"
+                  value={field.value}
+                  onChange={field.onChange}
+                  icon={<User size={16} />}
+                  placeholder="Nome do cliente"
+                  error={fieldState.error?.message}
+                  disabled={fieldsLocked}
+                />
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cpf"
+              render={({ field, fieldState }) => (
+                <InputField
+                  label="CPF"
+                  value={field.value}
+                  onChange={(value) => field.onChange(formatCpf(value))}
+                  icon={<CreditCard size={16} />}
+                  placeholder="000.000.000-00"
+                  inputMode="numeric"
+                  maxLength={14}
+                  error={
+                    field.value.replace(/\D/g, "").length === 11
+                      ? fieldState.error?.message
+                      : undefined
+                  }
+                  disabled={fieldsLocked}
+                />
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="birthDate"
+              render={({ field, fieldState }) => (
+                <InputField
+                  label="Data de nascimento"
+                  value={field.value}
+                  onChange={field.onChange}
+                  icon={<CalendarDays size={16} />}
+                  type="date"
+                  max={TODAY_ISO}
+                  error={field.value ? fieldState.error?.message : undefined}
+                  disabled={fieldsLocked}
+                />
+              )}
+            />
+
+            {status === "idle" || status === "loading" ? (
+              <Button
+                type="submit"
+                className="mt-1 h-11 w-full rounded-2xl font-semibold"
+                disabled={!canSubmit}
+              >
+                {status === "loading" ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    Consultando…
+                  </>
+                ) : (
+                  "Consultar"
+                )}
+              </Button>
+            ) : null}
+          </form>
+        </Form>
+
+        {status === "valid" || status === "invalid" ? (
           <div className="mt-5 flex flex-col gap-3">
             <div
               role="status"
@@ -168,7 +201,7 @@ export function ElegibilidadePage() {
               Consultar outro cliente
             </Button>
           </div>
-        )}
+        ) : null}
       </section>
     </div>
   );
