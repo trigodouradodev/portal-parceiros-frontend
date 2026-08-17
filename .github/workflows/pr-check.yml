@@ -20,8 +20,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -56,17 +56,17 @@ jobs:
 
             const errors = [];
 
-            // Validate title: must start with a ClickUp task ID followed by colon
-            // Format: 86aggjy7: Description... (alphanumeric ID, min 7 chars)
-            const titleRegex = /^[a-z0-9]{7,}:/i;
+            // Validate title: must start with a Jira issue key followed by colon
+            // Format: AUREA-179: Description...
+            const titleRegex = /^AUREA-\d+:/i;
             if (!titleRegex.test(title)) {
-              errors.push('❌ **Título inválido**: o título deve começar com o ID do ticket do ClickUp seguido de dois pontos.\n   Formato esperado: `86aggjy7: Descrição da tarefa`');
+              errors.push('❌ **Título inválido**: o título deve começar com a chave do ticket Jira seguida de dois pontos.\n   Formato esperado: `AUREA-179: Descrição da tarefa`');
             }
 
-            // Validate body: must contain a ClickUp link
-            const clickupLinkRegex = /https:\/\/app\.clickup\.com\/t\/[a-zA-Z0-9/_-]+/;
-            if (!clickupLinkRegex.test(body)) {
-              errors.push('❌ **Descrição inválida**: a descrição deve conter o link do ticket no ClickUp.\n   Exemplo: `https://app.clickup.com/t/86aggjy7`');
+            // Validate body: must contain a Jira link
+            const jiraLinkRegex = /https:\/\/aureadev\.atlassian\.net\/browse\/AUREA-\d+/i;
+            if (!jiraLinkRegex.test(body)) {
+              errors.push('❌ **Descrição inválida**: a descrição deve conter o link do ticket no Jira.\n   Exemplo: `https://aureadev.atlassian.net/browse/AUREA-179`');
             }
 
             if (errors.length > 0) {

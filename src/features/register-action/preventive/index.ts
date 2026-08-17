@@ -1,0 +1,1 @@
+export { RegisterPreventiveActionPage } from "./RegisterPreventiveActionPage";

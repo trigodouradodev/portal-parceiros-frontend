@@ -1,11 +1,141 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-brand-yellow: #ffd320;
+  --color-brand-navy: #0d0d53;
+
+  --color-success: hsl(var(--success));
+  --color-success-bg: hsl(var(--success-bg));
+  --color-warning: hsl(var(--warning));
+  --color-warning-bg: hsl(var(--warning-bg));
+  --color-destructive-bg: hsl(var(--destructive-bg));
+
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-display: "Fraunces", serif;
+  --font-mono: "DM Mono", monospace;
+
+  --shadow-card: var(--shadow-card-value);
+  --shadow-elevated: var(--shadow-elevated-value);
+}
 
 :root {
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  /* Aurea Theme — hex do portal-parceiros-design */
+  --background: 228 33% 97%; /* #F5F6FA */
+  --foreground: 231 28% 14%; /* #1A1D2E */
+
+  --card: 0 0% 100%;
+  --card-foreground: 231 28% 14%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 231 28% 14%;
+
+  --primary: 240 73% 19%; /* #0D0D53 */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 48 100% 91%; /* #FFF6D2 */
+  --secondary-foreground: 240 73% 19%;
+
+  --muted: 228 20% 95%; /* #F0F1F5 */
+  --muted-foreground: 226 9% 46%; /* #6B7080 */
+
+  --accent: 48 100% 56%; /* #FFD320 */
+  --accent-foreground: 240 73% 19%;
+
+  --destructive: 0 66% 55%; /* #D84040 */
+  --destructive-foreground: 0 0% 100%;
+  --destructive-bg: 0 90% 96%; /* #FEECEC */
+
+  --success: 161 69% 37%; /* #1D9E75 */
+  --success-bg: 159 52% 94%; /* #E6F7F1 */
+
+  --warning: 35 78% 41%; /* #BA7517 */
+  --warning-bg: 39 88% 94%; /* #FDF3E0 */
+
+  --border: 228 21% 91%; /* #E2E4EC */
+  --input: 228 21% 91%; /* #E2E4EC */
+  --ring: 240 73% 19%;
+
+  --radius: 0.5rem;
+
+  --shadow-card-value: 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  --shadow-elevated-value:
+    0 12px 24px -4px rgb(0 0 0 / 0.14), 0 8px 12px -4px rgb(0 0 0 / 0.1);
+
+  font-family: "DM Sans", system-ui, sans-serif;
   line-height: 1.5;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-fraunces {
+  font-family: "Fraunces", serif;
+}
+
+.font-mono-dm {
+  font-family: "DM Mono", monospace;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-toast-in {
+    animation: none;
+  }
 }
