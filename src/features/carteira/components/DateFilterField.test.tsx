@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { DateFilterField } from "@/features/carteira/components/DateFilterField";
 
-function renderField(props: Partial<ComponentProps<typeof DateFilterField>> = {}) {
+function renderField(
+  props: Partial<ComponentProps<typeof DateFilterField>> = {},
+) {
   const onChange = vi.fn();
   render(
     <DateFilterField

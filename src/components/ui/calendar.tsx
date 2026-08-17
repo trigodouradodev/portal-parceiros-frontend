@@ -47,10 +47,7 @@ export function Calendar({
   const maxDay = max ? startOfDay(max) : undefined;
   const { minYear, maxYear } = getCalendarYearBounds(minDay, maxDay);
   const yearPageStart = getYearPageStart(viewYear, minYear);
-  const years = useMemo(
-    () => buildYearPage(yearPageStart),
-    [yearPageStart],
-  );
+  const years = useMemo(() => buildYearPage(yearPageStart), [yearPageStart]);
 
   const cells = useMemo(
     () => buildCalendarCells(viewYear, viewMonth),
