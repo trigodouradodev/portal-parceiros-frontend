@@ -14,7 +14,7 @@ interface PromiseDateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   draftDate?: Date;
-  onDraftDateChange: (date: Date) => void;
+  onDraftDateChange: (date: Date | undefined) => void;
   onConfirm: () => void;
   minDate: Date;
   maxDate: Date;
@@ -41,10 +41,11 @@ export function PromiseDateModal({
         </DialogHeader>
         <div className="flex justify-center">
           <Calendar
+            mode="single"
             selected={draftDate}
-            minDate={minDate}
-            maxDate={maxDate}
             onSelect={onDraftDateChange}
+            disabled={{ before: minDate, after: maxDate }}
+            className="rounded-lg border"
           />
         </div>
         <DialogFooter>
