@@ -2,14 +2,7 @@ import { useFormContext } from "react-hook-form";
 import { AlertCircle, CreditCard, Mail, Phone, User } from "lucide-react";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectField, toSelectOptions } from "@/components/ui/select-field";
 import { AddressFields } from "@/features/originacao/components/AddressFields";
 import {
   GUARANTOR_MOCK_ADDRESS,
@@ -122,26 +115,12 @@ export function GuarantorSection() {
         control={control}
         name="guarantor.kinship"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Grau de parentesco com o tomador
-            </Label>
-            <Select
-              value={field.value || undefined}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {KINSHIP_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            label="Grau de parentesco com o tomador"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(KINSHIP_OPTIONS)}
+          />
         )}
       />
     </div>

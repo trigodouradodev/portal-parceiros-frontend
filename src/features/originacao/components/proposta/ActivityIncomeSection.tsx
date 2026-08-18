@@ -3,13 +3,7 @@ import { Building2, Wallet } from "lucide-react";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectField, toSelectOptions } from "@/components/ui/select-field";
 import { ChipButton } from "@/features/originacao/components/ChipButton";
 import { YesNoChips } from "@/features/originacao/components/YesNoChips";
 import {
@@ -92,26 +86,12 @@ export function ActivityIncomeSection() {
         control={control}
         name="activityIncome.incomeSource"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Fonte da renda
-            </Label>
-            <Select
-              value={field.value || undefined}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {INCOME_SOURCE_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            label="Fonte da renda"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(INCOME_SOURCE_OPTIONS)}
+          />
         )}
       />
 
@@ -146,26 +126,12 @@ export function ActivityIncomeSection() {
         control={control}
         name="activityIncome.availableProof"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Comprovante disponível?
-            </Label>
-            <Select
-              value={field.value || undefined}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {INCOME_PROOF_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            label="Comprovante disponível?"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(INCOME_PROOF_OPTIONS)}
+          />
         )}
       />
     </div>

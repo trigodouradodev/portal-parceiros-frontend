@@ -5,13 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectField, toSelectOptions } from "@/components/ui/select-field";
 import {
   UF_LIST,
   type ProposalFormData,
@@ -246,26 +240,13 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
           control={control}
           name={addressPath(namePrefix, "state")}
           render={({ field }) => (
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-medium text-[#1A1D2E]">
-                Estado
-              </Label>
-              <Select
-                value={field.value || undefined}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="UF" />
-                </SelectTrigger>
-                <SelectContent>
-                  {UF_LIST.map((uf) => (
-                    <SelectItem key={uf} value={uf}>
-                      {uf}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <SelectField
+              label="Estado"
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="UF"
+              options={toSelectOptions(UF_LIST)}
+            />
           )}
         />
       </div>

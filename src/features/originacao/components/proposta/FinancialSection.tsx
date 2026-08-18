@@ -4,13 +4,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectField, toSelectOptions } from "@/components/ui/select-field";
 import {
   AGIOTA_CREDITOR,
   CREDITOR_INSTITUTION_OPTIONS,
@@ -102,21 +96,12 @@ export function FinancialSection() {
                     control={control}
                     name={`financial.expenses.${index}.category`}
                     render={({ field }) => (
-                      <Select
-                        value={field.value || undefined}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Categoria" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {EXPENSE_CATEGORY_OPTIONS.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SelectField
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Categoria"
+                        options={toSelectOptions(EXPENSE_CATEGORY_OPTIONS)}
+                      />
                     )}
                   />
                 </div>
@@ -196,21 +181,12 @@ export function FinancialSection() {
                     control={control}
                     name={`financial.loans.${index}.institution`}
                     render={({ field }) => (
-                      <Select
-                        value={field.value || undefined}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Instituição/Credor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CREDITOR_INSTITUTION_OPTIONS.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <SelectField
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Instituição/Credor"
+                        options={toSelectOptions(CREDITOR_INSTITUTION_OPTIONS)}
+                      />
                     )}
                   />
                 </div>
@@ -244,26 +220,12 @@ export function FinancialSection() {
                   control={control}
                   name={`financial.loans.${index}.frequency`}
                   render={({ field }) => (
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs font-medium text-[#1A1D2E]">
-                        Frequência
-                      </Label>
-                      <Select
-                        value={field.value || undefined}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LOAN_FREQUENCY_OPTIONS.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <SelectField
+                      label="Frequência"
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={toSelectOptions(LOAN_FREQUENCY_OPTIONS)}
+                    />
                   )}
                 />
               </div>
@@ -272,26 +234,12 @@ export function FinancialSection() {
                   control={control}
                   name={`financial.loans.${index}.category`}
                   render={({ field }) => (
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-xs font-medium text-[#1A1D2E]">
-                        Categoria
-                      </Label>
-                      <Select
-                        value={field.value || undefined}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {LOAN_CATEGORY_OPTIONS.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <SelectField
+                      label="Categoria"
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={toSelectOptions(LOAN_CATEGORY_OPTIONS)}
+                    />
                   )}
                 />
                 <FormField

@@ -4,14 +4,8 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
+import { SelectField, toSelectOptions } from "@/components/ui/select-field";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ChipButton } from "@/features/originacao/components/ChipButton";
 import { YesNoChips } from "@/features/originacao/components/YesNoChips";
 import {
@@ -60,26 +54,12 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.howKnows"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Como conhece o cliente
-            </Label>
-            <Select
-              value={field.value || undefined}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {HOW_KNOWS_CLIENT_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            label="Como conhece o cliente"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(HOW_KNOWS_CLIENT_OPTIONS)}
+          />
         )}
       />
       {howKnows === HOW_KNOWS_OTHER ? (

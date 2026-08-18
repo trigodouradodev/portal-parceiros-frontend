@@ -12,13 +12,7 @@ import {
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectField, toSelectOptions } from "@/components/ui/select-field";
 import { ChipButton } from "@/features/originacao/components/ChipButton";
 import { YesNoChips } from "@/features/originacao/components/YesNoChips";
 import {
@@ -175,26 +169,12 @@ export function RegistrationSection({
         control={control}
         name="registration.occupation"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Profissão
-            </Label>
-            <Select
-              value={field.value || undefined}
-              onValueChange={field.onChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {OCCUPATION_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            label="Profissão"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(OCCUPATION_OPTIONS)}
+          />
         )}
       />
 
@@ -465,26 +445,12 @@ export function RegistrationSection({
             control={control}
             name="registration.debtCreditor"
             render={({ field }) => (
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-medium text-[#1A1D2E]">
-                  Credor
-                </Label>
-                <Select
-                  value={field.value || undefined}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEBT_CREDITOR_OPTIONS.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <SelectField
+                label="Credor"
+                value={field.value}
+                onChange={field.onChange}
+                options={toSelectOptions(DEBT_CREDITOR_OPTIONS)}
+              />
             )}
           />
         </div>

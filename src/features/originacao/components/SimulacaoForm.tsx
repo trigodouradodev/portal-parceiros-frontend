@@ -26,13 +26,7 @@ import {
 import { Form, FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SelectField, toSelectOptions } from "@/components/ui/select-field";
 import { ChipButton } from "@/features/originacao/components/ChipButton";
 import {
   AMOUNT_DEFAULT,
@@ -289,24 +283,14 @@ export function SimulacaoForm({
                       </button>
                     </div>
                   ) : (
-                    <Select
+                    <SelectField
                       value={field.value}
-                      onValueChange={(value) => {
+                      onChange={(value) => {
                         field.onChange(value as SimulationProduct);
                         setChangingProduct(false);
                       }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PRODUCTS.map((item) => (
-                          <SelectItem key={item} value={item}>
-                            {item}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      options={toSelectOptions(PRODUCTS)}
+                    />
                   )}
                 </div>
               )}
