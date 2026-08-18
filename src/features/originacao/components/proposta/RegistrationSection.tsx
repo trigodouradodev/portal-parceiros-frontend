@@ -57,6 +57,7 @@ export function RegistrationSection({
   const [showRate, setShowRate] = useState(false);
   const maritalStatus = watch("registration.maritalStatus");
   const creditPurpose = watch("registration.creditPurpose");
+  const activityCategories = watch("registration.activityCategories");
   const hasVehicle = watch("registration.hasVehicle");
   const spouseRequired = hasSpouse(maritalStatus);
   const debtRequired = creditPurpose === DEBT_PURPOSE;
@@ -176,25 +177,24 @@ export function RegistrationSection({
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(ACTIVITY_CATEGORY_OPTIONS)}
-          >
-            {field.value.includes(OTHER_OPTION) ? (
-              <FormField
-                control={control}
-                name="registration.activityCategoryOther"
-                render={({ field: otherField }) => (
-                  <InputField
-                    label="Qual?"
-                    value={otherField.value}
-                    onChange={otherField.onChange}
-                    icon={<User size={16} />}
-                    placeholder="Descreva a ocupação"
-                  />
-                )}
-              />
-            ) : null}
-          </ChipField>
+          />
         )}
       />
+      {activityCategories.includes(OTHER_OPTION) ? (
+        <FormField
+          control={control}
+          name="registration.activityCategoryOther"
+          render={({ field }) => (
+            <InputField
+              label="Qual?"
+              value={field.value}
+              onChange={field.onChange}
+              icon={<User size={16} />}
+              placeholder="Descreva a ocupação"
+            />
+          )}
+        />
+      ) : null}
 
       <InputField
         label="Email"

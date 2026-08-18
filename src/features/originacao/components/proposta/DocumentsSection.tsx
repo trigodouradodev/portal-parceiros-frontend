@@ -60,19 +60,18 @@ export function DocumentsSection() {
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(INCOME_DOCUMENT_TYPE_OPTIONS)}
-          >
-            <FormField
-              control={control}
-              name="documents.incomeProofs"
-              render={({ field: proofsField }) => (
-                <FileUploadField
-                  label="Comprovantes"
-                  value={proofsField.value}
-                  onChange={proofsField.onChange}
-                />
-              )}
-            />
-          </ChipField>
+          />
+        )}
+      />
+      <FormField
+        control={control}
+        name="documents.incomeProofs"
+        render={({ field }) => (
+          <FileUploadField
+            label="Comprovantes"
+            value={field.value}
+            onChange={field.onChange}
+          />
         )}
       />
     </div>
