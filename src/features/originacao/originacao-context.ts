@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import type { ProposalSnapshot } from "@/features/originacao/data/proposal";
 import type {
   DadosElegibilidade,
   OriginacaoTab,
@@ -8,15 +9,18 @@ import type {
 export interface OriginacaoContextValue {
   activeTab: OriginacaoTab;
   setActiveTab: (tab: OriginacaoTab) => void;
-  /** Prefill one-shot da elegibilidade → simulação (consumido na PR3). */
+  /** Prefill one-shot da elegibilidade → simulação. */
   dadosIniciais: DadosElegibilidade | null;
   setDadosIniciais: (dados: DadosElegibilidade) => void;
   consumeDadosIniciais: () => void;
   simulacoes: SimulacaoSnapshot[];
   addSimulacao: (snapshot: SimulacaoSnapshot) => void;
-  propostaSimulacao: SimulacaoSnapshot | null;
-  iniciarProposta: (snapshot: SimulacaoSnapshot) => void;
-  clearProposta: () => void;
+  proposals: ProposalSnapshot[];
+  openProposalId: string | null;
+  startProposal: (simulation: SimulacaoSnapshot) => void;
+  openProposal: (id: string) => void;
+  closeProposal: () => void;
+  updateProposal: (proposal: ProposalSnapshot) => void;
 }
 
 export const OriginacaoContext = createContext<OriginacaoContextValue | null>(
