@@ -15,6 +15,8 @@ interface CalendarProps {
   onSelect: (date: Date) => void;
   minDate?: Date;
   maxDate?: Date;
+  /** Besides min/max, only dates where this returns true are selectable. */
+  isDayAllowed?: (date: Date) => boolean;
   className?: string;
 }
 
@@ -23,6 +25,7 @@ export function Calendar({
   onSelect,
   minDate,
   maxDate,
+  isDayAllowed,
   className,
 }: CalendarProps) {
   const selectedDate = toValidDate(selected);
@@ -94,6 +97,7 @@ export function Calendar({
             selected={selectedDate}
             min={minDay}
             max={maxDay}
+            isDayAllowed={isDayAllowed}
             onSelect={onSelect}
           />
         ))}

@@ -8,7 +8,7 @@ import type {
 export interface OriginacaoContextValue {
   activeTab: OriginacaoTab;
   setActiveTab: (tab: OriginacaoTab) => void;
-  /** Prefill one-shot da elegibilidade → simulação (consumido na PR3). */
+  /** Prefill one-shot da elegibilidade → simulação. */
   dadosIniciais: DadosElegibilidade | null;
   setDadosIniciais: (dados: DadosElegibilidade) => void;
   consumeDadosIniciais: () => void;
