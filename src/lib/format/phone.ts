@@ -3,8 +3,8 @@ export function digitsOnlyPhone(value: string): string {
   return value.replace(/\D/g, "").slice(0, 20);
 }
 
-/** Formata telefone BR para exibição: (11) 99400-7722. */
-export function formatPhoneDisplay(value: string): string {
+/** Máscara progressiva de telefone BR: (11) 99400-7722 */
+export function formatPhone(value: string): string {
   const digits = digitsOnlyPhone(value).slice(0, 11);
 
   if (digits.length === 0) return "";
@@ -17,3 +17,5 @@ export function formatPhoneDisplay(value: string): string {
   }
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
+
+export const formatPhoneDisplay = formatPhone;

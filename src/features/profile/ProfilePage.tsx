@@ -18,10 +18,7 @@ import {
   type PasswordFormValues,
   type ProfileFormValues,
 } from "@/features/profile/schemas/profile-form";
-import {
-  digitsOnlyPhone,
-  formatPhoneDisplay,
-} from "@/features/profile/utils/phone";
+import { digitsOnlyPhone, formatPhoneDisplay } from "@/lib/format/phone";
 import { getRoleLabel } from "@/lib/user-display";
 import type { UpdateProfileRequest } from "@/services/auth/types";
 
