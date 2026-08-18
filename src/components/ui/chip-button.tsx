@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface ChipButtonProps {
   active: boolean;
   onClick: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   disabled?: boolean;
 }

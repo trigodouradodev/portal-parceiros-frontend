@@ -15,8 +15,8 @@ interface ShellContext {
 }
 
 function OriginacaoTabs() {
-  const { activeTab, setActiveTab, propostaSimulacao } = useOriginacao();
-  const propostaLocked = propostaSimulacao == null;
+  const { activeTab, setActiveTab, simulacoes } = useOriginacao();
+  const propostaLocked = simulacoes.length === 0;
 
   function goTo(tab: string) {
     if (tab === "proposta" && propostaLocked) return;
