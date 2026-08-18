@@ -1,11 +1,10 @@
 import { useFormContext } from "react-hook-form";
 import { Building2, Wallet } from "lucide-react";
+import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
 import { SelectField, toSelectOptions } from "@/components/ui/select-field";
-import { ChipButton } from "@/features/originacao/components/ChipButton";
-import { YesNoChips } from "@/features/originacao/components/YesNoChips";
+import { YesNoField } from "@/components/ui/yes-no-field";
 import {
   ACTIVITY_TIME_OPTIONS,
   INCOME_PROOF_OPTIONS,
@@ -48,22 +47,12 @@ export function ActivityIncomeSection() {
         control={control}
         name="activityIncome.activityTime"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Tempo na atividade
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {ACTIVITY_TIME_OPTIONS.map((option) => (
-                <ChipButton
-                  key={option}
-                  active={field.value === option}
-                  onClick={() => field.onChange(option)}
-                >
-                  {option}
-                </ChipButton>
-              ))}
-            </div>
-          </div>
+          <ChipField
+            label="Tempo na atividade"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(ACTIVITY_TIME_OPTIONS)}
+          />
         )}
       />
 
@@ -95,15 +84,11 @@ export function ActivityIncomeSection() {
         )}
       />
 
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-sm font-medium text-[#1A1D2E]">
-          Possui múltiplas fontes de renda?
-        </Label>
-        <YesNoChips
-          value={hasMultipleSources}
-          onChange={handleMultipleSourcesChange}
-        />
-      </div>
+      <YesNoField
+        label="Possui múltiplas fontes de renda?"
+        value={hasMultipleSources}
+        onChange={handleMultipleSourcesChange}
+      />
 
       {hasMultipleSources ? (
         <FormField

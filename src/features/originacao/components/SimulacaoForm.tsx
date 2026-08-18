@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { addDays } from "@/components/ui/calendar-utils";
+import { ChipField } from "@/components/ui/chip-field";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,6 @@ import { Form, FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
 import { SelectField, toSelectOptions } from "@/components/ui/select-field";
-import { ChipButton } from "@/features/originacao/components/ChipButton";
 import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
@@ -330,22 +330,16 @@ export function SimulacaoForm({
               control={form.control}
               name="installments"
               render={({ field }) => (
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-medium text-[#1A1D2E]">
-                    Em quantas parcelas?
-                  </Label>
-                  <div className="grid grid-cols-6 gap-2">
-                    {INSTALLMENT_OPTIONS.map((n) => (
-                      <ChipButton
-                        key={n}
-                        active={field.value === n}
-                        onClick={() => field.onChange(n)}
-                      >
-                        {n}x
-                      </ChipButton>
-                    ))}
-                  </div>
-                </div>
+                <ChipField
+                  label="Em quantas parcelas?"
+                  value={field.value != null ? String(field.value) : ""}
+                  onChange={(value) => field.onChange(Number(value))}
+                  options={INSTALLMENT_OPTIONS.map((n) => ({
+                    value: String(n),
+                    label: `${n}x`,
+                  }))}
+                  chipsClassName="grid grid-cols-6 gap-2"
+                />
               )}
             />
 

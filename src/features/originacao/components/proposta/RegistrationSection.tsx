@@ -9,12 +9,11 @@ import {
   Phone,
   User,
 } from "lucide-react";
+import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
 import { SelectField, toSelectOptions } from "@/components/ui/select-field";
-import { ChipButton } from "@/features/originacao/components/ChipButton";
-import { YesNoChips } from "@/features/originacao/components/YesNoChips";
+import { YesNoField } from "@/components/ui/yes-no-field";
 import {
   ACTIVITY_CATEGORY_OPTIONS,
   CREDIT_PURPOSE_OPTIONS,
@@ -28,7 +27,6 @@ import {
   PROPERTY_STATUS_OPTIONS,
   RESIDENCE_TIME_OPTIONS,
   hasSpouse,
-  toggleItem,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 import { formatCount } from "@/features/originacao/utils/format-count";
@@ -58,9 +56,7 @@ export function RegistrationSection({
   const [showRate, setShowRate] = useState(false);
   const maritalStatus = watch("registration.maritalStatus");
   const creditPurpose = watch("registration.creditPurpose");
-  const activityCategories = watch("registration.activityCategories");
   const hasVehicle = watch("registration.hasVehicle");
-  const governmentPrograms = watch("registration.governmentPrograms");
   const spouseRequired = hasSpouse(maritalStatus);
   const debtRequired = creditPurpose === DEBT_PURPOSE;
 
@@ -77,12 +73,11 @@ export function RegistrationSection({
         control={control}
         name="registration.isRenewal"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              É uma renovação de contrato?
-            </Label>
-            <YesNoChips value={field.value} onChange={field.onChange} />
-          </div>
+          <YesNoField
+            label="É uma renovação de contrato?"
+            value={field.value}
+            onChange={field.onChange}
+          />
         )}
       />
 
@@ -126,20 +121,12 @@ export function RegistrationSection({
         control={control}
         name="registration.gender"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">Gênero</Label>
-            <div className="flex flex-wrap gap-2">
-              {GENDER_OPTIONS.map((option) => (
-                <ChipButton
-                  key={option}
-                  active={field.value === option}
-                  onClick={() => field.onChange(option)}
-                >
-                  {option}
-                </ChipButton>
-              ))}
-            </div>
-          </div>
+          <ChipField
+            label="Gênero"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(GENDER_OPTIONS)}
+          />
         )}
       />
 
@@ -178,43 +165,35 @@ export function RegistrationSection({
         )}
       />
 
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-sm font-medium text-[#1A1D2E]">
-          Categoria da atividade
-        </Label>
-        <div className="flex flex-wrap gap-2">
-          {ACTIVITY_CATEGORY_OPTIONS.map((option) => (
-            <ChipButton
-              key={option}
-              active={activityCategories.includes(option)}
-              onClick={() =>
-                setValue(
-                  "registration.activityCategories",
-                  toggleItem(activityCategories, option),
-                  { shouldDirty: true },
-                )
-              }
-            >
-              {option}
-            </ChipButton>
-          ))}
-        </div>
-        {activityCategories.includes(OTHER_OPTION) ? (
-          <FormField
-            control={control}
-            name="registration.activityCategoryOther"
-            render={({ field }) => (
-              <InputField
-                label="Qual?"
-                value={field.value}
-                onChange={field.onChange}
-                icon={<User size={16} />}
-                placeholder="Descreva a ocupação"
+      <FormField
+        control={control}
+        name="registration.activityCategories"
+        render={({ field }) => (
+          <ChipField
+            label="Categoria da atividade"
+            multiple
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(ACTIVITY_CATEGORY_OPTIONS)}
+          >
+            {field.value.includes(OTHER_OPTION) ? (
+              <FormField
+                control={control}
+                name="registration.activityCategoryOther"
+                render={({ field: otherField }) => (
+                  <InputField
+                    label="Qual?"
+                    value={otherField.value}
+                    onChange={otherField.onChange}
+                    icon={<User size={16} />}
+                    placeholder="Descreva a ocupação"
+                  />
+                )}
               />
-            )}
-          />
-        ) : null}
-      </div>
+            ) : null}
+          </ChipField>
+        )}
+      />
 
       <InputField
         label="Email"
@@ -240,22 +219,12 @@ export function RegistrationSection({
             control={control}
             name="registration.maritalStatus"
             render={({ field }) => (
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-medium text-[#1A1D2E]">
-                  Estado civil
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {MARITAL_STATUS_OPTIONS.map((option) => (
-                    <ChipButton
-                      key={option}
-                      active={field.value === option}
-                      onClick={() => field.onChange(option)}
-                    >
-                      {option}
-                    </ChipButton>
-                  ))}
-                </div>
-              </div>
+              <ChipField
+                label="Estado civil"
+                value={field.value}
+                onChange={field.onChange}
+                options={toSelectOptions(MARITAL_STATUS_OPTIONS)}
+              />
             )}
           />
 
@@ -315,22 +284,12 @@ export function RegistrationSection({
             control={control}
             name="registration.propertyStatus"
             render={({ field }) => (
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-medium text-[#1A1D2E]">
-                  Situação do imóvel
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {PROPERTY_STATUS_OPTIONS.map((option) => (
-                    <ChipButton
-                      key={option}
-                      active={field.value === option}
-                      onClick={() => field.onChange(option)}
-                    >
-                      {option}
-                    </ChipButton>
-                  ))}
-                </div>
-              </div>
+              <ChipField
+                label="Situação do imóvel"
+                value={field.value}
+                onChange={field.onChange}
+                options={toSelectOptions(PROPERTY_STATUS_OPTIONS)}
+              />
             )}
           />
 
@@ -338,66 +297,45 @@ export function RegistrationSection({
             control={control}
             name="registration.residenceTime"
             render={({ field }) => (
-              <div className="flex flex-col gap-1.5">
-                <Label className="text-sm font-medium text-[#1A1D2E]">
-                  Tempo de residência
-                </Label>
-                <div className="flex flex-wrap gap-2">
-                  {RESIDENCE_TIME_OPTIONS.map((option) => (
-                    <ChipButton
-                      key={option}
-                      active={field.value === option}
-                      onClick={() => field.onChange(option)}
-                    >
-                      {option}
-                    </ChipButton>
-                  ))}
-                </div>
-              </div>
+              <ChipField
+                label="Tempo de residência"
+                value={field.value}
+                onChange={field.onChange}
+                options={toSelectOptions(RESIDENCE_TIME_OPTIONS)}
+              />
             )}
           />
 
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Vínculo a programas de governo
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {GOVERNMENT_PROGRAM_OPTIONS.map((option) => (
-                <ChipButton
-                  key={option}
-                  active={governmentPrograms.includes(option)}
-                  onClick={() =>
-                    setValue(
-                      "registration.governmentPrograms",
-                      toggleItem(governmentPrograms, option),
-                      { shouldDirty: true },
-                    )
-                  }
-                >
-                  {option}
-                </ChipButton>
-              ))}
-            </div>
-          </div>
+          <FormField
+            control={control}
+            name="registration.governmentPrograms"
+            render={({ field }) => (
+              <ChipField
+                label="Vínculo a programas de governo"
+                multiple
+                value={field.value}
+                onChange={field.onChange}
+                options={toSelectOptions(GOVERNMENT_PROGRAM_OPTIONS)}
+              />
+            )}
+          />
 
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Possui veículo?
-            </Label>
-            <YesNoChips value={hasVehicle} onChange={handleHasVehicleChange} />
-          </div>
+          <YesNoField
+            label="Possui veículo?"
+            value={hasVehicle}
+            onChange={handleHasVehicleChange}
+          />
 
           {hasVehicle ? (
             <FormField
               control={control}
               name="registration.vehicleFinanced"
               render={({ field }) => (
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-medium text-[#1A1D2E]">
-                    Veículo financiado?
-                  </Label>
-                  <YesNoChips value={field.value} onChange={field.onChange} />
-                </div>
+                <YesNoField
+                  label="Veículo financiado?"
+                  value={field.value}
+                  onChange={field.onChange}
+                />
               )}
             />
           ) : null}
@@ -408,22 +346,12 @@ export function RegistrationSection({
         control={control}
         name="registration.creditPurpose"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Finalidade do crédito
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {CREDIT_PURPOSE_OPTIONS.map((option) => (
-                <ChipButton
-                  key={option}
-                  active={field.value === option}
-                  onClick={() => field.onChange(option)}
-                >
-                  {option}
-                </ChipButton>
-              ))}
-            </div>
-          </div>
+          <ChipField
+            label="Finalidade do crédito"
+            value={field.value ?? ""}
+            onChange={field.onChange}
+            options={toSelectOptions(CREDIT_PURPOSE_OPTIONS)}
+          />
         )}
       />
       {debtRequired ? (

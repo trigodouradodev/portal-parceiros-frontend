@@ -1,17 +1,15 @@
 import { useFormContext } from "react-hook-form";
+import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
-import { Label } from "@/components/ui/label";
-import { ChipButton } from "@/features/originacao/components/ChipButton";
+import { toSelectOptions } from "@/components/ui/select-field";
 import { FileUploadField } from "@/features/originacao/components/FileUploadField";
 import {
   INCOME_DOCUMENT_TYPE_OPTIONS,
-  toggleItem,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 
 export function DocumentsSection() {
-  const { control, setValue, watch } = useFormContext<ProposalFormData>();
-  const incomeProofTypes = watch("documents.incomeProofTypes");
+  const { control } = useFormContext<ProposalFormData>();
 
   return (
     <div className="flex flex-col gap-5">
@@ -51,42 +49,32 @@ export function DocumentsSection() {
         )}
       />
 
-      <div className="flex flex-col gap-1.5">
-        <Label className="text-sm font-medium text-[#1A1D2E]">
-          Comprovantes de Renda
-        </Label>
-        <p className="text-xs text-[#9DA3B4]">
-          Selecione o(s) tipo(s) de comprovante disponíveis.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {INCOME_DOCUMENT_TYPE_OPTIONS.map((option) => (
-            <ChipButton
-              key={option}
-              active={incomeProofTypes.includes(option)}
-              onClick={() =>
-                setValue(
-                  "documents.incomeProofTypes",
-                  toggleItem(incomeProofTypes, option),
-                  { shouldDirty: true },
-                )
-              }
-            >
-              {option}
-            </ChipButton>
-          ))}
-        </div>
-        <FormField
-          control={control}
-          name="documents.incomeProofs"
-          render={({ field }) => (
-            <FileUploadField
-              label="Comprovantes"
-              value={field.value}
-              onChange={field.onChange}
+      <FormField
+        control={control}
+        name="documents.incomeProofTypes"
+        render={({ field }) => (
+          <ChipField
+            label="Comprovantes de Renda"
+            description="Selecione o(s) tipo(s) de comprovante disponíveis."
+            multiple
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(INCOME_DOCUMENT_TYPE_OPTIONS)}
+          >
+            <FormField
+              control={control}
+              name="documents.incomeProofs"
+              render={({ field: proofsField }) => (
+                <FileUploadField
+                  label="Comprovantes"
+                  value={proofsField.value}
+                  onChange={proofsField.onChange}
+                />
+              )}
             />
-          )}
-        />
-      </div>
+          </ChipField>
+        )}
+      />
     </div>
   );
 }

@@ -1,13 +1,12 @@
 import { useFormContext } from "react-hook-form";
 import { AlertTriangle, CreditCard } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
+import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
 import { SelectField, toSelectOptions } from "@/components/ui/select-field";
-import { Textarea } from "@/components/ui/textarea";
-import { ChipButton } from "@/features/originacao/components/ChipButton";
-import { YesNoChips } from "@/features/originacao/components/YesNoChips";
+import { TextareaField } from "@/components/ui/textarea-field";
+import { YesNoField } from "@/components/ui/yes-no-field";
 import {
   AUREA_REFERRAL_OPTION,
   DOUBTS_RATING,
@@ -23,7 +22,6 @@ import { cpfFieldError } from "@/lib/validation/cpf";
 export function PartnerOpinionSection() {
   const { control, watch } = useFormContext<ProposalFormData>();
   const howKnows = watch("partnerOpinion.howKnows");
-  const overallRating = watch("partnerOpinion.overallRating");
 
   return (
     <div className="flex flex-col gap-5">
@@ -31,22 +29,12 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.relationshipTime"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Tempo de relacionamento com o cliente
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {RELATIONSHIP_TIME_OPTIONS.map((option) => (
-                <ChipButton
-                  key={option}
-                  active={field.value === option}
-                  onClick={() => field.onChange(option)}
-                >
-                  {option}
-                </ChipButton>
-              ))}
-            </div>
-          </div>
+          <ChipField
+            label="Tempo de relacionamento com o cliente"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(RELATIONSHIP_TIME_OPTIONS)}
+          />
         )}
       />
 
@@ -100,22 +88,13 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.overallRating"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Avaliação geral
-            </Label>
-            <div className="flex flex-wrap gap-2">
-              {OVERALL_RATING_OPTIONS.map((option) => (
-                <ChipButton
-                  key={option}
-                  active={field.value === option}
-                  onClick={() => field.onChange(option)}
-                >
-                  {option}
-                </ChipButton>
-              ))}
-            </div>
-            {overallRating === DOUBTS_RATING ? (
+          <ChipField
+            label="Avaliação geral"
+            value={field.value}
+            onChange={field.onChange}
+            options={toSelectOptions(OVERALL_RATING_OPTIONS)}
+          >
+            {field.value === DOUBTS_RATING ? (
               <Alert variant="warning" className="mt-1">
                 <AlertTriangle size={18} />
                 <AlertTitle className="text-sm">
@@ -123,7 +102,7 @@ export function PartnerOpinionSection() {
                 </AlertTitle>
               </Alert>
             ) : null}
-          </div>
+          </ChipField>
         )}
       />
 
@@ -131,12 +110,11 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.informalDebtSigns"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Sinais de endividamento informal
-            </Label>
-            <YesNoChips value={field.value} onChange={field.onChange} />
-          </div>
+          <YesNoField
+            label="Sinais de endividamento informal"
+            value={field.value}
+            onChange={field.onChange}
+          />
         )}
       />
 
@@ -144,12 +122,11 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.financialUrgencySigns"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Sinais de urgência financeira
-            </Label>
-            <YesNoChips value={field.value} onChange={field.onChange} />
-          </div>
+          <YesNoField
+            label="Sinais de urgência financeira"
+            value={field.value}
+            onChange={field.onChange}
+          />
         )}
       />
 
@@ -157,17 +134,12 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.notes"
         render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium text-[#1A1D2E]">
-              Parecer
-            </Label>
-            <Textarea
-              value={field.value}
-              onChange={field.onChange}
-              placeholder="Complemento para a mesa de crédito — não substitui os campos acima"
-              className="rounded-2xl"
-            />
-          </div>
+          <TextareaField
+            label="Parecer"
+            value={field.value}
+            onChange={field.onChange}
+            placeholder="Complemento para a mesa de crédito — não substitui os campos acima"
+          />
         )}
       />
     </div>
