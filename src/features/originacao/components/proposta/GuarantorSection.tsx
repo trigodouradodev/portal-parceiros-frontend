@@ -2,7 +2,8 @@ import { useFormContext } from "react-hook-form";
 import { AlertCircle, CreditCard, Mail, Phone, User } from "lucide-react";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField, toSelectOptions } from "@/components/ui/select-field";
+import { SelectField } from "@/components/ui/select-field";
+import { toSelectOptions } from "@/components/ui/select-option";
 import { AddressFields } from "@/features/originacao/components/AddressFields";
 import {
   GUARANTOR_MOCK_ADDRESS,

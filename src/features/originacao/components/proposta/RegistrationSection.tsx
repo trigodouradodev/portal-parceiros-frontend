@@ -12,7 +12,8 @@ import {
 import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField, toSelectOptions } from "@/components/ui/select-field";
+import { SelectField } from "@/components/ui/select-field";
+import { toSelectOptions } from "@/components/ui/select-option";
 import { YesNoField } from "@/components/ui/yes-no-field";
 import {
   ACTIVITY_CATEGORY_OPTIONS,

@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
-import { toSelectOptions } from "@/components/ui/select-field";
+import { toSelectOptions } from "@/components/ui/select-option";
 import { FileUploadField } from "@/features/originacao/components/FileUploadField";
 import {
   INCOME_DOCUMENT_TYPE_OPTIONS,

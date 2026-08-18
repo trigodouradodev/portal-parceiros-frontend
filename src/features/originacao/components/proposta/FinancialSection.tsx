@@ -4,7 +4,8 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
-import { SelectField, toSelectOptions } from "@/components/ui/select-field";
+import { SelectField } from "@/components/ui/select-field";
+import { toSelectOptions } from "@/components/ui/select-option";
 import {
   AGIOTA_CREDITOR,
   CREDITOR_INSTITUTION_OPTIONS,

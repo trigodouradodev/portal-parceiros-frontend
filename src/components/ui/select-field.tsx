@@ -7,12 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { SelectOption } from "@/components/ui/select-option";
 import { cn } from "@/lib/utils";
-
-export interface SelectOption {
-  value: string;
-  label: string;
-}
 
 interface SelectFieldProps {
   label?: string;
@@ -23,10 +19,6 @@ interface SelectFieldProps {
   disabled?: boolean;
   error?: string;
   className?: string;
-}
-
-export function toSelectOptions(values: readonly string[]): SelectOption[] {
-  return values.map((value) => ({ value, label: value }));
 }
 
 export function SelectField({

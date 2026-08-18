@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ChipButton } from "@/components/ui/chip-button";
 import { Label } from "@/components/ui/label";
-import type { SelectOption } from "@/components/ui/select-field";
+import type { SelectOption } from "@/components/ui/select-option";
 import { cn } from "@/lib/utils";
 
 interface ChipFieldBase {
