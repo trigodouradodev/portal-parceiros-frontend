@@ -12,9 +12,9 @@ import {
   RefreshCw,
   User,
 } from "lucide-react";
+import { addDays, startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { addDays } from "@/components/ui/calendar-utils";
 import { ChipField } from "@/components/ui/chip-field";
 import {
   Dialog,
@@ -90,7 +90,7 @@ export function SimulacaoForm({
   const installments = form.watch("installments");
   const dueDate = form.watch("dueDate");
 
-  const today = new Date();
+  const today = startOfDay(new Date());
   const dueDateLimit = addDays(today, FIRST_INSTALLMENT_MAX_DAYS);
   const dueDay = dueDate?.getDate() ?? null;
   const rate = PRODUCT_RATE[product];
@@ -407,13 +407,19 @@ export function SimulacaoForm({
               {FIRST_INSTALLMENT_MAX_DAYS} dias a partir de hoje.
             </DialogDescription>
           </DialogHeader>
-          <Calendar
-            selected={draftDueDate}
-            minDate={today}
-            maxDate={dueDateLimit}
-            isDayAllowed={isAllowedDueDate}
-            onSelect={setDraftDueDate}
-          />
+          <div className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={draftDueDate}
+              onSelect={setDraftDueDate}
+              disabled={[
+                { before: today },
+                { after: dueDateLimit },
+                (date) => !isAllowedDueDate(date),
+              ]}
+              className="rounded-lg border"
+            />
+          </div>
           <DialogFooter>
             <Button
               type="button"

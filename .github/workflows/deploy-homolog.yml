@@ -9,7 +9,7 @@ env:
   AWS_ROLE_ARN: arn:aws:iam::390402573611:role/trigo-github-actions-role
   AWS_REGION: sa-east-1
   S3_BUCKET: portal-parceiros-frontend-homolog
-  CLOUDFRONT_DISTRIBUTION_ID: PREENCHER_APOS_TERRAFORM_APPLY
+  CLOUDFRONT_DISTRIBUTION_ID: E2GBFIY7UUU7AQ
   VITE_API_URL: https://portal-parceiros-api-homolog.trigodourado.com
 
 permissions:

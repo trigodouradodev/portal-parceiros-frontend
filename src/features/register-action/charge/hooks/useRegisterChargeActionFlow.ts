@@ -37,7 +37,7 @@ import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { hasCallablePhone, hasValidAddress } from "@/lib/contact-actions";
 import { getFirstName } from "@/lib/user-display";
-import { addDays, startOfDay } from "@/components/ui/calendar-utils";
+import { addDays, startOfDay } from "date-fns";
 import { buildCompletedHighlightNavigationState } from "@/features/dashboard/utils/queue-highlight-navigation";
 
 export type { FlowStep };
