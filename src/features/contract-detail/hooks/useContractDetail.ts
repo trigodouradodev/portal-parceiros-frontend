@@ -130,8 +130,13 @@ export function useContractDetail(contractId: string, mode: DetailMode) {
     installmentNumber,
     !isChargeMode && !isCarteiraMode,
   );
+  // AUREA-346: parcela explícita escolhida na lista de parcelas da Carteira
+  // (vs. o resumo do contrato, onde o backend resolve sozinho qual mostrar).
+  const hasExplicitCarteiraInstallment =
+    isCarteiraMode && installmentFromUrl !== undefined;
   const contractDetailQuery = useContractDetailByContractId(
     contractId,
+    isCarteiraMode ? installmentFromUrl : undefined,
     isCarteiraMode,
   );
 
@@ -187,6 +192,7 @@ export function useContractDetail(contractId: string, mode: DetailMode) {
     collectionDetail: collectionDetailQuery.data,
     installmentId,
     installmentNumber,
+    hasExplicitCarteiraInstallment,
     isLoading,
     isNotFound,
     mode,
