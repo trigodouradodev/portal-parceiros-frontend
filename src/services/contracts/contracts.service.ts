@@ -1,6 +1,10 @@
 import { api } from "@/lib/api/axios";
 import type { CollectionDetail } from "@/services/dashboard/dashboard.types";
-import type { ContractsListQuery, ContractsPage } from "./contracts.types";
+import type {
+  ContractInstallmentsList,
+  ContractsListQuery,
+  ContractsPage,
+} from "./contracts.types";
 
 export function buildContractsParams(
   query: ContractsListQuery,
@@ -36,13 +40,33 @@ export const contractsService = {
 
   /**
    * AUREA-330: detalhe rico do contrato pra tela de visualização da Carteira.
-   * O backend resolve sozinho qual parcela mostrar (aberta mais próxima; sem
-   * nenhuma, a última) — não precisa de installmentNumber aqui.
+   * Sem `installmentNumber`, o backend resolve sozinho qual parcela mostrar
+   * (aberta mais próxima; sem nenhuma, a última) — usado no resumo do
+   * contrato (header/cards). Com `installmentNumber` (AUREA-346, parcela
+   * escolhida na lista), pede o detalhe dessa parcela específica.
    * GET /contracts/:id
    */
-  async getContractDetail(contractId: string): Promise<CollectionDetail> {
+  async getContractDetail(
+    contractId: string,
+    installmentNumber?: number,
+  ): Promise<CollectionDetail> {
     const { data } = await api.get<CollectionDetail>(
       `/contracts/${contractId}`,
+      { params: installmentNumber ? { installmentNumber } : undefined },
+    );
+    return data;
+  },
+
+  /**
+   * AUREA-346: todas as parcelas do contrato com status de exibição (paga /
+   * atrasada / vence hoje / a vencer), pra tela de lista de parcelas da
+   * Carteira. GET /contracts/:id/installments
+   */
+  async getContractInstallments(
+    contractId: string,
+  ): Promise<ContractInstallmentsList> {
+    const { data } = await api.get<ContractInstallmentsList>(
+      `/contracts/${contractId}/installments`,
     );
     return data;
   },
