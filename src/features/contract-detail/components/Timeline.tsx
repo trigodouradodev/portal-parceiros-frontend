@@ -7,12 +7,14 @@ interface TimelineProps {
   steps: TimelineStep[];
   onRegisterAction: () => void;
   showAction?: boolean;
+  dedupeCtaLabel?: boolean;
 }
 
 export function Timeline({
   steps,
   onRegisterAction,
   showAction = true,
+  dedupeCtaLabel = false,
 }: TimelineProps) {
   return (
     <div className="flex flex-col">
@@ -23,6 +25,7 @@ export function Timeline({
           isLast={index === steps.length - 1}
           onRegisterAction={onRegisterAction}
           showAction={showAction}
+          dedupeCtaLabel={dedupeCtaLabel}
         />
       ))}
     </div>
@@ -34,6 +37,7 @@ interface TimelineRowProps {
   isLast: boolean;
   onRegisterAction: () => void;
   showAction: boolean;
+  dedupeCtaLabel: boolean;
 }
 
 function TimelineRow({
@@ -41,6 +45,7 @@ function TimelineRow({
   isLast,
   onRegisterAction,
   showAction,
+  dedupeCtaLabel,
 }: TimelineRowProps) {
   const isEvent = !step.tone;
 
@@ -60,6 +65,7 @@ function TimelineRow({
         isLast={isLast}
         onRegisterAction={onRegisterAction}
         showAction={showAction}
+        dedupeCtaLabel={dedupeCtaLabel}
       />
     </div>
   );

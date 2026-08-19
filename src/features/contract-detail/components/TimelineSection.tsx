@@ -7,12 +7,15 @@ interface TimelineSectionProps {
   onRegisterAction: () => void;
   /** AUREA-330: falso na visualização somente-leitura da Carteira. */
   showAction?: boolean;
+  /** AUREA-346: ver TimelineStepItem — escopado só à Carteira por ora. */
+  dedupeCtaLabel?: boolean;
 }
 
 export function TimelineSection({
   detail,
   onRegisterAction,
   showAction = true,
+  dedupeCtaLabel = false,
 }: TimelineSectionProps) {
   const doneCount = detail.timeline.filter((s) => s.status === "done").length;
   const totalCount = detail.timeline.length;
@@ -33,6 +36,7 @@ export function TimelineSection({
           steps={detail.timeline}
           onRegisterAction={onRegisterAction}
           showAction={showAction}
+          dedupeCtaLabel={dedupeCtaLabel}
         />
       </div>
     </div>
