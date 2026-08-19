@@ -82,7 +82,7 @@ export function ContractInstallmentsSection({
   const { data, isLoading, isError } = useContractInstallments(contractId);
 
   function openInstallment(number: number) {
-    navigate(`/contracts/${contractId}?mode=carteira&installment=${number}`);
+    navigate(`/carteira/contratos/${contractId}/parcelas/${number}`);
   }
 
   return (

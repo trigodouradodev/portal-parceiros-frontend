@@ -78,7 +78,7 @@ export function ContractListPage() {
   // AUREA-330: abre a mesma tela rica de detalhe que a Home usa, num modo
   // somente-leitura — não mais um modal pequeno.
   function openContractDetail(contract: ContractListItem) {
-    navigate(`/contracts/${contract.id}?mode=carteira`);
+    navigate(`/carteira/contratos/${contract.id}`);
   }
 
   useEffect(() => {

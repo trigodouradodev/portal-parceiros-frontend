@@ -1,4 +1,3 @@
-import { TaskTab } from "@/features/dashboard/constants/task-tab";
 import { buildTaskHistoryTimeline } from "@/features/contract-detail/mappers/build-task-history-timeline";
 import type {
   AlertType,
@@ -133,7 +132,6 @@ export function mapInstallmentDetailToView(
 
   return {
     contractId: detail.contract.id,
-    mode: TaskTab.Charge,
     businessName,
     clientName: detail.client.name,
     clientTaxId: detail.client.taxId
@@ -164,6 +162,5 @@ export function mapInstallmentDetailToView(
       detail.tasks,
       detail.installment.dueDate,
     ),
-    source: listItem,
   };
 }

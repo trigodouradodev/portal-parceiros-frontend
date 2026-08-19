@@ -10,13 +10,16 @@ interface ContractInfoCardProps {
    * montar o header/valores. Esconde o pill "Parcela X de Y" e o alerta de
    * atraso (que são sobre essa parcela auto-resolvida) pra não sugerir que
    * ela é o que está sendo visto.
-   */
+  */
   hideInstallmentBadge?: boolean;
+  /** Oculta valores associados a uma parcela auto-selecionada no resumo. */
+  showInstallmentInfo?: boolean;
 }
 
 export function ContractInfoCard({
   detail,
   hideInstallmentBadge = false,
+  showInstallmentInfo = true,
 }: ContractInfoCardProps) {
   const {
     contractTotalAmount,
@@ -50,22 +53,35 @@ export function ContractInfoCard({
       )}
       <div className="my-3 h-px bg-border" />
       <div className="grid grid-cols-2 gap-x-3 gap-y-3">
-        <div className="min-w-0">
-          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-            Parcela
-          </p>
-          <p className="truncate text-sm font-semibold text-foreground">
-            {fmtBRL(installmentTotalAmount)}
-          </p>
-        </div>
-        <div className="min-w-0">
-          <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-            Próx. vencimento
-          </p>
-          <p className="truncate text-sm font-semibold text-foreground">
-            {nextDue}
-          </p>
-        </div>
+        {showInstallmentInfo ? (
+          <>
+            <div className="min-w-0">
+              <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                Parcela
+              </p>
+              <p className="truncate text-sm font-semibold text-foreground">
+                {fmtBRL(installmentTotalAmount)}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+                Próx. vencimento
+              </p>
+              <p className="truncate text-sm font-semibold text-foreground">
+                {nextDue}
+              </p>
+            </div>
+          </>
+        ) : (
+          <div className="min-w-0">
+            <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+              Parcelas
+            </p>
+            <p className="truncate text-sm font-semibold text-foreground">
+              {totalInstallments}
+            </p>
+          </div>
+        )}
         {contractStartDate && (
           <div className="min-w-0">
             <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
