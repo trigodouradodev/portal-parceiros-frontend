@@ -22,10 +22,10 @@ interface DateFilterFieldProps {
 }
 
 /**
- * AUREA-346: filtro de data no mesmo estilo "pill" dos campos de formulário
- * do resto do app (InputField/SelectField — Perfil, Originação), reaproveitando
- * o `Calendar` da marca (o mesmo usado em PromiseDateModal/VisitRescheduleDialog)
- * em vez do `<input type="date">` nativo do navegador.
+ * Campo de data no mesmo estilo "pill" do InputField/SelectDialogField
+ * (Perfil, Originação), reaproveitando o `Calendar` da marca (o mesmo usado
+ * em PromiseDateModal/VisitRescheduleDialog) em vez do `<input type="date">`
+ * nativo do navegador. Introduzido na AUREA-346 (filtros da Carteira).
  */
 export function DateFilterField({
   label,

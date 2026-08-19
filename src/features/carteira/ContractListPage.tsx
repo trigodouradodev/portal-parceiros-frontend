@@ -4,6 +4,7 @@ import { ArrowLeft, Search } from "lucide-react";
 import { Pagination } from "@/components/data-table/Pagination";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DateFilterField } from "@/components/ui/date-filter-field";
 import { InputField } from "@/components/ui/input-field";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import type { SelectOption } from "@/components/ui/select-option";
@@ -17,7 +18,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ContractListCard } from "@/features/carteira/components/ContractListCard";
-import { DateFilterField } from "@/features/carteira/components/DateFilterField";
 import {
   ALL_PRODUCTS,
   SEARCH_DEBOUNCE_MS,
