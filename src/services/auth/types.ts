@@ -25,6 +25,8 @@ export interface UserProfile {
   phone_number: string | null;
   role: string;
   permissions: string[];
+  canSimulateQuote: boolean;
+  canCreateQuote: boolean;
 }
 
 /** Body de `PATCH /auth/me` (camelCase). */

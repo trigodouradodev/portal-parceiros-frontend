@@ -14,6 +14,8 @@ export const testUser: UserProfile = {
   phone_number: null,
   role: "CONSULTANT",
   permissions: [],
+  canSimulateQuote: true,
+  canCreateQuote: true,
 };
 
 const defaultAuth: AuthContextType = {
