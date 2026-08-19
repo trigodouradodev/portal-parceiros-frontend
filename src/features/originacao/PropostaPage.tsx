@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useOutletContext } from "react-router-dom";
 import {
-  ArrowLeft,
   CheckCircle2,
   ExternalLink,
   FileText,
@@ -17,6 +17,7 @@ import { DocumentsSection } from "@/features/originacao/components/proposta/Docu
 import { FinancialSection } from "@/features/originacao/components/proposta/FinancialSection";
 import { GuarantorSection } from "@/features/originacao/components/proposta/GuarantorSection";
 import { PartnerOpinionSection } from "@/features/originacao/components/proposta/PartnerOpinionSection";
+import { ProposalTaskHeader } from "@/features/originacao/components/proposta/ProposalTaskHeader";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import {
@@ -35,39 +36,9 @@ import { getProposalStepFieldErrors } from "@/features/originacao/utils/proposal
 import { scrollToField } from "@/features/originacao/utils/scroll-to-first-error";
 import { formatCpf } from "@/lib/format/tax-id";
 import { fmtBRL } from "@/lib/utils";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
 
-function StepHeader({ current }: { current: number }) {
-  return (
-    <div className="mb-4 rounded-2xl border border-[#E2E4EC] bg-white p-4 shadow-sm">
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-xs font-bold text-brand-navy">
-          Passo {current + 1} de {PROPOSAL_STEPS.length}
-        </span>
-        <span className="text-xs font-medium text-[#6B7080]">
-          {PROPOSAL_STEPS[current]}
-        </span>
-      </div>
-      <OriginacaoProgress
-        value={((current + 1) / PROPOSAL_STEPS.length) * 100}
-      />
-    </div>
-  );
-}
-
-function SimulationSummary({ simulation }: { simulation: SimulacaoSnapshot }) {
-  return (
-    <div className="mb-4 rounded-2xl bg-[#F5F6FA] px-4 py-3">
-      <p className="text-xs text-[#6B7080]">Baseada na simulação</p>
-      <p className="font-semibold text-[#1A1D2E]">
-        {fmtBRL(simulation.valor)} em {simulation.parcelas}x de{" "}
-        {fmtBRL(simulation.parcelaCalc)}
-      </p>
-      <p className="text-xs text-[#6B7080]">
-        {simulation.produto} · CPF {formatCpf(simulation.cpf)}
-      </p>
-    </div>
-  );
+interface ShellContext {
+  onMobileLogout?: () => void;
 }
 
 function ProposalList({
@@ -174,64 +145,66 @@ function ProposalList({
 function ProposalSuccess({
   proposal,
   onBackToList,
+  onLogout,
 }: {
   proposal: ProposalSnapshot;
   onBackToList: () => void;
+  onLogout?: () => void;
 }) {
   const { simulation } = proposal;
 
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <button
-        type="button"
-        onClick={onBackToList}
-        className="mb-4 flex items-center gap-1 text-sm font-semibold text-brand-navy"
-      >
-        <ArrowLeft size={14} />
-        Ver todas as propostas
-      </button>
+    <div className="flex-1 md:max-w-xl">
+      <ProposalTaskHeader
+        title="Proposta criada"
+        simulation={simulation}
+        backLabel="Ver todas as propostas"
+        onBack={onBackToList}
+        onLogout={onLogout}
+      />
 
-      <SimulationSummary simulation={simulation} />
+      <div className="px-5 pt-4 pb-24 md:px-8 md:pb-8">
+        <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3">
+            <Alert variant="success">
+              <CheckCircle2 size={22} />
+              <div>
+                <AlertTitle>Proposta criada</AlertTitle>
+                <AlertDescription>
+                  O cliente deve acessar o Portal do Cliente para revisar os
+                  dados, dar os consentimentos e concluir a aprovação.
+                </AlertDescription>
+              </div>
+            </Alert>
 
-      <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-3">
-          <Alert variant="success">
-            <CheckCircle2 size={22} />
-            <div>
-              <AlertTitle>Proposta criada</AlertTitle>
-              <AlertDescription>
-                O cliente deve acessar o Portal do Cliente para revisar os
-                dados, dar os consentimentos e concluir a aprovação.
-              </AlertDescription>
-            </div>
-          </Alert>
+            <button
+              type="button"
+              className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] py-3.5 font-semibold text-white transition-colors hover:bg-[#1ebe5a]"
+              onClick={() =>
+                alert("Abrirá o WhatsApp com o link do Portal do Cliente.")
+              }
+            >
+              <MessageSquare size={18} />
+              Enviar link pelo WhatsApp
+              <ExternalLink size={14} className="opacity-70" />
+            </button>
 
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] py-3.5 font-semibold text-white transition-colors hover:bg-[#1ebe5a]"
-            onClick={() =>
-              alert("Abrirá o WhatsApp com o link do Portal do Cliente.")
-            }
-          >
-            <MessageSquare size={18} />
-            Enviar link pelo WhatsApp
-            <ExternalLink size={14} className="opacity-70" />
-          </button>
-
-          <Button
-            variant="ghost"
-            className="h-11 rounded-2xl"
-            onClick={onBackToList}
-          >
-            Ver todas as propostas
-          </Button>
-        </div>
-      </section>
+            <Button
+              variant="ghost"
+              className="h-11 rounded-2xl"
+              onClick={onBackToList}
+            >
+              Ver todas as propostas
+            </Button>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
 
 export function PropostaPage() {
+  const { onMobileLogout } = useOutletContext<ShellContext>();
   const {
     proposals,
     openProposalId,
@@ -249,7 +222,13 @@ export function PropostaPage() {
   }
 
   if (proposal.status === "completed") {
-    return <ProposalSuccess proposal={proposal} onBackToList={closeProposal} />;
+    return (
+      <ProposalSuccess
+        proposal={proposal}
+        onBackToList={closeProposal}
+        onLogout={onMobileLogout}
+      />
+    );
   }
 
   return (
@@ -258,6 +237,7 @@ export function PropostaPage() {
       proposal={proposal}
       onUpdate={updateProposal}
       onClose={closeProposal}
+      onLogout={onMobileLogout}
     />
   );
 }
@@ -266,10 +246,12 @@ function ProposalWizard({
   proposal,
   onUpdate,
   onClose,
+  onLogout,
 }: {
   proposal: ProposalSnapshot;
   onUpdate: (proposal: ProposalSnapshot) => void;
   onClose: () => void;
+  onLogout?: () => void;
 }) {
   const form = useForm<ProposalFormData>({
     defaultValues: proposal.data,
@@ -342,63 +324,52 @@ function ProposalWizard({
   }
 
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <div className="mb-4">
-        <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-          Proposta
-        </h2>
-        <p className="mt-1 text-sm text-[#6B7080]">
-          Preenchimento completo: cadastro, atividade e renda, endereço, parecer
-          do parceiro, avalista, financeiro e documentação.
-        </p>
-      </div>
+    <div className="flex-1 md:max-w-xl">
+      <ProposalTaskHeader
+        title={`${PROPOSAL_STEPS[step]} · ${step + 1}/${PROPOSAL_STEPS.length}`}
+        simulation={simulation}
+        progress={((step + 1) / PROPOSAL_STEPS.length) * 100}
+        backLabel="Salvar rascunho e ver todas as propostas"
+        onBack={handleClose}
+        onLogout={onLogout}
+      />
 
-      <button
-        type="button"
-        onClick={handleClose}
-        className="mb-4 flex items-center gap-1 text-sm font-semibold text-brand-navy"
-      >
-        <ArrowLeft size={14} />
-        Salvar rascunho e ver todas as propostas
-      </button>
+      <div className="px-5 pt-4 pb-28 md:px-8 md:pb-8">
+        <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
+          <Form {...form}>
+            <div className={step === 0 ? "" : "hidden"}>
+              <RegistrationSection
+                product={simulation.produto}
+                rate={simulation.taxa}
+                cpf={simulation.cpf}
+                name={simulation.nome}
+                birthDate={simulation.nascimento}
+                email={simulation.email}
+                phone={simulation.celular}
+              />
+            </div>
+            <div className={step === 1 ? "" : "hidden"}>
+              <ActivityIncomeSection />
+            </div>
+            <div className={step === 2 ? "" : "hidden"}>
+              <AddressSection />
+            </div>
+            <div className={step === 3 ? "" : "hidden"}>
+              <PartnerOpinionSection />
+            </div>
+            <div className={step === 4 ? "" : "hidden"}>
+              <GuarantorSection />
+            </div>
+            <div className={step === 5 ? "" : "hidden"}>
+              <FinancialSection />
+            </div>
+            <div className={step === 6 ? "" : "hidden"}>
+              <DocumentsSection />
+            </div>
+          </Form>
+        </section>
 
-      <SimulationSummary simulation={simulation} />
-      <StepHeader current={step} />
-
-      <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <Form {...form}>
-          <div className={step === 0 ? "" : "hidden"}>
-            <RegistrationSection
-              product={simulation.produto}
-              rate={simulation.taxa}
-              cpf={simulation.cpf}
-              name={simulation.nome}
-              birthDate={simulation.nascimento}
-              email={simulation.email}
-              phone={simulation.celular}
-            />
-          </div>
-          <div className={step === 1 ? "" : "hidden"}>
-            <ActivityIncomeSection />
-          </div>
-          <div className={step === 2 ? "" : "hidden"}>
-            <AddressSection />
-          </div>
-          <div className={step === 3 ? "" : "hidden"}>
-            <PartnerOpinionSection />
-          </div>
-          <div className={step === 4 ? "" : "hidden"}>
-            <GuarantorSection />
-          </div>
-          <div className={step === 5 ? "" : "hidden"}>
-            <FinancialSection />
-          </div>
-          <div className={step === 6 ? "" : "hidden"}>
-            <DocumentsSection />
-          </div>
-        </Form>
-
-        <div className="mt-5 flex gap-2">
+        <div className="sticky bottom-16 z-10 -mx-5 mt-4 flex gap-2 border-t border-[#E2E4EC] bg-white px-5 py-3 md:static md:mx-0 md:mt-5 md:border-0 md:bg-transparent md:px-0 md:py-0">
           {step > 0 ? (
             <Button
               variant="outline"
@@ -418,7 +389,7 @@ function ProposalWizard({
               : "Avançar"}
           </Button>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

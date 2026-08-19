@@ -14,9 +14,12 @@ interface ShellContext {
   onMobileLogout?: () => void;
 }
 
-function OriginacaoTabs() {
-  const { activeTab, setActiveTab, simulacoes } = useOriginacao();
+function OriginacaoLayout() {
+  const { onMobileLogout } = useOutletContext<ShellContext>();
+  const { activeTab, setActiveTab, simulacoes, openProposalId } =
+    useOriginacao();
   const propostaLocked = simulacoes.length === 0;
+  const focusedProposal = Boolean(openProposalId);
 
   function goTo(tab: string) {
     if (tab === "proposta" && propostaLocked) return;
@@ -24,49 +27,49 @@ function OriginacaoTabs() {
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={goTo}>
-      <div className="px-5 pt-5 md:px-8">
-        <TabsList className="md:w-[26rem]">
-          <TabsTrigger value="elegibilidade">Elegibilidade</TabsTrigger>
-          <TabsTrigger value="simulacao">Simulação</TabsTrigger>
-          <TabsTrigger
-            value="proposta"
-            disabled={propostaLocked}
-            title={
-              propostaLocked
-                ? "Conclua uma simulação para liberar a proposta"
-                : undefined
-            }
-            className="disabled:cursor-not-allowed disabled:opacity-100 disabled:text-[#C8CBD8]"
-          >
-            {propostaLocked ? <Lock size={12} aria-hidden /> : null}
-            Proposta
-          </TabsTrigger>
-        </TabsList>
-      </div>
+    <PageContainer>
+      {focusedProposal ? null : <PageHeader onLogout={onMobileLogout} />}
+      <Tabs value={activeTab} onValueChange={goTo}>
+        {focusedProposal ? null : (
+          <div className="px-5 pt-5 md:px-8">
+            <TabsList className="md:w-[26rem]">
+              <TabsTrigger value="elegibilidade">Elegibilidade</TabsTrigger>
+              <TabsTrigger value="simulacao">Simulação</TabsTrigger>
+              <TabsTrigger
+                value="proposta"
+                disabled={propostaLocked}
+                title={
+                  propostaLocked
+                    ? "Conclua uma simulação para liberar a proposta"
+                    : undefined
+                }
+                className="disabled:cursor-not-allowed disabled:opacity-100 disabled:text-[#C8CBD8]"
+              >
+                {propostaLocked ? <Lock size={12} aria-hidden /> : null}
+                Proposta
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        )}
 
-      <TabsContent value="elegibilidade" className="mt-0">
-        <ElegibilidadePage />
-      </TabsContent>
-      <TabsContent value="simulacao" className="mt-0">
-        <SimulacaoPage />
-      </TabsContent>
-      <TabsContent value="proposta" className="mt-0">
-        <PropostaPage />
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="elegibilidade" className="mt-0">
+          <ElegibilidadePage />
+        </TabsContent>
+        <TabsContent value="simulacao" className="mt-0">
+          <SimulacaoPage />
+        </TabsContent>
+        <TabsContent value="proposta" className="mt-0">
+          <PropostaPage />
+        </TabsContent>
+      </Tabs>
+    </PageContainer>
   );
 }
 
 export function OriginacaoPage() {
-  const { onMobileLogout } = useOutletContext<ShellContext>();
-
   return (
     <OriginacaoProvider>
-      <PageContainer>
-        <PageHeader onLogout={onMobileLogout} />
-        <OriginacaoTabs />
-      </PageContainer>
+      <OriginacaoLayout />
     </OriginacaoProvider>
   );
 }
