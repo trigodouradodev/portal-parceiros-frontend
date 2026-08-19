@@ -16,35 +16,44 @@ export function DocumentsSection() {
       <FormField
         control={control}
         name="documents.identification"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <FileUploadField
+            name={field.name}
             label="Documentos de Identificação"
             value={field.value}
             onChange={field.onChange}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
       <FormField
         control={control}
         name="documents.proofOfResidence"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <FileUploadField
+            name={field.name}
             label="Comprovante de Residência"
             note="Até 90 dias"
             value={field.value}
             onChange={field.onChange}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
       <FormField
         control={control}
         name="documents.activityPhotos"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <FileUploadField
+            name={field.name}
             label="Fotos da Atividade"
             note="Fachada, local de trabalho ou estoque"
             value={field.value}
             onChange={field.onChange}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -52,25 +61,31 @@ export function DocumentsSection() {
       <FormField
         control={control}
         name="documents.incomeProofTypes"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <ChipField
+            name={field.name}
             label="Comprovantes de Renda"
             description="Selecione o(s) tipo(s) de comprovante disponíveis."
             multiple
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(INCOME_DOCUMENT_TYPE_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
       <FormField
         control={control}
         name="documents.incomeProofs"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <FileUploadField
+            name={field.name}
             label="Comprovantes"
             value={field.value}
             onChange={field.onChange}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />

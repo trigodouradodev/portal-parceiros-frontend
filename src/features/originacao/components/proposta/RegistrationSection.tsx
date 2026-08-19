@@ -74,11 +74,14 @@ export function RegistrationSection({
       <FormField
         control={control}
         name="registration.isRenewal"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <YesNoField
+            name={field.name}
             label="É uma renovação de contrato?"
             value={field.value}
             onChange={field.onChange}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -122,12 +125,15 @@ export function RegistrationSection({
       <FormField
         control={control}
         name="registration.gender"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <ChipField
+            name={field.name}
             label="Gênero"
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(GENDER_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -170,13 +176,16 @@ export function RegistrationSection({
       <FormField
         control={control}
         name="registration.activityCategories"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <ChipField
+            name={field.name}
             label="Categoria da atividade"
             multiple
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(ACTIVITY_CATEGORY_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -233,8 +242,9 @@ export function RegistrationSection({
             <FormField
               control={control}
               name="registration.spouseCpf"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="CPF do cônjuge"
                   value={formatCpf(field.value)}
                   onChange={(value) => field.onChange(formatCpf(value))}
@@ -242,7 +252,7 @@ export function RegistrationSection({
                   placeholder="000.000.000-00"
                   inputMode="numeric"
                   maxLength={14}
-                  error={cpfFieldError(field.value)}
+                  error={fieldState.error?.message ?? cpfFieldError(field.value)}
                 />
               )}
             />
@@ -346,12 +356,15 @@ export function RegistrationSection({
       <FormField
         control={control}
         name="registration.creditPurpose"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <ChipField
+            name={field.name}
             label="Finalidade do crédito"
             value={field.value ?? ""}
             onChange={field.onChange}
             options={toSelectOptions(CREDIT_PURPOSE_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />

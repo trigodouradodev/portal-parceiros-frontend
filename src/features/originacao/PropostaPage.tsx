@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   ArrowLeft,
@@ -30,6 +31,8 @@ import {
   type ProposalFormData,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
+import { getProposalStepFieldErrors } from "@/features/originacao/utils/proposal-step-errors";
+import { scrollToField } from "@/features/originacao/utils/scroll-to-first-error";
 import { formatCpf } from "@/lib/format/tax-id";
 import { fmtBRL } from "@/lib/utils";
 import type { SimulacaoSnapshot } from "@/features/originacao/types";
@@ -271,8 +274,10 @@ function ProposalWizard({
   const form = useForm<ProposalFormData>({
     defaultValues: proposal.data,
   });
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const data = form.watch();
+  const valuesKey = JSON.stringify(data);
   const { simulation, step } = proposal;
   const stepValid = [
     isRegistrationValid(data.registration),
@@ -283,6 +288,17 @@ function ProposalWizard({
     isFinancialValid(),
     isDocumentsValid(data.documents),
   ];
+
+  useEffect(() => {
+    if (!submitAttempted) return;
+    const errors = getProposalStepFieldErrors(step, form.getValues());
+    form.clearErrors();
+    for (const item of errors) {
+      form.setError(item.name, { type: "manual", message: item.message });
+    }
+    // Revalidates the current step after the first failed Avançar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- form methods are stable
+  }, [step, submitAttempted, valuesKey]);
 
   function persist(patch: Partial<ProposalSnapshot> = {}) {
     onUpdate({
@@ -295,7 +311,18 @@ function ProposalWizard({
   }
 
   function handleNext() {
-    if (!stepValid[step]) return;
+    const errors = getProposalStepFieldErrors(step, form.getValues());
+    setSubmitAttempted(true);
+    if (errors.length > 0) {
+      form.clearErrors();
+      for (const item of errors) {
+        form.setError(item.name, { type: "manual", message: item.message });
+      }
+      scrollToField(errors[0].name);
+      return;
+    }
+    setSubmitAttempted(false);
+    form.clearErrors();
     if (step === PROPOSAL_STEPS.length - 1) {
       persist({ status: "completed" });
     } else {
@@ -304,6 +331,8 @@ function ProposalWizard({
   }
 
   function handleBack() {
+    setSubmitAttempted(false);
+    form.clearErrors();
     persist({ step: Math.max(0, step - 1) });
   }
 
@@ -382,7 +411,6 @@ function ProposalWizard({
           <Button
             variant="yellow"
             className="h-11 flex-1 rounded-2xl"
-            disabled={!stepValid[step]}
             onClick={handleNext}
           >
             {step === PROPOSAL_STEPS.length - 1

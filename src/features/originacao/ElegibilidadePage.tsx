@@ -19,6 +19,7 @@ import {
   type EligibilityFormValues,
 } from "@/features/originacao/schemas/eligibility-form";
 import { todayIsoLocal } from "@/features/originacao/utils/calc-age";
+import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 import { formatCpf } from "@/lib/format/tax-id";
 import { cn } from "@/lib/utils";
 
@@ -38,12 +39,12 @@ export function ElegibilidadePage() {
 
   const form = useForm<EligibilityFormValues>({
     resolver: zodResolver(eligibilitySchema),
-    mode: "onChange",
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: EMPTY_VALUES,
   });
 
   const fieldsLocked = status === "loading" || status === "valid";
-  const canSubmit = form.formState.isValid && status !== "loading";
 
   function onConsultar(values: EligibilityFormValues) {
     if (status === "loading") return;
@@ -83,7 +84,7 @@ export function ElegibilidadePage() {
         <Form {...form}>
           <form
             className="flex flex-col gap-4"
-            onSubmit={form.handleSubmit(onConsultar)}
+            onSubmit={form.handleSubmit(onConsultar, scrollToFirstError)}
             noValidate
           >
             <FormField
@@ -91,11 +92,13 @@ export function ElegibilidadePage() {
               name="name"
               render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="Nome completo"
                   value={field.value}
                   onChange={field.onChange}
                   icon={<User size={16} />}
                   placeholder="Nome do cliente"
+                  required
                   error={fieldState.error?.message}
                   disabled={fieldsLocked}
                 />
@@ -106,6 +109,7 @@ export function ElegibilidadePage() {
               name="cpf"
               render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="CPF"
                   value={field.value}
                   onChange={(value) => field.onChange(formatCpf(value))}
@@ -113,11 +117,8 @@ export function ElegibilidadePage() {
                   placeholder="000.000.000-00"
                   inputMode="numeric"
                   maxLength={14}
-                  error={
-                    field.value.replace(/\D/g, "").length === 11
-                      ? fieldState.error?.message
-                      : undefined
-                  }
+                  required
+                  error={fieldState.error?.message}
                   disabled={fieldsLocked}
                 />
               )}
@@ -127,13 +128,15 @@ export function ElegibilidadePage() {
               name="birthDate"
               render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="Data de nascimento"
                   value={field.value}
                   onChange={field.onChange}
                   icon={<CalendarDays size={16} />}
                   type="date"
                   max={TODAY_ISO}
-                  error={field.value ? fieldState.error?.message : undefined}
+                  required
+                  error={fieldState.error?.message}
                   disabled={fieldsLocked}
                 />
               )}
@@ -143,7 +146,7 @@ export function ElegibilidadePage() {
               <Button
                 type="submit"
                 className="mt-1 h-11 w-full rounded-2xl font-semibold"
-                disabled={!canSubmit}
+                disabled={status === "loading"}
               >
                 {status === "loading" ? (
                   <>

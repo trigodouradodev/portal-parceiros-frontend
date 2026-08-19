@@ -1,5 +1,5 @@
 import { useFormContext } from "react-hook-form";
-import { AlertCircle, CreditCard, Mail, Phone, User } from "lucide-react";
+import { CreditCard, Mail, Phone, User } from "lucide-react";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { SelectField } from "@/components/ui/select-field";
@@ -23,21 +23,25 @@ export function GuarantorSection() {
       <FormField
         control={control}
         name="guarantor.name"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <InputField
+            name={field.name}
             label="Nome do avalista"
             value={field.value}
             onChange={field.onChange}
             icon={<User size={16} />}
             placeholder="Nome completo"
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
       <FormField
         control={control}
         name="guarantor.cpf"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <InputField
+            name={field.name}
             label="CPF do avalista"
             value={field.value}
             onChange={(value) => field.onChange(formatCpf(value))}
@@ -45,60 +49,67 @@ export function GuarantorSection() {
             placeholder="000.000.000-00"
             inputMode="numeric"
             maxLength={14}
-            error={cpfFieldError(field.value)}
+            required
+            error={fieldState.error?.message ?? cpfFieldError(field.value)}
           />
         )}
       />
       <FormField
         control={control}
         name="guarantor.birthDate"
-        render={({ field }) => {
+        render={({ field, fieldState }) => {
           const age = calcAge(field.value);
           const ageInvalid = age !== null && !isAdultAge(age);
           return (
-            <div className="flex flex-col gap-1.5">
-              <InputField
-                label="Data de nascimento"
-                value={field.value}
-                onChange={field.onChange}
-                icon={<User size={16} />}
-                type="date"
-              />
-              {ageInvalid ? (
-                <div className="flex items-center gap-1.5 text-xs text-[#D84040]">
-                  <AlertCircle size={12} />O avalista deve ter entre 18 e 120
-                  anos.
-                </div>
-              ) : null}
-            </div>
+            <InputField
+              name={field.name}
+              label="Data de nascimento"
+              value={field.value}
+              onChange={field.onChange}
+              icon={<User size={16} />}
+              type="date"
+              required
+              error={
+                fieldState.error?.message ??
+                (ageInvalid
+                  ? "O avalista deve ter entre 18 e 120 anos."
+                  : undefined)
+              }
+            />
           );
         }}
       />
       <FormField
         control={control}
         name="guarantor.email"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <InputField
+            name={field.name}
             label="Email do avalista"
             value={field.value}
             onChange={field.onChange}
             icon={<Mail size={16} />}
             placeholder="avalista@email.com"
             type="email"
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
       <FormField
         control={control}
         name="guarantor.phone"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <InputField
+            name={field.name}
             label="Telefone do avalista"
             value={field.value}
             onChange={(value) => field.onChange(formatPhone(value))}
             icon={<Phone size={16} />}
             placeholder="(11) 99999-0000"
             inputMode="tel"
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -115,12 +126,15 @@ export function GuarantorSection() {
       <FormField
         control={control}
         name="guarantor.kinship"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <SelectField
+            name={field.name}
             label="Grau de parentesco com o tomador"
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(KINSHIP_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />

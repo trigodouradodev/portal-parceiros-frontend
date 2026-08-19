@@ -1,4 +1,3 @@
-import { AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -8,40 +7,53 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { SelectOption } from "@/components/ui/select-option";
+import {
+  FieldErrorMessage,
+  FieldLabel,
+  fieldAnchorProps,
+} from "@/components/ui/field-hint";
 import { cn } from "@/lib/utils";
 
 interface SelectFieldProps {
+  name?: string;
   label?: string;
   options: SelectOption[];
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  required?: boolean;
   error?: string;
   className?: string;
 }
 
 export function SelectField({
+  name,
   label,
   options,
   value,
   onChange,
   placeholder = "Selecione",
   disabled,
+  required,
   error,
   className,
 }: SelectFieldProps) {
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      {label ? (
-        <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>
+    <div
+      className={cn("flex flex-col gap-1.5", className)}
+      {...fieldAnchorProps(name, error)}
+    >
+      {label ? <FieldLabel required={required}>{label}</FieldLabel> : null}
+      {!label && required ? (
+        <Label className="sr-only">Obrigatório</Label>
       ) : null}
       <Select
         value={value || undefined}
         onValueChange={onChange}
         disabled={disabled}
       >
-        <SelectTrigger>
+        <SelectTrigger aria-invalid={error ? true : undefined}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -52,12 +64,7 @@ export function SelectField({
           ))}
         </SelectContent>
       </Select>
-      {error ? (
-        <div className="flex items-center gap-1.5 text-xs text-[#D84040]">
-          <AlertCircle size={12} />
-          {error}
-        </div>
-      ) : null}
+      <FieldErrorMessage error={error} />
     </div>
   );
 }

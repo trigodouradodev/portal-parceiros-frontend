@@ -47,12 +47,15 @@ export function ActivityIncomeSection() {
       <FormField
         control={control}
         name="activityIncome.activityTime"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <ChipField
+            name={field.name}
             label="Tempo na atividade"
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(ACTIVITY_TIME_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -60,14 +63,17 @@ export function ActivityIncomeSection() {
       <FormField
         control={control}
         name="activityIncome.monthlyIncome"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <InputField
+            name={field.name}
             label="Renda mensal declarada"
             value={field.value}
             onChange={(value) => field.onChange(formatMoneyBrl(value))}
             icon={<Wallet size={16} />}
             placeholder="R$ 0,00"
             inputMode="numeric"
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -75,12 +81,15 @@ export function ActivityIncomeSection() {
       <FormField
         control={control}
         name="activityIncome.incomeSource"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <SelectField
+            name={field.name}
             label="Fonte da renda"
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(INCOME_SOURCE_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -111,12 +120,15 @@ export function ActivityIncomeSection() {
       <FormField
         control={control}
         name="activityIncome.availableProof"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <SelectField
+            name={field.name}
             label="Comprovante disponível?"
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(INCOME_PROOF_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />

@@ -29,12 +29,15 @@ export function PartnerOpinionSection() {
       <FormField
         control={control}
         name="partnerOpinion.relationshipTime"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <ChipField
+            name={field.name}
             label="Tempo de relacionamento com o cliente"
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(RELATIONSHIP_TIME_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -42,12 +45,15 @@ export function PartnerOpinionSection() {
       <FormField
         control={control}
         name="partnerOpinion.howKnows"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <SelectField
+            name={field.name}
             label="Como conhece o cliente"
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(HOW_KNOWS_CLIENT_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -70,8 +76,9 @@ export function PartnerOpinionSection() {
         <FormField
           control={control}
           name="partnerOpinion.referrerCpf"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <InputField
+              name={field.name}
               label="CPF de quem indicou"
               value={formatCpf(field.value)}
               onChange={(value) => field.onChange(formatCpf(value))}
@@ -79,7 +86,7 @@ export function PartnerOpinionSection() {
               placeholder="000.000.000-00"
               inputMode="numeric"
               maxLength={14}
-              error={cpfFieldError(field.value)}
+              error={fieldState.error?.message ?? cpfFieldError(field.value)}
             />
           )}
         />
@@ -88,12 +95,15 @@ export function PartnerOpinionSection() {
       <FormField
         control={control}
         name="partnerOpinion.overallRating"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <ChipField
+            name={field.name}
             label="Avaliação geral"
             value={field.value}
             onChange={field.onChange}
             options={toSelectOptions(OVERALL_RATING_OPTIONS)}
+            required
+            error={fieldState.error?.message}
           >
             {field.value === DOUBTS_RATING ? (
               <Alert variant="warning" className="mt-1">
@@ -110,11 +120,14 @@ export function PartnerOpinionSection() {
       <FormField
         control={control}
         name="partnerOpinion.informalDebtSigns"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <YesNoField
+            name={field.name}
             label="Sinais de endividamento informal"
             value={field.value}
             onChange={field.onChange}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -122,11 +135,14 @@ export function PartnerOpinionSection() {
       <FormField
         control={control}
         name="partnerOpinion.financialUrgencySigns"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <YesNoField
+            name={field.name}
             label="Sinais de urgência financeira"
             value={field.value}
             onChange={field.onChange}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -134,12 +150,15 @@ export function PartnerOpinionSection() {
       <FormField
         control={control}
         name="partnerOpinion.notes"
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <TextareaField
+            name={field.name}
             label="Parecer"
             value={field.value}
             onChange={field.onChange}
             placeholder="Complemento para a mesa de crédito — não substitui os campos acima"
+            required
+            error={fieldState.error?.message}
           />
         )}
       />

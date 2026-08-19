@@ -19,6 +19,7 @@ export function AddressSection() {
         name="address.landmark"
         render={({ field }) => (
           <TextareaField
+            name={field.name}
             label="Ponto de referência"
             value={field.value}
             onChange={field.onChange}

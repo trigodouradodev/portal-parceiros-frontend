@@ -142,8 +142,9 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
         <FormField
           control={control}
           name={addressPath(namePrefix, "zipCode")}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <InputField
+              name={field.name}
               label="CEP"
               value={field.value}
               onChange={handleZipCodeChange}
@@ -151,6 +152,8 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
               placeholder="00000-000"
               inputMode="numeric"
               maxLength={9}
+              required
+              error={fieldState.error?.message}
             />
           )}
         />
@@ -171,13 +174,16 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
       <FormField
         control={control}
         name={addressPath(namePrefix, "street")}
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <InputField
+            name={field.name}
             label="Rua"
             value={field.value}
             onChange={field.onChange}
             icon={<MapPin size={16} />}
             placeholder="Nome da rua"
+            required={namePrefix === "address"}
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -185,14 +191,17 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
         <FormField
           control={control}
           name={addressPath(namePrefix, "number")}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <InputField
+              name={field.name}
               label="Número"
               value={field.value}
               onChange={(value) => field.onChange(formatAddressNumber(value))}
               icon={<MapPin size={16} />}
               placeholder="Nº"
               maxLength={10}
+              required
+              error={fieldState.error?.message}
             />
           )}
         />
@@ -213,13 +222,16 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
       <FormField
         control={control}
         name={addressPath(namePrefix, "neighborhood")}
-        render={({ field }) => (
+        render={({ field, fieldState }) => (
           <InputField
+            name={field.name}
             label="Bairro"
             value={field.value}
             onChange={field.onChange}
             icon={<MapPin size={16} />}
             placeholder="Bairro"
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -227,26 +239,32 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
         <FormField
           control={control}
           name={addressPath(namePrefix, "city")}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <InputField
+              name={field.name}
               label="Cidade"
               value={field.value}
               onChange={field.onChange}
               icon={<MapPin size={16} />}
               placeholder="Cidade"
+              required
+              error={fieldState.error?.message}
             />
           )}
         />
         <FormField
           control={control}
           name={addressPath(namePrefix, "state")}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <SelectField
+              name={field.name}
               label="Estado"
               value={field.value}
               onChange={field.onChange}
               placeholder="UF"
               options={toSelectOptions(UF_LIST)}
+              required
+              error={fieldState.error?.message}
             />
           )}
         />

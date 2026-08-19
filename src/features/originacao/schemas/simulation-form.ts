@@ -20,8 +20,12 @@ export const simulationSchema = z.object({
     ),
   product: z.enum(["Pessoal", "Premium", "Giro"]),
   amount: z.number().min(AMOUNT_MIN).max(AMOUNT_MAX),
-  installments: z.number().int().min(2).max(12),
-  dueDate: z.date(),
+  installments: z
+    .number({ error: "Informe as parcelas" })
+    .int()
+    .min(2, "Informe as parcelas")
+    .max(12),
+  dueDate: z.date({ error: "Informe a data de vencimento" }),
 });
 
 export type SimulationFormValues = z.infer<typeof simulationSchema>;

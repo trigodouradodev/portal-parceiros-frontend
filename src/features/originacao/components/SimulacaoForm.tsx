@@ -24,9 +24,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  FieldErrorMessage,
+  FieldLabel,
+  fieldAnchorProps,
+} from "@/components/ui/field-hint";
 import { Form, FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
 import { SelectField } from "@/components/ui/select-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import {
@@ -52,6 +56,7 @@ import type {
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import { calcInstallment, fmtBRL } from "@/lib/utils";
+import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 
 interface SimulacaoFormProps {
   prefill: DadosElegibilidade | null;
@@ -73,7 +78,8 @@ export function SimulacaoForm({
 
   const form = useForm<SimulationFormValues>({
     resolver: zodResolver(simulationSchema),
-    mode: "onChange",
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: {
       nome: prefill?.nome ?? "",
       cpf: formatCpf(prefill?.cpf ?? ""),
@@ -159,7 +165,7 @@ export function SimulacaoForm({
         <Form {...form}>
           <form
             className="flex flex-col gap-5"
-            onSubmit={form.handleSubmit(onContinue)}
+            onSubmit={form.handleSubmit(onContinue, scrollToFirstError)}
             noValidate
           >
             <FormField
@@ -167,11 +173,13 @@ export function SimulacaoForm({
               name="nome"
               render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="Nome completo"
                   value={field.value}
                   onChange={field.onChange}
                   icon={<User size={16} />}
                   placeholder="Nome do cliente"
+                  required
                   error={fieldState.error?.message}
                 />
               )}
@@ -181,6 +189,7 @@ export function SimulacaoForm({
               name="cpf"
               render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="CPF"
                   value={field.value}
                   onChange={(value) => field.onChange(formatCpf(value))}
@@ -188,11 +197,8 @@ export function SimulacaoForm({
                   placeholder="000.000.000-00"
                   inputMode="numeric"
                   maxLength={14}
-                  error={
-                    field.value.replace(/\D/g, "").length === 11
-                      ? fieldState.error?.message
-                      : undefined
-                  }
+                  required
+                  error={fieldState.error?.message}
                 />
               )}
             />
@@ -201,12 +207,14 @@ export function SimulacaoForm({
               name="nascimento"
               render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="Data de nascimento"
                   value={field.value}
                   onChange={field.onChange}
                   icon={<CalendarDays size={16} />}
                   type="date"
-                  error={field.value ? fieldState.error?.message : undefined}
+                  required
+                  error={fieldState.error?.message}
                 />
               )}
             />
@@ -215,12 +223,14 @@ export function SimulacaoForm({
               name="email"
               render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="E-mail"
                   value={field.value}
                   onChange={field.onChange}
                   icon={<Mail size={16} />}
                   placeholder="cliente@email.com"
                   type="email"
+                  required
                   error={fieldState.error?.message}
                 />
               )}
@@ -230,6 +240,7 @@ export function SimulacaoForm({
               name="celular"
               render={({ field, fieldState }) => (
                 <InputField
+                  name={field.name}
                   label="Celular"
                   value={field.value}
                   onChange={(value) => field.onChange(formatPhone(value))}
@@ -237,11 +248,8 @@ export function SimulacaoForm({
                   placeholder="(11) 99999-0000"
                   inputMode="tel"
                   maxLength={15}
-                  error={
-                    field.value.replace(/\D/g, "").length >= 10
-                      ? fieldState.error?.message
-                      : undefined
-                  }
+                  required
+                  error={fieldState.error?.message}
                 />
               )}
             />
@@ -251,9 +259,7 @@ export function SimulacaoForm({
               name="product"
               render={({ field }) => (
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-medium text-[#1A1D2E]">
-                    Produto
-                  </Label>
+                  <FieldLabel required>Produto</FieldLabel>
                   {!changingProduct ? (
                     <div className="flex items-start justify-between gap-3 rounded-2xl bg-[#F5F6FA] px-4 py-3">
                       <div>
@@ -302,9 +308,7 @@ export function SimulacaoForm({
               name="amount"
               render={({ field }) => (
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-medium text-[#1A1D2E]">
-                    Quanto o cliente precisa?
-                  </Label>
+                  <FieldLabel required>Quanto o cliente precisa?</FieldLabel>
                   <p className="font-fraunces text-3xl font-bold text-brand-navy">
                     {fmtBRL(field.value)}
                   </p>
@@ -330,8 +334,9 @@ export function SimulacaoForm({
             <FormField
               control={form.control}
               name="installments"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <ChipField
+                  name={field.name}
                   label="Em quantas parcelas?"
                   value={field.value != null ? String(field.value) : ""}
                   onChange={(value) => field.onChange(Number(value))}
@@ -340,40 +345,55 @@ export function SimulacaoForm({
                     label: `${n}x`,
                   }))}
                   chipsClassName="grid grid-cols-6 gap-2"
+                  required
+                  error={fieldState.error?.message}
                 />
               )}
             />
 
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-medium text-[#1A1D2E]">
-                Melhor dia de vencimento
-              </Label>
-              <p className="text-xs text-[#9DA3B4]">
-                Vencimento sempre no dia 5, 10, 15 ou 20, dentro de uma janela
-                de até {FIRST_INSTALLMENT_MAX_DAYS} dias (D+
-                {FIRST_INSTALLMENT_MAX_DAYS}) a partir de hoje.
-              </p>
-              <button
-                type="button"
-                onClick={openDueDateDialog}
-                className="flex items-center gap-2 rounded-2xl bg-[#F5F6FA] px-4 py-3 text-left transition-colors hover:bg-[#EFF0F5]"
-              >
-                <CalendarDays size={16} className="shrink-0 text-[#6B7080]" />
-                <span
-                  className={
-                    dueDate ? "font-semibold text-[#1A1D2E]" : "text-[#9DA3B4]"
-                  }
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ fieldState }) => (
+                <div
+                  className="flex flex-col gap-1.5"
+                  {...fieldAnchorProps("dueDate", fieldState.error?.message)}
                 >
-                  {dueDate
-                    ? dueDate.toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : "Selecionar data"}
-                </span>
-              </button>
-            </div>
+                  <FieldLabel required>Melhor dia de vencimento</FieldLabel>
+                  <p className="text-xs text-[#9DA3B4]">
+                    Vencimento sempre no dia 5, 10, 15 ou 20, dentro de uma
+                    janela de até {FIRST_INSTALLMENT_MAX_DAYS} dias (D+
+                    {FIRST_INSTALLMENT_MAX_DAYS}) a partir de hoje.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openDueDateDialog}
+                    className="flex items-center gap-2 rounded-2xl bg-[#F5F6FA] px-4 py-3 text-left transition-colors hover:bg-[#EFF0F5]"
+                  >
+                    <CalendarDays
+                      size={16}
+                      className="shrink-0 text-[#6B7080]"
+                    />
+                    <span
+                      className={
+                        dueDate
+                          ? "font-semibold text-[#1A1D2E]"
+                          : "text-[#9DA3B4]"
+                      }
+                    >
+                      {dueDate
+                        ? dueDate.toLocaleDateString("pt-BR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "Selecionar data"}
+                    </span>
+                  </button>
+                  <FieldErrorMessage error={fieldState.error?.message} />
+                </div>
+              )}
+            />
 
             {installments && dueDay !== null ? (
               <div className="rounded-2xl bg-[#F5F6FA] px-4 py-3">
@@ -390,7 +410,6 @@ export function SimulacaoForm({
               type="submit"
               variant="yellow"
               className="mt-0 h-11 w-full rounded-2xl"
-              disabled={!form.formState.isValid}
             >
               Continuar
             </Button>
