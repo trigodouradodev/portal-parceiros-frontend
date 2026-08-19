@@ -67,3 +67,15 @@ export function getCtaClassName(tone?: TimelineTone): string {
   if (!tone) return "bg-[#BA7517] hover:bg-[#9a6012]";
   return TONE_META[tone].button;
 }
+
+/**
+ * Texto do CTA de registrar ação. O passo de fallback (sem tarefa/follow-up
+ * natural em andamento) já usa "Registrar próxima ação" como label — repetir
+ * o prefixo geraria "Registrar Registrar próxima ação". Passos reais (ex.:
+ * "Contato", "Visita") continuam ganhando o prefixo normalmente.
+ */
+export function buildCtaLabel(label: string): string {
+  return label.toLowerCase().startsWith("registrar")
+    ? label
+    : `Registrar ${label}`;
+}
