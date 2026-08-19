@@ -27,6 +27,7 @@ export interface ChargeQueueDisplayItem {
   contractLabel: string;
   wasPostponed: boolean;
   wasRescheduled: boolean;
+  rescheduleCount: number;
   rescheduledDateLabel?: string;
   lastActionNote?: string | null;
 }
@@ -102,6 +103,7 @@ export function mapOverdueToQueueDisplay(
     contractSubtitle: buildContractSubtitle(client.contract, segment),
     wasPostponed: item.wasPostponed ?? false,
     wasRescheduled: item.wasRescheduled ?? false,
+    rescheduleCount: item.rescheduleCount ?? 0,
     rescheduledDateLabel:
       item.wasRescheduled && item.expireDate
         ? formatDate(item.expireDate)
