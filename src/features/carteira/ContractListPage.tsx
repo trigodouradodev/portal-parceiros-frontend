@@ -4,7 +4,7 @@ import { ArrowLeft, Search } from "lucide-react";
 import { Pagination } from "@/components/data-table/Pagination";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import type { SelectOption } from "@/components/ui/select-option";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -129,7 +129,7 @@ export function ContractListPage() {
             onChange={setSearchInput}
             className="md:flex-1"
           />
-          <SelectField
+          <SelectDialogField
             label="Produto"
             value={filters.productId}
             onChange={(value) => patchFilters({ productId: value })}
