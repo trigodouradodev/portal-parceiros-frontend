@@ -1,15 +1,9 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  CalendarDays,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  User,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, CreditCard, Loader2, User, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DateFilterField } from "@/components/ui/date-filter-field";
 import { Form, FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { isEligibleCpf } from "@/features/originacao/data/eligibility";
@@ -127,14 +121,13 @@ export function ElegibilidadePage() {
               control={form.control}
               name="birthDate"
               render={({ field, fieldState }) => (
-                <InputField
+                <DateFilterField
                   name={field.name}
                   label="Data de nascimento"
                   value={field.value}
                   onChange={field.onChange}
-                  icon={<CalendarDays size={16} />}
-                  type="date"
                   max={TODAY_ISO}
+                  captionLayout="dropdown"
                   required
                   error={fieldState.error?.message}
                   disabled={fieldsLocked}

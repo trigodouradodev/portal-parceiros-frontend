@@ -12,6 +12,7 @@ describe("getProposalStepFieldErrors", () => {
       [
         "registration.isRenewal",
         "registration.gender",
+        "registration.occupation",
         "registration.activityCategories",
         "registration.creditPurpose",
       ],

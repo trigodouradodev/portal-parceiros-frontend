@@ -163,7 +163,7 @@ function ProposalSuccess({
         onLogout={onLogout}
       />
 
-      <div className="px-5 pt-4 pb-24 md:px-8 md:pb-8">
+      <div className="px-5 pt-4 pb-8 md:px-8">
         <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3">
             <Alert variant="success">
@@ -334,7 +334,7 @@ function ProposalWizard({
         onLogout={onLogout}
       />
 
-      <div className="px-5 pt-4 pb-28 md:px-8 md:pb-8">
+      <div className="px-5 pt-4 pb-24 md:px-8 md:pb-8">
         <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
           <Form {...form}>
             <div className={step === 0 ? "" : "hidden"}>
@@ -368,12 +368,14 @@ function ProposalWizard({
             </div>
           </Form>
         </section>
+      </div>
 
-        <div className="sticky bottom-16 z-10 -mx-5 mt-4 flex gap-2 border-t border-[#E2E4EC] bg-white px-5 py-3 md:static md:mx-0 md:mt-5 md:border-0 md:bg-transparent md:px-0 md:py-0">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#E2E4EC] bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:static md:mt-5 md:border-0 md:px-8 md:pb-8">
+        <div className="mx-auto flex w-full max-w-md gap-2 md:max-w-none">
           {step > 0 ? (
             <Button
               variant="outline"
-              className="h-11 rounded-2xl px-6"
+              className="h-12 min-h-12 shrink-0 rounded-2xl px-6"
               onClick={handleBack}
             >
               Voltar
@@ -381,7 +383,7 @@ function ProposalWizard({
           ) : null}
           <Button
             variant="yellow"
-            className="h-11 flex-1 rounded-2xl"
+            className="h-12 min-h-12 min-w-0 flex-1 rounded-2xl"
             onClick={handleNext}
           >
             {step === PROPOSAL_STEPS.length - 1

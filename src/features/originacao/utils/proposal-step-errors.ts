@@ -26,6 +26,10 @@ function registrationErrors(
     ...requiredIfEmpty("registration.isRenewal", data.isRenewal === null),
     ...requiredIfEmpty("registration.gender", data.gender === ""),
     ...requiredIfEmpty(
+      "registration.occupation",
+      data.occupation.trim() === "",
+    ),
+    ...requiredIfEmpty(
       "registration.activityCategories",
       data.activityCategories.length === 0,
     ),

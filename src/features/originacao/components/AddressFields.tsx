@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import {
   UF_LIST,
@@ -256,7 +256,7 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
           control={control}
           name={addressPath(namePrefix, "state")}
           render={({ field, fieldState }) => (
-            <SelectField
+            <SelectDialogField
               name={field.name}
               label="Estado"
               value={field.value}

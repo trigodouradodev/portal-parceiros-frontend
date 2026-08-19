@@ -10,9 +10,10 @@ import {
   User,
 } from "lucide-react";
 import { ChipField } from "@/components/ui/chip-field";
+import { DateFilterField } from "@/components/ui/date-filter-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import { YesNoField } from "@/components/ui/yes-no-field";
 import {
@@ -23,7 +24,6 @@ import {
   GENDER_OPTIONS,
   GOVERNMENT_PROGRAM_OPTIONS,
   MARITAL_STATUS_OPTIONS,
-  OCCUPATION_OPTIONS,
   OTHER_OPTION,
   PROPERTY_STATUS_OPTIONS,
   RESIDENCE_TIME_OPTIONS,
@@ -113,12 +113,10 @@ export function RegistrationSection({
         icon={<User size={16} />}
         disabled
       />
-      <InputField
+      <DateFilterField
         label="Data de nascimento"
         value={birthDate}
         onChange={() => {}}
-        icon={<User size={16} />}
-        type="date"
         disabled
       />
 
@@ -163,12 +161,16 @@ export function RegistrationSection({
       <FormField
         control={control}
         name="registration.occupation"
-        render={({ field }) => (
-          <SelectField
+        render={({ field, fieldState }) => (
+          <InputField
+            name={field.name}
             label="Profissão"
             value={field.value}
             onChange={field.onChange}
-            options={toSelectOptions(OCCUPATION_OPTIONS)}
+            icon={<User size={16} />}
+            placeholder="Informe a profissão"
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
@@ -177,12 +179,11 @@ export function RegistrationSection({
         control={control}
         name="registration.activityCategories"
         render={({ field, fieldState }) => (
-          <ChipField
+          <SelectDialogField
             name={field.name}
-            label="Categoria da atividade"
-            multiple
-            value={field.value}
-            onChange={field.onChange}
+            label="Atividade econômica"
+            value={field.value[0] ?? ""}
+            onChange={(value) => field.onChange(value ? [value] : [])}
             options={toSelectOptions(ACTIVITY_CATEGORY_OPTIONS)}
             required
             error={fieldState.error?.message}
@@ -252,7 +253,9 @@ export function RegistrationSection({
                   placeholder="000.000.000-00"
                   inputMode="numeric"
                   maxLength={14}
-                  error={fieldState.error?.message ?? cpfFieldError(field.value)}
+                  error={
+                    fieldState.error?.message ?? cpfFieldError(field.value)
+                  }
                 />
               )}
             />
@@ -387,7 +390,7 @@ export function RegistrationSection({
             control={control}
             name="registration.debtCreditor"
             render={({ field }) => (
-              <SelectField
+              <SelectDialogField
                 label="Credor"
                 value={field.value}
                 onChange={field.onChange}

@@ -3,7 +3,7 @@ import { Building2, Wallet } from "lucide-react";
 import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import { YesNoField } from "@/components/ui/yes-no-field";
 import {
@@ -82,7 +82,7 @@ export function ActivityIncomeSection() {
         control={control}
         name="activityIncome.incomeSource"
         render={({ field, fieldState }) => (
-          <SelectField
+          <SelectDialogField
             name={field.name}
             label="Fonte da renda"
             value={field.value}
@@ -121,7 +121,7 @@ export function ActivityIncomeSection() {
         control={control}
         name="activityIncome.availableProof"
         render={({ field, fieldState }) => (
-          <SelectField
+          <SelectDialogField
             name={field.name}
             label="Comprovante disponível?"
             value={field.value}

@@ -53,7 +53,7 @@ describe("createProposalFromSimulation", () => {
 });
 
 describe("proposal validators", () => {
-  it("requires registration chips before the first step is valid", () => {
+  it("requires occupation and economic activity before the first step is valid", () => {
     const empty = createEmptyProposalForm().registration;
     expect(isRegistrationValid(empty)).toBe(false);
     expect(
@@ -61,6 +61,7 @@ describe("proposal validators", () => {
         ...empty,
         isRenewal: false,
         gender: "Feminino",
+        occupation: "Vendedora",
         activityCategories: ["Empregado CLT"],
         creditPurpose: "Despesa pessoal",
       }),
@@ -70,6 +71,16 @@ describe("proposal validators", () => {
         ...empty,
         isRenewal: false,
         gender: "Feminino",
+        activityCategories: ["Empregado CLT"],
+        creditPurpose: "Despesa pessoal",
+      }),
+    ).toBe(false);
+    expect(
+      isRegistrationValid({
+        ...empty,
+        isRenewal: false,
+        gender: "Feminino",
+        occupation: "Vendedora",
         activityCategories: ["Empregado CLT"],
         creditPurpose: "Despesa pessoal",
         spouseCpf: "111.111.111-11",

@@ -53,19 +53,6 @@ export const ACTIVITY_CATEGORY_OPTIONS = [
   "Outros",
 ];
 
-export const OCCUPATION_OPTIONS = [
-  "Comerciante",
-  "Autônomo",
-  "Motorista",
-  "Vendedor(a)",
-  "Cabeleireiro(a)",
-  "Costureiro(a)",
-  "Pedreiro(a)",
-  "Cozinheiro(a)",
-  "Diarista",
-  "Outros",
-];
-
 export const CREDIT_PURPOSE_OPTIONS = [
   "Fluxo de caixa do negócio",
   "Compra de mercadoria/estoque",
@@ -471,6 +458,7 @@ export function isRegistrationValid(data: RegistrationData): boolean {
   return (
     data.isRenewal !== null &&
     data.gender !== "" &&
+    data.occupation.trim() !== "" &&
     data.activityCategories.length > 0 &&
     data.creditPurpose !== null &&
     isOptionalCpfValid(data.spouseCpf)

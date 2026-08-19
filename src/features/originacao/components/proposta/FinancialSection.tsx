@@ -4,7 +4,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import {
   AGIOTA_CREDITOR,
@@ -97,7 +97,7 @@ export function FinancialSection() {
                     control={control}
                     name={`financial.expenses.${index}.category`}
                     render={({ field }) => (
-                      <SelectField
+                      <SelectDialogField
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="Categoria"
@@ -182,7 +182,7 @@ export function FinancialSection() {
                     control={control}
                     name={`financial.loans.${index}.institution`}
                     render={({ field }) => (
-                      <SelectField
+                      <SelectDialogField
                         value={field.value}
                         onChange={field.onChange}
                         placeholder="Instituição/Credor"
@@ -221,7 +221,7 @@ export function FinancialSection() {
                   control={control}
                   name={`financial.loans.${index}.frequency`}
                   render={({ field }) => (
-                    <SelectField
+                    <SelectDialogField
                       label="Frequência"
                       value={field.value}
                       onChange={field.onChange}
@@ -235,7 +235,7 @@ export function FinancialSection() {
                   control={control}
                   name={`financial.loans.${index}.category`}
                   render={({ field }) => (
-                    <SelectField
+                    <SelectDialogField
                       label="Categoria"
                       value={field.value}
                       onChange={field.onChange}

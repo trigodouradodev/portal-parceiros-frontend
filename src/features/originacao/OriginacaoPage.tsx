@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Lock } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -12,14 +13,20 @@ import type { OriginacaoTab } from "@/features/originacao/types";
 
 interface ShellContext {
   onMobileLogout?: () => void;
+  setHideBottomNav?: (hide: boolean) => void;
 }
 
 function OriginacaoLayout() {
-  const { onMobileLogout } = useOutletContext<ShellContext>();
+  const { onMobileLogout, setHideBottomNav } = useOutletContext<ShellContext>();
   const { activeTab, setActiveTab, simulacoes, openProposalId } =
     useOriginacao();
   const propostaLocked = simulacoes.length === 0;
   const focusedProposal = Boolean(openProposalId);
+
+  useEffect(() => {
+    setHideBottomNav?.(focusedProposal);
+    return () => setHideBottomNav?.(false);
+  }, [focusedProposal, setHideBottomNav]);
 
   function goTo(tab: string) {
     if (tab === "proposta" && propostaLocked) return;
@@ -27,7 +34,7 @@ function OriginacaoLayout() {
   }
 
   return (
-    <PageContainer>
+    <PageContainer withBottomNav={!focusedProposal}>
       {focusedProposal ? null : <PageHeader onLogout={onMobileLogout} />}
       <Tabs value={activeTab} onValueChange={goTo}>
         {focusedProposal ? null : (

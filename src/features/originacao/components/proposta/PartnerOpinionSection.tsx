@@ -4,7 +4,7 @@ import { Alert, AlertTitle } from "@/components/ui/alert";
 import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import { TextareaField } from "@/components/ui/textarea-field";
 import { YesNoField } from "@/components/ui/yes-no-field";
@@ -46,7 +46,7 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.howKnows"
         render={({ field, fieldState }) => (
-          <SelectField
+          <SelectDialogField
             name={field.name}
             label="Como conhece o cliente"
             value={field.value}

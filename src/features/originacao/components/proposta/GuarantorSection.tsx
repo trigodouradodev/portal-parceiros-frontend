@@ -1,8 +1,9 @@
 import { useFormContext } from "react-hook-form";
 import { CreditCard, Mail, Phone, User } from "lucide-react";
+import { DateFilterField } from "@/components/ui/date-filter-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import { AddressFields } from "@/features/originacao/components/AddressFields";
 import {
@@ -10,10 +11,16 @@ import {
   KINSHIP_OPTIONS,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
-import { calcAge, isAdultAge } from "@/features/originacao/utils/calc-age";
+import {
+  calcAge,
+  isAdultAge,
+  todayIsoLocal,
+} from "@/features/originacao/utils/calc-age";
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import { cpfFieldError } from "@/lib/validation/cpf";
+
+const TODAY_ISO = todayIsoLocal();
 
 export function GuarantorSection() {
   const { control } = useFormContext<ProposalFormData>();
@@ -61,13 +68,13 @@ export function GuarantorSection() {
           const age = calcAge(field.value);
           const ageInvalid = age !== null && !isAdultAge(age);
           return (
-            <InputField
+            <DateFilterField
               name={field.name}
               label="Data de nascimento"
               value={field.value}
               onChange={field.onChange}
-              icon={<User size={16} />}
-              type="date"
+              max={TODAY_ISO}
+              captionLayout="dropdown"
               required
               error={
                 fieldState.error?.message ??
@@ -127,7 +134,7 @@ export function GuarantorSection() {
         control={control}
         name="guarantor.kinship"
         render={({ field, fieldState }) => (
-          <SelectField
+          <SelectDialogField
             name={field.name}
             label="Grau de parentesco com o tomador"
             value={field.value}

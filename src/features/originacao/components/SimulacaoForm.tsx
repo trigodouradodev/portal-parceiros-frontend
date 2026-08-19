@@ -16,6 +16,7 @@ import { addDays, startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { ChipField } from "@/components/ui/chip-field";
+import { DateFilterField } from "@/components/ui/date-filter-field";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/field-hint";
 import { Form, FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import {
   AMOUNT_DEFAULT,
@@ -56,6 +57,7 @@ import type {
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import { calcInstallment, fmtBRL } from "@/lib/utils";
+import { todayIsoLocal } from "@/features/originacao/utils/calc-age";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 
 interface SimulacaoFormProps {
@@ -65,13 +67,15 @@ interface SimulacaoFormProps {
   onCompleted: (snapshot: SimulacaoSnapshot) => void;
 }
 
+const TODAY_ISO = todayIsoLocal();
+
 export function SimulacaoForm({
   prefill,
   hasList,
   onViewList,
   onCompleted,
 }: SimulacaoFormProps) {
-  const [changingProduct, setChangingProduct] = useState(false);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [draftDueDate, setDraftDueDate] = useState<Date | undefined>(undefined);
   const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
   const [showRate, setShowRate] = useState(false);
@@ -206,13 +210,13 @@ export function SimulacaoForm({
               control={form.control}
               name="nascimento"
               render={({ field, fieldState }) => (
-                <InputField
+                <DateFilterField
                   name={field.name}
                   label="Data de nascimento"
                   value={field.value}
                   onChange={field.onChange}
-                  icon={<CalendarDays size={16} />}
-                  type="date"
+                  max={TODAY_ISO}
+                  captionLayout="dropdown"
                   required
                   error={fieldState.error?.message}
                 />
@@ -260,45 +264,44 @@ export function SimulacaoForm({
               render={({ field }) => (
                 <div className="flex flex-col gap-1.5">
                   <FieldLabel required>Produto</FieldLabel>
-                  {!changingProduct ? (
-                    <div className="flex items-start justify-between gap-3 rounded-2xl bg-[#F5F6FA] px-4 py-3">
-                      <div>
-                        <span className="mb-1 inline-block rounded-full bg-[#FDF3E0] px-2 py-0.5 text-[11px] font-semibold text-[#854F0B]">
-                          Sugerido
-                        </span>
-                        <p className="font-semibold text-[#1A1D2E]">
-                          {field.value}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowRate((value) => !value)}
-                          className="flex items-center gap-1 text-xs text-[#6B7080]"
-                        >
-                          {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
-                          {showRate
-                            ? `Taxa de ${rate.toFixed(2).replace(".", ",")}% ao mês · definida pelo produto`
-                            : "Mostrar taxa"}
-                        </button>
-                      </div>
+                  <div className="flex items-start justify-between gap-3 rounded-2xl bg-[#F5F6FA] px-4 py-3">
+                    <div>
+                      <span className="mb-1 inline-block rounded-full bg-[#FDF3E0] px-2 py-0.5 text-[11px] font-semibold text-[#854F0B]">
+                        Sugerido
+                      </span>
+                      <p className="font-semibold text-[#1A1D2E]">
+                        {field.value}
+                      </p>
                       <button
                         type="button"
-                        onClick={() => setChangingProduct(true)}
-                        className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy"
+                        onClick={() => setShowRate((value) => !value)}
+                        className="flex items-center gap-1 text-xs text-[#6B7080]"
                       >
-                        <RefreshCw size={13} />
-                        Trocar
+                        {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
+                        {showRate
+                          ? `Taxa de ${rate.toFixed(2).replace(".", ",")}% ao mês · definida pelo produto`
+                          : "Mostrar taxa"}
                       </button>
                     </div>
-                  ) : (
-                    <SelectField
-                      value={field.value}
-                      onChange={(value) => {
-                        field.onChange(value as SimulationProduct);
-                        setChangingProduct(false);
-                      }}
-                      options={toSelectOptions(PRODUCTS)}
-                    />
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => setProductDialogOpen(true)}
+                      className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy"
+                    >
+                      <RefreshCw size={13} />
+                      Trocar
+                    </button>
+                  </div>
+                  <SelectDialogField
+                    hideTrigger
+                    open={productDialogOpen}
+                    onOpenChange={setProductDialogOpen}
+                    value={field.value}
+                    onChange={(value) =>
+                      field.onChange(value as SimulationProduct)
+                    }
+                    options={toSelectOptions(PRODUCTS)}
+                  />
                 </div>
               )}
             />
