@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Search } from "lucide-react";
 import { Pagination } from "@/components/data-table/Pagination";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { Checkbox } from "@/components/ui/checkbox";
 import { InputField } from "@/components/ui/input-field";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import type { SelectOption } from "@/components/ui/select-option";
@@ -149,35 +150,28 @@ export function ContractListPage() {
             />
           </div>
 
-          <div className="flex flex-wrap gap-4">
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
-              <input
-                type="checkbox"
-                checked={filters.onlyActive}
-                onChange={(e) => patchFilters({ onlyActive: e.target.checked })}
-              />
-              Só com saldo pendente
-            </label>
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
-              <input
-                type="checkbox"
-                checked={filters.onlyDelinquency}
-                onChange={(e) =>
-                  patchFilters({ onlyDelinquency: e.target.checked })
-                }
-              />
-              Só em atraso
-            </label>
-            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
-              <input
-                type="checkbox"
-                checked={filters.onlyRenegotiated}
-                onChange={(e) =>
-                  patchFilters({ onlyRenegotiated: e.target.checked })
-                }
-              />
-              Só renegociados
-            </label>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <Checkbox
+              label="Só com saldo pendente"
+              checked={filters.onlyActive}
+              onCheckedChange={(checked) =>
+                patchFilters({ onlyActive: checked })
+              }
+            />
+            <Checkbox
+              label="Só em atraso"
+              checked={filters.onlyDelinquency}
+              onCheckedChange={(checked) =>
+                patchFilters({ onlyDelinquency: checked })
+              }
+            />
+            <Checkbox
+              label="Só renegociados"
+              checked={filters.onlyRenegotiated}
+              onCheckedChange={(checked) =>
+                patchFilters({ onlyRenegotiated: checked })
+              }
+            />
           </div>
         </section>
 
