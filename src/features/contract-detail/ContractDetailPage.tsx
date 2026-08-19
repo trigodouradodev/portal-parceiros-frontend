@@ -16,6 +16,7 @@ import {
 import { mapPreventiveItemToPrevClient } from "@/features/dashboard/utils/task-mappers";
 import { ClientDetailsCard } from "@/features/contract-detail/components/ClientDetailsCard";
 import { ContractInfoCard } from "@/features/contract-detail/components/ContractInfoCard";
+import { ContractInstallmentsSection } from "@/features/contract-detail/components/ContractInstallmentsSection";
 import { DetailPageHeader } from "@/features/contract-detail/components/DetailPageHeader";
 import { TimelineSection } from "@/features/contract-detail/components/TimelineSection";
 import {
@@ -71,10 +72,21 @@ export function ContractDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
 
-  const { detail, listItem, installmentDetail, isLoading, isNotFound } =
-    useContractDetail(contractId, mode);
+  const {
+    detail,
+    listItem,
+    installmentDetail,
+    hasExplicitCarteiraInstallment,
+    isLoading,
+    isNotFound,
+  } = useContractDetail(contractId, mode);
 
   const isCarteiraView = mode === CARTEIRA_DETAIL_MODE;
+  // AUREA-346: resumo do contrato (Carteira sem parcela escolhida) — mostra
+  // a lista de parcelas em vez de fingir uma parcela específica. Com uma
+  // parcela explícita na URL, é a mesma visão rica de sempre, com ação.
+  const isCarteiraSummary = isCarteiraView && !hasExplicitCarteiraInstallment;
+  const showRegisterAction = !isCarteiraView || hasExplicitCarteiraInstallment;
 
   const handleBack = () => {
     // AUREA-330: veio da Carteira (não é aba do dashboard) — só volta na
@@ -88,9 +100,10 @@ export function ContractDetailPage() {
   };
 
   const handleRegisterAction = () => {
-    // Visualização somente-leitura da Carteira: sem ação de cobrança/
-    // preventivo pra registrar (o botão já não aparece — guarda defensiva).
-    if (isCarteiraView) return;
+    // Resumo do contrato da Carteira (sem parcela escolhida): sem ação de
+    // cobrança/preventivo pra registrar (o botão já não aparece — guarda
+    // defensiva). Com parcela explícita, cai no fluxo genérico abaixo.
+    if (isCarteiraSummary) return;
 
     writeTaskTabCookie(readTaskTabFromCookie());
 
@@ -195,26 +208,35 @@ export function ContractDetailPage() {
       <div className="flex-1 px-5 pb-28 md:px-8 md:pb-10">
         <div className="lg:grid lg:grid-cols-[1fr_400px] lg:items-start lg:gap-6 lg:pt-6">
           <div className="flex flex-col gap-4 pt-4 lg:pt-0">
-            <ContractInfoCard detail={detail} />
+            <ContractInfoCard
+              detail={detail}
+              hideInstallmentBadge={isCarteiraSummary}
+            />
 
             <ClientDetailsCard detail={detail} />
 
-            <div className="lg:hidden">
+            {isCarteiraSummary ? (
+              <ContractInstallmentsSection contractId={contractId} />
+            ) : (
+              <div className="lg:hidden">
+                <TimelineSection
+                  detail={detail}
+                  onRegisterAction={handleRegisterAction}
+                  showAction={showRegisterAction}
+                />
+              </div>
+            )}
+          </div>
+
+          {!isCarteiraSummary && (
+            <div className="sticky top-6 hidden lg:block">
               <TimelineSection
                 detail={detail}
                 onRegisterAction={handleRegisterAction}
-                showAction={!isCarteiraView}
+                showAction={showRegisterAction}
               />
             </div>
-          </div>
-
-          <div className="sticky top-6 hidden lg:block">
-            <TimelineSection
-              detail={detail}
-              onRegisterAction={handleRegisterAction}
-              showAction={!isCarteiraView}
-            />
-          </div>
+          )}
         </div>
       </div>
     </PageContainer>

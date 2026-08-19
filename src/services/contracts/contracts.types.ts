@@ -58,3 +58,27 @@ export interface CarteiraDrillDownFilter {
   onlyDelinquency?: boolean;
   onlyRenegotiated?: boolean;
 }
+
+/**
+ * AUREA-346: status de exibição de uma parcela na lista de parcelas do
+ * contrato (Carteira) — paga / atrasada / vence hoje / a vencer.
+ */
+export type ContractInstallmentDisplayStatus =
+  | "paid"
+  | "overdue"
+  | "due_today"
+  | "upcoming";
+
+/** Item de GET /contracts/:id/installments. */
+export interface ContractInstallmentItem {
+  number: number;
+  dueDate: string;
+  totalAmount: number;
+  pendingAmount: number;
+  paymentDate?: string;
+  displayStatus: ContractInstallmentDisplayStatus;
+}
+
+export interface ContractInstallmentsList {
+  items: ContractInstallmentItem[];
+}
