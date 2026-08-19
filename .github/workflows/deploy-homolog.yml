@@ -11,6 +11,7 @@ env:
   S3_BUCKET: portal-parceiros-frontend-homolog
   CLOUDFRONT_DISTRIBUTION_ID: E2GBFIY7UUU7AQ
   VITE_API_URL: https://portal-parceiros-api-homolog.trigodourado.com
+  VITE_BACKOFFICE_URL: https://homolog.web.trigodourado.com
 
 permissions:
   id-token: write
