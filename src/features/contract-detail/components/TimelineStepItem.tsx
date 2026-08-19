@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import type { TimelineStep } from "@/features/contract-detail/types";
 import {
+  buildCtaLabel,
   getCtaClassName,
   getIconClassName,
   getLabelClassName,
@@ -14,6 +15,13 @@ interface TimelineStepItemProps {
   isLast: boolean;
   onRegisterAction: () => void;
   showAction?: boolean;
+  /**
+   * AUREA-346: corrige o CTA duplicando "Registrar" quando o step já usa
+   * "Registrar próxima ação" como label (bug pré-existente, também presente
+   * no fluxo de tarefas da Home). Escopado só à Carteira por ora — default
+   * `false` mantém o fluxo de tarefas (Home) byte a byte como está hoje.
+   */
+  dedupeCtaLabel?: boolean;
 }
 
 export function TimelineStepItem({
@@ -21,6 +29,7 @@ export function TimelineStepItem({
   isLast,
   onRegisterAction,
   showAction = true,
+  dedupeCtaLabel = false,
 }: TimelineStepItemProps) {
   const isEvent = !step.tone;
   const toneMeta = step.tone ? TONE_META[step.tone] : null;
@@ -28,6 +37,9 @@ export function TimelineStepItem({
   const labelClassName = getLabelClassName(step.status);
   const iconClassName = getIconClassName(step.status);
   const contentClassName = isLast ? "pb-0" : "pb-4";
+  const ctaLabel = dedupeCtaLabel
+    ? buildCtaLabel(step.label)
+    : `Registrar ${step.label}`;
 
   return (
     <div className={`min-w-0 flex-1 ${contentClassName}`}>
@@ -77,7 +89,7 @@ export function TimelineStepItem({
           onClick={onRegisterAction}
           className={`mt-2.5 h-10 w-full rounded-xl text-sm font-semibold text-white ${getCtaClassName(step.tone)}`}
         >
-          Registrar {step.label}
+          {ctaLabel}
         </Button>
       )}
     </div>

@@ -223,6 +223,7 @@ export function ContractDetailPage() {
                   detail={detail}
                   onRegisterAction={handleRegisterAction}
                   showAction={showRegisterAction}
+                  dedupeCtaLabel={isCarteiraView}
                 />
               </div>
             )}
@@ -234,6 +235,7 @@ export function ContractDetailPage() {
                 detail={detail}
                 onRegisterAction={handleRegisterAction}
                 showAction={showRegisterAction}
+                dedupeCtaLabel={isCarteiraView}
               />
             </div>
           )}
