@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { ProfileTextField } from "@/features/profile/components/ProfileTextField";
 import type { ProfileFormValues } from "@/features/profile/schemas/profile-form";
-import { formatPhoneDisplay } from "@/features/profile/utils/phone";
+import { formatPhoneDisplay } from "@/lib/format/phone";
 
 interface PersonalDataSectionProps {
   form: UseFormReturn<ProfileFormValues>;

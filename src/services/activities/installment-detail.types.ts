@@ -44,6 +44,7 @@ export interface TaskHistoryItem {
   expireDate: string;
   wasPostponed: boolean;
   wasRescheduled: boolean;
+  rescheduleCount: number;
   createdAt: string;
   completedAt?: string;
   systemClosedAt?: string;

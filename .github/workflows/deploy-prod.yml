@@ -9,6 +9,7 @@ env:
   S3_BUCKET: portal-parceiros-frontend-prod
   CLOUDFRONT_DISTRIBUTION_ID: EHTDYU4Z9MN2K
   VITE_API_URL: https://portal-parceiros-api.trigodourado.com
+  VITE_BACKOFFICE_URL: https://backoffice.souaurea.com
 
 permissions:
   id-token: write

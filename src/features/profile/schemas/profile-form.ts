@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { digitsOnlyPhone } from "@/features/profile/utils/phone";
+import { digitsOnlyPhone } from "@/lib/format/phone";
 
 export const profileSchema = z.object({
   fullName: z

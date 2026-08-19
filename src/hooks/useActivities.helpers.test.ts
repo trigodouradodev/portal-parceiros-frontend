@@ -5,6 +5,8 @@ import {
 } from "@/hooks/useActivities";
 import { normalizeQueueSegmentCode } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 import { mapQueueTaskCardToOverdueItem } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
+import { buildChargeQueueFromApiCards } from "@/features/dashboard/mappers/build-charge-queue-from-today";
+import { buildChargeQueueTabView } from "@/features/dashboard/mappers/build-charge-queue-tab-view";
 import {
   ActivityTaskStatus,
   ActivityTaskType,
@@ -32,6 +34,7 @@ function makeCard(
     expireDate: "2026-03-01",
     wasPostponed: false,
     wasRescheduled: false,
+    rescheduleCount: 0,
     client: { name: "Cliente", taxId: "12345678901", phone: "11999999999" },
     contract: {
       id: "c1",
@@ -79,6 +82,27 @@ describe("mapQueueTaskCardToOverdueItem", () => {
     expect(item.queueSegmentCode).toBe("late");
     expect(item.apiSegmentCode).toBe(QueueSegmentCode.POST_LETTER);
     expect(item.isActive).toBe(true);
+    expect(item.rescheduleCount).toBe(0);
+  });
+});
+
+describe("buildChargeQueueTabView", () => {
+  it("allows a second visit reschedule and blocks a third", () => {
+    const buildHero = (rescheduleCount: number) =>
+      buildChargeQueueTabView(
+        buildChargeQueueFromApiCards([
+          makeCard({
+            taskId: `visit-${rescheduleCount}`,
+            taskType: ActivityTaskType.VISIT,
+            isActive: true,
+            isRecommended: true,
+            rescheduleCount,
+          }),
+        ]),
+      ).hero;
+
+    expect(buildHero(1)?.canRescheduleVisit).toBe(true);
+    expect(buildHero(2)?.canRescheduleVisit).toBe(false);
   });
 });
 

@@ -5,6 +5,7 @@ import { activitiesService } from "@/services/activities/activities.service";
 import type { RegisterInteractionVariables } from "@/services/activities/activities.types";
 import { dashboardKeys } from "@/hooks/useDashboard";
 import { collectionKeys } from "@/hooks/useCollectionDetail";
+import { quoteActivityPermissionsKeys } from "@/hooks/useQuoteActivityPermissions";
 
 export function useRegisterInteraction() {
   const queryClient = useQueryClient();
@@ -15,6 +16,9 @@ export function useRegisterInteraction() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
       queryClient.invalidateQueries({ queryKey: activitiesKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: quoteActivityPermissionsKeys.all,
+      });
 
       if (variables.installmentId) {
         queryClient.invalidateQueries({
