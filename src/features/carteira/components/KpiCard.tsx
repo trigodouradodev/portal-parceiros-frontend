@@ -26,7 +26,7 @@ export function KpiCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-2 rounded-2xl border border-[#D6D9E3] bg-white p-4 text-left shadow transition-transform hover:-translate-y-0.5"
+      className="flex flex-col gap-2 rounded-2xl border border-border bg-white p-4 text-left shadow-sm transition-transform hover:-translate-y-0.5"
     >
       <div className="flex items-center gap-2">
         <div
@@ -34,9 +34,11 @@ export function KpiCard({
         >
           <Icon size={16} />
         </div>
-        <span className="text-xs font-semibold text-[#4B5165]">{label}</span>
+        <span className="text-xs font-semibold text-muted-foreground">
+          {label}
+        </span>
       </div>
-      <span className="font-fraunces text-xl leading-tight font-bold text-[#1A1D2E]">
+      <span className="font-fraunces text-xl leading-tight font-bold text-foreground">
         {value}
       </span>
       <span className={`text-xs opacity-90 ${TONE_TEXT[tone]}`}>{sub}</span>
