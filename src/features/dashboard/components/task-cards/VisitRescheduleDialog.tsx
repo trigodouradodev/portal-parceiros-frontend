@@ -18,6 +18,7 @@ interface VisitRescheduleDialogProps {
   onDraftDateChange: (date: Date | undefined) => void;
   minDate: Date;
   maxDate: Date;
+  rescheduleCount: number;
   isRescheduling?: boolean;
   onConfirm: (isoDate: string) => void | Promise<void>;
 }
@@ -29,9 +30,15 @@ export function VisitRescheduleDialog({
   onDraftDateChange,
   minDate,
   maxDate,
+  rescheduleCount,
   isRescheduling = false,
   onConfirm,
 }: VisitRescheduleDialogProps) {
+  const isLastReschedule = rescheduleCount === 1;
+  const title = isLastReschedule ? "Reagendar visita" : "Agendar visita";
+  const description = isLastReschedule
+    ? "Escolha uma nova data para a visita. Esta é a última oportunidade de reagendamento."
+    : `Escolha uma data para a visita, dentro de uma janela de até ${VISIT_RESCHEDULE_WINDOW_DAYS} dias.`;
   let confirmLabel = "Confirmar";
   if (isRescheduling) {
     confirmLabel = "Salvando...";
@@ -41,12 +48,8 @@ export function VisitRescheduleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[340px]">
         <DialogHeader>
-          <DialogTitle>Alterar data da visita</DialogTitle>
-          <DialogDescription>
-            Escolha uma nova data para a visita, dentro de uma janela de até{" "}
-            {VISIT_RESCHEDULE_WINDOW_DAYS} dias. Essa alteração só pode ser
-            feita uma vez.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">
           <Calendar

@@ -15,7 +15,7 @@ export const ICON_CIRCLE: Record<KpiTone, string> = {
 };
 
 export const TONE_TEXT: Record<KpiTone, string> = {
-  neutral: "text-[#4B5165]",
+  neutral: "text-muted-foreground",
   ok: "text-[#0F6E56]",
   warn: "text-[#854F0B]",
   crit: "text-[#A32D2D]",

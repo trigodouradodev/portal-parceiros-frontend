@@ -20,6 +20,7 @@ interface InputFieldProps {
   disabled?: boolean;
   required?: boolean;
   error?: string;
+  className?: string;
 }
 
 export function InputField({
@@ -36,10 +37,11 @@ export function InputField({
   disabled,
   required,
   error,
+  className,
 }: InputFieldProps) {
   return (
     <div
-      className="flex flex-col gap-1.5"
+      className={cn("flex flex-col gap-1.5", className)}
       {...fieldAnchorProps(name, error)}
     >
       <FieldLabel required={required}>{label}</FieldLabel>

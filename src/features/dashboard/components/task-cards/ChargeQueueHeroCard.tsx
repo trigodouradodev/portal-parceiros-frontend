@@ -61,6 +61,7 @@ export function ChargeQueueHeroCard({
     toneLabel,
     rescheduledDateLabel,
     wasRescheduled,
+    rescheduleCount,
     lastActionNote,
   } = display;
   const initials = getInitials(client.name);
@@ -237,6 +238,7 @@ export function ChargeQueueHeroCard({
               <VisitSecondaryActions
                 canRescheduleVisit={canRescheduleVisit}
                 wasRescheduled={wasRescheduled}
+                rescheduleCount={rescheduleCount}
                 rescheduledDateLabel={rescheduledDateLabel}
                 canPostpone={canPostpone}
                 onOpenReschedule={openReschedule}
@@ -255,6 +257,7 @@ export function ChargeQueueHeroCard({
           onDraftDateChange={setDraftVisitDate}
           minDate={min}
           maxDate={max}
+          rescheduleCount={rescheduleCount}
           isRescheduling={isRescheduling}
           onConfirm={handleConfirmReschedule}
         />
