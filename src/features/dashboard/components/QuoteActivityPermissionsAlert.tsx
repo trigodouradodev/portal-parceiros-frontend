@@ -2,7 +2,7 @@ import { CheckCircle2, LockKeyhole } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { QuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
 
-interface QuoteActivityPermissionsAlertProps extends QuoteActivityPermissions {}
+type QuoteActivityPermissionsAlertProps = QuoteActivityPermissions;
 
 function PermissionStatus({
   label,
