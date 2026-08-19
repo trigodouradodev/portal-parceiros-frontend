@@ -31,7 +31,7 @@ function buildHeroView(entry: {
     canPostpone: !entry.item.wasPostponed,
     canRescheduleVisit:
       taskChannel === ActivityChannel.CLIENT_VISIT &&
-      !entry.item.wasRescheduled,
+      (entry.item.rescheduleCount ?? 0) < 2,
     segmentCode: entry.segmentCode,
   };
 }

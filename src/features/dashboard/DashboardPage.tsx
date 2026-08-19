@@ -31,11 +31,13 @@ import {
   useTodayQueueInfinite,
 } from "@/hooks/useActivities";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { formatDate } from "@/lib/format/date";
 import { useDragScroll } from "@/hooks/useDragScroll";
+import { QuoteActivityPermissionsAlert } from "@/features/dashboard/components/QuoteActivityPermissionsAlert";
 
 const QUEUE_HIGHLIGHT_MS = 5000;
 
@@ -64,6 +66,7 @@ export function DashboardPage() {
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
+  const { data: quoteActivityPermissions } = useQuoteActivityPermissions();
   const {
     data: todayQueueData,
     isLoading: isLoadingTodayQueue,
@@ -345,7 +348,7 @@ export function DashboardPage() {
     }
 
     try {
-      await rescheduleTask.mutateAsync({
+      const rescheduledTask = await rescheduleTask.mutateAsync({
         taskId,
         payload: { date },
         installmentId: item.installment.id,
@@ -363,6 +366,7 @@ export function DashboardPage() {
         const pinnedItem: OverdueCollectionItem = {
           ...item,
           wasRescheduled: true,
+          rescheduleCount: rescheduledTask.rescheduleCount,
           expireDate: date,
         };
         setPinnedHighlightItem(pinnedItem);
@@ -426,6 +430,12 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {quoteActivityPermissions && (
+        <div className="px-5 pt-5 md:px-8">
+          <QuoteActivityPermissionsAlert {...quoteActivityPermissions} />
+        </div>
+      )}
 
       <div className="px-5 pt-5 pb-4 md:px-8">
         <div className="mb-3 flex items-center justify-between">

@@ -7,6 +7,7 @@ import type { ChargeQueueSegmentCode } from "@/features/dashboard/constants/char
 import { normalizeQueueSegmentCode } from "@/features/dashboard/mappers/map-queue-task-card-to-overdue";
 import { dashboardKeys } from "@/hooks/useDashboard";
 import { installmentKeys } from "@/hooks/useInstallmentDetail";
+import { quoteActivityPermissionsKeys } from "@/hooks/useQuoteActivityPermissions";
 import { activitiesService } from "@/services/activities/activities.service";
 import type {
   QueueTaskCard,
@@ -88,6 +89,9 @@ export function usePostponeTask() {
     onSuccess: async (_data, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: activitiesKeys.all }),
+        queryClient.invalidateQueries({
+          queryKey: quoteActivityPermissionsKeys.all,
+        }),
         queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
         queryClient.invalidateQueries({ queryKey: installmentKeys.all }),
         variables.installmentId
@@ -115,6 +119,9 @@ export function useRescheduleTask() {
     onSuccess: async (_data, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: activitiesKeys.all }),
+        queryClient.invalidateQueries({
+          queryKey: quoteActivityPermissionsKeys.all,
+        }),
         queryClient.invalidateQueries({ queryKey: dashboardKeys.all }),
         queryClient.invalidateQueries({ queryKey: installmentKeys.all }),
         variables.installmentId

@@ -109,6 +109,8 @@ export interface QueueTaskCard {
   expireDate: string;
   wasPostponed: boolean;
   wasRescheduled: boolean;
+  /** Quantidade de reagendamentos da visita (máximo 2). */
+  rescheduleCount: number;
   client: QueueClient;
   contract: QueueContract;
   installment: QueueInstallment;
@@ -154,6 +156,7 @@ export interface TaskActionResult {
   expireDate: string;
   wasPostponed: boolean;
   wasRescheduled: boolean;
+  rescheduleCount: number;
 }
 
 export interface RescheduleTaskPayload {

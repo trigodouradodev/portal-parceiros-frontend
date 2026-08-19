@@ -30,7 +30,7 @@ export function BottomNav({ activeTab, items, onNavigate }: BottomNavProps) {
             onClick={() => onNavigate(item.key)}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 py-3 text-xs font-medium transition-colors",
+              "flex flex-1 flex-col items-center gap-0.5 px-0.5 py-2.5 text-[10px] font-medium transition-colors sm:text-xs sm:py-3",
               isActive ? "text-brand-navy" : "text-[#9DA3B4]",
             )}
           >

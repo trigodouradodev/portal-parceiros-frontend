@@ -50,10 +50,11 @@ export function VisitRescheduleDialog({
         </DialogHeader>
         <div className="flex justify-center">
           <Calendar
+            mode="single"
             selected={draftDate}
-            minDate={minDate}
-            maxDate={maxDate}
             onSelect={onDraftDateChange}
+            disabled={{ before: minDate, after: maxDate }}
+            className="rounded-lg border"
           />
         </div>
         <DialogFooter>

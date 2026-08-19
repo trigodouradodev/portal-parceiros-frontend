@@ -84,6 +84,7 @@ export function mapQueueTaskCardToOverdueItem(
     lastInteraction: card.lastInteraction ?? undefined,
     wasPostponed: card.wasPostponed,
     wasRescheduled: card.wasRescheduled,
+    rescheduleCount: card.rescheduleCount,
     expireDate: card.expireDate,
     taskType: card.taskType,
     assignedTo: card.assignedTo,
