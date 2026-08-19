@@ -21,7 +21,7 @@ import { cn, fmtBRL } from "@/lib/utils";
 const SENTIMENT_TEXT = {
   good: "text-[#0F6E56]",
   bad: "text-[#A32D2D]",
-  neutral: "text-[#6B7080]",
+  neutral: "text-muted-foreground",
 } as const;
 
 export function SafraSection() {
@@ -55,15 +55,15 @@ export function SafraSection() {
     current.renegotiatedSharePercent - previous.renegotiatedSharePercent;
 
   return (
-    <section className="rounded-2xl border border-[#D6D9E3] bg-white p-5 shadow">
+    <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
       <div className="mb-1 flex flex-wrap items-baseline gap-2">
-        <h2 className="text-base font-semibold text-[#1A1D2E] md:text-lg">
+        <h2 className="text-base font-semibold text-foreground md:text-lg">
           Indicadores de carteira por safra
         </h2>
-        <span className="text-xs text-[#9DA3B4]">Últimos 12 meses</span>
+        <span className="text-xs text-muted-foreground">Últimos 12 meses</span>
       </div>
       {safra.isMock ? (
-        <p className="mb-4 text-[11px] text-[#9DA3B4]">
+        <p className="mb-4 text-[11px] text-muted-foreground">
           Série ilustrativa — endpoint de safra (BE-02) ainda não disponível.
         </p>
       ) : (
@@ -91,7 +91,7 @@ export function SafraSection() {
         />
       </div>
 
-      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-[#9DA3B4]">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
         <span>↔</span> Arraste a lista para o lado pra ver todas as colunas
       </div>
       <div
@@ -172,16 +172,18 @@ function TrendCard({
   const arrow = direction === "up" ? "↗" : direction === "down" ? "↘" : "—";
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-[#D6D9E3] bg-white p-4 shadow">
+    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-white p-4 shadow-sm">
       <div className="flex items-center gap-2">
         <div
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ICON_CIRCLE[tone]}`}
         >
           <Icon size={16} />
         </div>
-        <span className="text-xs font-semibold text-[#4B5165]">{label}</span>
+        <span className="text-xs font-semibold text-muted-foreground">
+          {label}
+        </span>
       </div>
-      <span className="font-fraunces text-xl leading-tight font-bold text-[#1A1D2E]">
+      <span className="font-fraunces text-xl leading-tight font-bold text-foreground">
         {value}
       </span>
       <span className={`text-xs font-medium ${SENTIMENT_TEXT[sentiment]}`}>
@@ -203,7 +205,7 @@ function SafraRow({
   last?: boolean;
 }) {
   return (
-    <tr className={last ? undefined : "border-b border-[#EBEDF3]"}>
+    <tr className={last ? undefined : "border-b border-border"}>
       <td className="sticky left-0 bg-white px-3 py-2.5 font-semibold whitespace-nowrap text-brand-navy">
         {label}
       </td>
@@ -214,7 +216,7 @@ function SafraRow({
             "px-3 py-2.5 text-right whitespace-nowrap",
             cellTone
               ? `${TONE_TEXT[cellTone[index]]} font-semibold`
-              : "text-[#1A1D2E]",
+              : "text-foreground",
             index === 0 && "bg-brand-yellow/10",
           )}
         >

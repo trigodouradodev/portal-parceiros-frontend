@@ -30,10 +30,10 @@ export function KpiSection() {
     return (
       <section>
         <div className="mb-3 flex items-baseline gap-2">
-          <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
+          <span className="text-base font-semibold text-foreground md:text-lg">
             Carteira
           </span>
-          <span className="text-xs text-[#9DA3B4]">
+          <span className="text-xs text-muted-foreground">
             Carregando indicadores…
           </span>
         </div>
@@ -48,7 +48,7 @@ export function KpiSection() {
 
   if (summaryQuery.isError || !summaryQuery.data) {
     return (
-      <section className="rounded-2xl border border-[#D6D9E3] bg-white px-4 py-6">
+      <section className="rounded-2xl border border-border bg-white px-4 py-6">
         <p className="text-sm text-[#A32D2D]">
           {getApiErrorMessage(
             summaryQuery.error,
@@ -65,10 +65,10 @@ export function KpiSection() {
   return (
     <section>
       <div className="mb-3 flex items-baseline gap-2">
-        <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
+        <span className="text-base font-semibold text-foreground md:text-lg">
           Carteira
         </span>
-        <span className="text-xs text-[#9DA3B4]">
+        <span className="text-xs text-muted-foreground">
           Visão consolidada dos seus contratos
         </span>
       </div>
