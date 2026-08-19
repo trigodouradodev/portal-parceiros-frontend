@@ -13,8 +13,10 @@ export function CarteiraPage() {
 
   return (
     <PageContainer>
-      {/* Saudação do shell (logout mobile); o título da tela segue o design na KpiSection. */}
-      <PageHeader onLogout={onMobileLogout} />
+      <PageHeader
+        subtitle="Indicadores e contratos da sua carteira"
+        onLogout={onMobileLogout}
+      />
 
       <div className="flex flex-col gap-6 px-5 pt-6 md:px-8">
         <KpiSection />

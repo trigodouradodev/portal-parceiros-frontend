@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Pagination } from "@/components/data-table/Pagination";
@@ -12,7 +12,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ContractListCard } from "@/features/carteira/components/ContractListCard";
+import { DateFilterField } from "@/features/carteira/components/DateFilterField";
 import {
   ALL_PRODUCTS,
   SEARCH_DEBOUNCE_MS,
@@ -23,30 +32,11 @@ import {
 } from "@/features/carteira/utils/contracts-list";
 import { parseContractListSearchParams } from "@/features/carteira/utils/contract-list-route";
 import { useContractsList } from "@/hooks/useContractsList";
-import { useDragScroll } from "@/hooks/useDragScroll";
 import { useProducts } from "@/hooks/useProducts";
 import { getContractsListErrorMessage } from "@/lib/api/contracts-list-errors";
 import { formatDate } from "@/lib/format/date";
-import { cn, fmtBRL } from "@/lib/utils";
+import { fmtBRL } from "@/lib/utils";
 import type { ContractListItem } from "@/services/contracts/contracts.types";
-
-const CONTRACT_TABLE_HEADERS = [
-  "Contrato",
-  "Cliente",
-  "Produto",
-  "Valor Desembolsado",
-  "Valor Projetado",
-  "Saldo Pendente",
-  "Parcelas Totais",
-  "Data",
-  "Próximo Vencimento",
-] as const;
-
-const MONEY_HEADERS = new Set([
-  "Valor Desembolsado",
-  "Valor Projetado",
-  "Saldo Pendente",
-]);
 
 function fmtDate(value?: string): string {
   if (!value) return "—";
@@ -72,8 +62,6 @@ export function ContractListPage() {
     buildInitialFilters(initialFilter),
   );
   const [searchInput, setSearchInput] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const dragScroll = useDragScroll(scrollRef);
 
   // AUREA-330: abre a mesma tela rica de detalhe que a Home usa, num modo
   // somente-leitura — não mais um modal pequeno.
@@ -151,24 +139,20 @@ export function ContractListPage() {
               ))}
             </SelectContent>
           </Select>
-          <Input
-            type="date"
+          <DateFilterField
+            label="Data inicial de desembolso"
             value={filters.startDate}
-            onChange={(e) => patchFilters({ startDate: e.target.value })}
-            className="w-auto"
-            aria-label="Data inicial de desembolso"
+            onChange={(value) => patchFilters({ startDate: value })}
           />
-          <Input
-            type="date"
+          <DateFilterField
+            label="Data final de desembolso"
             value={filters.endDate}
-            onChange={(e) => patchFilters({ endDate: e.target.value })}
-            className="w-auto"
-            aria-label="Data final de desembolso"
+            onChange={(value) => patchFilters({ endDate: value })}
           />
         </div>
 
         <div className="flex flex-wrap gap-4">
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-[#374151]">
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
             <input
               type="checkbox"
               checked={filters.onlyActive}
@@ -176,7 +160,7 @@ export function ContractListPage() {
             />
             Só com saldo pendente
           </label>
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-[#374151]">
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
             <input
               type="checkbox"
               checked={filters.onlyDelinquency}
@@ -186,7 +170,7 @@ export function ContractListPage() {
             />
             Só em atraso
           </label>
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-[#374151]">
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
             <input
               type="checkbox"
               checked={filters.onlyRenegotiated}
@@ -206,7 +190,7 @@ export function ContractListPage() {
                 <Skeleton key={i} className="h-28 w-full rounded-xl" />
               ))}
             </div>
-            <div className="hidden space-y-2 rounded-xl border border-[#EBEDF3] p-4 md:block">
+            <div className="hidden space-y-2 rounded-xl border border-border p-4 md:block">
               {Array.from({ length: 6 }).map((_, i) => (
                 <Skeleton key={i} className="h-8 w-full" />
               ))}
@@ -220,7 +204,7 @@ export function ContractListPage() {
             )}
           </p>
         ) : items.length === 0 ? (
-          <p className="py-8 text-center text-sm text-[#9DA3B4]">
+          <p className="py-8 text-center text-sm text-muted-foreground">
             Nenhum contrato encontrado com esses filtros.
           </p>
         ) : (
@@ -238,37 +222,25 @@ export function ContractListPage() {
               ))}
             </div>
 
-            <div
-              ref={scrollRef}
-              {...dragScroll}
-              className="no-scrollbar hidden cursor-grab overflow-x-auto rounded-xl border border-[#EBEDF3] select-none active:cursor-grabbing md:block"
-            >
-              <table className="w-full min-w-[900px] text-xs">
-                <thead className="bg-brand-navy">
-                  <tr>
-                    {CONTRACT_TABLE_HEADERS.map((header) => (
-                      <th
-                        key={header}
-                        className={cn(
-                          "whitespace-nowrap px-3 py-2.5 font-semibold text-white/90",
-                          header === "Parcelas Totais"
-                            ? "text-center"
-                            : MONEY_HEADERS.has(header)
-                              ? "text-right"
-                              : "text-left",
-                          header === "Contrato" &&
-                            "sticky left-0 z-10 bg-brand-navy text-white",
-                        )}
-                      >
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
+            <div className="hidden rounded-xl border border-border md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Contrato</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Produto</TableHead>
+                    <TableHead className="text-right">
+                      Valor desembolsado
+                    </TableHead>
+                    <TableHead className="text-right">Saldo pendente</TableHead>
+                    <TableHead className="text-center">Parcelas</TableHead>
+                    <TableHead>Próx. vencimento</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {items.map((contract) => (
-                    <tr key={contract.id} className="border-t border-[#EBEDF3]">
-                      <td className="sticky left-0 z-10 whitespace-nowrap bg-white px-3 py-2">
+                    <TableRow key={contract.id}>
+                      <TableCell className="whitespace-nowrap">
                         <button
                           type="button"
                           className="font-semibold text-brand-navy underline decoration-brand-navy/30 hover:decoration-brand-navy"
@@ -279,39 +251,29 @@ export function ContractListPage() {
                         >
                           {contract.contractNumber}
                         </button>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-[#1A1D2E]">
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {contract.clientName}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-[#6B7080]">
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
                         {contract.productName}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right text-[#1A1D2E]">
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-right">
                         {fmtBRL(contract.disbursedAmount)}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right text-[#1A1D2E]">
-                        {fmtBRL(contract.projectedAmount)}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right text-[#1A1D2E]">
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-right">
                         {fmtBRL(contract.outstandingBalance)}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-center text-[#1A1D2E]">
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-center">
                         {contract.totalInstallments}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-[#6B7080]">
-                        {fmtDate(contract.disbursementDate)}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-[#6B7080]">
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
                         {fmtDate(contract.nextDueDate)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="hidden items-center gap-1.5 text-[11px] text-[#9DA3B4] md:flex">
-              <span>↔</span> Arraste a lista para o lado pra ver todas as
-              colunas
+                </TableBody>
+              </Table>
             </div>
           </>
         )}
@@ -324,7 +286,7 @@ export function ContractListPage() {
               if (contractsQuery.isFetching) return;
               setFilters((prev) => ({ ...prev, page }));
             }}
-            className="border-t border-[#EBEDF3] pt-3"
+            className="border-t border-border pt-3"
           />
         ) : null}
       </div>
