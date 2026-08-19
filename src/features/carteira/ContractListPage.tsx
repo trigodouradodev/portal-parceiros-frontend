@@ -120,64 +120,66 @@ export function ContractListPage() {
       </div>
 
       <div className="flex flex-col gap-4 px-5 pt-5 md:px-8">
-        <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
-          <InputField
-            label="Cliente ou contrato"
-            icon={<Search size={16} />}
-            placeholder="Buscar cliente ou contrato…"
-            value={searchInput}
-            onChange={setSearchInput}
-            className="md:flex-1"
-          />
-          <SelectDialogField
-            label="Produto"
-            value={filters.productId}
-            onChange={(value) => patchFilters({ productId: value })}
-            options={productOptions}
-            className="md:w-48"
-          />
-          <DateFilterField
-            label="Data inicial de desembolso"
-            value={filters.startDate}
-            onChange={(value) => patchFilters({ startDate: value })}
-          />
-          <DateFilterField
-            label="Data final de desembolso"
-            value={filters.endDate}
-            onChange={(value) => patchFilters({ endDate: value })}
-          />
-        </div>
+        <section className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
+            <InputField
+              label="Cliente ou contrato"
+              icon={<Search size={16} />}
+              placeholder="Buscar cliente ou contrato…"
+              value={searchInput}
+              onChange={setSearchInput}
+              className="md:flex-1"
+            />
+            <SelectDialogField
+              label="Produto"
+              value={filters.productId}
+              onChange={(value) => patchFilters({ productId: value })}
+              options={productOptions}
+              className="md:w-48"
+            />
+            <DateFilterField
+              label="Data inicial de desembolso"
+              value={filters.startDate}
+              onChange={(value) => patchFilters({ startDate: value })}
+            />
+            <DateFilterField
+              label="Data final de desembolso"
+              value={filters.endDate}
+              onChange={(value) => patchFilters({ endDate: value })}
+            />
+          </div>
 
-        <div className="flex flex-wrap gap-4">
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
-            <input
-              type="checkbox"
-              checked={filters.onlyActive}
-              onChange={(e) => patchFilters({ onlyActive: e.target.checked })}
-            />
-            Só com saldo pendente
-          </label>
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
-            <input
-              type="checkbox"
-              checked={filters.onlyDelinquency}
-              onChange={(e) =>
-                patchFilters({ onlyDelinquency: e.target.checked })
-              }
-            />
-            Só em atraso
-          </label>
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
-            <input
-              type="checkbox"
-              checked={filters.onlyRenegotiated}
-              onChange={(e) =>
-                patchFilters({ onlyRenegotiated: e.target.checked })
-              }
-            />
-            Só renegociados
-          </label>
-        </div>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
+              <input
+                type="checkbox"
+                checked={filters.onlyActive}
+                onChange={(e) => patchFilters({ onlyActive: e.target.checked })}
+              />
+              Só com saldo pendente
+            </label>
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
+              <input
+                type="checkbox"
+                checked={filters.onlyDelinquency}
+                onChange={(e) =>
+                  patchFilters({ onlyDelinquency: e.target.checked })
+                }
+              />
+              Só em atraso
+            </label>
+            <label className="flex cursor-pointer items-center gap-1.5 text-xs font-medium text-foreground">
+              <input
+                type="checkbox"
+                checked={filters.onlyRenegotiated}
+                onChange={(e) =>
+                  patchFilters({ onlyRenegotiated: e.target.checked })
+                }
+              />
+              Só renegociados
+            </label>
+          </div>
+        </section>
 
         {contractsQuery.isPending && !contractsQuery.data ? (
           <>
