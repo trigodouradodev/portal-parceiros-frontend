@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { formatDate, parseCalendarDate } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 
@@ -21,10 +22,10 @@ interface DateFilterFieldProps {
 }
 
 /**
- * AUREA-346: filtro de data reaproveitando o `Calendar` da marca (o mesmo
- * usado em PromiseDateModal/VisitRescheduleDialog/Simulação), em vez do
- * `<input type="date">` nativo do navegador — única tela que ainda usava o
- * seletor cru, destoando do resto do app.
+ * AUREA-346: filtro de data no mesmo estilo "pill" dos campos de formulário
+ * do resto do app (InputField/SelectField — Perfil, Originação), reaproveitando
+ * o `Calendar` da marca (o mesmo usado em PromiseDateModal/VisitRescheduleDialog)
+ * em vez do `<input type="date">` nativo do navegador.
  */
 export function DateFilterField({
   label,
@@ -52,19 +53,22 @@ export function DateFilterField({
   }
 
   return (
-    <>
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>
       <button
         type="button"
         onClick={() => handleOpenChange(true)}
-        aria-label={label}
-        className={cn(
-          "flex h-9 items-center gap-2 rounded border border-input bg-white px-3 text-sm text-foreground outline-none transition-colors hover:border-brand-navy/40",
-          !value && "text-muted-foreground/70",
-          className,
-        )}
+        className="flex items-center gap-3 rounded-2xl border-2 border-transparent bg-[#F5F6FA] px-4 py-3 text-left transition-colors focus-within:border-brand-navy"
       >
-        <CalendarIcon size={14} className="shrink-0 text-muted-foreground" />
-        {value ? formatDate(value) : "dd/mm/aaaa"}
+        <CalendarIcon size={16} className="shrink-0 text-[#9DA3B4]" />
+        <span
+          className={cn(
+            "flex-1 text-sm",
+            value ? "text-[#1A1D2E]" : "text-[#C8CBD8]",
+          )}
+        >
+          {value ? formatDate(value) : "dd/mm/aaaa"}
+        </span>
       </button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -99,6 +103,6 @@ export function DateFilterField({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

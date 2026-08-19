@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { Pagination } from "@/components/data-table/Pagination";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { InputField } from "@/components/ui/input-field";
+import { SelectField } from "@/components/ui/select-field";
+import type { SelectOption } from "@/components/ui/select-option";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -81,6 +76,17 @@ export function ContractListPage() {
   const contractsQuery = useContractsList(listQuery);
   const productsQuery = useProducts();
 
+  const productOptions: SelectOption[] = useMemo(
+    () => [
+      { value: ALL_PRODUCTS, label: "Todos os produtos" },
+      ...(productsQuery.data ?? []).map((product) => ({
+        value: product.id,
+        label: product.description,
+      })),
+    ],
+    [productsQuery.data],
+  );
+
   function patchFilters(patch: Partial<ContractsUiFilters>) {
     setFilters((prev) => ({
       ...prev,
@@ -114,31 +120,22 @@ export function ContractListPage() {
       </div>
 
       <div className="flex flex-col gap-4 px-5 pt-5 md:px-8">
-        <div className="flex flex-col gap-2.5 md:flex-row">
-          <Input
-            type="text"
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
+          <InputField
+            label="Cliente ou contrato"
+            icon={<Search size={16} />}
             placeholder="Buscar cliente ou contrato…"
-            aria-label="Buscar cliente ou contrato"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={setSearchInput}
             className="md:flex-1"
           />
-          <Select
+          <SelectField
+            label="Produto"
             value={filters.productId}
-            onValueChange={(value) => patchFilters({ productId: value })}
-          >
-            <SelectTrigger className="w-full whitespace-nowrap md:w-48">
-              <SelectValue placeholder="Produto" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_PRODUCTS}>Todos os produtos</SelectItem>
-              {(productsQuery.data ?? []).map((product) => (
-                <SelectItem key={product.id} value={product.id}>
-                  {product.description}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(value) => patchFilters({ productId: value })}
+            options={productOptions}
+            className="md:w-48"
+          />
           <DateFilterField
             label="Data inicial de desembolso"
             value={filters.startDate}
