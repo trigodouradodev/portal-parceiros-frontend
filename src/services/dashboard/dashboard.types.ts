@@ -150,6 +150,7 @@ export interface OverdueCollectionItem {
   };
   wasPostponed?: boolean;
   wasRescheduled?: boolean;
+  rescheduleCount?: number;
   expireDate?: string;
   taskType?: ActivityTaskType;
   assignedTo?: { id: string; name: string } | null;
