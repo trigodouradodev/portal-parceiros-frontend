@@ -10,7 +10,7 @@ interface ContractInfoCardProps {
    * montar o header/valores. Esconde o pill "Parcela X de Y" e o alerta de
    * atraso (que são sobre essa parcela auto-resolvida) pra não sugerir que
    * ela é o que está sendo visto.
-  */
+   */
   hideInstallmentBadge?: boolean;
   /** Oculta valores associados a uma parcela auto-selecionada no resumo. */
   showInstallmentInfo?: boolean;

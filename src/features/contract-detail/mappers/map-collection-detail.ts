@@ -12,7 +12,10 @@ import { formatTaxId } from "@/lib/format/tax-id";
 import type { CollectionDetail } from "@/services/dashboard/dashboard.types";
 
 function getDaysFromDueDate(dueDate: string): number {
-  return differenceInCalendarDays(startOfDay(new Date()), startOfDay(new Date(dueDate)));
+  return differenceInCalendarDays(
+    startOfDay(new Date()),
+    startOfDay(new Date(dueDate)),
+  );
 }
 
 function getInstallmentStatus(daysUntilDue: number): {
@@ -40,9 +43,13 @@ function mapPortfolioDetail(
     contractId: detail.contract.id,
     businessName: detail.client.name ?? detail.contract.number,
     clientName: detail.client.name,
-    clientTaxId: detail.client.taxId ? formatTaxId(detail.client.taxId) : undefined,
+    clientTaxId: detail.client.taxId
+      ? formatTaxId(detail.client.taxId)
+      : undefined,
     clientAddress:
-      address && hasValidAddress(address) ? formatClientAddress(address) : undefined,
+      address && hasValidAddress(address)
+        ? formatClientAddress(address)
+        : undefined,
     address,
     responsibleName: detail.responsible?.name,
     responsibleType: detail.responsible?.type,

@@ -55,7 +55,8 @@ export function ActivityInstallmentDetailPage() {
   const { setActionData } = useActionContext();
   const { user } = useAuth();
   const { showToast } = useToast();
-  const locationState = location.state as ActivityInstallmentLocationState | null;
+  const locationState =
+    location.state as ActivityInstallmentLocationState | null;
   const sourceItem = isOverdueCollectionItem(locationState?.item)
     ? locationState.item
     : undefined;
