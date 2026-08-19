@@ -11,6 +11,7 @@ env:
   S3_BUCKET: portal-parceiros-frontend-dev
   CLOUDFRONT_DISTRIBUTION_ID: EZJM0VN7NTYNF
   VITE_API_URL: https://portal-parceiros-api-dev.trigodourado.com
+  VITE_BACKOFFICE_URL: https://dev.trigodourado.com
 
 permissions:
   id-token: write
