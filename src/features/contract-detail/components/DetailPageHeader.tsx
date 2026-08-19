@@ -13,12 +13,14 @@ interface DetailPageHeaderProps {
   detail: ContractDetailView;
   partnerName?: string;
   onBack: () => void;
+  hideStatus?: boolean;
 }
 
 export function DetailPageHeader({
   detail,
   partnerName,
   onBack,
+  hideStatus = false,
 }: DetailPageHeaderProps) {
   const { businessName, contractCode, statusLabel, statusColor } = detail;
 
@@ -44,15 +46,17 @@ export function DetailPageHeader({
             {partnerName ? ` · Parceiro ${partnerName}` : ""}
           </p>
         </div>
-        <span
-          className={cn(
-            "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold",
-            statusBadgeStyle[statusColor],
-          )}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-current" />
-          {statusLabel}
-        </span>
+        {!hideStatus && (
+          <span
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold",
+              statusBadgeStyle[statusColor],
+            )}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+            {statusLabel}
+          </span>
+        )}
       </div>
     </div>
   );
