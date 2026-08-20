@@ -86,11 +86,11 @@ describe("buildContractsListQuery", () => {
       products: ["prod-1"],
       startDate: undefined,
       endDate: undefined,
-        onlyActive: true,
-        onlyDelinquency: true,
-        onlyRenegotiated: undefined,
-        onlyDueToday: true,
-        onlyUpcomingRenewal: true,
+      onlyActive: true,
+      onlyDelinquency: true,
+      onlyRenegotiated: undefined,
+      onlyDueToday: true,
+      onlyUpcomingRenewal: true,
     });
     expect(ALL_PRODUCTS).toBe("TODOS");
   });
