@@ -41,7 +41,13 @@ export function AppShell() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background font-sans md:flex">
+    <div
+      className={
+        hideBottomNav
+          ? "flex h-dvh overflow-hidden bg-background font-sans md:flex"
+          : "flex min-h-dvh bg-background font-sans md:flex"
+      }
+    >
       <AppSidebar
         activeTab={activeTab}
         items={NAV_ITEMS}
@@ -49,7 +55,7 @@ export function AppShell() {
         onRequestLogout={handleRequestLogout}
       />
 
-      <div className="flex w-full min-w-0 flex-1 flex-col md:ml-56">
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col md:ml-56">
         <Outlet
           context={{
             onMobileLogout: handleRequestLogout,

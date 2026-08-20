@@ -207,6 +207,7 @@ export const INCOME_DOCUMENT_TYPE_OPTIONS = [
 
 export const DEBT_PURPOSE = "Quitação/troca de dívida";
 export const OTHER_OPTION = "Outros";
+export const NONE_PROGRAM = "Nenhum";
 export const HOW_KNOWS_OTHER = "Outro";
 export const AUREA_REFERRAL_OPTION = "Indicação de cliente Áurea";
 export const DOUBTS_RATING = "Tenho dúvidas";

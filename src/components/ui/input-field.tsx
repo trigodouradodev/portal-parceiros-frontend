@@ -41,13 +41,13 @@ export function InputField({
 }: InputFieldProps) {
   return (
     <div
-      className={cn("flex flex-col gap-1.5", className)}
+      className={cn("flex min-w-0 flex-col gap-1.5", className)}
       {...fieldAnchorProps(name, error)}
     >
       <FieldLabel required={required}>{label}</FieldLabel>
       <div
         className={cn(
-          "flex items-center gap-3 rounded-2xl border-2 px-4 py-3 transition-colors",
+          "flex min-w-0 items-center gap-3 rounded-2xl border-2 px-4 py-3 transition-colors",
           disabled
             ? "border-transparent bg-[#EFEFF3]"
             : error
@@ -68,7 +68,7 @@ export function InputField({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           aria-invalid={error ? true : undefined}
-          className="flex-1 bg-transparent text-sm text-[#1A1D2E] outline-none placeholder:text-[#C8CBD8] disabled:text-[#6B7080]"
+          className="min-w-0 w-full flex-1 bg-transparent text-sm text-[#1A1D2E] outline-none placeholder:text-[#C8CBD8] disabled:text-[#6B7080]"
         />
       </div>
       <FieldErrorMessage error={error} />

@@ -1,6 +1,5 @@
 import { useFormContext } from "react-hook-form";
 import { Building2, Wallet } from "lucide-react";
-import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
@@ -48,7 +47,7 @@ export function ActivityIncomeSection() {
         control={control}
         name="activityIncome.activityTime"
         render={({ field, fieldState }) => (
-          <ChipField
+          <SelectDialogField
             name={field.name}
             label="Tempo na atividade"
             value={field.value}

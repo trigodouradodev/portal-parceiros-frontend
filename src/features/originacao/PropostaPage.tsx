@@ -154,7 +154,7 @@ function ProposalSuccess({
   const { simulation } = proposal;
 
   return (
-    <div className="flex-1 md:max-w-xl">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:max-w-xl">
       <ProposalTaskHeader
         title="Proposta criada"
         simulation={simulation}
@@ -324,7 +324,7 @@ function ProposalWizard({
   }
 
   return (
-    <div className="flex-1 md:max-w-xl">
+    <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col md:max-w-xl">
       <ProposalTaskHeader
         title={`${PROPOSAL_STEPS[step]} · ${step + 1}/${PROPOSAL_STEPS.length}`}
         simulation={simulation}
@@ -334,8 +334,8 @@ function ProposalWizard({
         onLogout={onLogout}
       />
 
-      <div className="px-5 pt-4 pb-24 md:px-8 md:pb-8">
-        <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-5 pt-4 pb-4 md:px-8">
+        <section className="min-w-0 rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
           <Form {...form}>
             <div className={step === 0 ? "" : "hidden"}>
               <RegistrationSection
@@ -370,8 +370,8 @@ function ProposalWizard({
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#E2E4EC] bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:static md:mt-5 md:border-0 md:px-8 md:pb-8">
-        <div className="mx-auto flex w-full max-w-md gap-2 md:max-w-none">
+      <div className="shrink-0 border-t border-[#E2E4EC] bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-8">
+        <div className="flex w-full gap-2">
           {step > 0 ? (
             <Button
               variant="outline"

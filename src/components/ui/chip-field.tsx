@@ -55,14 +55,14 @@ export function ChipField(props: ChipFieldProps) {
 
   return (
     <div
-      className={cn("flex flex-col gap-1.5", className)}
+      className={cn("flex min-w-0 flex-col gap-1.5", className)}
       {...fieldAnchorProps(name, error)}
     >
       <FieldLabel required={required}>{label}</FieldLabel>
       {description ? (
         <p className="text-xs text-[#9DA3B4]">{description}</p>
       ) : null}
-      <div className={cn("flex flex-wrap gap-2", chipsClassName)}>
+      <div className={cn("flex min-w-0 flex-wrap gap-2", chipsClassName)}>
         {options.map((option) => {
           const active = props.multiple
             ? props.value.includes(option.value)

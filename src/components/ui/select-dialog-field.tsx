@@ -105,7 +105,7 @@ export function SelectDialogField({
 
   return (
     <div
-      className={cn("flex flex-col gap-1.5", className)}
+      className={cn("flex min-w-0 flex-col gap-1.5", className)}
       {...fieldAnchorProps(name, error)}
     >
       {label ? <FieldLabel required={required}>{label}</FieldLabel> : null}

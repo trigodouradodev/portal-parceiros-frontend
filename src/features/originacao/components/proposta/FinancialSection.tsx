@@ -115,7 +115,7 @@ export function FinancialSection() {
                   <Trash2 size={16} />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid min-w-0 grid-cols-2 gap-2">
                 <FormField
                   control={control}
                   name={`financial.expenses.${index}.amount`}
@@ -200,7 +200,7 @@ export function FinancialSection() {
                   <Trash2 size={16} />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid min-w-0 grid-cols-2 gap-2">
                 <FormField
                   control={control}
                   name={`financial.loans.${index}.installmentAmount`}
@@ -230,7 +230,7 @@ export function FinancialSection() {
                   )}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid min-w-0 grid-cols-2 gap-2">
                 <FormField
                   control={control}
                   name={`financial.loans.${index}.category`}

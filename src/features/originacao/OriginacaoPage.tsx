@@ -34,9 +34,20 @@ function OriginacaoLayout() {
   }
 
   return (
-    <PageContainer withBottomNav={!focusedProposal}>
+    <PageContainer
+      withBottomNav={!focusedProposal}
+      className={
+        focusedProposal ? "min-h-0 min-w-0 overflow-hidden" : undefined
+      }
+    >
       {focusedProposal ? null : <PageHeader onLogout={onMobileLogout} />}
-      <Tabs value={activeTab} onValueChange={goTo}>
+      <Tabs
+        value={activeTab}
+        onValueChange={goTo}
+        className={
+          focusedProposal ? "flex min-h-0 min-w-0 flex-1 flex-col" : undefined
+        }
+      >
         {focusedProposal ? null : (
           <div className="px-5 pt-5 md:px-8">
             <TabsList className="md:w-[26rem]">
@@ -65,7 +76,14 @@ function OriginacaoLayout() {
         <TabsContent value="simulacao" className="mt-0">
           <SimulacaoPage />
         </TabsContent>
-        <TabsContent value="proposta" className="mt-0">
+        <TabsContent
+          value="proposta"
+          className={
+            focusedProposal
+              ? "mt-0 flex min-h-0 min-w-0 flex-1 flex-col"
+              : "mt-0"
+          }
+        >
           <PropostaPage />
         </TabsContent>
       </Tabs>

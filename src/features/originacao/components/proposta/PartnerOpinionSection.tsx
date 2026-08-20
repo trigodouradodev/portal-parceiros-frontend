@@ -1,7 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { AlertTriangle, CreditCard } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
@@ -30,7 +29,7 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.relationshipTime"
         render={({ field, fieldState }) => (
-          <ChipField
+          <SelectDialogField
             name={field.name}
             label="Tempo de relacionamento com o cliente"
             value={field.value}
@@ -96,24 +95,25 @@ export function PartnerOpinionSection() {
         control={control}
         name="partnerOpinion.overallRating"
         render={({ field, fieldState }) => (
-          <ChipField
-            name={field.name}
-            label="Avaliação geral"
-            value={field.value}
-            onChange={field.onChange}
-            options={toSelectOptions(OVERALL_RATING_OPTIONS)}
-            required
-            error={fieldState.error?.message}
-          >
+          <>
+            <SelectDialogField
+              name={field.name}
+              label="Avaliação geral"
+              value={field.value}
+              onChange={field.onChange}
+              options={toSelectOptions(OVERALL_RATING_OPTIONS)}
+              required
+              error={fieldState.error?.message}
+            />
             {field.value === DOUBTS_RATING ? (
-              <Alert variant="warning" className="mt-1">
+              <Alert variant="warning">
                 <AlertTriangle size={18} />
                 <AlertTitle className="text-sm">
                   Essa proposta vai obrigatoriamente para a mesa de crédito.
                 </AlertTitle>
               </Alert>
             ) : null}
-          </ChipField>
+          </>
         )}
       />
 

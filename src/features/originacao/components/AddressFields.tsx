@@ -187,7 +187,7 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
           />
         )}
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid min-w-0 grid-cols-2 gap-3">
         <FormField
           control={control}
           name={addressPath(namePrefix, "number")}
@@ -235,7 +235,7 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
           />
         )}
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid min-w-0 grid-cols-2 gap-3">
         <FormField
           control={control}
           name={addressPath(namePrefix, "city")}

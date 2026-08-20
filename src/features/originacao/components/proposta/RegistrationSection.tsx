@@ -24,6 +24,7 @@ import {
   GENDER_OPTIONS,
   GOVERNMENT_PROGRAM_OPTIONS,
   MARITAL_STATUS_OPTIONS,
+  NONE_PROGRAM,
   OTHER_OPTION,
   PROPERTY_STATUS_OPTIONS,
   RESIDENCE_TIME_OPTIONS,
@@ -124,7 +125,7 @@ export function RegistrationSection({
         control={control}
         name="registration.gender"
         render={({ field, fieldState }) => (
-          <ChipField
+          <SelectDialogField
             name={field.name}
             label="Gênero"
             value={field.value}
@@ -230,7 +231,7 @@ export function RegistrationSection({
             control={control}
             name="registration.maritalStatus"
             render={({ field }) => (
-              <ChipField
+              <SelectDialogField
                 label="Estado civil"
                 value={field.value}
                 onChange={field.onChange}
@@ -261,7 +262,7 @@ export function RegistrationSection({
             />
           ) : null}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid min-w-0 grid-cols-2 gap-3">
             <FormField
               control={control}
               name="registration.childrenCount"
@@ -298,7 +299,7 @@ export function RegistrationSection({
             control={control}
             name="registration.propertyStatus"
             render={({ field }) => (
-              <ChipField
+              <SelectDialogField
                 label="Situação do imóvel"
                 value={field.value}
                 onChange={field.onChange}
@@ -311,7 +312,7 @@ export function RegistrationSection({
             control={control}
             name="registration.residenceTime"
             render={({ field }) => (
-              <ChipField
+              <SelectDialogField
                 label="Tempo de residência"
                 value={field.value}
                 onChange={field.onChange}
@@ -328,7 +329,16 @@ export function RegistrationSection({
                 label="Vínculo a programas de governo"
                 multiple
                 value={field.value}
-                onChange={field.onChange}
+                onChange={(value) => {
+                  if (
+                    value.includes(NONE_PROGRAM) &&
+                    !field.value.includes(NONE_PROGRAM)
+                  ) {
+                    field.onChange([NONE_PROGRAM]);
+                    return;
+                  }
+                  field.onChange(value.filter((item) => item !== NONE_PROGRAM));
+                }}
                 options={toSelectOptions(GOVERNMENT_PROGRAM_OPTIONS)}
               />
             )}
@@ -360,7 +370,7 @@ export function RegistrationSection({
         control={control}
         name="registration.creditPurpose"
         render={({ field, fieldState }) => (
-          <ChipField
+          <SelectDialogField
             name={field.name}
             label="Finalidade do crédito"
             value={field.value ?? ""}

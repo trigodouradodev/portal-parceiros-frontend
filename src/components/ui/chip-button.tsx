@@ -22,7 +22,7 @@ export function ChipButton({
       disabled={disabled}
       onClick={disabled ? undefined : onClick}
       className={cn(
-        "h-10 rounded-2xl border-2 px-3 text-sm font-semibold transition-colors",
+        "h-10 max-w-full rounded-2xl border-2 px-3 text-sm font-semibold transition-colors",
         disabled
           ? "cursor-not-allowed border-[#E2E4EC] bg-[#F5F6FA] text-[#B7BBC9]"
           : active
