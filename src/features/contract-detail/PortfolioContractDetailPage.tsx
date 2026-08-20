@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth/auth-context";
 import { ClientDetailsCard } from "@/features/contract-detail/components/ClientDetailsCard";
 import { ContractInfoCard } from "@/features/contract-detail/components/ContractInfoCard";
 import { ContractInstallmentsSection } from "@/features/contract-detail/components/ContractInstallmentsSection";
+import { ContractStatusHistorySection } from "@/features/contract-detail/components/ContractStatusHistorySection";
 import { DetailPageHeader } from "@/features/contract-detail/components/DetailPageHeader";
 import { mapPortfolioContractDetailToView } from "@/features/contract-detail/mappers/map-collection-detail";
 import { useContractDetailByContractId } from "@/hooks/useContractDetailByContractId";
@@ -81,6 +82,7 @@ export function PortfolioContractDetailPage() {
           />
           <ClientDetailsCard detail={detail} />
           <ContractInstallmentsSection contractId={contractId} />
+          <ContractStatusHistorySection items={detail.statusHistory ?? []} />
         </div>
       </div>
     </PageContainer>
