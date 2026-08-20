@@ -56,9 +56,6 @@ export interface ContractDetailView {
   contractStatus?: string;
   productName?: string;
   companyName?: string;
-  totalWithIof?: number;
-  iofAmount?: number;
-  tacAmount?: number;
   originationConsultantName?: string;
   guarantor?: DetailGuarantor | null;
   statusHistory?: ContractStatusHistoryItem[];

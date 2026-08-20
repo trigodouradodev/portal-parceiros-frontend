@@ -35,12 +35,15 @@ export function ContractInfoCard({
     contractStatus,
     productName,
     companyName,
-    totalWithIof,
-    iofAmount,
-    tacAmount,
     originationConsultantName,
+    responsibleName,
   } = detail;
   const hasBadgeRow = Boolean(contractStatus || productName || companyName);
+  // AUREA-346: no parceiro-consultor único, quem originou a proposta costuma
+  // ser a mesma pessoa responsável pelo contrato — evita repetir o nome.
+  const showOriginationConsultant = Boolean(
+    originationConsultantName && originationConsultantName !== responsibleName,
+  );
 
   return (
     <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
@@ -132,53 +135,16 @@ export function ContractInfoCard({
         )}
       </div>
 
-      {(totalWithIof !== undefined ||
-        iofAmount !== undefined ||
-        tacAmount !== undefined ||
-        originationConsultantName) && (
+      {showOriginationConsultant && (
         <>
           <div className="my-3 h-px bg-border" />
-          <div className="grid grid-cols-2 gap-x-3 gap-y-3">
-            {totalWithIof !== undefined && (
-              <div className="min-w-0">
-                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-                  Total com IOF
-                </p>
-                <p className="truncate text-sm font-semibold text-foreground">
-                  {fmtBRL(totalWithIof)}
-                </p>
-              </div>
-            )}
-            {iofAmount !== undefined && (
-              <div className="min-w-0">
-                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-                  IOF
-                </p>
-                <p className="truncate text-sm font-semibold text-foreground">
-                  {fmtBRL(iofAmount)}
-                </p>
-              </div>
-            )}
-            {tacAmount !== undefined && (
-              <div className="min-w-0">
-                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-                  TAC
-                </p>
-                <p className="truncate text-sm font-semibold text-foreground">
-                  {fmtBRL(tacAmount)}
-                </p>
-              </div>
-            )}
-            {originationConsultantName && (
-              <div className="min-w-0">
-                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
-                  Consultor da proposta
-                </p>
-                <p className="truncate text-sm font-semibold text-foreground">
-                  {originationConsultantName}
-                </p>
-              </div>
-            )}
+          <div className="min-w-0">
+            <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/80">
+              Consultor da proposta
+            </p>
+            <p className="truncate text-sm font-semibold text-foreground">
+              {originationConsultantName}
+            </p>
           </div>
         </>
       )}
