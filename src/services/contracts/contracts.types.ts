@@ -50,6 +50,10 @@ export interface ContractsListQuery {
   onlyActive?: boolean;
   onlyDelinquency?: boolean;
   onlyRenegotiated?: boolean;
+  /** Contratos com parcela vencendo no dia corrente (KPI Home/Vencem hoje). */
+  onlyDueToday?: boolean;
+  /** Contratos em janela de renovação próxima (KPI Home/Renovação próxima). */
+  onlyUpcomingRenewal?: boolean;
 }
 
 /** Pré-filtro ao abrir o modal a partir de um KPI. */
@@ -57,6 +61,8 @@ export interface CarteiraDrillDownFilter {
   onlyActive?: boolean;
   onlyDelinquency?: boolean;
   onlyRenegotiated?: boolean;
+  onlyDueToday?: boolean;
+  onlyUpcomingRenewal?: boolean;
 }
 
 /**

@@ -11,6 +11,10 @@ export function buildContractListPath(
   if (filter.onlyActive) params.set("onlyActive", "true");
   if (filter.onlyDelinquency) params.set("onlyDelinquency", "true");
   if (filter.onlyRenegotiated) params.set("onlyRenegotiated", "true");
+  if (filter.onlyDueToday) params.set("onlyDueToday", "true");
+  if (filter.onlyUpcomingRenewal) {
+    params.set("onlyUpcomingRenewal", "true");
+  }
   return `${CONTRACT_LIST_PATH}?${params.toString()}`;
 }
 
@@ -29,6 +33,8 @@ export function parseContractListSearchParams(
       onlyActive: params.get("onlyActive") === "true",
       onlyDelinquency: params.get("onlyDelinquency") === "true",
       onlyRenegotiated: params.get("onlyRenegotiated") === "true",
+      onlyDueToday: params.get("onlyDueToday") === "true",
+      onlyUpcomingRenewal: params.get("onlyUpcomingRenewal") === "true",
     },
   };
 }

@@ -13,6 +13,8 @@ export interface ContractsUiFilters {
   onlyActive: boolean;
   onlyDelinquency: boolean;
   onlyRenegotiated: boolean;
+  onlyDueToday: boolean;
+  onlyUpcomingRenewal: boolean;
   page: number;
 }
 
@@ -24,6 +26,8 @@ export const EMPTY_CONTRACTS_FILTERS: ContractsUiFilters = {
   onlyActive: false,
   onlyDelinquency: false,
   onlyRenegotiated: false,
+  onlyDueToday: false,
+  onlyUpcomingRenewal: false,
   page: 1,
 };
 
@@ -35,6 +39,8 @@ export function buildInitialFilters(
     onlyActive: Boolean(initialFilter?.onlyActive),
     onlyDelinquency: Boolean(initialFilter?.onlyDelinquency),
     onlyRenegotiated: Boolean(initialFilter?.onlyRenegotiated),
+    onlyDueToday: Boolean(initialFilter?.onlyDueToday),
+    onlyUpcomingRenewal: Boolean(initialFilter?.onlyUpcomingRenewal),
   };
 }
 
@@ -61,5 +67,7 @@ export function buildContractsListQuery(
     onlyActive: filters.onlyActive || undefined,
     onlyDelinquency: filters.onlyDelinquency || undefined,
     onlyRenegotiated: filters.onlyRenegotiated || undefined,
+    onlyDueToday: filters.onlyDueToday || undefined,
+    onlyUpcomingRenewal: filters.onlyUpcomingRenewal || undefined,
   };
 }

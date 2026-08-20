@@ -62,6 +62,8 @@ describe("buildContractsListQuery", () => {
       onlyActive: undefined,
       onlyDelinquency: undefined,
       onlyRenegotiated: undefined,
+      onlyDueToday: undefined,
+      onlyUpcomingRenewal: undefined,
     });
   });
 
@@ -73,6 +75,8 @@ describe("buildContractsListQuery", () => {
         search: "joão",
         onlyActive: true,
         onlyDelinquency: true,
+        onlyDueToday: true,
+        onlyUpcomingRenewal: true,
         page: 2,
       }),
     ).toEqual({
@@ -82,9 +86,11 @@ describe("buildContractsListQuery", () => {
       products: ["prod-1"],
       startDate: undefined,
       endDate: undefined,
-      onlyActive: true,
-      onlyDelinquency: true,
-      onlyRenegotiated: undefined,
+        onlyActive: true,
+        onlyDelinquency: true,
+        onlyRenegotiated: undefined,
+        onlyDueToday: true,
+        onlyUpcomingRenewal: true,
     });
     expect(ALL_PRODUCTS).toBe("TODOS");
   });
