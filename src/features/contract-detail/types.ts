@@ -1,8 +1,10 @@
 import type {
   ClientAddress,
+  ContractStatusHistoryItem,
   OverdueCollectionItem,
   ResponsibleType,
 } from "@/services/dashboard/dashboard.types";
+import type { DetailGuarantor } from "@/services/activities/installment-detail.types";
 
 export type StatusColor = "blue" | "amber" | "red" | "green";
 
@@ -27,6 +29,7 @@ export interface ContractDetailView {
   businessName: string;
   clientName: string;
   clientTaxId?: string;
+  clientEmail?: string;
   clientAddress?: string;
   address?: ClientAddress;
   responsibleName?: string;
@@ -45,6 +48,20 @@ export interface ContractDetailView {
   alertDays?: number;
   alertType?: AlertType;
   timeline: TimelineStep[];
+  /**
+   * AUREA-346: dados adicionais do contrato, só populados no fluxo da
+   * Carteira (mapPortfolioDetail) — o fluxo de cobrança/preventivo (Home)
+   * usa outra fonte (GET /activities/installments/:id) que não os tem.
+   */
+  contractStatus?: string;
+  productName?: string;
+  companyName?: string;
+  totalWithIof?: number;
+  iofAmount?: number;
+  tacAmount?: number;
+  originationConsultantName?: string;
+  guarantor?: DetailGuarantor | null;
+  statusHistory?: ContractStatusHistoryItem[];
 }
 
 export interface ActivityInstallmentLocationState {

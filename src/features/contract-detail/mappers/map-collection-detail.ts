@@ -71,6 +71,16 @@ function mapPortfolioDetail(
     alertDays: Math.max(0, -daysFromDue),
     alertType: "renewal" satisfies AlertType,
     timeline,
+    clientEmail: detail.client.email,
+    contractStatus: detail.contract.status,
+    productName: detail.contract.productName,
+    companyName: detail.contract.companyName,
+    totalWithIof: detail.contract.totalWithIof,
+    iofAmount: detail.contract.iofAmount,
+    tacAmount: detail.contract.tacAmount,
+    originationConsultantName: detail.contract.originationConsultantName,
+    guarantor: detail.guarantor,
+    statusHistory: detail.statusHistory,
   };
 }
 
