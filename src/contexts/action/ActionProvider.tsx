@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import {
   ActionContext,
@@ -61,9 +61,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setOnComplete(() => () => {});
   }, []);
 
-  useEffect(() => {
-    if (!user) clearActionData();
-  }, [user, clearActionData]);
+  if (!user && client !== null) {
+    clearActionData();
+  }
 
   return (
     <ActionContext.Provider
