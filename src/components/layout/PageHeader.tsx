@@ -16,15 +16,16 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
 
   return (
     <div
-      className={cn("bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8", className)}
+      className={cn("bg-brand-navy px-5 pb-6 pt-8 md:px-8 md:pt-8", className)}
     >
       {/*
         No mobile a AppSidebar (única fonte da marca "aurea" / "Portal
         Parceiro") fica escondida — sem BottomNav equivalente, a marca
         desaparecia por completo do app depois do login. md:hidden porque
-        no desktop a sidebar já cobre isso.
+        no desktop a sidebar já cobre isso. pt-8 (era pt-12): essa linha
+        ocupa parte do espaço que antes era só padding em branco.
       */}
-      <div className="mb-3 flex items-center gap-1.5 md:hidden">
+      <div className="mb-2 flex items-center gap-1.5 md:hidden">
         <AureaLogoMark size={16} className="text-white" />
         <span className="font-fraunces text-sm font-bold text-white">
           aurea
