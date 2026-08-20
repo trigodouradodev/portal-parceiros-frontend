@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import {
   ActionContext,
@@ -67,15 +61,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setOnComplete(() => () => {});
   }, []);
 
-  const userId = user?.id ?? null;
-  const previousUserIdRef = useRef<string | null>(userId);
-
   useEffect(() => {
-    if (previousUserIdRef.current !== userId) {
-      clearActionData();
-    }
-    previousUserIdRef.current = userId;
-  }, [userId, clearActionData]);
+    if (!user) clearActionData();
+  }, [user, clearActionData]);
 
   return (
     <ActionContext.Provider

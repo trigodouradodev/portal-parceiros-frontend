@@ -11,13 +11,6 @@ import { TaskTab } from "@/features/dashboard/constants/task-tab";
 import { testUser } from "@/test/render";
 import type { UserProfile } from "@/services/auth/types";
 
-const otherUser: UserProfile = {
-  ...testUser,
-  id: "user-2",
-  email: "ianca@test.com",
-  full_name: "Ianca",
-};
-
 function Probe() {
   const { client, setActionData } = useActionContext();
 
@@ -64,9 +57,6 @@ function Harness({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={value}>
-      <button type="button" onClick={() => setUser(otherUser)}>
-        switch-user
-      </button>
       <button type="button" onClick={() => setUser(null)}>
         logout
       </button>
@@ -76,23 +66,6 @@ function Harness({ children }: { children: ReactNode }) {
 }
 
 describe("ActionProvider", () => {
-  it("clears action data when the authenticated user changes", async () => {
-    const user = userEvent.setup();
-    render(
-      <Harness>
-        <ActionProvider>
-          <Probe />
-        </ActionProvider>
-      </Harness>,
-    );
-
-    await user.click(screen.getByRole("button", { name: "set-action" }));
-    expect(screen.getByText("cliente:Cliente A")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "switch-user" }));
-    expect(screen.getByText("sem-cliente")).toBeInTheDocument();
-  });
-
   it("clears action data on logout", async () => {
     const user = userEvent.setup();
     render(
