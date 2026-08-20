@@ -1,3 +1,4 @@
+import { AureaLogoMark } from "@/components/brand/AureaLogo";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getFirstName, getGreeting, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,21 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
     <div
       className={cn("bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8", className)}
     >
+      {/*
+        No mobile a AppSidebar (única fonte da marca "aurea" / "Portal
+        Parceiro") fica escondida — sem BottomNav equivalente, a marca
+        desaparecia por completo do app depois do login. md:hidden porque
+        no desktop a sidebar já cobre isso.
+      */}
+      <div className="mb-3 flex items-center gap-1.5 md:hidden">
+        <AureaLogoMark size={16} className="text-white" />
+        <span className="font-fraunces text-sm font-bold text-white">
+          aurea
+        </span>
+        <span className="text-[10px] tracking-widest text-white/40 uppercase">
+          Portal Parceiro
+        </span>
+      </div>
       <div className="mb-1 flex items-start justify-between md:mb-3">
         <div>
           <h1 className="font-fraunces text-2xl font-bold text-white md:text-3xl">
