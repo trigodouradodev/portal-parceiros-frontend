@@ -11,6 +11,7 @@ import type {
   QueueSegmentCode,
   QueueTone,
 } from "@/services/activities/activity.enums";
+import type { DetailGuarantor } from "@/services/activities/installment-detail.types";
 
 export interface RenewalMonthBucket {
   month: string; // 'YYYY-MM'
@@ -102,6 +103,7 @@ export interface ClientInfo {
   name: string;
   taxId: string;
   phone?: string;
+  email?: string;
   address?: ClientAddress;
 }
 
@@ -248,10 +250,35 @@ export interface ActivityHistory {
 export interface ContractDetailInfo {
   id: string;
   number: string;
+  /** Status bruto do contrato (contracts.status) — não editável no portal. */
+  status: string;
   totalInstallments: number;
   totalAmount: number;
+  totalWithIof?: number;
+  iofAmount?: number;
+  /** TAC (Tarifa de Abertura de Crédito) da proposta de origem. */
+  tacAmount?: number;
+  /** Produto financeiro da proposta de origem. */
+  productName?: string;
+  /** Empresa/origem do contrato (ex.: CELCOIN). */
+  companyName?: string;
+  /**
+   * Consultor responsável pela PROPOSTA original — pode diferir do consultor
+   * atual do contrato (`responsible`), se o contrato foi reatribuído depois.
+   */
+  originationConsultantName?: string;
   startDate?: string;
   endDate?: string;
+}
+
+/** Item do histórico de mudança de status do contrato. */
+export interface ContractStatusHistoryItem {
+  id: string;
+  oldStatus: string;
+  newStatus: string;
+  reason?: string;
+  changedByName: string;
+  createdAt: string;
 }
 
 export interface InstallmentDetailInfo {
@@ -270,4 +297,7 @@ export interface CollectionDetail {
   responsible?: ContractResponsible;
   installment: InstallmentDetailInfo;
   followups: FollowUpHistoryItem[];
+  /** Avalista da proposta de origem — null quando ausente/vazio no JSON. */
+  guarantor?: DetailGuarantor | null;
+  statusHistory: ContractStatusHistoryItem[];
 }

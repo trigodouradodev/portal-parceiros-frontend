@@ -22,6 +22,7 @@ interface TimelineStepItemProps {
    * `false` mantém o fluxo de tarefas (Home) byte a byte como está hoje.
    */
   dedupeCtaLabel?: boolean;
+  actionLabel?: string;
 }
 
 export function TimelineStepItem({
@@ -30,6 +31,7 @@ export function TimelineStepItem({
   onRegisterAction,
   showAction = true,
   dedupeCtaLabel = false,
+  actionLabel,
 }: TimelineStepItemProps) {
   const isEvent = !step.tone;
   const toneMeta = step.tone ? TONE_META[step.tone] : null;
@@ -37,9 +39,9 @@ export function TimelineStepItem({
   const labelClassName = getLabelClassName(step.status);
   const iconClassName = getIconClassName(step.status);
   const contentClassName = isLast ? "pb-0" : "pb-4";
-  const ctaLabel = dedupeCtaLabel
-    ? buildCtaLabel(step.label)
-    : `Registrar ${step.label}`;
+  const ctaLabel =
+    actionLabel ??
+    (dedupeCtaLabel ? buildCtaLabel(step.label) : `Registrar ${step.label}`);
 
   return (
     <div className={`min-w-0 flex-1 ${contentClassName}`}>

@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import { AureaLogoMark } from "@/components/brand/AureaLogo";
 import type { ContractDetailView } from "@/features/contract-detail/types";
 import { cn } from "@/lib/utils";
 
@@ -13,17 +14,33 @@ interface DetailPageHeaderProps {
   detail: ContractDetailView;
   partnerName?: string;
   onBack: () => void;
+  hideStatus?: boolean;
 }
 
 export function DetailPageHeader({
   detail,
   partnerName,
   onBack,
+  hideStatus = false,
 }: DetailPageHeaderProps) {
   const { businessName, contractCode, statusLabel, statusColor } = detail;
 
   return (
-    <div className="bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8">
+    <div className="bg-brand-navy px-5 pb-6 pt-8 md:px-8 md:pt-8">
+      {/*
+        AppSidebar (única fonte da marca) fica escondida no mobile — ver
+        PageHeader.tsx. pt-8 (era pt-12): essa linha ocupa parte do espaço
+        que antes era só padding em branco.
+      */}
+      <div className="mb-2 flex items-center gap-1.5 md:hidden">
+        <AureaLogoMark size={16} className="text-white" />
+        <span className="font-fraunces text-sm font-bold text-white">
+          aurea
+        </span>
+        <span className="text-[10px] tracking-widest text-white/40 uppercase">
+          Portal Parceiro
+        </span>
+      </div>
       <div className="mb-4 flex items-center justify-between">
         <button
           type="button"
@@ -44,15 +61,17 @@ export function DetailPageHeader({
             {partnerName ? ` · Parceiro ${partnerName}` : ""}
           </p>
         </div>
-        <span
-          className={cn(
-            "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold",
-            statusBadgeStyle[statusColor],
-          )}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-current" />
-          {statusLabel}
-        </span>
+        {!hideStatus && (
+          <span
+            className={cn(
+              "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold",
+              statusBadgeStyle[statusColor],
+            )}
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-current" />
+            {statusLabel}
+          </span>
+        )}
       </div>
     </div>
   );

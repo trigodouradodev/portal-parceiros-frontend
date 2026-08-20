@@ -224,14 +224,10 @@ export function DashboardPage() {
 
   const handleDetailOpen = (item: OverdueCollectionItem) => {
     writeTaskTabCookie(TaskTab.Charge);
-    const installment = item.installment.number;
     const installmentId = item.installment.id;
-    navigate(
-      `/contracts/${item.contract.id}?mode=${TaskTab.Charge}&installment=${installment}&installmentId=${installmentId}`,
-      {
-        state: { item, mode: TaskTab.Charge },
-      },
-    );
+    navigate(`/activities/installments/${installmentId}`, {
+      state: { item },
+    });
   };
 
   const launchChargeAction = async (

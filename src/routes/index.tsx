@@ -7,7 +7,12 @@ import { CarteiraPage } from "@/features/carteira";
 import { ContractListPage } from "@/features/carteira/ContractListPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { LoginPage } from "@/features/login/LoginPage";
-import { ContractDetailPage } from "@/features/contract-detail";
+import {
+  ActivityInstallmentDetailPage,
+  NewPortfolioFollowUpPage,
+  PortfolioContractDetailPage,
+  PortfolioInstallmentDetailPage,
+} from "@/features/contract-detail";
 import { OriginacaoPage } from "@/features/originacao";
 import { PerformancePage } from "@/features/performance";
 import { ProfilePage } from "@/features/profile";
@@ -29,18 +34,30 @@ export const router = createBrowserRouter([
         element: <RegisterPreventiveActionPage />,
       },
       {
+        path: "/carteira/contratos/:contractId/parcelas/:installmentNumber/follow-ups/novo",
+        element: <NewPortfolioFollowUpPage />,
+      },
+      {
         element: <Layout />,
         children: [
           { index: true, element: <DashboardPage /> },
           { path: "/carteira", element: <CarteiraPage /> },
           { path: "/carteira/contratos", element: <ContractListPage /> },
+          {
+            path: "/carteira/contratos/:contractId",
+            element: <PortfolioContractDetailPage />,
+          },
+          {
+            path: "/carteira/contratos/:contractId/parcelas/:installmentNumber",
+            element: <PortfolioInstallmentDetailPage />,
+          },
+          {
+            path: "/activities/installments/:installmentId",
+            element: <ActivityInstallmentDetailPage />,
+          },
           { path: "/originacao", element: <OriginacaoPage /> },
           { path: "/performance", element: <PerformancePage /> },
           { path: "/profile", element: <ProfilePage /> },
-          {
-            path: "/contracts/:contractId",
-            element: <ContractDetailPage />,
-          },
           { path: "*", element: <NotFound /> },
         ],
       },

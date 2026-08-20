@@ -133,6 +133,9 @@ export function RegisterChargeStepContent({
         note={{
           value: note,
           onChange: setNote,
+          placeholder: isVisitTask
+            ? "Descreva detalhes da visita..."
+            : "Descreva detalhes do contato...",
           required: noteRequired,
           hint: noteHint,
           invalid: showNoteValidation,
