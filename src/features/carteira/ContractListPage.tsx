@@ -172,6 +172,20 @@ export function ContractListPage() {
                 patchFilters({ onlyRenegotiated: checked })
               }
             />
+            <Checkbox
+              label="Vencem hoje"
+              checked={filters.onlyDueToday}
+              onCheckedChange={(checked) =>
+                patchFilters({ onlyDueToday: checked })
+              }
+            />
+            <Checkbox
+              label="Renovação próxima"
+              checked={filters.onlyUpcomingRenewal}
+              onCheckedChange={(checked) =>
+                patchFilters({ onlyUpcomingRenewal: checked })
+              }
+            />
           </div>
         </section>
 

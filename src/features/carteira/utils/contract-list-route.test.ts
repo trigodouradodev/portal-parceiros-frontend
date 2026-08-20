@@ -18,6 +18,8 @@ describe("buildContractListPath", () => {
     expect(path).toContain("onlyDelinquency=true");
     expect(path).not.toContain("onlyActive");
     expect(path).not.toContain("onlyRenegotiated");
+    expect(path).not.toContain("onlyDueToday");
+    expect(path).not.toContain("onlyUpcomingRenewal");
   });
 });
 
@@ -25,6 +27,8 @@ describe("parseContractListSearchParams", () => {
   it("round-trips through buildContractListPath", () => {
     const path = buildContractListPath("Contratos Renegociados", {
       onlyRenegotiated: true,
+      onlyDueToday: true,
+      onlyUpcomingRenewal: true,
     });
     const [, query] = path.split("?");
     const { title, initialFilter } = parseContractListSearchParams(
@@ -35,6 +39,8 @@ describe("parseContractListSearchParams", () => {
       onlyActive: false,
       onlyDelinquency: false,
       onlyRenegotiated: true,
+      onlyDueToday: true,
+      onlyUpcomingRenewal: true,
     });
   });
 
