@@ -38,6 +38,12 @@ function mapPortfolioDetail(
   const daysFromDue = getDaysFromDueDate(detail.installment.dueDate);
   const status = getInstallmentStatus(-daysFromDue);
   const address = detail.client.address;
+  // A parcela mostrada aqui é "auto-resolvida" pelo backend (não escolhida
+  // pelo consultor) — pode estar de fato atrasada. Antes disso o badge
+  // sempre usava alertType "renewal" com os dias zerados (Math.max(0, ...)),
+  // então uma parcela atrasada aparecia como "Vence hoje" em vez de "Xd
+  // atraso". Aqui alternamos o tipo/valor conforme o sinal real do atraso.
+  const isOverdue = daysFromDue > 0;
 
   return {
     contractId: detail.contract.id,
@@ -68,8 +74,8 @@ function mapPortfolioDetail(
       ? formatDate(detail.contract.endDate)
       : undefined,
     nextDue: formatDate(detail.installment.dueDate),
-    alertDays: Math.max(0, -daysFromDue),
-    alertType: "renewal" satisfies AlertType,
+    alertDays: isOverdue ? daysFromDue : Math.max(0, -daysFromDue),
+    alertType: (isOverdue ? "overdue" : "renewal") satisfies AlertType,
     timeline,
     clientEmail: detail.client.email,
     contractStatus: detail.contract.status,
