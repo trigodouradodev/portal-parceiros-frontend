@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ArrowLeft,
   CalendarDays,
   CreditCard,
   Eye,
@@ -34,6 +33,8 @@ import { Form, FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
+import { OriginacaoTaskHeader } from "@/features/originacao/components/OriginacaoTaskHeader";
+import { OriginacaoTaskLayout } from "@/features/originacao/components/OriginacaoTaskLayout";
 import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
@@ -62,18 +63,21 @@ import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-
 
 interface SimulacaoFormProps {
   prefill: DadosElegibilidade | null;
-  hasList: boolean;
-  onViewList: () => void;
+  onBack: () => void;
+  backLabel: string;
   onCompleted: (snapshot: SimulacaoSnapshot) => void;
+  onLogout?: () => void;
 }
 
 const TODAY_ISO = todayIsoLocal();
+const FORM_ID = "simulation-form";
 
 export function SimulacaoForm({
   prefill,
-  hasList,
-  onViewList,
+  onBack,
+  backLabel,
   onCompleted,
+  onLogout,
 }: SimulacaoFormProps) {
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [draftDueDate, setDraftDueDate] = useState<Date | undefined>(undefined);
@@ -145,33 +149,34 @@ export function SimulacaoForm({
   }
 
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <div className="mb-6">
-        <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-          Simulação
-        </h2>
-        <p className="mt-1 text-sm text-[#6B7080]">
-          Simule uma cotação de crédito para o cliente.
-        </p>
-        {hasList ? (
-          <button
-            type="button"
-            onClick={onViewList}
-            className="mt-2 flex items-center gap-1 text-sm font-semibold text-brand-navy"
-          >
-            <ArrowLeft size={14} />
-            Ver lista de simulações
-          </button>
-        ) : null}
-      </div>
-
-      <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <Form {...form}>
-          <form
-            className="flex flex-col gap-5"
-            onSubmit={form.handleSubmit(onContinue, scrollToFirstError)}
-            noValidate
-          >
+    <OriginacaoTaskLayout
+      header={
+        <OriginacaoTaskHeader
+          title="Simulação"
+          subtitle="Simule uma cotação de crédito para o cliente."
+          backLabel={backLabel}
+          onBack={onBack}
+          onLogout={onLogout}
+        />
+      }
+      footer={
+        <Button
+          type="submit"
+          form={FORM_ID}
+          variant="yellow"
+          className="h-12 min-h-12 min-w-0 flex-1 rounded-2xl"
+        >
+          Continuar
+        </Button>
+      }
+    >
+      <Form {...form}>
+        <form
+          id={FORM_ID}
+          className="flex flex-col gap-5"
+          onSubmit={form.handleSubmit(onContinue, scrollToFirstError)}
+          noValidate
+        >
             <FormField
               control={form.control}
               name="nome"
@@ -408,17 +413,8 @@ export function SimulacaoForm({
                 </div>
               </div>
             ) : null}
-
-            <Button
-              type="submit"
-              variant="yellow"
-              className="mt-0 h-11 w-full rounded-2xl"
-            >
-              Continuar
-            </Button>
           </form>
         </Form>
-      </section>
 
       <Dialog open={dueDateDialogOpen} onOpenChange={setDueDateDialogOpen}>
         <DialogContent className="max-w-[340px]">
@@ -462,6 +458,6 @@ export function SimulacaoForm({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </OriginacaoTaskLayout>
   );
 }

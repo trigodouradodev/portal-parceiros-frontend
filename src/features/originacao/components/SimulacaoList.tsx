@@ -16,7 +16,8 @@ export function SimulacaoList({
   onStartProposal,
 }: SimulacaoListProps) {
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
+    <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-8 md:px-8">
+      <div className="w-full max-w-xl">
       <div className="mb-6 flex items-start justify-between gap-3">
         <div>
           <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
@@ -88,6 +89,7 @@ export function SimulacaoList({
             </Button>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

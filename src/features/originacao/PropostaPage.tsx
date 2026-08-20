@@ -11,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { OriginacaoProgress } from "@/features/originacao/components/OriginacaoProgress";
+import { OriginacaoTaskLayout } from "@/features/originacao/components/OriginacaoTaskLayout";
 import { ActivityIncomeSection } from "@/features/originacao/components/proposta/ActivityIncomeSection";
 import { AddressSection } from "@/features/originacao/components/proposta/AddressSection";
 import { DocumentsSection } from "@/features/originacao/components/proposta/DocumentsSection";
@@ -49,7 +50,8 @@ function ProposalList({
   onOpen: (id: string) => void;
 }) {
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
+    <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-8 md:px-8">
+      <div className="w-full max-w-xl">
       <div className="mb-6">
         <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
           Propostas
@@ -138,6 +140,7 @@ function ProposalList({
           </div>
         ))}
       </div>
+      </div>
     </div>
   );
 }
@@ -164,7 +167,7 @@ function ProposalSuccess({
       />
 
       <div className="px-5 pt-4 pb-8 md:px-8">
-        <section className="mx-auto w-full max-w-2xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
+        <section className="w-full max-w-xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3">
             <Alert variant="success">
               <CheckCircle2 size={22} />
@@ -324,54 +327,19 @@ function ProposalWizard({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col">
-      <ProposalTaskHeader
-        title={`${PROPOSAL_STEPS[step]} · ${step + 1}/${PROPOSAL_STEPS.length}`}
-        simulation={simulation}
-        progress={((step + 1) / PROPOSAL_STEPS.length) * 100}
-        backLabel="Salvar rascunho e ver todas as propostas"
-        onBack={handleClose}
-        onLogout={onLogout}
-      />
-
-      <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-5 pt-4 pb-4 md:px-8">
-        <section className="mx-auto w-full min-w-0 max-w-2xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-          <Form {...form}>
-            <div className={step === 0 ? "" : "hidden"}>
-              <RegistrationSection
-                product={simulation.produto}
-                rate={simulation.taxa}
-                cpf={simulation.cpf}
-                name={simulation.nome}
-                birthDate={simulation.nascimento}
-                email={simulation.email}
-                phone={simulation.celular}
-              />
-            </div>
-            <div className={step === 1 ? "" : "hidden"}>
-              <ActivityIncomeSection />
-            </div>
-            <div className={step === 2 ? "" : "hidden"}>
-              <AddressSection />
-            </div>
-            <div className={step === 3 ? "" : "hidden"}>
-              <PartnerOpinionSection />
-            </div>
-            <div className={step === 4 ? "" : "hidden"}>
-              <GuarantorSection />
-            </div>
-            <div className={step === 5 ? "" : "hidden"}>
-              <FinancialSection />
-            </div>
-            <div className={step === 6 ? "" : "hidden"}>
-              <DocumentsSection />
-            </div>
-          </Form>
-        </section>
-      </div>
-
-      <div className="shrink-0 border-t border-[#E2E4EC] bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-8">
-        <div className="mx-auto flex w-full max-w-2xl gap-2">
+    <OriginacaoTaskLayout
+      header={
+        <ProposalTaskHeader
+          title={`${PROPOSAL_STEPS[step]} · ${step + 1}/${PROPOSAL_STEPS.length}`}
+          simulation={simulation}
+          progress={((step + 1) / PROPOSAL_STEPS.length) * 100}
+          backLabel="Salvar rascunho e ver todas as propostas"
+          onBack={handleClose}
+          onLogout={onLogout}
+        />
+      }
+      footer={
+        <>
           {step > 0 ? (
             <Button
               variant="outline"
@@ -390,8 +358,40 @@ function ProposalWizard({
               ? "Concluir proposta"
               : "Avançar"}
           </Button>
+        </>
+      }
+    >
+      <Form {...form}>
+        <div className={step === 0 ? "" : "hidden"}>
+          <RegistrationSection
+            product={simulation.produto}
+            rate={simulation.taxa}
+            cpf={simulation.cpf}
+            name={simulation.nome}
+            birthDate={simulation.nascimento}
+            email={simulation.email}
+            phone={simulation.celular}
+          />
         </div>
-      </div>
-    </div>
+        <div className={step === 1 ? "" : "hidden"}>
+          <ActivityIncomeSection />
+        </div>
+        <div className={step === 2 ? "" : "hidden"}>
+          <AddressSection />
+        </div>
+        <div className={step === 3 ? "" : "hidden"}>
+          <PartnerOpinionSection />
+        </div>
+        <div className={step === 4 ? "" : "hidden"}>
+          <GuarantorSection />
+        </div>
+        <div className={step === 5 ? "" : "hidden"}>
+          <FinancialSection />
+        </div>
+        <div className={step === 6 ? "" : "hidden"}>
+          <DocumentsSection />
+        </div>
+      </Form>
+    </OriginacaoTaskLayout>
   );
 }
