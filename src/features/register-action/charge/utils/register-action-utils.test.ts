@@ -29,10 +29,15 @@ describe("charge flow steps", () => {
     expect(getChargeFlowSteps("visit")).toEqual([
       "Destinatário",
       "Visita",
-      "Resultado",
+      "Resultado da visita",
     ]);
     expect(getChargeStepTitle("contact", "phone")).toBe("Ligação");
+    expect(getChargeStepTitle("contact", "visit")).toBe("Resultado da visita");
     expect(getChargeStepTitle("outcome", "phone")).toBe("Resultado do contato");
+    expect(getChargeStepTitle("outcome", "visit")).toBe("Resultado da visita");
+    expect(getChargeStepTitle("outcome", "whatsapp")).toBe(
+      "Resultado do contato",
+    );
   });
 });
 

@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import { AureaLogoMark } from "@/components/brand/AureaLogo";
 import type { ContractDetailView } from "@/features/contract-detail/types";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,21 @@ export function DetailPageHeader({
   const { businessName, contractCode, statusLabel, statusColor } = detail;
 
   return (
-    <div className="bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8">
+    <div className="bg-brand-navy px-5 pb-6 pt-8 md:px-8 md:pt-8">
+      {/*
+        AppSidebar (única fonte da marca) fica escondida no mobile — ver
+        PageHeader.tsx. pt-8 (era pt-12): essa linha ocupa parte do espaço
+        que antes era só padding em branco.
+      */}
+      <div className="mb-2 flex items-center gap-1.5 md:hidden">
+        <AureaLogoMark size={16} className="text-white" />
+        <span className="font-fraunces text-sm font-bold text-white">
+          aurea
+        </span>
+        <span className="text-[10px] tracking-widest text-white/40 uppercase">
+          Portal Parceiro
+        </span>
+      </div>
       <div className="mb-4 flex items-center justify-between">
         <button
           type="button"

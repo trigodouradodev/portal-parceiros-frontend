@@ -11,7 +11,9 @@ function getContactActionLabel(contactType: PreventiveContactType): string {
 export function getChargeFlowSteps(
   contactType: PreventiveContactType,
 ): [string, string, string] {
-  return ["Destinatário", getContactActionLabel(contactType), "Resultado"];
+  const outcomeLabel =
+    contactType === "visit" ? "Resultado da visita" : "Resultado";
+  return ["Destinatário", getContactActionLabel(contactType), outcomeLabel];
 }
 
 export function getChargeStepTitle(
@@ -19,6 +21,7 @@ export function getChargeStepTitle(
   contactType: PreventiveContactType,
 ): string {
   if (step === "recipient") return "Destinatário";
+  if (contactType === "visit") return "Resultado da visita";
   if (step === "contact") return getContactActionLabel(contactType);
   return "Resultado do contato";
 }

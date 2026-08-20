@@ -18,6 +18,8 @@ describe("buildContractsParams", () => {
         onlyActive: true,
         onlyDelinquency: true,
         onlyRenegotiated: false,
+        onlyDueToday: true,
+        onlyUpcomingRenewal: true,
       }),
     ).toEqual({
       page: 2,
@@ -28,6 +30,8 @@ describe("buildContractsParams", () => {
       endDate: "2026-02-01",
       onlyActive: true,
       onlyDelinquency: true,
+      onlyDueToday: true,
+      onlyUpcomingRenewal: true,
     });
   });
 });

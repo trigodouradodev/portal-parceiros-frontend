@@ -38,6 +38,7 @@ import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { formatDate } from "@/lib/format/date";
 import { useDragScroll } from "@/hooks/useDragScroll";
 import { QuoteActivityPermissionsAlert } from "@/features/dashboard/components/QuoteActivityPermissionsAlert";
+import { buildContractListPath } from "@/features/carteira/utils/contract-list-route";
 
 const QUEUE_HIGHLIGHT_MS = 5000;
 
@@ -404,24 +405,52 @@ export function DashboardPage() {
               value={ativos}
               label="Contratos ativos"
               variant="navy"
+              onClick={() =>
+                navigate(
+                  buildContractListPath("Contratos ativos", {
+                    onlyActive: true,
+                  }),
+                )
+              }
             />
             <SummaryCard
               icon={<Clock size={18} />}
               value={vencemHoje}
               label="Vencem hoje"
               variant="amber"
+              onClick={() =>
+                navigate(
+                  buildContractListPath("Contratos que vencem hoje", {
+                    onlyDueToday: true,
+                  }),
+                )
+              }
             />
             <SummaryCard
               icon={<AlertTriangle size={18} />}
               value={emAtraso}
               label="Em atraso"
               variant="red"
+              onClick={() =>
+                navigate(
+                  buildContractListPath("Contratos em atraso", {
+                    onlyDelinquency: true,
+                  }),
+                )
+              }
             />
             <SummaryCard
               icon={<RefreshCw size={18} />}
               value={renovProx}
               label="Renovação próxima"
               variant="blue"
+              onClick={() =>
+                navigate(
+                  buildContractListPath("Contratos com renovação próxima", {
+                    onlyUpcomingRenewal: true,
+                  }),
+                )
+              }
             />
           </div>
         </div>

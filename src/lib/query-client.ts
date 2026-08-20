@@ -9,3 +9,9 @@ export const queryClient = new QueryClient({
     },
   },
 });
+
+/** Drop cached queries so the next session never reuses another user's data. */
+export function resetQueryCache() {
+  void queryClient.cancelQueries();
+  queryClient.clear();
+}
