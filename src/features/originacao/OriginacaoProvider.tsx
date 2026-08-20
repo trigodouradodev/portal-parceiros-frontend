@@ -20,7 +20,6 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
   const [simulacoes, setSimulacoes] = useState<SimulacaoSnapshot[]>([]);
   const [proposals, setProposals] = useState<ProposalSnapshot[]>([]);
   const [openProposalId, setOpenProposalId] = useState<string | null>(null);
-  const [simulationFormOpen, setSimulationFormOpen] = useState(false);
 
   const setDadosIniciais = useCallback((dados: DadosElegibilidade) => {
     setDadosIniciaisState(dados);
@@ -66,8 +65,6 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
       addSimulacao,
       proposals,
       openProposalId,
-      simulationFormOpen,
-      setSimulationFormOpen,
       startProposal,
       openProposal,
       closeProposal,
@@ -82,7 +79,6 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
       addSimulacao,
       proposals,
       openProposalId,
-      simulationFormOpen,
       startProposal,
       openProposal,
       closeProposal,

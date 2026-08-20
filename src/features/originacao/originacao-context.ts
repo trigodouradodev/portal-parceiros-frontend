@@ -17,8 +17,6 @@ export interface OriginacaoContextValue {
   addSimulacao: (snapshot: SimulacaoSnapshot) => void;
   proposals: ProposalSnapshot[];
   openProposalId: string | null;
-  simulationFormOpen: boolean;
-  setSimulationFormOpen: (open: boolean) => void;
   startProposal: (simulation: SimulacaoSnapshot) => void;
   openProposal: (id: string) => void;
   closeProposal: () => void;

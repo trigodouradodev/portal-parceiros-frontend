@@ -51,7 +51,7 @@ function ProposalList({
 }) {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-8 md:px-8">
-      <div className="w-full max-w-xl">
+      <div className="mx-auto w-full max-w-2xl">
       <div className="mb-6">
         <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
           Propostas
@@ -167,7 +167,7 @@ function ProposalSuccess({
       />
 
       <div className="px-5 pt-4 pb-8 md:px-8">
-        <section className="w-full max-w-xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
+        <section className="mx-auto w-full max-w-2xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3">
             <Alert variant="success">
               <CheckCircle2 size={22} />

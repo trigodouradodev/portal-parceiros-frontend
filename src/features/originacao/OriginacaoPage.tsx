@@ -18,20 +18,15 @@ interface ShellContext {
 
 function OriginacaoLayout() {
   const { onMobileLogout, setHideBottomNav } = useOutletContext<ShellContext>();
-  const {
-    activeTab,
-    setActiveTab,
-    simulacoes,
-    openProposalId,
-    simulationFormOpen,
-  } = useOriginacao();
+  const { activeTab, setActiveTab, simulacoes, openProposalId } =
+    useOriginacao();
   const propostaLocked = simulacoes.length === 0;
-  const focusedTask = Boolean(openProposalId) || simulationFormOpen;
+  const focusedProposal = Boolean(openProposalId);
 
   useEffect(() => {
-    setHideBottomNav?.(focusedTask);
+    setHideBottomNav?.(focusedProposal);
     return () => setHideBottomNav?.(false);
-  }, [focusedTask, setHideBottomNav]);
+  }, [focusedProposal, setHideBottomNav]);
 
   function goTo(tab: string) {
     if (tab === "proposta" && propostaLocked) return;
@@ -40,18 +35,22 @@ function OriginacaoLayout() {
 
   return (
     <PageContainer
-      withBottomNav={!focusedTask}
-      className="min-h-0 min-w-0 overflow-hidden"
+      withBottomNav={!focusedProposal}
+      className={
+        focusedProposal ? "min-h-0 min-w-0 overflow-hidden" : undefined
+      }
     >
-      {focusedTask ? null : <PageHeader onLogout={onMobileLogout} />}
+      {focusedProposal ? null : <PageHeader onLogout={onMobileLogout} />}
       <Tabs
         value={activeTab}
         onValueChange={goTo}
-        className="flex min-h-0 min-w-0 flex-1 flex-col"
+        className={
+          focusedProposal ? "flex min-h-0 min-w-0 flex-1 flex-col" : undefined
+        }
       >
-        {focusedTask ? null : (
-          <div className="max-w-xl px-5 pt-5 md:px-8">
-            <TabsList className="w-full">
+        {focusedProposal ? null : (
+          <div className="px-5 pt-5 md:px-8">
+            <TabsList className="md:w-[26rem]">
               <TabsTrigger value="elegibilidade">Elegibilidade</TabsTrigger>
               <TabsTrigger value="simulacao">Simulação</TabsTrigger>
               <TabsTrigger
@@ -71,21 +70,19 @@ function OriginacaoLayout() {
           </div>
         )}
 
-        <TabsContent
-          value="elegibilidade"
-          className="mt-0 flex min-h-0 flex-1 flex-col"
-        >
+        <TabsContent value="elegibilidade" className="mt-0">
           <ElegibilidadePage />
         </TabsContent>
-        <TabsContent
-          value="simulacao"
-          className="mt-0 flex min-h-0 flex-1 flex-col"
-        >
+        <TabsContent value="simulacao" className="mt-0">
           <SimulacaoPage />
         </TabsContent>
         <TabsContent
           value="proposta"
-          className="mt-0 flex min-h-0 flex-1 flex-col"
+          className={
+            focusedProposal
+              ? "mt-0 flex min-h-0 min-w-0 flex-1 flex-col"
+              : "mt-0"
+          }
         >
           <PropostaPage />
         </TabsContent>

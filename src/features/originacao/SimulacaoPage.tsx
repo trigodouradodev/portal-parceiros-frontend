@@ -1,24 +1,16 @@
-import { useEffect, useLayoutEffect, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import { SimulacaoList } from "@/features/originacao/components/SimulacaoList";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import type { SimulacaoSnapshot } from "@/features/originacao/types";
 
-interface ShellContext {
-  onMobileLogout?: () => void;
-}
-
 export function SimulacaoPage() {
-  const { onMobileLogout } = useOutletContext<ShellContext>();
   const {
     dadosIniciais,
     consumeDadosIniciais,
     simulacoes,
     addSimulacao,
     startProposal,
-    setActiveTab,
-    setSimulationFormOpen,
   } = useOriginacao();
   const [mode, setMode] = useState<"list" | "form">(
     dadosIniciais ? "form" : "list",
@@ -34,11 +26,6 @@ export function SimulacaoPage() {
     consumeDadosIniciais();
   }, [dadosIniciais, consumeDadosIniciais]);
 
-  useLayoutEffect(() => {
-    setSimulationFormOpen(mode === "form");
-    return () => setSimulationFormOpen(false);
-  }, [mode, setSimulationFormOpen]);
-
   function handleNewSimulation() {
     setFormPrefill(null);
     setFormKey((key) => key + 1);
@@ -48,13 +35,6 @@ export function SimulacaoPage() {
   function handleCompleted(snapshot: SimulacaoSnapshot) {
     addSimulacao(snapshot);
     setMode("list");
-  }
-
-  function handleBack() {
-    setMode("list");
-    if (simulacoes.length === 0) {
-      setActiveTab("elegibilidade");
-    }
   }
 
   if (mode === "list") {
@@ -71,14 +51,9 @@ export function SimulacaoPage() {
     <SimulacaoForm
       key={formKey}
       prefill={formPrefill}
-      backLabel={
-        simulacoes.length > 0
-          ? "Voltar para a lista de simulações"
-          : "Voltar para elegibilidade"
-      }
-      onBack={handleBack}
+      hasList={simulacoes.length > 0}
+      onViewList={() => setMode("list")}
       onCompleted={handleCompleted}
-      onLogout={onMobileLogout}
     />
   );
 }
