@@ -161,23 +161,6 @@ export function RegistrationSection({
 
       <FormField
         control={control}
-        name="registration.occupation"
-        render={({ field, fieldState }) => (
-          <InputField
-            name={field.name}
-            label="Profissão"
-            value={field.value}
-            onChange={field.onChange}
-            icon={<User size={16} />}
-            placeholder="Informe a profissão"
-            required
-            error={fieldState.error?.message}
-          />
-        )}
-      />
-
-      <FormField
-        control={control}
         name="registration.activityCategories"
         render={({ field, fieldState }) => (
           <SelectDialogField
@@ -206,6 +189,23 @@ export function RegistrationSection({
           )}
         />
       ) : null}
+
+      <FormField
+        control={control}
+        name="registration.occupation"
+        render={({ field, fieldState }) => (
+          <InputField
+            name={field.name}
+            label="Profissão"
+            value={field.value}
+            onChange={field.onChange}
+            icon={<User size={16} />}
+            placeholder="Informe a profissão"
+            required
+            error={fieldState.error?.message}
+          />
+        )}
+      />
 
       <InputField
         label="Email"
