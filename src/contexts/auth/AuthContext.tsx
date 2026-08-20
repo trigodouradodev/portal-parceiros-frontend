@@ -7,6 +7,7 @@ import {
   AUTH_TOKEN_REFRESHED_EVENT,
   type AuthTokenRefreshedDetail,
 } from "@/lib/api/auth-events";
+import { resetQueryCache } from "@/lib/query-client";
 
 const readStoredUser = (): User | null => {
   const raw = localStorage.getItem("user");
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem("access_token", response.accessToken);
       localStorage.setItem("refresh_token", response.refreshToken);
       localStorage.setItem("user", JSON.stringify(response.user));
+      resetQueryCache();
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -59,6 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
+    resetQueryCache();
   }, []);
 
   const updateStoredUser = useCallback((next: User) => {
