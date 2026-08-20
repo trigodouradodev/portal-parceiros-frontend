@@ -77,6 +77,10 @@ export interface ContractInstallmentItem {
   pendingAmount: number;
   paymentDate?: string;
   displayStatus: ContractInstallmentDisplayStatus;
+  /** Dias de atraso. Só vem quando displayStatus é "overdue". */
+  daysOverdue?: number;
+  /** Follow-ups já registrados pra essa parcela. Só vem quando displayStatus é "overdue". */
+  followUpsCount?: number;
 }
 
 export interface ContractInstallmentsList {

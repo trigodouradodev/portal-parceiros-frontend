@@ -1,6 +1,7 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertBadge } from "@/features/contract-detail/components/AlertBadge";
 import { installmentSubtitle } from "@/features/contract-detail/utils/installment-subtitle";
 import { useContractInstallments } from "@/hooks/useContractInstallments";
 import { cn, fmtBRL } from "@/lib/utils";
@@ -22,6 +23,23 @@ const STATUS_META: Record<
   },
 };
 
+/** AUREA-346: contagem de follow-ups já registrados pra uma parcela atrasada. */
+function FollowUpCountBadge({ count }: { count: number }) {
+  const label =
+    count === 0
+      ? "Sem follow-up"
+      : count === 1
+        ? "1 follow-up"
+        : `${count} follow-ups`;
+
+  return (
+    <span className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground">
+      <MessageSquare size={9} />
+      {label}
+    </span>
+  );
+}
+
 interface ContractInstallmentRowProps {
   item: ContractInstallmentItem;
   onOpen: () => void;
@@ -30,37 +48,48 @@ interface ContractInstallmentRowProps {
 function ContractInstallmentRow({ item, onOpen }: ContractInstallmentRowProps) {
   const meta = STATUS_META[item.displayStatus];
   const highlighted = item.displayStatus === "due_today";
+  // AUREA-346: atraso/follow-ups só existem pra parcela atrasada (o backend
+  // já garante isso — checar displayStatus aqui é só defensivo).
+  const isOverdue = item.displayStatus === "overdue";
 
   return (
     <button
       type="button"
       onClick={onOpen}
       className={cn(
-        "flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors",
+        "flex flex-col gap-2 rounded-xl border p-3 text-left transition-colors",
         highlighted
           ? "border-[#FAC775] bg-[#FDF3E0]/40"
           : "border-border hover:bg-muted/40",
       )}
     >
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-foreground">
-          Parcela {item.number}
-        </p>
-        <p className="truncate text-xs text-muted-foreground">
-          {installmentSubtitle(item)} &middot; {fmtBRL(item.totalAmount)}
-        </p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground">
+            Parcela {item.number}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {installmentSubtitle(item)} &middot; {fmtBRL(item.totalAmount)}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-1 text-[11px] font-semibold",
+              meta.className,
+            )}
+          >
+            {meta.label}
+          </span>
+          <ChevronRight size={16} className="text-muted-foreground/60" />
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <span
-          className={cn(
-            "rounded-full px-2.5 py-1 text-[11px] font-semibold",
-            meta.className,
-          )}
-        >
-          {meta.label}
-        </span>
-        <ChevronRight size={16} className="text-muted-foreground/60" />
-      </div>
+      {isOverdue && item.daysOverdue !== undefined && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <AlertBadge type="overdue" days={item.daysOverdue} />
+          <FollowUpCountBadge count={item.followUpsCount ?? 0} />
+        </div>
+      )}
     </button>
   );
 }
