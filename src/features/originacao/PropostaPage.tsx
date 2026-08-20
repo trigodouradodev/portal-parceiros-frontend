@@ -50,8 +50,7 @@ function ProposalList({
   onOpen: (id: string) => void;
 }) {
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-8 md:px-8">
-      <div className="mx-auto w-full max-w-2xl">
+    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
       <div className="mb-6">
         <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
           Propostas
@@ -140,7 +139,6 @@ function ProposalList({
           </div>
         ))}
       </div>
-      </div>
     </div>
   );
 }
@@ -167,7 +165,7 @@ function ProposalSuccess({
       />
 
       <div className="px-5 pt-4 pb-8 md:px-8">
-        <section className="mx-auto w-full max-w-2xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
+        <section className="w-full max-w-xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3">
             <Alert variant="success">
               <CheckCircle2 size={22} />
@@ -338,28 +336,6 @@ function ProposalWizard({
           onLogout={onLogout}
         />
       }
-      footer={
-        <>
-          {step > 0 ? (
-            <Button
-              variant="outline"
-              className="h-12 min-h-12 shrink-0 rounded-2xl px-6"
-              onClick={handleBack}
-            >
-              Voltar
-            </Button>
-          ) : null}
-          <Button
-            variant="yellow"
-            className="h-12 min-h-12 min-w-0 flex-1 rounded-2xl"
-            onClick={handleNext}
-          >
-            {step === PROPOSAL_STEPS.length - 1
-              ? "Concluir proposta"
-              : "Avançar"}
-          </Button>
-        </>
-      }
     >
       <Form {...form}>
         <div className={step === 0 ? "" : "hidden"}>
@@ -392,6 +368,27 @@ function ProposalWizard({
           <DocumentsSection />
         </div>
       </Form>
+
+      <div className="mt-6 flex gap-2">
+        {step > 0 ? (
+          <Button
+            variant="outline"
+            className="h-11 shrink-0 rounded-2xl px-6"
+            onClick={handleBack}
+          >
+            Voltar
+          </Button>
+        ) : null}
+        <Button
+          variant="yellow"
+          className="h-11 min-w-0 flex-1 rounded-2xl"
+          onClick={handleNext}
+        >
+          {step === PROPOSAL_STEPS.length - 1
+            ? "Concluir proposta"
+            : "Avançar"}
+        </Button>
+      </div>
     </OriginacaoTaskLayout>
   );
 }

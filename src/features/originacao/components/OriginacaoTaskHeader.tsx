@@ -25,7 +25,7 @@ export function OriginacaoTaskHeader({
 
   return (
     <header className="sticky top-0 z-20 shrink-0 bg-brand-navy px-4 pt-11 pb-3 md:static md:px-8 md:pt-5">
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full max-w-xl">
         <div className="flex items-center gap-2">
           <button
             type="button"
