@@ -1,10 +1,16 @@
+/**
+ * Iniciais pro avatar circular: primeiro + último nome. Antes usava as duas
+ * primeiras palavras, o que pegava conectores ("da", "dos", "de") ou nome do
+ * meio em vez do sobrenome — "Ianca da Silva Sena" virava "ID" em vez de "IS".
+ */
 export function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  return (first[0] + last[0]).toUpperCase();
 }
 
 export function getGreeting(): string {

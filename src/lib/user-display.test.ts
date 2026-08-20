@@ -6,10 +6,14 @@ import {
 } from "@/lib/user-display";
 
 describe("getInitials", () => {
-  it("uses up to two name parts", () => {
+  it("usa primeiro + último nome", () => {
     expect(getInitials("Ana Silva")).toBe("AS");
-    expect(getInitials("Ana Silva Costa")).toBe("AS");
+    expect(getInitials("Ana Silva Costa")).toBe("AC");
     expect(getInitials("Ana")).toBe("A");
+  });
+
+  it("ignora conectores/nome do meio (não usa a segunda palavra)", () => {
+    expect(getInitials("Ianca da Silva Sena")).toBe("IS");
   });
 });
 
