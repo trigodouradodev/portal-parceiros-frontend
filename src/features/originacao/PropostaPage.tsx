@@ -154,7 +154,7 @@ function ProposalSuccess({
   const { simulation } = proposal;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto md:max-w-xl">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto">
       <ProposalTaskHeader
         title="Proposta criada"
         simulation={simulation}
@@ -164,7 +164,7 @@ function ProposalSuccess({
       />
 
       <div className="px-5 pt-4 pb-8 md:px-8">
-        <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
+        <section className="mx-auto w-full max-w-2xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3">
             <Alert variant="success">
               <CheckCircle2 size={22} />
@@ -324,7 +324,7 @@ function ProposalWizard({
   }
 
   return (
-    <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col md:max-w-xl">
+    <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col">
       <ProposalTaskHeader
         title={`${PROPOSAL_STEPS[step]} · ${step + 1}/${PROPOSAL_STEPS.length}`}
         simulation={simulation}
@@ -335,7 +335,7 @@ function ProposalWizard({
       />
 
       <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-5 pt-4 pb-4 md:px-8">
-        <section className="min-w-0 rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
+        <section className="mx-auto w-full min-w-0 max-w-2xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
           <Form {...form}>
             <div className={step === 0 ? "" : "hidden"}>
               <RegistrationSection
@@ -371,7 +371,7 @@ function ProposalWizard({
       </div>
 
       <div className="shrink-0 border-t border-[#E2E4EC] bg-white px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:px-8">
-        <div className="flex w-full gap-2">
+        <div className="mx-auto flex w-full max-w-2xl gap-2">
           {step > 0 ? (
             <Button
               variant="outline"
