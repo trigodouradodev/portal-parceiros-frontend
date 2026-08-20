@@ -6,9 +6,10 @@ import {
 } from "@/lib/user-display";
 
 describe("getInitials", () => {
-  it("uses up to two name parts", () => {
+  it("uses the first and last name", () => {
     expect(getInitials("Ana Silva")).toBe("AS");
-    expect(getInitials("Ana Silva Costa")).toBe("AS");
+    expect(getInitials("Ana Silva Costa")).toBe("AC");
+    expect(getInitials("Rayanne de Paulo")).toBe("RP");
     expect(getInitials("Ana")).toBe("A");
   });
 });

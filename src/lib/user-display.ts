@@ -1,10 +1,12 @@
 export function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+
+  const first = parts[0][0] ?? "";
+  if (parts.length === 1) return first.toUpperCase();
+
+  const last = parts[parts.length - 1][0] ?? "";
+  return `${first}${last}`.toUpperCase();
 }
 
 export function getGreeting(): string {
