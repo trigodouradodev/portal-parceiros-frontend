@@ -1,5 +1,6 @@
 import { MapPin, MessageSquare, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { whatsappButtonClassName } from "@/components/ui/whatsapp-button";
 import { PostponeControl } from "@/features/dashboard/components/task-cards/PostponeControl";
 
 interface HeroPrimaryActionsProps {
@@ -38,7 +39,7 @@ export function HeroPrimaryActions({
       <Button
         type="button"
         size="sm"
-        className="h-9 flex-1 gap-1.5 bg-[#25D366] text-xs text-white hover:bg-[#1ebe5a]"
+        className={`h-9 flex-1 gap-1.5 text-xs ${whatsappButtonClassName}`}
         onClick={onWhatsApp}
       >
         <MessageSquare size={11} />
