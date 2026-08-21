@@ -1,30 +1,25 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  CalendarDays,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  User,
-  XCircle,
-} from "lucide-react";
+import { CheckCircle2, CreditCard, Loader2, User, XCircle } from "lucide-react";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Form, FormField } from "@/components/ui/form";
-import { InputField } from "@/components/ui/input-field";
+import { Form } from "@/components/ui/form";
+import { FormDate, FormInput } from "@/components/ui/rhf-fields";
+import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import { isEligibleCpf } from "@/features/originacao/data/eligibility";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import {
   eligibilitySchema,
   type EligibilityFormValues,
 } from "@/features/originacao/schemas/eligibility-form";
-import { todayIsoLocal } from "@/features/originacao/utils/calc-age";
+import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
+import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 import { formatCpf } from "@/lib/format/tax-id";
-import { cn } from "@/lib/utils";
 
 type Status = "idle" | "loading" | "valid" | "invalid";
 
-const TODAY_ISO = todayIsoLocal();
+const MAX_BIRTH_ISO = maxAdultBirthIso();
 
 const EMPTY_VALUES: EligibilityFormValues = {
   name: "",
@@ -38,12 +33,12 @@ export function ElegibilidadePage() {
 
   const form = useForm<EligibilityFormValues>({
     resolver: zodResolver(eligibilitySchema),
-    mode: "onChange",
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: EMPTY_VALUES,
   });
 
   const fieldsLocked = status === "loading" || status === "valid";
-  const canSubmit = form.formState.isValid && status !== "loading";
 
   function onConsultar(values: EligibilityFormValues) {
     if (status === "loading") return;
@@ -69,140 +64,99 @@ export function ElegibilidadePage() {
   }
 
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:px-8 md:pb-8">
-      <div className="mb-6 max-w-xl">
-        <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-          Elegibilidade
-        </h2>
-        <p className="mt-1 text-sm text-[#6B7080]">
-          Informe os dados do cliente para consultar a elegibilidade.
-        </p>
-      </div>
+    <OriginacaoPageFrame
+      title="Elegibilidade"
+      description="Informe os dados do cliente para consultar a elegibilidade."
+      card
+    >
+      <Form {...form}>
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={form.handleSubmit(onConsultar, scrollToFirstError)}
+          noValidate
+        >
+          <FormInput<EligibilityFormValues>
+            name="name"
+            label="Nome completo"
+            icon={<User size={16} />}
+            placeholder="Nome do cliente"
+            required
+            disabled={fieldsLocked}
+          />
+          <FormInput<EligibilityFormValues>
+            name="cpf"
+            label="CPF"
+            transform={formatCpf}
+            icon={<CreditCard size={16} />}
+            placeholder="000.000.000-00"
+            inputMode="numeric"
+            maxLength={14}
+            required
+            disabled={fieldsLocked}
+          />
+          <FormDate<EligibilityFormValues>
+            name="birthDate"
+            label="Data de nascimento"
+            max={MAX_BIRTH_ISO}
+            captionLayout="dropdown"
+            required
+            disabled={fieldsLocked}
+          />
 
-      <section className="max-w-xl rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <Form {...form}>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={form.handleSubmit(onConsultar)}
-            noValidate
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field, fieldState }) => (
-                <InputField
-                  label="Nome completo"
-                  value={field.value}
-                  onChange={field.onChange}
-                  icon={<User size={16} />}
-                  placeholder="Nome do cliente"
-                  error={fieldState.error?.message}
-                  disabled={fieldsLocked}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="cpf"
-              render={({ field, fieldState }) => (
-                <InputField
-                  label="CPF"
-                  value={field.value}
-                  onChange={(value) => field.onChange(formatCpf(value))}
-                  icon={<CreditCard size={16} />}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
-                  maxLength={14}
-                  error={
-                    field.value.replace(/\D/g, "").length === 11
-                      ? fieldState.error?.message
-                      : undefined
-                  }
-                  disabled={fieldsLocked}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="birthDate"
-              render={({ field, fieldState }) => (
-                <InputField
-                  label="Data de nascimento"
-                  value={field.value}
-                  onChange={field.onChange}
-                  icon={<CalendarDays size={16} />}
-                  type="date"
-                  max={TODAY_ISO}
-                  error={field.value ? fieldState.error?.message : undefined}
-                  disabled={fieldsLocked}
-                />
-              )}
-            />
-
-            {status === "idle" || status === "loading" ? (
-              <Button
-                type="submit"
-                className="mt-1 h-11 w-full rounded-2xl font-semibold"
-                disabled={!canSubmit}
-              >
-                {status === "loading" ? (
-                  <>
-                    <Loader2 size={15} className="animate-spin" />
-                    Consultando…
-                  </>
-                ) : (
-                  "Consultar"
-                )}
-              </Button>
-            ) : null}
-          </form>
-        </Form>
-
-        {status === "valid" || status === "invalid" ? (
-          <div className="mt-5 flex flex-col gap-3">
-            <div
-              role="status"
-              className={cn(
-                "flex items-center gap-3 rounded-2xl border-2 p-4",
-                status === "valid"
-                  ? "border-[#1D9E75] bg-[#E6F7F1] text-[#0F6E56]"
-                  : "border-[#D84040] bg-[#FEECEC] text-[#A32D2D]",
-              )}
+          {status === "idle" || status === "loading" ? (
+            <Button
+              type="submit"
+              size="pill"
+              className="mt-1 w-full"
+              disabled={status === "loading"}
             >
-              {status === "valid" ? (
-                <CheckCircle2 size={22} className="shrink-0" />
+              {status === "loading" ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  Consultando…
+                </>
               ) : (
-                <XCircle size={22} className="shrink-0" />
+                "Consultar"
               )}
-              <p className="font-fraunces text-lg font-bold">
-                {status === "valid"
-                  ? "Cliente elegível"
-                  : "Cliente não elegível"}
-              </p>
-            </div>
+            </Button>
+          ) : null}
+        </form>
+      </Form>
 
+      {status === "valid" || status === "invalid" ? (
+        <div className="mt-5 flex flex-col gap-3">
+          <Alert variant={status === "valid" ? "success" : "destructive"}>
             {status === "valid" ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="h-11 rounded-2xl"
-                onClick={handleIniciarSimulacao}
-              >
-                Iniciar simulação
-              </Button>
-            ) : null}
+              <CheckCircle2 size={22} />
+            ) : (
+              <XCircle size={22} />
+            )}
+            <AlertTitle className="font-display text-lg font-bold">
+              {status === "valid" ? "Cliente elegível" : "Cliente não elegível"}
+            </AlertTitle>
+          </Alert>
 
+          {status === "valid" ? (
             <Button
               type="button"
-              variant="ghost"
-              className="h-11 rounded-2xl"
-              onClick={handleReset}
+              variant="outline"
+              size="pill"
+              onClick={handleIniciarSimulacao}
             >
-              Consultar outro cliente
+              Iniciar simulação
             </Button>
-          </div>
-        ) : null}
-      </section>
-    </div>
+          ) : null}
+
+          <Button
+            type="button"
+            variant="ghost"
+            size="pill"
+            onClick={handleReset}
+          >
+            Consultar outro cliente
+          </Button>
+        </div>
+      ) : null}
+    </OriginacaoPageFrame>
   );
 }

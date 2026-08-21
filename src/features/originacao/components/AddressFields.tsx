@@ -1,254 +1,150 @@
-import { useEffect, useRef, useState } from "react";
-import { useFormContext } from "react-hook-form";
 import { CheckCircle2, Loader2, MapPin } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/ui/form";
-import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/ui/select-field";
+import { FieldLabel, FieldStatusMessage } from "@/components/ui/field-hint";
+import { FormInput, FormSelect } from "@/components/ui/rhf-fields";
 import { toSelectOptions } from "@/components/ui/select-option";
+import { useCepAutoFill } from "@/features/originacao/hooks/useCepAutoFill";
+import { useGeoAutoFill } from "@/features/originacao/hooks/useGeoAutoFill";
 import {
   UF_LIST,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
+import {
+  addressPath,
+  type AddressPrefix,
+} from "@/features/originacao/utils/apply-address-fill";
 import { formatAddressNumber } from "@/features/originacao/utils/format-address-number";
-import { formatCep } from "@/features/originacao/utils/format-cep";
-
-export interface AddressFill {
-  zipCode: string;
-  street: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-}
-
-type AddressPrefix = "address" | "guarantor";
-type AddressFieldName =
-  | "zipCode"
-  | "street"
-  | "number"
-  | "complement"
-  | "neighborhood"
-  | "city"
-  | "state";
-
-type GeoStatus = "idle" | "capturing" | "captured";
-type CepStatus = "idle" | "searching" | "found";
-
-function addressPath<F extends AddressFieldName>(
-  prefix: AddressPrefix,
-  field: F,
-): `${AddressPrefix}.${F}` {
-  return `${prefix}.${field}`;
-}
+import {
+  formatCep,
+  isCompleteCep,
+} from "@/features/originacao/utils/format-cep";
 
 interface AddressFieldsProps {
   namePrefix: AddressPrefix;
-  mock: AddressFill;
 }
 
-export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
-  const { control, setValue } = useFormContext<ProposalFormData>();
-  const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
-  const [cepStatus, setCepStatus] = useState<CepStatus>("idle");
-  const geoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+export function AddressFields({ namePrefix }: AddressFieldsProps) {
+  const { cepStatus, onZipCodeComplete, onZipCodeIncomplete } =
+    useCepAutoFill(namePrefix);
+  const { geoStatus, captureLocation, resetGeo } = useGeoAutoFill(namePrefix);
+  const searching = cepStatus === "searching";
+  const streetRequired = namePrefix === "address";
 
-  useEffect(() => {
-    return () => {
-      if (geoTimerRef.current) clearTimeout(geoTimerRef.current);
-      if (cepTimerRef.current) clearTimeout(cepTimerRef.current);
-    };
-  }, []);
-
-  function applyMock(zipCode: string) {
-    setValue(addressPath(namePrefix, "zipCode"), zipCode, {
-      shouldDirty: true,
-    });
-    setValue(addressPath(namePrefix, "street"), mock.street, {
-      shouldDirty: true,
-    });
-    setValue(addressPath(namePrefix, "neighborhood"), mock.neighborhood, {
-      shouldDirty: true,
-    });
-    setValue(addressPath(namePrefix, "city"), mock.city, { shouldDirty: true });
-    setValue(addressPath(namePrefix, "state"), mock.state, {
-      shouldDirty: true,
-    });
-  }
-
-  function handleCaptureLocation() {
-    if (geoStatus !== "idle") return;
-    setGeoStatus("capturing");
-    geoTimerRef.current = setTimeout(() => {
-      setGeoStatus("captured");
-      applyMock(mock.zipCode);
-    }, 1000);
-  }
-
-  function handleZipCodeChange(value: string) {
-    const formatted = formatCep(value);
-    setValue(addressPath(namePrefix, "zipCode"), formatted, {
-      shouldDirty: true,
-    });
-    if (cepTimerRef.current) clearTimeout(cepTimerRef.current);
-
-    const digits = formatted.replace(/\D/g, "");
-    if (digits.length === 8) {
-      setCepStatus("searching");
-      cepTimerRef.current = setTimeout(() => {
-        setCepStatus("found");
-        applyMock(formatted);
-      }, 700);
+  function handleZipCodeChange(formatted: string) {
+    resetGeo();
+    if (isCompleteCep(formatted)) {
+      onZipCodeComplete(formatted.replace(/\D/g, ""));
     } else {
-      setCepStatus("idle");
+      onZipCodeIncomplete();
     }
   }
 
   return (
     <>
       <div className="flex flex-col gap-1.5">
-        <Label className="text-sm font-medium text-[#1A1D2E]">
-          Geolocalização
-        </Label>
-        {geoStatus !== "captured" ? (
-          <Button
-            variant="outline"
-            className="h-11 gap-2 rounded-2xl"
-            disabled={geoStatus === "capturing"}
-            onClick={handleCaptureLocation}
-          >
-            {geoStatus === "capturing" ? (
-              <>
-                <Loader2 size={15} className="animate-spin" />
-                Capturando localização…
-              </>
-            ) : (
-              <>
-                <MapPin size={15} />
-                Recuperar via geolocalização
-              </>
-            )}
-          </Button>
-        ) : (
-          <div className="flex items-center gap-2 rounded-2xl bg-[#E6F7F1] px-4 py-3 text-sm font-medium text-[#0F6E56]">
+        <FieldLabel>Geolocalização</FieldLabel>
+        <Button
+          type="button"
+          variant="outline"
+          size="pill"
+          className="gap-2"
+          disabled={geoStatus === "capturing" || searching}
+          onClick={() => {
+            onZipCodeIncomplete();
+            captureLocation();
+          }}
+        >
+          {geoStatus === "capturing" ? (
+            <>
+              <Loader2 size={15} className="animate-spin" />
+              Capturando localização…
+            </>
+          ) : (
+            <>
+              <MapPin size={15} />
+              Recuperar via geolocalização
+            </>
+          )}
+        </Button>
+        {geoStatus === "captured" ? (
+          <Alert variant="success">
             <CheckCircle2 size={16} />
-            Localização capturada — endereço preenchido automaticamente
-          </div>
-        )}
+            <AlertDescription>
+              Localização capturada — endereço preenchido automaticamente
+            </AlertDescription>
+          </Alert>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <FormField
-          control={control}
+        <FormInput<ProposalFormData>
           name={addressPath(namePrefix, "zipCode")}
-          render={({ field }) => (
-            <InputField
-              label="CEP"
-              value={field.value}
-              onChange={handleZipCodeChange}
-              icon={<MapPin size={16} />}
-              placeholder="00000-000"
-              inputMode="numeric"
-              maxLength={9}
-            />
-          )}
+          label="CEP"
+          transform={formatCep}
+          onValueChange={handleZipCodeChange}
+          icon={<MapPin size={16} />}
+          placeholder="00000-000"
+          inputMode="numeric"
+          maxLength={9}
+          required
         />
         {cepStatus === "searching" ? (
-          <p className="flex items-center gap-1.5 text-xs text-[#6B7080]">
-            <Loader2 size={12} className="animate-spin" />
+          <FieldStatusMessage tone="pending">
             Buscando endereço…
-          </p>
+          </FieldStatusMessage>
         ) : null}
         {cepStatus === "found" ? (
-          <p className="flex items-center gap-1.5 text-xs text-[#0F6E56]">
-            <CheckCircle2 size={12} />
+          <FieldStatusMessage tone="success">
             Endereço encontrado e preenchido automaticamente
-          </p>
+          </FieldStatusMessage>
         ) : null}
       </div>
 
-      <FormField
-        control={control}
+      <FormInput<ProposalFormData>
         name={addressPath(namePrefix, "street")}
-        render={({ field }) => (
-          <InputField
-            label="Rua"
-            value={field.value}
-            onChange={field.onChange}
-            icon={<MapPin size={16} />}
-            placeholder="Nome da rua"
-          />
-        )}
+        label="Rua"
+        placeholder="Nome da rua"
+        required={streetRequired}
+        disabled={searching}
       />
-      <div className="grid grid-cols-2 gap-3">
-        <FormField
-          control={control}
+      <div className="grid min-w-0 grid-cols-2 gap-3">
+        <FormInput<ProposalFormData>
           name={addressPath(namePrefix, "number")}
-          render={({ field }) => (
-            <InputField
-              label="Número"
-              value={field.value}
-              onChange={(value) => field.onChange(formatAddressNumber(value))}
-              icon={<MapPin size={16} />}
-              placeholder="Nº"
-              maxLength={10}
-            />
-          )}
+          label="Número"
+          transform={formatAddressNumber}
+          placeholder="Nº"
+          maxLength={10}
+          required
         />
-        <FormField
-          control={control}
+        <FormInput<ProposalFormData>
           name={addressPath(namePrefix, "complement")}
-          render={({ field }) => (
-            <InputField
-              label="Complemento"
-              value={field.value}
-              onChange={field.onChange}
-              icon={<MapPin size={16} />}
-              placeholder="Opcional"
-            />
-          )}
+          label="Complemento"
+          placeholder="Opcional"
         />
       </div>
-      <FormField
-        control={control}
+      <FormInput<ProposalFormData>
         name={addressPath(namePrefix, "neighborhood")}
-        render={({ field }) => (
-          <InputField
-            label="Bairro"
-            value={field.value}
-            onChange={field.onChange}
-            icon={<MapPin size={16} />}
-            placeholder="Bairro"
-          />
-        )}
+        label="Bairro"
+        placeholder="Bairro"
+        required
+        disabled={searching}
       />
-      <div className="grid grid-cols-2 gap-3">
-        <FormField
-          control={control}
+      <div className="grid min-w-0 grid-cols-2 gap-3">
+        <FormInput<ProposalFormData>
           name={addressPath(namePrefix, "city")}
-          render={({ field }) => (
-            <InputField
-              label="Cidade"
-              value={field.value}
-              onChange={field.onChange}
-              icon={<MapPin size={16} />}
-              placeholder="Cidade"
-            />
-          )}
+          label="Cidade"
+          placeholder="Cidade"
+          required
+          disabled={searching}
         />
-        <FormField
-          control={control}
+        <FormSelect<ProposalFormData>
           name={addressPath(namePrefix, "state")}
-          render={({ field }) => (
-            <SelectField
-              label="Estado"
-              value={field.value}
-              onChange={field.onChange}
-              placeholder="UF"
-              options={toSelectOptions(UF_LIST)}
-            />
-          )}
+          label="Estado"
+          placeholder="UF"
+          options={toSelectOptions(UF_LIST)}
+          required
+          disabled={searching}
         />
       </div>
     </>

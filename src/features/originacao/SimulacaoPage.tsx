@@ -19,7 +19,11 @@ export function SimulacaoPage() {
   const [formPrefill, setFormPrefill] = useState(dadosIniciais);
 
   useEffect(() => {
-    if (dadosIniciais) consumeDadosIniciais();
+    if (!dadosIniciais) return;
+    setFormPrefill(dadosIniciais);
+    setFormKey((key) => key + 1);
+    setMode("form");
+    consumeDadosIniciais();
   }, [dadosIniciais, consumeDadosIniciais]);
 
   function handleNewSimulation() {

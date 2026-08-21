@@ -35,3 +35,10 @@ export function todayIsoLocal(today: Date = new Date()): string {
   const d = String(today.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+/** Última data de nascimento que ainda completa 18 anos hoje. */
+export function maxAdultBirthIso(today: Date = new Date()): string {
+  return todayIsoLocal(
+    new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()),
+  );
+}
