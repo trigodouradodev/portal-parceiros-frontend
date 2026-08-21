@@ -31,7 +31,10 @@ import {
   isRegistrationValid,
 } from "@/features/originacao/schemas/proposal-form";
 import { getProposalStepFieldErrors } from "@/features/originacao/utils/proposal-step-errors";
-import { scrollToField } from "@/features/originacao/utils/scroll-to-first-error";
+import {
+  scrollTaskToTop,
+  scrollToField,
+} from "@/features/originacao/utils/scroll-to-first-error";
 import { fmtBRL } from "@/lib/utils";
 
 export function PropostaPage() {
@@ -113,6 +116,10 @@ function ProposalWizard({
     // Revalida o passo atual depois do primeiro Avançar.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- form methods are stable
   }, [step, submitAttempted, data]);
+
+  useEffect(() => {
+    scrollTaskToTop();
+  }, [step]);
 
   function persist(patch: Partial<ProposalSnapshot> = {}) {
     onUpdate({
