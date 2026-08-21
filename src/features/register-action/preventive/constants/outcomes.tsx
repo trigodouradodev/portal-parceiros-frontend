@@ -1,4 +1,12 @@
-import { Calendar, CheckCircle2, Handshake, PhoneOff } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle2,
+  CircleAlert,
+  Ellipsis,
+  Handshake,
+  HeartCrack,
+  PhoneOff,
+} from "lucide-react";
 import type { OutcomeOption } from "@/features/register-action/components/OutcomeOptionList";
 
 export const OUTCOMES: OutcomeOption[] = [
@@ -24,10 +32,31 @@ export const OUTCOMES: OutcomeOption[] = [
     color: "amber",
   },
   {
+    value: "dispute",
+    label: "Disputa/contestação",
+    desc: "Questionou a cobrança ou os valores",
+    icon: <CircleAlert size={18} />,
+    color: "amber",
+  },
+  {
     value: "renegotiate",
     label: "Quer renegociar",
     desc: "Quer alterar condições",
     icon: <Handshake size={18} />,
+    color: "blue",
+  },
+  {
+    value: "deceased",
+    label: "Falecido",
+    desc: "Foi informado o falecimento",
+    icon: <HeartCrack size={18} />,
+    color: "blue",
+  },
+  {
+    value: "other",
+    label: "Outro",
+    desc: "Registrar outra situação",
+    icon: <Ellipsis size={18} />,
     color: "blue",
   },
 ];

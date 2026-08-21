@@ -11,19 +11,19 @@ const CHANNEL_OPTIONS: {
   {
     value: "whatsapp",
     label: "WhatsApp",
-    desc: "Enviar mensagem prédefinida",
+    desc: "Enviar mensagem",
     icon: <MessageSquare size={20} />,
   },
   {
     value: "phone",
     label: "Ligação",
-    desc: "Ligar para o cliente agora",
+    desc: "Realizar ligação",
     icon: <Phone size={20} />,
   },
   {
     value: "visit",
     label: "Visita",
-    desc: "Visitar o cliente presencialmente",
+    desc: "Realizar visita presencialmente",
     icon: <MapPin size={20} />,
   },
 ];

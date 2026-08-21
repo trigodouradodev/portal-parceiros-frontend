@@ -22,11 +22,39 @@ export const FollowUpStatus = {
 export type FollowUpStatus =
   (typeof FollowUpStatus)[keyof typeof FollowUpStatus];
 
+export const FollowUpType = {
+  CALL: "call",
+  MESSAGE: "message",
+  VISIT: "visit",
+  AUTOMATIC: "automatic",
+} as const;
+
+export type FollowUpType = (typeof FollowUpType)[keyof typeof FollowUpType];
+
+export const FollowUpParty = {
+  CLIENT: "client",
+  GUARANTOR: "guarantor",
+} as const;
+
+export type FollowUpParty = (typeof FollowUpParty)[keyof typeof FollowUpParty];
+
+export const AutomaticFollowUpAction = {
+  COLLECTION_LETTER: "collection_letter",
+  NEGATIVATION: "negativation",
+  RENEGOTIATION: "renegotiation",
+} as const;
+
+export type AutomaticFollowUpAction =
+  (typeof AutomaticFollowUpAction)[keyof typeof AutomaticFollowUpAction];
+
 export const FollowUpExpectedResult = {
   WILL_PAY_ON_DATE: "will_pay_on_date",
   NO_RETURN: "no_return",
   REQUESTED_EXTENSION: "requested_extension",
+  DISPUTE: "dispute",
   WANTS_RENEGOTIATION: "wants_renegotiation",
+  DECEASED: "deceased",
+  OTHER: "other",
 } as const;
 
 export type FollowUpExpectedResult =
@@ -35,7 +63,10 @@ export type FollowUpExpectedResult =
 export interface CreateFollowUpPayload {
   contractId: string;
   installmentNumber?: number;
-  status: FollowUpStatus;
+  status?: FollowUpStatus;
+  followUpType?: FollowUpType;
+  party?: FollowUpParty;
+  automaticAction?: AutomaticFollowUpAction;
   note?: string;
   expectedResult?: FollowUpExpectedResult;
   paymentForecast?: string;

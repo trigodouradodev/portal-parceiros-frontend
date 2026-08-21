@@ -12,6 +12,11 @@ import type {
   QueueTone,
 } from "@/services/activities/activity.enums";
 import type { DetailGuarantor } from "@/services/activities/installment-detail.types";
+import type {
+  AutomaticFollowUpAction,
+  FollowUpParty,
+  FollowUpType,
+} from "@/services/followup/followup.types";
 
 export interface RenewalMonthBucket {
   month: string; // 'YYYY-MM'
@@ -224,6 +229,10 @@ export interface FollowUpHistoryItem {
   id: string;
   status: string;
   note?: string;
+  /** Campos do modelo estruturado; ausentes para registros legados. */
+  followUpType?: FollowUpType;
+  party?: FollowUpParty;
+  automaticAction?: AutomaticFollowUpAction;
   expectedResult?: string;
   paymentForecast?: string;
   createdAt: string;
