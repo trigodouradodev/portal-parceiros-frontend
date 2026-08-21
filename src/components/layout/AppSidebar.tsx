@@ -41,7 +41,7 @@ export function AppSidebar({
       )}
     >
       <div className="border-b border-brand-navy/10 px-6 pt-8 pb-6">
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col items-center gap-1.5">
           <AureaLogo size={40} logoClassName="text-brand-navy" />
           <p className="text-[10px] tracking-widest text-brand-navy/50 uppercase">
             Portal Parceiro
