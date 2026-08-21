@@ -7,7 +7,6 @@ import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
 import { AddressFields } from "@/features/originacao/components/AddressFields";
 import {
-  GUARANTOR_MOCK_ADDRESS,
   KINSHIP_OPTIONS,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
@@ -126,7 +125,7 @@ export function GuarantorSection() {
           Endereço do avalista
         </p>
         <div className="flex flex-col gap-5">
-          <AddressFields namePrefix="guarantor" mock={GUARANTOR_MOCK_ADDRESS} />
+          <AddressFields namePrefix="guarantor" />
         </div>
       </div>
 

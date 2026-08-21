@@ -7,101 +7,87 @@ import { InputField } from "@/components/ui/input-field";
 import { Label } from "@/components/ui/label";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
+import { useCepAutoFill } from "@/features/originacao/hooks/useCepAutoFill";
 import {
   UF_LIST,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
+import {
+  addressPath,
+  applyAddressFill,
+  type AddressPrefix,
+} from "@/features/originacao/utils/apply-address-fill";
 import { formatAddressNumber } from "@/features/originacao/utils/format-address-number";
-import { formatCep } from "@/features/originacao/utils/format-cep";
-
-export interface AddressFill {
-  zipCode: string;
-  street: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-}
-
-type AddressPrefix = "address" | "guarantor";
-type AddressFieldName =
-  | "zipCode"
-  | "street"
-  | "number"
-  | "complement"
-  | "neighborhood"
-  | "city"
-  | "state";
+import {
+  formatCep,
+  isCompleteCep,
+} from "@/features/originacao/utils/format-cep";
+import type { CepLookupResult } from "@/services/cep/cep.types";
 
 type GeoStatus = "idle" | "capturing" | "captured";
-type CepStatus = "idle" | "searching" | "found";
 
-function addressPath<F extends AddressFieldName>(
-  prefix: AddressPrefix,
-  field: F,
-): `${AddressPrefix}.${F}` {
-  return `${prefix}.${field}`;
-}
+/** Preenchimento temporário da geolocalização (ainda mock). */
+const GEO_MOCK_BY_PREFIX: Record<AddressPrefix, CepLookupResult> = {
+  address: {
+    zipCode: "01001-000",
+    street: "Rua das Flores",
+    neighborhood: "Centro",
+    city: "São Paulo",
+    state: "SP",
+  },
+  guarantor: {
+    zipCode: "01310-100",
+    street: "Avenida Paulista",
+    neighborhood: "Bela Vista",
+    city: "São Paulo",
+    state: "SP",
+  },
+};
 
 interface AddressFieldsProps {
   namePrefix: AddressPrefix;
-  mock: AddressFill;
 }
 
-export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
+export function AddressFields({ namePrefix }: AddressFieldsProps) {
   const { control, setValue } = useFormContext<ProposalFormData>();
+  const { cepStatus, onZipCodeComplete, onZipCodeIncomplete } =
+    useCepAutoFill(namePrefix);
   const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
-  const [cepStatus, setCepStatus] = useState<CepStatus>("idle");
   const geoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searching = cepStatus === "searching";
 
   useEffect(() => {
     return () => {
       if (geoTimerRef.current) clearTimeout(geoTimerRef.current);
-      if (cepTimerRef.current) clearTimeout(cepTimerRef.current);
     };
   }, []);
 
-  function applyMock(zipCode: string) {
-    setValue(addressPath(namePrefix, "zipCode"), zipCode, {
-      shouldDirty: true,
-    });
-    setValue(addressPath(namePrefix, "street"), mock.street, {
-      shouldDirty: true,
-    });
-    setValue(addressPath(namePrefix, "neighborhood"), mock.neighborhood, {
-      shouldDirty: true,
-    });
-    setValue(addressPath(namePrefix, "city"), mock.city, { shouldDirty: true });
-    setValue(addressPath(namePrefix, "state"), mock.state, {
-      shouldDirty: true,
-    });
+  function resetGeo() {
+    if (geoTimerRef.current) clearTimeout(geoTimerRef.current);
+    setGeoStatus("idle");
   }
 
   function handleCaptureLocation() {
-    if (geoStatus !== "idle") return;
+    if (geoStatus === "capturing") return;
+    onZipCodeIncomplete();
     setGeoStatus("capturing");
     geoTimerRef.current = setTimeout(() => {
       setGeoStatus("captured");
-      applyMock(mock.zipCode);
+      applyAddressFill(setValue, namePrefix, GEO_MOCK_BY_PREFIX[namePrefix]);
     }, 1000);
   }
 
   function handleZipCodeChange(value: string) {
+    resetGeo();
     const formatted = formatCep(value);
     setValue(addressPath(namePrefix, "zipCode"), formatted, {
       shouldDirty: true,
     });
-    if (cepTimerRef.current) clearTimeout(cepTimerRef.current);
 
-    const digits = formatted.replace(/\D/g, "");
-    if (digits.length === 8) {
-      setCepStatus("searching");
-      cepTimerRef.current = setTimeout(() => {
-        setCepStatus("found");
-        applyMock(formatted);
-      }, 700);
+    if (isCompleteCep(formatted)) {
+      onZipCodeComplete(formatted.replace(/\D/g, ""));
     } else {
-      setCepStatus("idle");
+      onZipCodeIncomplete();
     }
   }
 
@@ -111,31 +97,31 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
         <Label className="text-sm font-medium text-[#1A1D2E]">
           Geolocalização
         </Label>
-        {geoStatus !== "captured" ? (
-          <Button
-            variant="outline"
-            className="h-11 gap-2 rounded-2xl"
-            disabled={geoStatus === "capturing"}
-            onClick={handleCaptureLocation}
-          >
-            {geoStatus === "capturing" ? (
-              <>
-                <Loader2 size={15} className="animate-spin" />
-                Capturando localização…
-              </>
-            ) : (
-              <>
-                <MapPin size={15} />
-                Recuperar via geolocalização
-              </>
-            )}
-          </Button>
-        ) : (
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 gap-2 rounded-2xl"
+          disabled={geoStatus === "capturing" || searching}
+          onClick={handleCaptureLocation}
+        >
+          {geoStatus === "capturing" ? (
+            <>
+              <Loader2 size={15} className="animate-spin" />
+              Capturando localização…
+            </>
+          ) : (
+            <>
+              <MapPin size={15} />
+              Recuperar via geolocalização
+            </>
+          )}
+        </Button>
+        {geoStatus === "captured" ? (
           <div className="flex items-center gap-2 rounded-2xl bg-[#E6F7F1] px-4 py-3 text-sm font-medium text-[#0F6E56]">
             <CheckCircle2 size={16} />
             Localização capturada — endereço preenchido automaticamente
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -183,6 +169,7 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
             icon={<MapPin size={16} />}
             placeholder="Nome da rua"
             required={namePrefix === "address"}
+            disabled={searching}
             error={fieldState.error?.message}
           />
         )}
@@ -231,6 +218,7 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
             icon={<MapPin size={16} />}
             placeholder="Bairro"
             required
+            disabled={searching}
             error={fieldState.error?.message}
           />
         )}
@@ -248,6 +236,7 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
               icon={<MapPin size={16} />}
               placeholder="Cidade"
               required
+              disabled={searching}
               error={fieldState.error?.message}
             />
           )}
@@ -264,6 +253,7 @@ export function AddressFields({ namePrefix, mock }: AddressFieldsProps) {
               placeholder="UF"
               options={toSelectOptions(UF_LIST)}
               required
+              disabled={searching}
               error={fieldState.error?.message}
             />
           )}

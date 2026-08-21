@@ -214,22 +214,6 @@ export const DOUBTS_RATING = "Tenho dúvidas";
 export const AGIOTA_CREDITOR = "Agiota";
 export const MARRIED_STATUSES = ["Casado(a)", "União estável"] as const;
 
-export const CLIENT_MOCK_ADDRESS = {
-  zipCode: "01001-000",
-  street: "Rua das Flores",
-  neighborhood: "Centro",
-  city: "São Paulo",
-  state: "SP",
-} as const;
-
-export const GUARANTOR_MOCK_ADDRESS = {
-  zipCode: "01310-100",
-  street: "Avenida Paulista",
-  neighborhood: "Bela Vista",
-  city: "São Paulo",
-  state: "SP",
-} as const;
-
 export interface RegistrationData {
   isRenewal: boolean | null;
   gender: string;
