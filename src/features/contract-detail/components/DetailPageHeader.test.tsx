@@ -20,10 +20,12 @@ const DETAIL: ContractDetailView = {
 };
 
 describe("DetailPageHeader", () => {
-  it("mostra a marca (aurea / Portal Parceiro) — some no mobile onde a AppSidebar fica escondida", () => {
-    render(<DetailPageHeader detail={DETAIL} onBack={vi.fn()} />);
+  it("mostra a marca (logo Aurea / Portal Parceiro) — some no mobile onde a AppSidebar fica escondida", () => {
+    const { container } = render(
+      <DetailPageHeader detail={DETAIL} onBack={vi.fn()} />,
+    );
 
-    expect(screen.getByText("aurea")).toBeInTheDocument();
+    expect(container.querySelector("svg")).toBeInTheDocument();
     expect(screen.getByText("Portal Parceiro")).toBeInTheDocument();
   });
 });

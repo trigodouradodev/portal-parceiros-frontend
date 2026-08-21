@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { LogOut } from "lucide-react";
-import { AureaLogoMark } from "@/components/brand/AureaLogo";
+import { AureaLogo } from "@/components/brand/AureaLogo";
 import { type NavTab } from "@/components/layout/nav-config";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getInitials, getRoleLabel } from "@/lib/user-display";
@@ -36,36 +36,29 @@ export function AppSidebar({
   return (
     <aside
       className={cn(
-        "fixed top-0 bottom-0 left-0 z-20 hidden w-56 flex-col bg-brand-navy md:flex",
+        "fixed top-0 bottom-0 left-0 z-20 hidden w-56 flex-col bg-brand-gray md:flex",
         className,
       )}
     >
-      <div className="border-b border-white/10 px-6 pt-8 pb-6">
-        <div className="flex items-center gap-2">
-          {/* Fundo escuro: sem asset oficial "Negativa" (branca) ainda — usa a
-              geometria oficial da estrela em branco até chegar o arquivo certo. */}
-          <AureaLogoMark className="text-white" />
-          <div>
-            <p className="font-fraunces text-lg leading-tight font-bold text-white">
-              aurea
-            </p>
-            <p className="text-[10px] tracking-widest text-white/40 uppercase">
-              Portal Parceiro
-            </p>
-          </div>
+      <div className="border-b border-brand-navy/10 px-6 pt-8 pb-6">
+        <div className="flex flex-col items-center gap-1.5">
+          <AureaLogo size={40} logoClassName="text-brand-navy" />
+          <p className="text-[10px] tracking-widest text-brand-navy/50 uppercase">
+            Portal Parceiro
+          </p>
         </div>
       </div>
 
-      <div className="border-b border-white/10 px-6 py-4">
+      <div className="border-b border-brand-navy/10 px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-yellow text-sm font-bold text-brand-navy">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-navy text-sm font-bold text-brand-yellow">
             {getInitials(displayName)}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">
+            <p className="truncate text-sm font-semibold text-brand-navy">
               {displayName}
             </p>
-            <p className="truncate text-xs text-white/40">{roleLabel}</p>
+            <p className="truncate text-xs text-brand-navy/50">{roleLabel}</p>
           </div>
         </div>
       </div>
@@ -85,8 +78,8 @@ export function AppSidebar({
               className={cn(
                 "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all",
                 isActive
-                  ? "bg-white/10 text-white"
-                  : "text-white/50 hover:bg-white/5 hover:text-white/80",
+                  ? "bg-brand-navy/10 text-brand-navy font-semibold"
+                  : "text-brand-navy/50 hover:bg-brand-navy/5 hover:text-brand-navy/80",
               )}
             >
               {item.icon}
@@ -100,7 +93,7 @@ export function AppSidebar({
         <button
           type="button"
           onClick={onRequestLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/40 transition-all hover:bg-white/5 hover:text-white/70"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-brand-navy/50 transition-all hover:bg-brand-navy/5 hover:text-brand-navy/80"
         >
           <LogOut size={18} />
           Sair
