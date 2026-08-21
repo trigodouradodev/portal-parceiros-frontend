@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { format, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarDays } from "lucide-react";
@@ -28,10 +28,6 @@ export function PaymentForecastField({
   const [draftDate, setDraftDate] = useState<Date | undefined>(value);
   const today = startOfDay(new Date());
 
-  useEffect(() => {
-    if (open) setDraftDate(value);
-  }, [open, value]);
-
   return (
     <div className="mt-4 rounded-2xl border border-border bg-muted/30 p-4">
       <p className="text-sm font-semibold text-foreground">
@@ -46,7 +42,10 @@ export function PaymentForecastField({
         className={`mt-3 h-11 w-full justify-start gap-2 rounded-xl ${
           invalid ? "border-2 border-destructive" : ""
         }`}
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setDraftDate(value);
+          setOpen(true);
+        }}
       >
         <CalendarDays size={16} />
         {value
