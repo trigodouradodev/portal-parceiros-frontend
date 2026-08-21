@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import { SimulacaoList } from "@/features/originacao/components/SimulacaoList";
 import { useOriginacao } from "@/features/originacao/originacao-context";
@@ -12,32 +12,28 @@ export function SimulacaoPage() {
     addSimulacao,
     startProposal,
   } = useOriginacao();
-  const [mode, setMode] = useState<"list" | "form">(
-    dadosIniciais ? "form" : "list",
-  );
-  const [formKey, setFormKey] = useState(0);
-  const [formPrefill, setFormPrefill] = useState(dadosIniciais);
+  const [blankFormKey, setBlankFormKey] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!dadosIniciais) return;
-    setFormPrefill(dadosIniciais);
-    setFormKey((key) => key + 1);
-    setMode("form");
+  const fromEligibility = dadosIniciais != null;
+  const showForm = fromEligibility || blankFormKey != null;
+  const formKey = fromEligibility ? "prefill" : String(blankFormKey);
+
+  function closeForm() {
     consumeDadosIniciais();
-  }, [dadosIniciais, consumeDadosIniciais]);
+    setBlankFormKey(null);
+  }
 
   function handleNewSimulation() {
-    setFormPrefill(null);
-    setFormKey((key) => key + 1);
-    setMode("form");
+    consumeDadosIniciais();
+    setBlankFormKey((key) => (key ?? 0) + 1);
   }
 
   function handleCompleted(snapshot: SimulacaoSnapshot) {
     addSimulacao(snapshot);
-    setMode("list");
+    closeForm();
   }
 
-  if (mode === "list") {
+  if (!showForm) {
     return (
       <SimulacaoList
         simulations={simulacoes}
@@ -50,9 +46,9 @@ export function SimulacaoPage() {
   return (
     <SimulacaoForm
       key={formKey}
-      prefill={formPrefill}
+      prefill={dadosIniciais}
       hasList={simulacoes.length > 0}
-      onViewList={() => setMode("list")}
+      onViewList={closeForm}
       onCompleted={handleCompleted}
     />
   );
