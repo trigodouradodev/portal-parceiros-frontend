@@ -21,6 +21,8 @@ export function buildContractsParams(
   if (query.onlyActive) params.onlyActive = true;
   if (query.onlyDelinquency) params.onlyDelinquency = true;
   if (query.onlyRenegotiated) params.onlyRenegotiated = true;
+  if (query.onlyDueToday) params.onlyDueToday = true;
+  if (query.onlyUpcomingRenewal) params.onlyUpcomingRenewal = true;
   // Nest aceita lista separada por vírgula (ver ContractsQueryDto).
   if (query.products && query.products.length > 0) {
     params.products = query.products.join(",");

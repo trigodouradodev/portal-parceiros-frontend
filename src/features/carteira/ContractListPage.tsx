@@ -102,19 +102,19 @@ export function ContractListPage() {
 
   return (
     <PageContainer>
-      <div className="bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8">
+      <div className="bg-brand-yellow px-5 pb-6 pt-12 md:px-8 md:pt-8">
         <button
           type="button"
           onClick={() => navigate("/carteira")}
-          className="mb-4 flex items-center gap-1.5 text-sm font-medium text-white/70 transition-colors hover:text-white"
+          className="mb-4 flex items-center gap-1.5 text-sm font-medium text-brand-navy/70 transition-colors hover:text-brand-navy"
         >
           <ArrowLeft size={16} />
           Carteira
         </button>
-        <h1 className="font-fraunces text-2xl font-bold leading-tight text-white md:text-3xl">
+        <h1 className="font-fraunces text-2xl font-bold leading-tight text-brand-navy md:text-3xl">
           {title}
         </h1>
-        <p className="mt-1 text-sm text-white/50">
+        <p className="mt-1 text-sm text-brand-navy/60">
           Empresa: CELCOIN · {total} contrato{total === 1 ? "" : "s"} encontrado
           {total === 1 ? "" : "s"}
         </p>
@@ -170,6 +170,20 @@ export function ContractListPage() {
               checked={filters.onlyRenegotiated}
               onCheckedChange={(checked) =>
                 patchFilters({ onlyRenegotiated: checked })
+              }
+            />
+            <Checkbox
+              label="Vencem hoje"
+              checked={filters.onlyDueToday}
+              onCheckedChange={(checked) =>
+                patchFilters({ onlyDueToday: checked })
+              }
+            />
+            <Checkbox
+              label="Renovação próxima"
+              checked={filters.onlyUpcomingRenewal}
+              onCheckedChange={(checked) =>
+                patchFilters({ onlyUpcomingRenewal: checked })
               }
             />
           </div>

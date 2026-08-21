@@ -66,6 +66,8 @@ export function AureaLogoMark({
 }
 
 interface AureaLogoProps {
+  /** Altura em px — a largura acompanha proporcionalmente. */
+  size?: number;
   className?: string;
   /** Cor via classe Tailwind (`text-*`) — o SVG herda com `currentColor`. */
   logoClassName?: string;
@@ -73,16 +75,21 @@ interface AureaLogoProps {
 
 /** Lockup oficial estrela + "aurea" (Biblioteca Aurea). Default = Positiva (navy). */
 export function AureaLogo({
+  size = 40,
   className,
   logoClassName = "text-brand-navy",
 }: AureaLogoProps) {
+  const height = size;
+  const width = size * (389.33 / 141.33);
   return (
     <div className={className}>
       <svg
+        width={width}
+        height={height}
         viewBox={WORDMARK_VIEWBOX}
         fill="none"
         aria-hidden
-        className={`h-10 w-auto ${logoClassName}`}
+        className={logoClassName}
       >
         <g fill="currentColor">
           {WORDMARK_STAR_PATHS.map((d, i) => (

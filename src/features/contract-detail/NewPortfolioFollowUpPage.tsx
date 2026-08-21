@@ -11,10 +11,10 @@ import { fmtBRL } from "@/lib/utils";
 function NewPortfolioFollowUpSkeleton() {
   return (
     <PageContainer>
-      <div className="bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8">
-        <Skeleton className="mb-4 h-5 w-24 bg-white/20" />
-        <Skeleton className="mb-2 h-8 w-3/4 bg-white/20" />
-        <Skeleton className="h-4 w-1/2 bg-white/20" />
+      <div className="bg-brand-yellow px-5 pb-6 pt-12 md:px-8 md:pt-8">
+        <Skeleton className="mb-4 h-5 w-24 bg-brand-navy/15" />
+        <Skeleton className="mb-2 h-8 w-3/4 bg-brand-navy/15" />
+        <Skeleton className="h-4 w-1/2 bg-brand-navy/15" />
       </div>
       <div className="mx-auto max-w-2xl px-5 py-6 md:px-8">
         <Skeleton className="mb-6 h-20 rounded-2xl" />
