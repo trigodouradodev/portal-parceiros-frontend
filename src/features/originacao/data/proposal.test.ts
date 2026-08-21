@@ -4,6 +4,8 @@ import {
   createEmptyProposalForm,
   createProposalFromSimulation,
   hasSpouse,
+} from "@/features/originacao/data/proposal";
+import {
   isActivityIncomeValid,
   isAddressValid,
   isDocumentsValid,
@@ -11,8 +13,7 @@ import {
   isGuarantorValid,
   isPartnerOpinionValid,
   isRegistrationValid,
-  toggleItem,
-} from "@/features/originacao/data/proposal";
+} from "@/features/originacao/schemas/proposal-form";
 import type { SimulacaoSnapshot } from "@/features/originacao/types";
 
 const simulation: SimulacaoSnapshot = {
@@ -30,13 +31,6 @@ const simulation: SimulacaoSnapshot = {
   vencimento: 10,
   parcelaCalc: 500,
 };
-
-describe("toggleItem", () => {
-  it("adds and removes items", () => {
-    expect(toggleItem([], "A")).toEqual(["A"]);
-    expect(toggleItem(["A", "B"], "A")).toEqual(["B"]);
-  });
-});
 
 describe("createProposalFromSimulation", () => {
   it("starts as a 7-step draft with empty form", () => {
@@ -88,6 +82,26 @@ describe("proposal validators", () => {
     ).toBe(false);
   });
 
+  it("requires extra occupation text and debt details when those options are chosen", () => {
+    const base = {
+      ...createEmptyProposalForm().registration,
+      isRenewal: false,
+      gender: "Feminino",
+      occupation: "Vendedora",
+      activityCategories: ["Outros"],
+      creditPurpose: "Quitação/troca de dívida",
+    };
+    expect(isRegistrationValid(base)).toBe(false);
+    expect(
+      isRegistrationValid({
+        ...base,
+        activityCategoryOther: "Feirante",
+        debtDescription: "Cartão",
+        debtCreditor: "Banco",
+      }),
+    ).toBe(true);
+  });
+
   it("treats married statuses as having a spouse", () => {
     expect(hasSpouse("Casado(a)")).toBe(true);
     expect(hasSpouse("União estável")).toBe(true);
@@ -106,6 +120,16 @@ describe("proposal validators", () => {
         availableProof: "Holerite",
       }),
     ).toBe(true);
+    expect(
+      isActivityIncomeValid({
+        ...empty,
+        activityTime: "1 a 3 anos",
+        monthlyIncome: "3000",
+        incomeSource: "Salário",
+        availableProof: "Holerite",
+        hasMultipleSources: true,
+      }),
+    ).toBe(false);
   });
 
   it("validates address required fields", () => {
@@ -151,6 +175,7 @@ describe("proposal validators", () => {
     expect(
       isPartnerOpinionValid({ ...valid, referrerCpf: "111.111.111-11" }),
     ).toBe(false);
+    expect(isPartnerOpinionValid({ ...valid, howKnows: "Outro" })).toBe(false);
   });
 
   it("rejects guarantor under 18 and accepts adult with address", () => {

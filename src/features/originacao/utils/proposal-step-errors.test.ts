@@ -8,15 +8,15 @@ import {
 describe("getProposalStepFieldErrors", () => {
   it("lists registration required fields in visual order", () => {
     const empty = createEmptyProposalForm();
-    expect(getProposalStepFieldErrors(0, empty).map((item) => item.name)).toEqual(
-      [
-        "registration.isRenewal",
-        "registration.gender",
-        "registration.occupation",
-        "registration.activityCategories",
-        "registration.creditPurpose",
-      ],
-    );
+    expect(
+      getProposalStepFieldErrors(0, empty).map((item) => item.name),
+    ).toEqual([
+      "registration.isRenewal",
+      "registration.gender",
+      "registration.activityCategories",
+      "registration.occupation",
+      "registration.creditPurpose",
+    ]);
     expect(getProposalStepFieldErrors(0, empty)[0]?.message).toBe(
       REQUIRED_FIELD_MESSAGE,
     );

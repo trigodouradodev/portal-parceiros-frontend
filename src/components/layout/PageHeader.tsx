@@ -1,4 +1,5 @@
 import { AureaLogoMark } from "@/components/brand/AureaLogo";
+import { LogoutAvatarButton } from "@/components/layout/LogoutAvatarButton";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getFirstName, getGreeting, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
@@ -27,16 +28,14 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
       */}
       <div className="mb-2 flex items-center gap-1.5 md:hidden">
         <AureaLogoMark size={16} className="text-white" />
-        <span className="font-fraunces text-sm font-bold text-white">
-          aurea
-        </span>
+        <span className="font-display text-sm font-bold text-white">aurea</span>
         <span className="text-[10px] tracking-widest text-white/40 uppercase">
           Portal Parceiro
         </span>
       </div>
       <div className="mb-1 flex items-start justify-between md:mb-3">
         <div>
-          <h1 className="font-fraunces text-2xl font-bold text-white md:text-3xl">
+          <h1 className="font-display text-2xl font-bold text-white md:text-3xl">
             {getGreeting()}, {firstName}
           </h1>
           {subtitle && (
@@ -45,14 +44,10 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
         </div>
         {onLogout && (
           <div className="mt-1 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onLogout}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-yellow text-sm font-bold text-brand-navy md:hidden"
-              aria-label="Sair"
-            >
-              {getInitials(displayName)}
-            </button>
+            <LogoutAvatarButton
+              initials={getInitials(displayName)}
+              onLogout={onLogout}
+            />
           </div>
         )}
       </div>

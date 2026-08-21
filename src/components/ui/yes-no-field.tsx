@@ -23,10 +23,7 @@ export function YesNoField({
   error,
 }: YesNoFieldProps) {
   return (
-    <div
-      className="flex flex-col gap-1.5"
-      {...fieldAnchorProps(name, error)}
-    >
+    <div className="flex flex-col gap-1.5" {...fieldAnchorProps(name, error)}>
       <FieldLabel required={required}>{label}</FieldLabel>
       <div className="flex gap-2">
         <ChipButton active={value === true} onClick={() => onChange(true)}>

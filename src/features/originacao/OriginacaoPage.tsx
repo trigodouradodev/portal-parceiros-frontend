@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Lock } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
+import type { AppShellOutletContext } from "@/components/layout/shell-context";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,13 +12,9 @@ import { PropostaPage } from "@/features/originacao/PropostaPage";
 import { SimulacaoPage } from "@/features/originacao/SimulacaoPage";
 import type { OriginacaoTab } from "@/features/originacao/types";
 
-interface ShellContext {
-  onMobileLogout?: () => void;
-  setHideBottomNav?: (hide: boolean) => void;
-}
-
 function OriginacaoLayout() {
-  const { onMobileLogout, setHideBottomNav } = useOutletContext<ShellContext>();
+  const { onMobileLogout, setHideBottomNav } =
+    useOutletContext<AppShellOutletContext>();
   const { activeTab, setActiveTab, simulacoes, openProposalId } =
     useOriginacao();
   const propostaLocked = simulacoes.length === 0;
@@ -61,7 +58,7 @@ function OriginacaoLayout() {
                     ? "Conclua uma simulação para liberar a proposta"
                     : undefined
                 }
-                className="disabled:cursor-not-allowed disabled:opacity-100 disabled:text-[#C8CBD8]"
+                className="disabled:cursor-not-allowed disabled:opacity-100 disabled:text-muted-foreground/50"
               >
                 {propostaLocked ? <Lock size={12} aria-hidden /> : null}
                 Proposta

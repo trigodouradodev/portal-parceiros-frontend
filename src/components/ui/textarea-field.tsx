@@ -1,6 +1,7 @@
 import { Textarea } from "@/components/ui/textarea";
 import {
   FieldErrorMessage,
+  FieldHint,
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
@@ -13,6 +14,7 @@ interface TextareaFieldProps {
   placeholder?: string;
   required?: boolean;
   error?: string;
+  hint?: string;
 }
 
 export function TextareaField({
@@ -23,12 +25,10 @@ export function TextareaField({
   placeholder,
   required,
   error,
+  hint,
 }: TextareaFieldProps) {
   return (
-    <div
-      className="flex flex-col gap-1.5"
-      {...fieldAnchorProps(name, error)}
-    >
+    <div className="flex flex-col gap-1.5" {...fieldAnchorProps(name, error)}>
       <FieldLabel required={required}>{label}</FieldLabel>
       <Textarea
         value={value}
@@ -40,6 +40,7 @@ export function TextareaField({
         className="rounded-2xl"
       />
       <FieldErrorMessage error={error} />
+      {hint && !error ? <FieldHint>{hint}</FieldHint> : null}
     </div>
   );
 }

@@ -1,7 +1,4 @@
 import type { SimulacaoSnapshot } from "@/features/originacao/types";
-import { calcAge, isAdultAge } from "@/features/originacao/utils/calc-age";
-import { isCompleteCep } from "@/features/originacao/utils/format-cep";
-import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
 
 export const PROPOSAL_STEPS = [
   "Cadastro",
@@ -245,7 +242,7 @@ export interface ActivityIncomeData {
   availableProof: string;
 }
 
-export interface AddressData {
+export interface AddressValue {
   zipCode: string;
   street: string;
   number: string;
@@ -253,6 +250,9 @@ export interface AddressData {
   neighborhood: string;
   city: string;
   state: string;
+}
+
+export interface AddressData extends AddressValue {
   landmark: string;
 }
 
@@ -267,19 +267,12 @@ export interface PartnerOpinionData {
   notes: string;
 }
 
-export interface GuarantorData {
+export interface GuarantorData extends AddressValue {
   name: string;
   cpf: string;
   birthDate: string;
   email: string;
   phone: string;
-  zipCode: string;
-  street: string;
-  number: string;
-  complement: string;
-  neighborhood: string;
-  city: string;
-  state: string;
   kinship: string;
 }
 
@@ -336,6 +329,16 @@ export interface ProposalSnapshot {
   data: ProposalFormData;
 }
 
+const EMPTY_ADDRESS: AddressValue = {
+  zipCode: "",
+  street: "",
+  number: "",
+  complement: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+};
+
 export function createEmptyProposalForm(): ProposalFormData {
   return {
     registration: {
@@ -368,13 +371,7 @@ export function createEmptyProposalForm(): ProposalFormData {
       availableProof: "",
     },
     address: {
-      zipCode: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
+      ...EMPTY_ADDRESS,
       landmark: "",
     },
     partnerOpinion: {
@@ -393,13 +390,7 @@ export function createEmptyProposalForm(): ProposalFormData {
       birthDate: "",
       email: "",
       phone: "",
-      zipCode: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
+      ...EMPTY_ADDRESS,
       kinship: "",
     },
     financial: { expenses: [], loans: [], nextId: 1 },
@@ -411,12 +402,6 @@ export function createEmptyProposalForm(): ProposalFormData {
       incomeProofs: [],
     },
   };
-}
-
-export function toggleItem(list: string[], item: string): string[] {
-  return list.includes(item)
-    ? list.filter((entry) => entry !== item)
-    : [...list, item];
 }
 
 export function createProposalFromSimulation(
@@ -437,78 +422,4 @@ export function createProposalFromSimulation(
 
 export function hasSpouse(maritalStatus: string): boolean {
   return (MARRIED_STATUSES as readonly string[]).includes(maritalStatus);
-}
-
-export function isRegistrationValid(data: RegistrationData): boolean {
-  return (
-    data.isRenewal !== null &&
-    data.gender !== "" &&
-    data.occupation.trim() !== "" &&
-    data.activityCategories.length > 0 &&
-    data.creditPurpose !== null &&
-    isOptionalCpfValid(data.spouseCpf)
-  );
-}
-
-export function isActivityIncomeValid(data: ActivityIncomeData): boolean {
-  return (
-    data.activityTime !== "" &&
-    data.monthlyIncome.trim() !== "" &&
-    data.incomeSource !== "" &&
-    data.availableProof !== ""
-  );
-}
-
-export function isAddressValid(data: AddressData): boolean {
-  return (
-    isCompleteCep(data.zipCode) &&
-    data.street.trim() !== "" &&
-    data.number.trim() !== "" &&
-    data.neighborhood.trim() !== "" &&
-    data.city.trim() !== "" &&
-    data.state !== ""
-  );
-}
-
-export function isPartnerOpinionValid(data: PartnerOpinionData): boolean {
-  return (
-    data.relationshipTime !== "" &&
-    data.howKnows !== "" &&
-    data.overallRating !== "" &&
-    data.informalDebtSigns !== null &&
-    data.financialUrgencySigns !== null &&
-    data.notes.trim() !== "" &&
-    isOptionalCpfValid(data.referrerCpf)
-  );
-}
-
-export function isGuarantorValid(data: GuarantorData): boolean {
-  const age = calcAge(data.birthDate);
-  return (
-    data.name.trim() !== "" &&
-    isValidCpf(data.cpf) &&
-    isAdultAge(age) &&
-    data.email.trim() !== "" &&
-    data.phone.trim() !== "" &&
-    isCompleteCep(data.zipCode) &&
-    data.number.trim() !== "" &&
-    data.neighborhood.trim() !== "" &&
-    data.city.trim() !== "" &&
-    data.state !== "" &&
-    data.kinship !== ""
-  );
-}
-
-export function isFinancialValid(): boolean {
-  return true;
-}
-
-export function isDocumentsValid(data: DocumentsData): boolean {
-  return (
-    data.identification.length > 0 &&
-    data.proofOfResidence.length > 0 &&
-    data.activityPhotos.length > 0 &&
-    data.incomeProofTypes.length > 0 &&
-    data.incomeProofs.length > 0
-  );
 }

@@ -28,6 +28,8 @@ const buttonVariants = cva(
         default: "h-9 px-4 py-2",
         sm: "h-7 px-3 text-xs",
         lg: "h-10 px-8",
+        pill: "h-11 rounded-2xl px-4",
+        pillSm: "h-10 rounded-2xl px-4",
         icon: "h-8 w-8 p-0",
       },
     },

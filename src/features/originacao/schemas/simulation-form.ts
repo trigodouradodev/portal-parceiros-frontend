@@ -1,12 +1,16 @@
 import { z } from "zod";
 import { AMOUNT_MAX, AMOUNT_MIN } from "@/features/originacao/data/simulacao";
+import {
+  CLIENT_BIRTH_DATE_MESSAGE,
+  birthDateSchema,
+} from "@/features/originacao/schemas/birth-date";
 import { digitsOnlyPhone } from "@/lib/format/phone";
 import { isValidCpf } from "@/lib/validation/cpf";
 
 export const simulationSchema = z.object({
   nome: z.string().trim().min(1, "Informe o nome"),
   cpf: z.string().refine(isValidCpf, "CPF inválido"),
-  nascimento: z.string().min(1, "Informe a data de nascimento"),
+  nascimento: birthDateSchema(CLIENT_BIRTH_DATE_MESSAGE),
   email: z
     .string()
     .trim()

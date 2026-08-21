@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import { LogoutAvatarButton } from "@/components/layout/LogoutAvatarButton";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { OriginacaoProgress } from "@/features/originacao/components/OriginacaoProgress";
 import { getInitials } from "@/lib/user-display";
@@ -24,7 +25,7 @@ export function OriginacaoTaskHeader({
   const initials = getInitials(user?.full_name ?? "Parceiro");
 
   return (
-    <header className="sticky top-0 z-20 shrink-0 bg-brand-navy px-4 pt-11 pb-3 md:static md:px-8 md:pt-5">
+    <header className="sticky top-0 z-20 shrink-0 bg-brand-navy px-4 pt-[max(2.75rem,calc(env(safe-area-inset-top)+0.75rem))] pb-3 md:static md:px-8 md:pt-5">
       <div className="w-full max-w-xl">
         <div className="flex items-center gap-2">
           <button
@@ -36,7 +37,7 @@ export function OriginacaoTaskHeader({
             <ArrowLeft size={18} />
           </button>
           <div className="min-w-0 flex-1">
-            <h2 className="truncate font-fraunces text-base font-bold text-white">
+            <h2 className="truncate font-display text-base font-bold text-white">
               {title}
             </h2>
             {subtitle ? (
@@ -44,14 +45,7 @@ export function OriginacaoTaskHeader({
             ) : null}
           </div>
           {onLogout ? (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-yellow text-sm font-bold text-brand-navy md:hidden"
-              aria-label="Sair"
-            >
-              {initials}
-            </button>
+            <LogoutAvatarButton initials={initials} onLogout={onLogout} />
           ) : null}
         </div>
         {progress != null ? (

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ChipButton } from "@/components/ui/chip-button";
 import {
   FieldErrorMessage,
+  FieldHint,
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
@@ -59,9 +60,7 @@ export function ChipField(props: ChipFieldProps) {
       {...fieldAnchorProps(name, error)}
     >
       <FieldLabel required={required}>{label}</FieldLabel>
-      {description ? (
-        <p className="text-xs text-[#9DA3B4]">{description}</p>
-      ) : null}
+      {description ? <FieldHint>{description}</FieldHint> : null}
       <div className={cn("flex min-w-0 flex-wrap gap-2", chipsClassName)}>
         {options.map((option) => {
           const active = props.multiple

@@ -15,6 +15,10 @@ import {
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
+import {
+  fieldControlClassName,
+  fieldIconClassName,
+} from "@/components/ui/field-control";
 import { formatDate, parseCalendarDate } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +34,7 @@ interface DateFilterFieldProps {
   min?: string;
   max?: string;
   captionLayout?: "label" | "dropdown";
+  isDateDisabled?: (date: Date) => boolean;
 }
 
 /**
@@ -50,6 +55,7 @@ export function DateFilterField({
   min,
   max,
   captionLayout = "label",
+  isDateDisabled,
 }: DateFilterFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = value ? (parseCalendarDate(value) ?? undefined) : undefined;
@@ -92,24 +98,17 @@ export function DateFilterField({
         disabled={disabled}
         onClick={() => handleOpenChange(true)}
         aria-invalid={error ? true : undefined}
-        className={cn(
-          "flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-colors",
-          disabled
-            ? "cursor-not-allowed border-transparent bg-[#EFEFF3]"
-            : error
-              ? "border-[#D84040] bg-[#F5F6FA]"
-              : "border-transparent bg-[#F5F6FA] focus-within:border-brand-navy",
-        )}
+        className={fieldControlClassName({ error: Boolean(error), disabled })}
       >
-        <CalendarIcon size={16} className="shrink-0 text-[#9DA3B4]" />
+        <CalendarIcon size={16} className={fieldIconClassName} />
         <span
           className={cn(
             "flex-1 text-sm",
             disabled
-              ? "text-[#6B7080]"
+              ? "text-muted-foreground"
               : value
-                ? "text-[#1A1D2E]"
-                : "text-[#C8CBD8]",
+                ? "text-foreground"
+                : "text-muted-foreground/70",
           )}
         >
           {value ? formatDate(value) : "dd/mm/aaaa"}
@@ -133,6 +132,7 @@ export function DateFilterField({
               disabled={[
                 ...(minDate ? [{ before: minDate }] : []),
                 ...(maxDate ? [{ after: maxDate }] : []),
+                ...(isDateDisabled ? [isDateDisabled] : []),
               ]}
               className="rounded-lg border"
             />
@@ -141,16 +141,12 @@ export function DateFilterField({
             <Button
               type="button"
               variant="outline"
-              className="h-10 rounded-xl"
+              size="pillSm"
               onClick={handleClear}
             >
               Limpar
             </Button>
-            <Button
-              type="button"
-              className="h-10 rounded-xl bg-brand-navy font-semibold text-white"
-              onClick={handleConfirm}
-            >
+            <Button type="button" size="pillSm" onClick={handleConfirm}>
               Aplicar
             </Button>
           </DialogFooter>

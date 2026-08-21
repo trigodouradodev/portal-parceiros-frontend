@@ -16,7 +16,6 @@ import { addDays, startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { ChipField } from "@/components/ui/chip-field";
-import { DateFilterField } from "@/components/ui/date-filter-field";
 import {
   Dialog,
   DialogContent,
@@ -27,13 +26,16 @@ import {
 } from "@/components/ui/dialog";
 import {
   FieldErrorMessage,
+  FieldHint,
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
 import { Form, FormField } from "@/components/ui/form";
-import { InputField } from "@/components/ui/input-field";
+import { FormDate, FormInput } from "@/components/ui/rhf-fields";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { toSelectOptions } from "@/components/ui/select-option";
+import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
+import { OriginacaoToneBadge } from "@/features/originacao/components/OriginacaoSnapshotCard";
 import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
@@ -57,7 +59,8 @@ import type {
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import { calcInstallment, fmtBRL } from "@/lib/utils";
-import { todayIsoLocal } from "@/features/originacao/utils/calc-age";
+import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
+import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 
 interface SimulacaoFormProps {
@@ -67,7 +70,7 @@ interface SimulacaoFormProps {
   onCompleted: (snapshot: SimulacaoSnapshot) => void;
 }
 
-const TODAY_ISO = todayIsoLocal();
+const MAX_BIRTH_ISO = maxAdultBirthIso();
 
 export function SimulacaoForm({
   prefill,
@@ -145,15 +148,11 @@ export function SimulacaoForm({
   }
 
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <div className="mb-6">
-        <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-          Simulação
-        </h2>
-        <p className="mt-1 text-sm text-[#6B7080]">
-          Simule uma cotação de crédito para o cliente.
-        </p>
-        {hasList ? (
+    <OriginacaoPageFrame
+      title="Simulação"
+      description="Simule uma cotação de crédito para o cliente."
+      intro={
+        hasList ? (
           <button
             type="button"
             onClick={onViewList}
@@ -162,263 +161,215 @@ export function SimulacaoForm({
             <ArrowLeft size={14} />
             Ver lista de simulações
           </button>
-        ) : null}
-      </div>
+        ) : null
+      }
+      card
+    >
+      <Form {...form}>
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={form.handleSubmit(onContinue, scrollToFirstError)}
+          noValidate
+        >
+          <FormInput<SimulationFormValues>
+            name="nome"
+            label="Nome completo"
+            icon={<User size={16} />}
+            placeholder="Nome do cliente"
+            required
+          />
+          <FormInput<SimulationFormValues>
+            name="cpf"
+            label="CPF"
+            transform={formatCpf}
+            icon={<CreditCard size={16} />}
+            placeholder="000.000.000-00"
+            inputMode="numeric"
+            maxLength={14}
+            required
+          />
+          <FormDate<SimulationFormValues>
+            name="nascimento"
+            label="Data de nascimento"
+            max={MAX_BIRTH_ISO}
+            captionLayout="dropdown"
+            required
+          />
+          <FormInput<SimulationFormValues>
+            name="email"
+            label="E-mail"
+            icon={<Mail size={16} />}
+            placeholder="cliente@email.com"
+            type="email"
+            required
+          />
+          <FormInput<SimulationFormValues>
+            name="celular"
+            label="Celular"
+            transform={formatPhone}
+            icon={<Phone size={16} />}
+            placeholder="(11) 99999-0000"
+            inputMode="tel"
+            maxLength={15}
+            required
+          />
 
-      <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <Form {...form}>
-          <form
-            className="flex flex-col gap-5"
-            onSubmit={form.handleSubmit(onContinue, scrollToFirstError)}
-            noValidate
-          >
-            <FormField
-              control={form.control}
-              name="nome"
-              render={({ field, fieldState }) => (
-                <InputField
-                  name={field.name}
-                  label="Nome completo"
-                  value={field.value}
-                  onChange={field.onChange}
-                  icon={<User size={16} />}
-                  placeholder="Nome do cliente"
-                  required
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="cpf"
-              render={({ field, fieldState }) => (
-                <InputField
-                  name={field.name}
-                  label="CPF"
-                  value={field.value}
-                  onChange={(value) => field.onChange(formatCpf(value))}
-                  icon={<CreditCard size={16} />}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
-                  maxLength={14}
-                  required
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="nascimento"
-              render={({ field, fieldState }) => (
-                <DateFilterField
-                  name={field.name}
-                  label="Data de nascimento"
-                  value={field.value}
-                  onChange={field.onChange}
-                  max={TODAY_ISO}
-                  captionLayout="dropdown"
-                  required
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field, fieldState }) => (
-                <InputField
-                  name={field.name}
-                  label="E-mail"
-                  value={field.value}
-                  onChange={field.onChange}
-                  icon={<Mail size={16} />}
-                  placeholder="cliente@email.com"
-                  type="email"
-                  required
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="celular"
-              render={({ field, fieldState }) => (
-                <InputField
-                  name={field.name}
-                  label="Celular"
-                  value={field.value}
-                  onChange={(value) => field.onChange(formatPhone(value))}
-                  icon={<Phone size={16} />}
-                  placeholder="(11) 99999-0000"
-                  inputMode="tel"
-                  maxLength={15}
-                  required
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="product"
-              render={({ field }) => (
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel required>Produto</FieldLabel>
-                  <div className="flex items-start justify-between gap-3 rounded-2xl bg-[#F5F6FA] px-4 py-3">
-                    <div>
-                      <span className="mb-1 inline-block rounded-full bg-[#FDF3E0] px-2 py-0.5 text-[11px] font-semibold text-[#854F0B]">
-                        Sugerido
-                      </span>
-                      <p className="font-semibold text-[#1A1D2E]">
-                        {field.value}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setShowRate((value) => !value)}
-                        className="flex items-center gap-1 text-xs text-[#6B7080]"
-                      >
-                        {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
-                        {showRate
-                          ? `Taxa de ${rate.toFixed(2).replace(".", ",")}% ao mês · definida pelo produto`
-                          : "Mostrar taxa"}
-                      </button>
-                    </div>
+          <FormField
+            control={form.control}
+            name="product"
+            render={({ field }) => (
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>Produto</FieldLabel>
+                <div className="flex items-start justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
+                  <div>
+                    <OriginacaoToneBadge tone="warning">
+                      Sugerido
+                    </OriginacaoToneBadge>
+                    <p className="font-semibold text-foreground">
+                      {field.value}
+                    </p>
                     <button
                       type="button"
-                      onClick={() => setProductDialogOpen(true)}
-                      className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy"
+                      onClick={() => setShowRate((value) => !value)}
+                      className="flex items-center gap-1 text-xs text-muted-foreground"
                     >
-                      <RefreshCw size={13} />
-                      Trocar
+                      {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
+                      {showRate
+                        ? `Taxa de ${formatMonthlyRate(rate)} · definida pelo produto`
+                        : "Mostrar taxa"}
                     </button>
                   </div>
-                  <SelectDialogField
-                    hideTrigger
-                    open={productDialogOpen}
-                    onOpenChange={setProductDialogOpen}
-                    value={field.value}
-                    onChange={(value) =>
-                      field.onChange(value as SimulationProduct)
-                    }
-                    options={toSelectOptions(PRODUCTS)}
-                  />
-                </div>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <div className="flex flex-col gap-1.5">
-                  <FieldLabel required>Quanto o cliente precisa?</FieldLabel>
-                  <p className="font-fraunces text-3xl font-bold text-brand-navy">
-                    {fmtBRL(field.value)}
-                  </p>
-                  <input
-                    type="range"
-                    min={AMOUNT_MIN}
-                    max={AMOUNT_MAX}
-                    step={AMOUNT_STEP}
-                    value={field.value}
-                    onChange={(event) =>
-                      field.onChange(Number(event.target.value))
-                    }
-                    className="w-full accent-brand-navy"
-                  />
-                  <div className="flex justify-between text-xs text-[#9DA3B4]">
-                    <span>R$ 500</span>
-                    <span>R$ 30.000</span>
-                  </div>
-                </div>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="installments"
-              render={({ field, fieldState }) => (
-                <ChipField
-                  name={field.name}
-                  label="Em quantas parcelas?"
-                  value={field.value != null ? String(field.value) : ""}
-                  onChange={(value) => field.onChange(Number(value))}
-                  options={INSTALLMENT_OPTIONS.map((n) => ({
-                    value: String(n),
-                    label: `${n}x`,
-                  }))}
-                  chipsClassName="grid grid-cols-6 gap-2"
-                  required
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="dueDate"
-              render={({ fieldState }) => (
-                <div
-                  className="flex flex-col gap-1.5"
-                  {...fieldAnchorProps("dueDate", fieldState.error?.message)}
-                >
-                  <FieldLabel required>Melhor dia de vencimento</FieldLabel>
-                  <p className="text-xs text-[#9DA3B4]">
-                    Vencimento sempre no dia 5, 10, 15 ou 20, dentro de uma
-                    janela de até {FIRST_INSTALLMENT_MAX_DAYS} dias (D+
-                    {FIRST_INSTALLMENT_MAX_DAYS}) a partir de hoje.
-                  </p>
                   <button
                     type="button"
-                    onClick={openDueDateDialog}
-                    className="flex items-center gap-2 rounded-2xl bg-[#F5F6FA] px-4 py-3 text-left transition-colors hover:bg-[#EFF0F5]"
+                    onClick={() => setProductDialogOpen(true)}
+                    className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy"
                   >
-                    <CalendarDays
-                      size={16}
-                      className="shrink-0 text-[#6B7080]"
-                    />
-                    <span
-                      className={
-                        dueDate
-                          ? "font-semibold text-[#1A1D2E]"
-                          : "text-[#9DA3B4]"
-                      }
-                    >
-                      {dueDate
-                        ? dueDate.toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          })
-                        : "Selecionar data"}
-                    </span>
+                    <RefreshCw size={13} />
+                    Trocar
                   </button>
-                  <FieldErrorMessage error={fieldState.error?.message} />
                 </div>
-              )}
-            />
+                <SelectDialogField
+                  hideTrigger
+                  open={productDialogOpen}
+                  onOpenChange={setProductDialogOpen}
+                  value={field.value}
+                  onChange={(value) =>
+                    field.onChange(value as SimulationProduct)
+                  }
+                  options={toSelectOptions(PRODUCTS)}
+                />
+              </div>
+            )}
+          />
 
-            {installments && dueDay !== null ? (
-              <div className="rounded-2xl bg-[#F5F6FA] px-4 py-3">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-[#6B7080]">Parcela</span>
-                  <span className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-                    {fmtBRL(installmentAmount)}/mês
-                  </span>
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>Quanto o cliente precisa?</FieldLabel>
+                <p className="font-display text-3xl font-bold text-brand-navy">
+                  {fmtBRL(field.value)}
+                </p>
+                <input
+                  type="range"
+                  min={AMOUNT_MIN}
+                  max={AMOUNT_MAX}
+                  step={AMOUNT_STEP}
+                  value={field.value}
+                  onChange={(event) =>
+                    field.onChange(Number(event.target.value))
+                  }
+                  className="w-full accent-brand-navy"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>R$ 500</span>
+                  <span>R$ 30.000</span>
                 </div>
               </div>
-            ) : null}
+            )}
+          />
 
-            <Button
-              type="submit"
-              variant="yellow"
-              className="mt-0 h-11 w-full rounded-2xl"
-            >
-              Continuar
-            </Button>
-          </form>
-        </Form>
-      </section>
+          <FormField
+            control={form.control}
+            name="installments"
+            render={({ field, fieldState }) => (
+              <ChipField
+                name={field.name}
+                label="Em quantas parcelas?"
+                value={field.value != null ? String(field.value) : ""}
+                onChange={(value) => field.onChange(Number(value))}
+                options={INSTALLMENT_OPTIONS.map((n) => ({
+                  value: String(n),
+                  label: `${n}x`,
+                }))}
+                chipsClassName="grid grid-cols-6 gap-2"
+                required
+                error={fieldState.error?.message}
+              />
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="dueDate"
+            render={({ fieldState }) => (
+              <div
+                className="flex flex-col gap-1.5"
+                {...fieldAnchorProps("dueDate", fieldState.error?.message)}
+              >
+                <FieldLabel required>Melhor dia de vencimento</FieldLabel>
+                <FieldHint>
+                  Vencimento sempre no dia 5, 10, 15 ou 20, dentro de uma janela
+                  de até {FIRST_INSTALLMENT_MAX_DAYS} dias (D+
+                  {FIRST_INSTALLMENT_MAX_DAYS}) a partir de hoje.
+                </FieldHint>
+                <button
+                  type="button"
+                  onClick={openDueDateDialog}
+                  className="flex items-center gap-2 rounded-2xl bg-muted px-4 py-3 text-left transition-colors hover:bg-muted/80"
+                >
+                  <CalendarDays
+                    size={16}
+                    className="shrink-0 text-muted-foreground"
+                  />
+                  <span
+                    className={
+                      dueDate
+                        ? "font-semibold text-foreground"
+                        : "text-muted-foreground/70"
+                    }
+                  >
+                    {dueDate
+                      ? dueDate.toLocaleDateString("pt-BR", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "Selecionar data"}
+                  </span>
+                </button>
+                <FieldErrorMessage error={fieldState.error?.message} />
+              </div>
+            )}
+          />
+
+          {installments && dueDay !== null ? (
+            <div className="rounded-2xl bg-muted px-4 py-3">
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm text-muted-foreground">Parcela</span>
+                <span className="font-display text-xl font-bold text-foreground">
+                  {fmtBRL(installmentAmount)}/mês
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          <Button type="submit" variant="yellow" size="pill" className="w-full">
+            Continuar
+          </Button>
+        </form>
+      </Form>
 
       <Dialog open={dueDateDialogOpen} onOpenChange={setDueDateDialogOpen}>
         <DialogContent className="max-w-[340px]">
@@ -446,14 +397,14 @@ export function SimulacaoForm({
             <Button
               type="button"
               variant="outline"
-              className="h-10 rounded-xl"
+              size="pillSm"
               onClick={() => setDueDateDialogOpen(false)}
             >
               Cancelar
             </Button>
             <Button
               type="button"
-              className="h-10 rounded-xl font-semibold"
+              size="pillSm"
               disabled={!draftDueDate}
               onClick={confirmDueDate}
             >
@@ -462,6 +413,6 @@ export function SimulacaoForm({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </OriginacaoPageFrame>
   );
 }

@@ -15,7 +15,7 @@ export function OriginacaoProgress({
     <div
       className={cn(
         "relative h-1 w-full overflow-hidden rounded-full",
-        tone === "onDark" ? "bg-white/20" : "bg-[#E2E4EC]",
+        tone === "onDark" ? "bg-white/20" : "bg-border",
       )}
     >
       <div

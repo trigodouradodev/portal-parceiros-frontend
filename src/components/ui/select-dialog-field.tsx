@@ -13,6 +13,10 @@ import {
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
+import {
+  fieldControlClassName,
+  fieldIconClassName,
+} from "@/components/ui/field-control";
 import { cn } from "@/lib/utils";
 
 interface SelectDialogFieldProps {
@@ -117,28 +121,21 @@ export function SelectDialogField({
         disabled={disabled}
         onClick={() => handleOpenChange(true)}
         aria-invalid={error ? true : undefined}
-        className={cn(
-          "flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-colors",
-          disabled
-            ? "cursor-not-allowed border-transparent bg-[#EFEFF3]"
-            : error
-              ? "border-[#D84040] bg-[#F5F6FA]"
-              : "border-transparent bg-[#F5F6FA] focus-within:border-brand-navy",
-        )}
+        className={fieldControlClassName({ error: Boolean(error), disabled })}
       >
         <span
           className={cn(
             "flex-1 truncate text-sm",
             disabled
-              ? "text-[#6B7080]"
+              ? "text-muted-foreground"
               : selected
-                ? "text-[#1A1D2E]"
-                : "text-[#C8CBD8]",
+                ? "text-foreground"
+                : "text-muted-foreground/70",
           )}
         >
           {selected?.label ?? placeholder}
         </span>
-        <ChevronDown size={16} className="shrink-0 text-[#9DA3B4]" />
+        <ChevronDown size={16} className={fieldIconClassName} />
       </button>
       <FieldErrorMessage error={error} />
       {dialog}

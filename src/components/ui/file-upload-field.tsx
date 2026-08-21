@@ -2,6 +2,7 @@ import { useRef, type ChangeEvent } from "react";
 import { CheckCircle2, Paperclip, X } from "lucide-react";
 import {
   FieldErrorMessage,
+  FieldHint,
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
@@ -42,10 +43,7 @@ export function FileUploadField({
   }
 
   return (
-    <div
-      className="flex flex-col gap-1.5"
-      {...fieldAnchorProps(name, error)}
-    >
+    <div className="flex flex-col gap-1.5" {...fieldAnchorProps(name, error)}>
       <FieldLabel required={required}>{label}</FieldLabel>
       <input
         ref={fileRef}
@@ -57,7 +55,7 @@ export function FileUploadField({
       {files.map((fileName, i) => (
         <div
           key={`${fileName}-${i}`}
-          className="flex items-center justify-between gap-2 rounded-2xl bg-[#E6F7F1] px-4 py-3 text-sm font-medium text-[#0F6E56]"
+          className="flex items-center justify-between gap-2 rounded-2xl bg-success-bg px-4 py-3 text-sm font-medium text-success"
         >
           <span className="flex items-center gap-2 truncate">
             <CheckCircle2 size={16} className="shrink-0" />
@@ -66,7 +64,7 @@ export function FileUploadField({
           <button
             type="button"
             onClick={() => handleRemove(i)}
-            className="shrink-0 text-[#0F6E56] hover:text-[#0A4C3D]"
+            className="shrink-0 text-success hover:text-success/80"
             aria-label={`Remover ${fileName}`}
           >
             <X size={15} />
@@ -77,10 +75,10 @@ export function FileUploadField({
         type="button"
         onClick={() => fileRef.current?.click()}
         className={cn(
-          "flex h-11 items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-sm font-semibold hover:bg-[#F5F6FA]",
+          "flex h-11 items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-sm font-semibold hover:bg-muted",
           error
-            ? "border-[#D84040] text-[#D84040]"
-            : "border-[#C8CBD8] text-[#6B7080]",
+            ? "border-destructive text-destructive"
+            : "border-border text-muted-foreground",
         )}
       >
         <Paperclip size={15} />
@@ -88,7 +86,7 @@ export function FileUploadField({
           ? `Anexar ${label.toLowerCase()}`
           : "Anexar mais um arquivo"}
       </button>
-      {note ? <p className="text-xs text-[#9DA3B4]">{note}</p> : null}
+      {note ? <FieldHint>{note}</FieldHint> : null}
       <FieldErrorMessage error={error} />
     </div>
   );
