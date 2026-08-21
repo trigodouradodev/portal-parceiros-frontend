@@ -37,7 +37,7 @@ describe("nearestScrollableParent", () => {
     const scroller = document.createElement("div");
     scroller.id = ORIGINACAO_TASK_SCROLL_ID;
     const field = document.createElement("div");
-    field.id = fieldElementId("guarantor.name");
+    field.id = fieldElementId("guarantor.name") ?? "";
     scroller.append(field);
     document.body.append(scroller);
 
@@ -63,7 +63,7 @@ describe("scrollToField", () => {
       value: vi.fn(),
     });
     const field = document.createElement("div");
-    field.id = fieldElementId("guarantor.name");
+    field.id = fieldElementId("guarantor.name") ?? "";
     const input = document.createElement("input");
     field.append(input);
     scroller.append(field);
