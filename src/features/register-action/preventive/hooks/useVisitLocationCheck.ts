@@ -3,6 +3,10 @@ import { useToast } from "@/contexts/toast/toast-context";
 import { useVerifyLocation } from "@/hooks/useVerifyLocation";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import type { LocationCheckResult } from "@/services/location-check/location-check.types";
+import {
+  FollowUpParty,
+  type FollowUpParty as FollowUpPartyValue,
+} from "@/services/followup/followup.types";
 
 export type VisitLocationStatus =
   | "idle"
@@ -14,12 +18,14 @@ export type VisitLocationStatus =
 interface UseVisitLocationCheckOptions {
   contractId: string;
   installmentNumber: number;
+  party?: FollowUpPartyValue;
   onPartialMatch?: () => void;
 }
 
 export function useVisitLocationCheck({
   contractId,
   installmentNumber,
+  party = FollowUpParty.CLIENT,
   onPartialMatch,
 }: UseVisitLocationCheckOptions) {
   const { showToast } = useToast();
@@ -70,6 +76,7 @@ export function useVisitLocationCheck({
           .mutateAsync({
             contractId,
             installmentNumber,
+            party,
             latitude: positionCoords.latitude,
             longitude: positionCoords.longitude,
           })
@@ -114,6 +121,7 @@ export function useVisitLocationCheck({
     contractId,
     installmentNumber,
     onPartialMatch,
+    party,
     showToast,
     verifyLocation,
   ]);

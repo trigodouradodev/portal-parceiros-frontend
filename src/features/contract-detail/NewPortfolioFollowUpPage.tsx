@@ -81,6 +81,7 @@ export function NewPortfolioFollowUpPage() {
   return (
     <PreventiveFollowUpForm
       client={client}
+      guarantor={detail.guarantor}
       onBack={() => navigate(-1)}
       onSaved={() => navigate(detailPath, { replace: true })}
     />
