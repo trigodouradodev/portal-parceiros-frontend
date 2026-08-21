@@ -22,20 +22,20 @@ export function RegisterActionLayout({
 }: RegisterActionLayoutProps) {
   return (
     <div className="min-h-screen flex-1 bg-background font-sans">
-      <div className="bg-brand-navy px-5 pb-6 pt-12 md:px-8 md:pt-8">
+      <div className="bg-brand-yellow px-5 pb-6 pt-12 md:px-8 md:pt-8">
         <div className="mx-auto max-w-2xl">
           <button
             type="button"
             onClick={onBack}
-            className="mb-4 flex items-center gap-1.5 text-sm font-medium text-white/70 transition-colors hover:text-white"
+            className="mb-4 flex items-center gap-1.5 text-sm font-medium text-brand-navy/70 transition-colors hover:text-brand-navy"
           >
             <ArrowLeft size={16} />
             Voltar
           </button>
-          <h1 className="font-fraunces text-2xl font-bold text-white md:text-3xl">
+          <h1 className="font-fraunces text-2xl font-bold text-brand-navy md:text-3xl">
             {title}
           </h1>
-          <p className="mt-1 text-sm text-white/50">
+          <p className="mt-1 text-sm text-brand-navy/60">
             {client.name} · {client.parcela}
           </p>
         </div>

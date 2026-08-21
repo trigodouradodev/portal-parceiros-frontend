@@ -30,8 +30,11 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
-  --color-brand-yellow: #ffd320;
-  --color-brand-navy: #0d0d53;
+  /* Paleta oficial da marca (4 cores — pasta "Paleta de Cores", Biblioteca Aurea). */
+  --color-brand-yellow: #ffe167; /* Ouro */
+  --color-brand-navy: #05003d; /* Azul */
+  --color-brand-gray: #f0f0f0; /* Cinza */
+  --color-brand-white: #ffffff; /* Branco */
 
   --color-success: hsl(var(--success));
   --color-success-bg: hsl(var(--success-bg));
