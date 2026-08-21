@@ -1,24 +1,25 @@
 import {
   FollowUpExpectedResult,
-  FollowUpStatus,
+  FollowUpParty,
+  FollowUpType,
   type CreateFollowUpPayload,
 } from "@/services/followup/followup.types";
 
-export function mapPreventiveChannelToStatus(
+export function mapPreventiveChannelToType(
   channel: "whatsapp" | "phone" | "visit",
-): FollowUpStatus {
+): FollowUpType {
   switch (channel) {
     case "whatsapp":
-      return FollowUpStatus.WHATSAPP_MESSAGE;
+      return FollowUpType.MESSAGE;
     case "phone":
-      return FollowUpStatus.CLIENT_CALL;
+      return FollowUpType.CALL;
     case "visit":
-      return FollowUpStatus.CLIENT_VISIT;
+      return FollowUpType.VISIT;
   }
 }
 
 export function mapPreventiveOutcomeToExpectedResult(
-  outcome: string,
+  outcome?: string | null,
 ): FollowUpExpectedResult | undefined {
   switch (outcome) {
     case "confirmed":
@@ -27,8 +28,14 @@ export function mapPreventiveOutcomeToExpectedResult(
       return FollowUpExpectedResult.NO_RETURN;
     case "delay":
       return FollowUpExpectedResult.REQUESTED_EXTENSION;
+    case "dispute":
+      return FollowUpExpectedResult.DISPUTE;
     case "renegotiate":
       return FollowUpExpectedResult.WANTS_RENEGOTIATION;
+    case "deceased":
+      return FollowUpExpectedResult.DECEASED;
+    case "other":
+      return FollowUpExpectedResult.OTHER;
     default:
       return undefined;
   }
@@ -38,17 +45,21 @@ export function buildPreventiveFollowUpPayload(params: {
   contractId: string;
   installmentNumber: number;
   channel: "whatsapp" | "phone" | "visit";
-  outcome: string;
+  party: FollowUpParty;
+  outcome?: string | null;
   note?: string;
+  paymentForecast?: string;
   latitude?: number;
   longitude?: number;
 }): CreateFollowUpPayload {
   const payload: CreateFollowUpPayload = {
     contractId: params.contractId,
     installmentNumber: params.installmentNumber,
-    status: mapPreventiveChannelToStatus(params.channel),
+    followUpType: mapPreventiveChannelToType(params.channel),
+    party: params.party,
     note: params.note || undefined,
     expectedResult: mapPreventiveOutcomeToExpectedResult(params.outcome),
+    paymentForecast: params.paymentForecast,
   };
 
   if (

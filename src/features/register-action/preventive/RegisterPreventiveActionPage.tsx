@@ -4,7 +4,7 @@ import { PreventiveFollowUpForm } from "./PreventiveFollowUpForm";
 
 export function RegisterPreventiveActionPage() {
   const navigate = useNavigate();
-  const { client, onComplete } = useActionContext();
+  const { client, guarantor, onComplete } = useActionContext();
 
   if (!client) {
     return null;
@@ -13,6 +13,7 @@ export function RegisterPreventiveActionPage() {
   return (
     <PreventiveFollowUpForm
       client={client}
+      guarantor={guarantor}
       onBack={() => navigate(-1)}
       onSaved={(result) => {
         onComplete(result);

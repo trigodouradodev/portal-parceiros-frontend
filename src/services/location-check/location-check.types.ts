@@ -2,6 +2,8 @@
  * Types matching portal-parceiros-backend/src/location-check/
  */
 
+import type { FollowUpParty } from "@/services/followup/followup.types";
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -10,6 +12,7 @@ export interface Coordinates {
 export interface VerifyLocationPayload {
   contractId: string;
   installmentNumber: number;
+  party?: FollowUpParty;
   latitude: number;
   longitude: number;
 }
