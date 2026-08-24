@@ -29,9 +29,11 @@ export interface UserProfile {
   canCreateQuote: boolean;
 }
 
-/** Body de `PATCH /auth/me` (camelCase). */
+/**
+ * Body de `PATCH /auth/me` (camelCase). E-mail não entra aqui: é o login do
+ * usuário, não é editável pelo Perfil.
+ */
 export interface UpdateProfileRequest {
-  email?: string;
   fullName?: string;
   phoneNumber?: string | null;
 }

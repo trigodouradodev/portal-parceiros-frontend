@@ -106,6 +106,28 @@ describe("LoginPage", () => {
     );
   });
 
+  it("shows permission error on 403", async () => {
+    const user = userEvent.setup();
+    const login = vi.fn().mockRejectedValue(
+      new AxiosError("Forbidden", "ERR_BAD_REQUEST", undefined, undefined, {
+        status: 403,
+        data: {},
+        statusText: "Forbidden",
+        headers: {},
+        config: { headers: {} as never },
+      }),
+    );
+    renderLogin(login);
+
+    await user.type(emailInput(), "ana@test.com");
+    await user.type(passwordInput(), "senha123");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Você não tem permissão para acessar o Portal.",
+    );
+  });
+
   it("shows offline error when there is no response", async () => {
     const user = userEvent.setup();
     const login = vi

@@ -65,6 +65,10 @@ export function LoginPage() {
           setFormError("E-mail ou senha incorretos. Tente novamente.");
           return;
         }
+        if (err.response?.status === 403) {
+          setFormError("Você não tem permissão para acessar o Portal.");
+          return;
+        }
         if (!err.response) {
           setFormError(
             "Sem conexão. Verifique sua internet e tente novamente.",
