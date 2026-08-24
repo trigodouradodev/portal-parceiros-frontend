@@ -1,18 +1,15 @@
 import { z } from "zod";
 import { digitsOnlyPhone } from "@/lib/format/phone";
 
+// E-mail não faz parte do formulário: é o login do usuário, não é editável
+// por aqui (ver ProfilePage/PersonalDataSection, que mostram o valor atual
+// só como leitura).
 export const profileSchema = z.object({
   fullName: z
     .string()
     .trim()
     .min(1, "Informe seu nome completo.")
     .max(255, "Nome muito longo."),
-  email: z
-    .string()
-    .trim()
-    .min(1, "Informe seu e-mail.")
-    .email("Informe um e-mail válido.")
-    .max(255, "E-mail muito longo."),
   phone: z
     .string()
     .trim()
