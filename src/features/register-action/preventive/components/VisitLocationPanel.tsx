@@ -73,6 +73,7 @@ export function VisitLocationPanel({
           destinationCoordinates={locationCheckResult?.registeredCoordinates}
           distanceMeters={locationCheckResult?.distanceMeters}
           radiusMeters={locationCheckResult?.radiusMeters}
+          addressLikelyWrong={locationCheckResult?.addressLikelyWrong}
           onConfirmManual={onConfirmManual}
         />
       )}
