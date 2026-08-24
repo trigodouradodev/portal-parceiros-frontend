@@ -3,6 +3,7 @@ import { followupService } from "@/services/followup/followup.service";
 import type { CreateFollowUpPayload } from "@/services/followup/followup.types";
 import { dashboardKeys } from "@/hooks/useDashboard";
 import { collectionKeys } from "@/hooks/useCollectionDetail";
+import { contractDetailKeys } from "@/hooks/useContractDetailByContractId";
 
 export function useCreateFollowUp() {
   const queryClient = useQueryClient();
@@ -14,6 +15,12 @@ export function useCreateFollowUp() {
       queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
 
       if (payload.contractId && payload.installmentNumber) {
+        queryClient.invalidateQueries({
+          queryKey: contractDetailKeys.detail(
+            payload.contractId,
+            payload.installmentNumber,
+          ),
+        });
         queryClient.invalidateQueries({
           queryKey: collectionKeys.detail(
             payload.contractId,

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import type { ChargeStage } from "@/features/dashboard/mocks/tasks";
 import {
   ActionContext,
@@ -9,9 +9,11 @@ import {
   type SetActionDataPayload,
   type PreventiveContactType,
 } from "@/contexts/action/action-context";
+import { useAuth } from "@/contexts/auth/auth-context";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
 export function ActionProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [client, setClient] = useState<ActionClient | null>(null);
   const [guarantor, setGuarantor] = useState<ActionParty | null>(null);
   const [mode, setMode] = useState<ActionMode | null>(null);
@@ -33,7 +35,7 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     () => () => {},
   );
 
-  function setActionData(data: SetActionDataPayload) {
+  const setActionData = useCallback((data: SetActionDataPayload) => {
     setClient(data.client);
     setGuarantor(data.guarantor ?? null);
     setMode(data.mode);
@@ -44,9 +46,9 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setContactType(data.contactType);
     setQueueTone(data.queueTone);
     setOnComplete(() => data.onComplete);
-  }
+  }, []);
 
-  function clearActionData() {
+  const clearActionData = useCallback(() => {
     setClient(null);
     setGuarantor(null);
     setMode(null);
@@ -57,6 +59,10 @@ export function ActionProvider({ children }: { children: ReactNode }) {
     setContactType(undefined);
     setQueueTone(undefined);
     setOnComplete(() => () => {});
+  }, []);
+
+  if (!user && client !== null) {
+    clearActionData();
   }
 
   return (

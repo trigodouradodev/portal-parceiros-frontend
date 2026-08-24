@@ -1,4 +1,3 @@
-import { TaskTab } from "@/features/dashboard/constants/task-tab";
 import type { ContractDetailView } from "@/features/contract-detail/types";
 import { Timeline } from "@/features/contract-detail/components/Timeline";
 
@@ -9,6 +8,8 @@ interface TimelineSectionProps {
   showAction?: boolean;
   /** AUREA-346: ver TimelineStepItem — escopado só à Carteira por ora. */
   dedupeCtaLabel?: boolean;
+  title?: string;
+  actionLabel?: string;
 }
 
 export function TimelineSection({
@@ -16,10 +17,12 @@ export function TimelineSection({
   onRegisterAction,
   showAction = true,
   dedupeCtaLabel = false,
+  title,
+  actionLabel,
 }: TimelineSectionProps) {
   const doneCount = detail.timeline.filter((s) => s.status === "done").length;
   const totalCount = detail.timeline.length;
-  const titlePrefix = detail.mode === TaskTab.Charge ? "Cobrança" : "Jornada";
+  const titlePrefix = title ?? "Histórico";
 
   return (
     <div>
@@ -37,6 +40,7 @@ export function TimelineSection({
           onRegisterAction={onRegisterAction}
           showAction={showAction}
           dedupeCtaLabel={dedupeCtaLabel}
+          actionLabel={actionLabel}
         />
       </div>
     </div>

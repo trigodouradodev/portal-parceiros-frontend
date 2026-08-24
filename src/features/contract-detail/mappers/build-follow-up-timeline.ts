@@ -4,6 +4,7 @@ import type { FollowUpHistoryItem } from "@/services/dashboard/dashboard.types";
 import {
   getFollowUpExpectedResultLabel,
   getFollowUpStatusLabel,
+  getStructuredFollowUpLabel,
 } from "@/services/followup/followup-labels";
 
 function buildFollowUpNote(followUp: FollowUpHistoryItem): string | undefined {
@@ -36,7 +37,13 @@ export function buildFollowUpTimeline(
   const historySteps: TimelineStep[] = chronological.map((followUp, index) => ({
     id: followUp.id,
     day: `#${index + 1}`,
-    label: getFollowUpStatusLabel(followUp.status),
+    label: followUp.followUpType
+      ? getStructuredFollowUpLabel(
+          followUp.followUpType,
+          followUp.party,
+          followUp.automaticAction,
+        )
+      : getFollowUpStatusLabel(followUp.status),
     status: "done",
     date: formatDateTime(followUp.createdAt),
     agent: followUp.author.name,

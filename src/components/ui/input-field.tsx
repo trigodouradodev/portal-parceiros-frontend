@@ -15,6 +15,7 @@ interface InputFieldProps {
   max?: string;
   disabled?: boolean;
   error?: string;
+  className?: string;
 }
 
 export function InputField({
@@ -29,9 +30,10 @@ export function InputField({
   max,
   disabled,
   error,
+  className,
 }: InputFieldProps) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>
       <div
         className={cn(

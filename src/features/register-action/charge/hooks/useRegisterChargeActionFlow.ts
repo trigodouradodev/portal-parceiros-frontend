@@ -27,6 +27,7 @@ import {
   ActivityRecipientType,
   PROMISE_MAX_DAYS,
 } from "@/services/activities/activity.enums";
+import { FollowUpParty } from "@/services/followup/followup.types";
 import {
   buildV2RegisterInteractionPayload,
   mapTaskChannelToActivityTaskType,
@@ -84,6 +85,10 @@ export function useRegisterChargeActionFlow() {
   const location = useVisitLocationCheck({
     contractId: client?.id ?? "",
     installmentNumber: client?.installmentNumber ?? 0,
+    party:
+      recipientType === ActivityRecipientType.GUARANTOR
+        ? FollowUpParty.GUARANTOR
+        : FollowUpParty.CLIENT,
   });
 
   useEffect(() => {

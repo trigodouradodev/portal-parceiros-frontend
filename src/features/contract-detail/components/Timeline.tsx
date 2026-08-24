@@ -8,6 +8,7 @@ interface TimelineProps {
   onRegisterAction: () => void;
   showAction?: boolean;
   dedupeCtaLabel?: boolean;
+  actionLabel?: string;
 }
 
 export function Timeline({
@@ -15,6 +16,7 @@ export function Timeline({
   onRegisterAction,
   showAction = true,
   dedupeCtaLabel = false,
+  actionLabel,
 }: TimelineProps) {
   return (
     <div className="flex flex-col">
@@ -26,6 +28,7 @@ export function Timeline({
           onRegisterAction={onRegisterAction}
           showAction={showAction}
           dedupeCtaLabel={dedupeCtaLabel}
+          actionLabel={actionLabel}
         />
       ))}
     </div>
@@ -38,6 +41,7 @@ interface TimelineRowProps {
   onRegisterAction: () => void;
   showAction: boolean;
   dedupeCtaLabel: boolean;
+  actionLabel?: string;
 }
 
 function TimelineRow({
@@ -46,6 +50,7 @@ function TimelineRow({
   onRegisterAction,
   showAction,
   dedupeCtaLabel,
+  actionLabel,
 }: TimelineRowProps) {
   const isEvent = !step.tone;
 
@@ -66,6 +71,7 @@ function TimelineRow({
         onRegisterAction={onRegisterAction}
         showAction={showAction}
         dedupeCtaLabel={dedupeCtaLabel}
+        actionLabel={actionLabel}
       />
     </div>
   );

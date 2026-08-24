@@ -8,6 +8,7 @@ import { VISIT_RESCHEDULE_WINDOW_DAYS } from "@/features/dashboard/constants/vis
 interface VisitSecondaryActionsProps {
   canRescheduleVisit: boolean;
   wasRescheduled: boolean;
+  rescheduleCount: number;
   rescheduledDateLabel?: string;
   canPostpone: boolean;
   onOpenReschedule: () => void;
@@ -17,11 +18,18 @@ interface VisitSecondaryActionsProps {
 export function VisitSecondaryActions({
   canRescheduleVisit,
   wasRescheduled,
+  rescheduleCount,
   rescheduledDateLabel,
   canPostpone,
   onOpenReschedule,
   onPostponeClick,
 }: VisitSecondaryActionsProps) {
+  const isLastReschedule = rescheduleCount === 1;
+  const rescheduleLabel = isLastReschedule ? "Reagendar" : "Agendar";
+  const rescheduleTitle = isLastReschedule
+    ? `Reagendar a visita para até ${VISIT_RESCHEDULE_WINDOW_DAYS} dias (última chance)`
+    : `Agendar a visita para até ${VISIT_RESCHEDULE_WINDOW_DAYS} dias`;
+
   let rescheduleControl: ReactNode = (
     <RescheduledVisitBadge
       wasRescheduled={wasRescheduled}
@@ -37,10 +45,10 @@ export function VisitSecondaryActions({
         variant="outline"
         className="h-9 gap-1 border-[#E2E4EC] px-3 text-xs text-[#6B7080] hover:border-brand-navy hover:text-brand-navy"
         onClick={onOpenReschedule}
-        title={`Reagendar a visita para até ${VISIT_RESCHEDULE_WINDOW_DAYS} dias (apenas 1 vez)`}
+        title={rescheduleTitle}
       >
         <CalendarDays size={13} />
-        Reagendar · 1×
+        {rescheduleLabel}
       </Button>
     );
   }

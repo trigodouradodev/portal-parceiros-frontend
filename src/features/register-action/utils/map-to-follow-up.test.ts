@@ -1,24 +1,19 @@
 import {
   buildPreventiveFollowUpPayload,
-  mapPreventiveChannelToStatus,
+  mapPreventiveChannelToType,
   mapPreventiveOutcomeToExpectedResult,
 } from "@/features/register-action/utils/map-to-follow-up";
 import {
   FollowUpExpectedResult,
-  FollowUpStatus,
+  FollowUpParty,
+  FollowUpType,
 } from "@/services/followup/followup.types";
 
-describe("mapPreventiveChannelToStatus", () => {
-  it("maps channels to follow-up statuses", () => {
-    expect(mapPreventiveChannelToStatus("whatsapp")).toBe(
-      FollowUpStatus.WHATSAPP_MESSAGE,
-    );
-    expect(mapPreventiveChannelToStatus("phone")).toBe(
-      FollowUpStatus.CLIENT_CALL,
-    );
-    expect(mapPreventiveChannelToStatus("visit")).toBe(
-      FollowUpStatus.CLIENT_VISIT,
-    );
+describe("mapPreventiveChannelToType", () => {
+  it("maps channels to structured follow-up types", () => {
+    expect(mapPreventiveChannelToType("whatsapp")).toBe(FollowUpType.MESSAGE);
+    expect(mapPreventiveChannelToType("phone")).toBe(FollowUpType.CALL);
+    expect(mapPreventiveChannelToType("visit")).toBe(FollowUpType.VISIT);
   });
 });
 
@@ -36,7 +31,16 @@ describe("mapPreventiveOutcomeToExpectedResult", () => {
     expect(mapPreventiveOutcomeToExpectedResult("renegotiate")).toBe(
       FollowUpExpectedResult.WANTS_RENEGOTIATION,
     );
-    expect(mapPreventiveOutcomeToExpectedResult("other")).toBeUndefined();
+    expect(mapPreventiveOutcomeToExpectedResult("dispute")).toBe(
+      FollowUpExpectedResult.DISPUTE,
+    );
+    expect(mapPreventiveOutcomeToExpectedResult("deceased")).toBe(
+      FollowUpExpectedResult.DECEASED,
+    );
+    expect(mapPreventiveOutcomeToExpectedResult("other")).toBe(
+      FollowUpExpectedResult.OTHER,
+    );
+    expect(mapPreventiveOutcomeToExpectedResult()).toBeUndefined();
   });
 });
 
@@ -47,17 +51,21 @@ describe("buildPreventiveFollowUpPayload", () => {
         contractId: "c-1",
         installmentNumber: 2,
         channel: "visit",
+        party: FollowUpParty.GUARANTOR,
         outcome: "confirmed",
         note: "Ok",
+        paymentForecast: "2026-09-01",
         latitude: -23.5,
         longitude: -46.6,
       }),
     ).toEqual({
       contractId: "c-1",
       installmentNumber: 2,
-      status: FollowUpStatus.CLIENT_VISIT,
+      followUpType: FollowUpType.VISIT,
+      party: FollowUpParty.GUARANTOR,
       note: "Ok",
       expectedResult: FollowUpExpectedResult.WILL_PAY_ON_DATE,
+      paymentForecast: "2026-09-01",
       latitude: -23.5,
       longitude: -46.6,
     });
@@ -68,6 +76,7 @@ describe("buildPreventiveFollowUpPayload", () => {
       contractId: "c-1",
       installmentNumber: 1,
       channel: "whatsapp",
+      party: FollowUpParty.CLIENT,
       outcome: "no_return",
       latitude: -23.5,
       longitude: -46.6,
@@ -75,6 +84,7 @@ describe("buildPreventiveFollowUpPayload", () => {
 
     expect(payload.latitude).toBeUndefined();
     expect(payload.longitude).toBeUndefined();
-    expect(payload.status).toBe(FollowUpStatus.WHATSAPP_MESSAGE);
+    expect(payload.followUpType).toBe(FollowUpType.MESSAGE);
+    expect(payload.party).toBe(FollowUpParty.CLIENT);
   });
 });
