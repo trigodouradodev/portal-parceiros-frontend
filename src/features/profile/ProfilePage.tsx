@@ -45,7 +45,6 @@ export function ProfilePage() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       fullName: "",
-      email: "",
       phone: "",
     },
   });
@@ -59,7 +58,7 @@ export function ProfilePage() {
     },
   });
 
-  const { reset, watch, setError, formState } = form;
+  const { reset, watch, formState } = form;
   const values = watch();
 
   const {
@@ -74,18 +73,15 @@ export function ProfilePage() {
     if (!user) return;
     reset({
       fullName: user.full_name ?? "",
-      email: user.email ?? "",
       phone: formatPhoneDisplay(user.phone_number ?? ""),
     });
   }, [user, reset]);
 
   const baselineName = user?.full_name ?? "";
-  const baselineEmail = user?.email ?? "";
   const baselinePhoneDigits = digitsOnlyPhone(user?.phone_number ?? "");
 
   const dataChanged =
     values.fullName.trim() !== baselineName.trim() ||
-    values.email.trim().toLowerCase() !== baselineEmail.trim().toLowerCase() ||
     digitsOnlyPhone(values.phone) !== baselinePhoneDigits;
 
   const passwordFilled =
@@ -97,7 +93,6 @@ export function ProfilePage() {
     if (!user) return;
     reset({
       fullName: user.full_name ?? "",
-      email: user.email ?? "",
       phone: formatPhoneDisplay(user.phone_number ?? ""),
     });
   };
@@ -107,14 +102,10 @@ export function ProfilePage() {
 
     const payload: UpdateProfileRequest = {};
     const nextName = formValues.fullName.trim();
-    const nextEmail = formValues.email.trim().toLowerCase();
     const nextPhone = digitsOnlyPhone(formValues.phone);
 
     if (nextName !== baselineName.trim()) {
       payload.fullName = nextName;
-    }
-    if (nextEmail !== baselineEmail.trim().toLowerCase()) {
-      payload.email = nextEmail;
     }
     if (nextPhone !== baselinePhoneDigits) {
       payload.phoneNumber = nextPhone || null;
@@ -131,14 +122,6 @@ export function ProfilePage() {
     } catch (err: unknown) {
       if (isAxiosError(err)) {
         const code = apiErrorMessage(err);
-
-        if (err.response?.status === 409 || code === "email_already_in_use") {
-          setError("email", {
-            type: "server",
-            message: "Este e-mail já está em uso.",
-          });
-          return;
-        }
 
         if (code === "no_fields_to_update") {
           showToast("Nenhuma alteração para salvar.", {
@@ -212,12 +195,6 @@ export function ProfilePage() {
   const passwordSaving =
     changePassword.isPending || passwordFormState.isSubmitting;
 
-  const handleCameraClick = () => {
-    showToast("Upload de foto ainda não está disponível.", {
-      variant: "destructive",
-    });
-  };
-
   return (
     <PageContainer>
       <PageHeader
@@ -226,14 +203,11 @@ export function ProfilePage() {
       />
 
       <div className="max-w-xl flex-1 px-5 pt-5 pb-8 md:px-8">
-        <ProfileAvatarHeader
-          displayName={displayName}
-          roleLabel={roleLabel}
-          onCameraClick={handleCameraClick}
-        />
+        <ProfileAvatarHeader displayName={displayName} roleLabel={roleLabel} />
 
         <PersonalDataSection
           form={form}
+          email={user?.email ?? ""}
           dataChanged={dataChanged}
           saving={saving}
           onCancel={handleCancel}

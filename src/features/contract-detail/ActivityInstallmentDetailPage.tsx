@@ -16,6 +16,7 @@ import {
   getChargeRegisterPath,
 } from "@/features/dashboard/utils/launch-action";
 import { useInstallmentDetail } from "@/hooks/useInstallmentDetail";
+import { useTaskInteractionPermission } from "@/hooks/useTaskInteractionPermission";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 function isOverdueCollectionItem(
@@ -55,11 +56,13 @@ export function ActivityInstallmentDetailPage() {
   const { setActionData } = useActionContext();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const canInteractWithTask = useTaskInteractionPermission();
   const locationState =
     location.state as ActivityInstallmentLocationState | null;
   const sourceItem = isOverdueCollectionItem(locationState?.item)
     ? locationState.item
     : undefined;
+  const canRegisterAction = canInteractWithTask(sourceItem);
   const installmentDetailQuery = useInstallmentDetail(installmentId);
 
   const detail = installmentDetailQuery.data
@@ -73,6 +76,13 @@ export function ActivityInstallmentDetailPage() {
   }
 
   function handleRegisterAction() {
+    if (!canRegisterAction) {
+      showToast("Esta tarefa está disponível somente para visualização.", {
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!installmentDetailQuery.data) {
       showToast("Não foi possível carregar o detalhe da parcela.", {
         variant: "destructive",
@@ -137,6 +147,7 @@ export function ActivityInstallmentDetailPage() {
               <TimelineSection
                 detail={detail}
                 onRegisterAction={handleRegisterAction}
+                showAction={canRegisterAction}
                 title="Cobrança"
               />
             </div>
@@ -146,6 +157,7 @@ export function ActivityInstallmentDetailPage() {
             <TimelineSection
               detail={detail}
               onRegisterAction={handleRegisterAction}
+              showAction={canRegisterAction}
               title="Cobrança"
             />
           </div>
