@@ -105,7 +105,10 @@ export function QuoteActivityPermissionsAlert({
 }: QuoteActivityPermissionsAlertProps) {
   return (
     <Dialog>
-      <section aria-label="Acessos a propostas" className="flex flex-col gap-3">
+      <section
+        aria-label="Acessos a propostas"
+        className="flex flex-col gap-3 rounded-2xl border border-border bg-white p-4 shadow-card"
+      >
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-[#1A1D2E] md:text-lg">
             Propostas
@@ -120,7 +123,7 @@ export function QuoteActivityPermissionsAlert({
             </Button>
           </DialogTrigger>
         </div>
-        <div className="flex w-full flex-wrap justify-between gap-3 md:w-auto md:self-end md:justify-end">
+        <div className="grid grid-cols-2 gap-2 md:flex md:w-auto md:self-end">
           <QuoteAction
             label="Simular proposta"
             allowed={canSimulateQuote}

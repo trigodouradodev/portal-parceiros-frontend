@@ -93,6 +93,12 @@ export interface QueueAssignee {
   name: string;
 }
 
+/** Usuário da hierarquia do parceiro autenticado. */
+export interface ActivitySubordinate {
+  id: string;
+  name: string;
+}
+
 export interface QueueTaskCard {
   position: number;
   taskId: string;

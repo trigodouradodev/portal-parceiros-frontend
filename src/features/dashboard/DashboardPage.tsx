@@ -5,6 +5,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useToast } from "@/contexts/toast/toast-context";
 import { useActionContext } from "@/contexts/action";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import type { PreventiveContactType } from "@/contexts/action/action-context";
 import { SummaryCard } from "@/features/dashboard/components/SummaryCards";
 import { DashboardSkeleton } from "@/features/dashboard/components/DashboardSkeleton";
@@ -28,8 +29,10 @@ import {
   flattenTodayQueueCards,
   usePostponeTask,
   useRescheduleTask,
+  useSubordinates,
   useTodayQueueInfinite,
 } from "@/hooks/useActivities";
+import { useTaskInteractionPermission } from "@/hooks/useTaskInteractionPermission";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
@@ -41,6 +44,7 @@ import { QuoteActivityPermissionsAlert } from "@/features/dashboard/components/Q
 import { buildContractListPath } from "@/features/carteira/utils/contract-list-route";
 
 const QUEUE_HIGHLIGHT_MS = 5000;
+const MY_ACTIVITIES_VALUE = "my-activities";
 
 function scrollToHighlightedCard(installmentId: string): boolean {
   const el = document.querySelector(
@@ -64,17 +68,33 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setActionData } = useActionContext();
+  const canInteractWithTask = useTaskInteractionPermission();
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
   const { data: quoteActivityPermissions } = useQuoteActivityPermissions();
+  const [selectedAssigneeId, setSelectedAssigneeId] =
+    useState(MY_ACTIVITIES_VALUE);
+  const selectedAssignedToId =
+    selectedAssigneeId === MY_ACTIVITIES_VALUE ? undefined : selectedAssigneeId;
+  const { data: subordinates = [] } = useSubordinates();
+  const assigneeOptions = useMemo(
+    () => [
+      { value: MY_ACTIVITIES_VALUE, label: "Minhas atividades" },
+      ...subordinates.map((subordinate) => ({
+        value: subordinate.id,
+        label: subordinate.name,
+      })),
+    ],
+    [subordinates],
+  );
   const {
     data: todayQueueData,
     isLoading: isLoadingTodayQueue,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useTodayQueueInfinite(30);
+  } = useTodayQueueInfinite(30, selectedAssignedToId);
   const postponeTask = usePostponeTask();
   const rescheduleTask = useRescheduleTask();
   const summaryScrollRef = useRef<HTMLDivElement>(null);
@@ -94,6 +114,13 @@ export function DashboardPage() {
   const rescheduleHighlightTimeoutRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
+
+  const handleAssigneeChange = (value: string) => {
+    setSelectedAssigneeId(value);
+    setHighlightedInstallmentId(null);
+    setPinnedHighlightItem(null);
+    highlightScrolledRef.current = null;
+  };
 
   const navCompletedHighlightId =
     (location.state as QueueHighlightNavigationState | null)
@@ -143,7 +170,7 @@ export function DashboardPage() {
   const chargeQueueData = useMemo(() => {
     const pages = todayQueueData?.pages ?? [];
     const cards = flattenTodayQueueCards(pages);
-    const queueView = buildChargeQueueFromApiCards(cards);
+    const queueView = buildChargeQueueFromApiCards(cards, canInteractWithTask);
     const firstPage = pages[0];
     const { scheduled, completedToday } = extractTodayQueueMeta(pages);
 
@@ -155,7 +182,7 @@ export function DashboardPage() {
       scheduledItems: scheduled.map(mapQueueTaskCardToOverdueItem),
       completedTodayItems: completedToday.map(mapQueueTaskCardToOverdueItem),
     };
-  }, [todayQueueData?.pages]);
+  }, [todayQueueData?.pages, canInteractWithTask]);
 
   const {
     items: chargeItems,
@@ -289,14 +316,6 @@ export function DashboardPage() {
   };
 
   const handleChargeOpen = (item: OverdueCollectionItem) => {
-    if (isChargeQueueItemBlocked(chargeQueueView, item)) {
-      showToast(
-        "Esta tarefa está bloqueada. Complete as tarefas do segmento atual (mais prioritário) para liberá-la.",
-        { variant: "destructive" },
-      );
-      return;
-    }
-
     handleDetailOpen(item);
   };
 
@@ -462,17 +481,36 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="px-5 pt-5 pb-4 md:px-8">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
-              Ações de hoje
-            </span>
-            <span className="rounded-full bg-brand-navy px-2 py-0.5 text-xs font-semibold text-white">
-              {totalActions}
-            </span>
-          </div>
-          <span className="text-xs text-[#9DA3B4]">Ordenado por urgência</span>
+      <div className="mx-5 mt-7 border-t border-border pt-5 pb-4 md:mx-8">
+        <div className="mb-3">
+          {subordinates.length > 0 ? (
+            <div className="flex items-center gap-2 md:w-90">
+              <SelectDialogField
+                value={selectedAssigneeId}
+                onChange={handleAssigneeChange}
+                options={assigneeOptions}
+                placeholder="Minhas atividades"
+                dialogTitle="Filtrar atividades"
+                className="min-w-0 flex-1"
+                selectedLabelClassName="text-base font-semibold"
+              />
+              <span
+                aria-label={`${totalActions} atividades de hoje`}
+                className="rounded-full bg-brand-navy px-2 py-0.5 text-xs font-semibold text-white"
+              >
+                {totalActions}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-base font-semibold text-[#1A1D2E] md:text-lg">
+                Atividades de hoje
+              </span>
+              <span className="rounded-full bg-brand-navy px-2 py-0.5 text-xs font-semibold text-white">
+                {totalActions}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

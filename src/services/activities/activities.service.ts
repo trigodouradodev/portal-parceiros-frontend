@@ -8,14 +8,26 @@ import type {
   RegisterInteractionResponse,
   RescheduleTaskPayload,
   TaskActionResult,
+  ActivitySubordinate,
   TodayQueue,
 } from "./activities.types";
 import type { InstallmentDetail } from "./installment-detail.types";
 
 export const activitiesService = {
-  async getTodayQueue(page = 1, limit = 30): Promise<TodayQueue> {
+  async getSubordinates(): Promise<ActivitySubordinate[]> {
+    const { data } = await api.get<ActivitySubordinate[]>(
+      "/activities/subordinates",
+    );
+    return data;
+  },
+
+  async getTodayQueue(
+    page = 1,
+    limit = 30,
+    assignedToId?: string,
+  ): Promise<TodayQueue> {
     const { data } = await api.get<TodayQueue>("/activities/tasks/today", {
-      params: { page, limit },
+      params: { page, limit, ...(assignedToId ? { assignedToId } : {}) },
     });
     return normalizeTodayQueue(data);
   },
