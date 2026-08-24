@@ -11,12 +11,14 @@ import type { SelectOption } from "@/components/ui/select-option";
 import { cn } from "@/lib/utils";
 
 interface SelectDialogFieldProps {
-  label: string;
+  label?: string;
+  dialogTitle?: string;
   value: string;
   onChange: (value: string) => void;
   options: SelectOption[];
   placeholder?: string;
   className?: string;
+  selectedLabelClassName?: string;
 }
 
 /**
@@ -29,14 +31,17 @@ interface SelectDialogFieldProps {
  */
 export function SelectDialogField({
   label,
+  dialogTitle,
   value,
   onChange,
   options,
   placeholder = "Selecione",
   className,
+  selectedLabelClassName,
 }: SelectDialogFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = options.find((option) => option.value === value);
+  const title = dialogTitle ?? label ?? placeholder;
 
   function handleSelect(next: string) {
     onChange(next);
@@ -45,13 +50,20 @@ export function SelectDialogField({
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>
+      {label && (
+        <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>
+      )}
       <button
         type="button"
         onClick={() => setOpen(true)}
         className="flex items-center gap-3 rounded-2xl border-2 border-transparent bg-[#F5F6FA] px-4 py-3 text-left transition-colors focus-within:border-brand-navy"
       >
-        <span className="flex-1 truncate text-sm text-[#1A1D2E]">
+        <span
+          className={cn(
+            "flex-1 truncate text-sm text-[#1A1D2E]",
+            selectedLabelClassName,
+          )}
+        >
           {selected?.label ?? placeholder}
         </span>
         <ChevronDown size={16} className="shrink-0 text-[#9DA3B4]" />
@@ -60,7 +72,7 @@ export function SelectDialogField({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-[340px]">
           <DialogHeader>
-            <DialogTitle>{label}</DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
           </DialogHeader>
           <div className="-mx-1 flex max-h-[60vh] flex-col gap-1 overflow-y-auto px-1">
             {options.map((option) => {

@@ -167,16 +167,17 @@ export function ChargeTasksTab({
     const installmentId = row.item.installment.id;
     const highlighted = installmentId === highlightedInstallmentId;
 
-    // Travada (outro segmento): sem alteração, sem clique.
-    if (row.locked) {
+    // Travada: pode ser expandida para consulta, mas nunca mostra interações.
+    if (row.locked && !expandedIds.has(installmentId)) {
       return (
         <ChargeQueueCompactRow
           key={row.key}
           display={row.display}
           locked
+          expandable
           installmentId={installmentId}
           highlighted={highlighted}
-          onOpen={() => onOpen(row.item)}
+          onOpen={() => toggleExpanded(installmentId)}
         />
       );
     }
@@ -197,7 +198,7 @@ export function ChargeTasksTab({
       );
     }
 
-    // Expandida: card de ação completo, igual ao Hero.
+    // Expandida: a tarefa própria mostra ações; as demais ficam em consulta.
     return (
       <ChargeQueueHeroCard
         key={row.key}
@@ -215,6 +216,7 @@ export function ChargeTasksTab({
         onRescheduleVisit={(date) => onRescheduleVisit(row.item, date)}
         isPostponing={isPostponing}
         isRescheduling={isRescheduling}
+        readOnly={row.locked}
       />
     );
   }

@@ -29,6 +29,8 @@ interface ChargeQueueHeroCardProps {
   onRescheduleVisit: (date: string) => boolean | Promise<boolean>;
   isPostponing?: boolean;
   isRescheduling?: boolean;
+  /** Exibe os dados da tarefa sem disponibilizar interações. */
+  readOnly?: boolean;
   /** Presente só nas secundárias do segmento ativo — recolhe de volta à linha compacta (AUREA-319). */
   onCollapse?: () => void;
 }
@@ -48,6 +50,7 @@ export function ChargeQueueHeroCard({
   onRescheduleVisit,
   isPostponing = false,
   isRescheduling = false,
+  readOnly = false,
   onCollapse,
 }: ChargeQueueHeroCardProps) {
   const [confirmingPostpone, setConfirmingPostpone] = useState(false);
@@ -184,7 +187,7 @@ export function ChargeQueueHeroCard({
           )}
         </button>
 
-        {confirmingPostpone && (
+        {!readOnly && confirmingPostpone && (
           <div className="mx-4 mb-3 rounded-xl border border-[#F5C37A] bg-[#FDF3E0] p-3">
             <div className="mb-3 flex items-start gap-2">
               <CalendarClock
@@ -221,7 +224,7 @@ export function ChargeQueueHeroCard({
           </div>
         )}
 
-        {!confirmingPostpone && (
+        {!readOnly && !confirmingPostpone && (
           <div className="flex flex-col gap-2 border-t border-[#F0F1F5] px-4 pb-3 pt-1">
             <div className="flex gap-2">
               <HeroPrimaryActions
@@ -249,7 +252,7 @@ export function ChargeQueueHeroCard({
         )}
       </div>
 
-      {isVisitTask && (
+      {!readOnly && isVisitTask && (
         <VisitRescheduleDialog
           open={rescheduleOpen}
           onOpenChange={handleRescheduleOpenChange}
