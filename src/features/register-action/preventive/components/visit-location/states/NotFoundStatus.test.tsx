@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { NotFoundStatus } from "./NotFoundStatus";
 
 describe("NotFoundStatus", () => {
-  it("não mostra o alerta de endereço incorreto por padrão", () => {
+  it("mostra a distância calculada e o título assertivo por padrão", () => {
     render(
       <NotFoundStatus
         distanceMeters={250}
@@ -11,12 +11,17 @@ describe("NotFoundStatus", () => {
       />,
     );
 
+    expect(screen.getByText("Você não está no endereço")).toBeInTheDocument();
+    expect(screen.getByText(/Distância: 250m/)).toBeInTheDocument();
     expect(
-      screen.queryByText(/endereço cadastrado pode estar incorreto/i),
+      screen.queryByText(/não conseguimos confirmar com precisão/i),
     ).not.toBeInTheDocument();
   });
 
-  it("mostra o alerta de endereço incorreto quando addressLikelyWrong é true (AUREA-352)", () => {
+  it("esconde a distância e troca o título quando addressLikelyWrong é true (AUREA-352)", () => {
+    // A distância calculada pode estar errada por vários km quando o
+    // geocoding não é confiável — mostrar o número, mesmo com um aviso ao
+    // lado, ainda passaria a mensagem falsa de "você está longe".
     render(
       <NotFoundStatus
         distanceMeters={34996.7}
@@ -27,7 +32,11 @@ describe("NotFoundStatus", () => {
     );
 
     expect(
-      screen.getByText(/endereço cadastrado pode estar incorreto/i),
+      screen.getByText("Não foi possível confirmar sua localização"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/34.996|34996/)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/não conseguimos confirmar com precisão/i),
     ).toBeInTheDocument();
   });
 
@@ -35,7 +44,7 @@ describe("NotFoundStatus", () => {
     render(<NotFoundStatus addressLikelyWrong onConfirmManual={vi.fn()} />);
 
     expect(
-      screen.queryByText(/endereço cadastrado pode estar incorreto/i),
+      screen.queryByText(/não conseguimos confirmar com precisão/i),
     ).not.toBeInTheDocument();
     expect(
       screen.getByText("Não foi possível obter sua localização"),
