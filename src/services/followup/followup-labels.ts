@@ -10,6 +10,7 @@ const FOLLOW_UP_STATUS_LABELS: Record<string, string> = {
   [FollowUpStatus.NO_ANSWER]: "Sem retorno",
   [FollowUpStatus.PROMISE_TO_PAY]: "Promessa de pagamento",
   [FollowUpStatus.NO_FORECAST]: "Sem previsão",
+  [FollowUpStatus.NOT_LOCATED]: "Não localizado",
   [FollowUpStatus.CONTACTED]: "Contato realizado",
   [FollowUpStatus.DISPUTE]: "Disputa / Contestação",
   [FollowUpStatus.RENEGOTIATION]: "Renegociação",
@@ -32,6 +33,8 @@ const FOLLOW_UP_EXPECTED_RESULT_LABELS: Record<string, string> = {
   [FollowUpExpectedResult.DISPUTE]: "Disputa/contestação",
   [FollowUpExpectedResult.WANTS_RENEGOTIATION]: "Quer renegociar",
   [FollowUpExpectedResult.DECEASED]: "Falecido",
+  [FollowUpExpectedResult.NO_FORECAST]: "Sem previsão",
+  [FollowUpExpectedResult.NOT_LOCATED]: "Não localizado",
   [FollowUpExpectedResult.OTHER]: "Outro",
 };
 

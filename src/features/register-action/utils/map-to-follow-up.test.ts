@@ -3,6 +3,7 @@ import {
   mapPreventiveChannelToType,
   mapPreventiveOutcomeToExpectedResult,
 } from "@/features/register-action/utils/map-to-follow-up";
+import { getPreventiveOutcomes } from "@/features/register-action/preventive/constants/outcomes";
 import {
   FollowUpExpectedResult,
   FollowUpParty,
@@ -36,6 +37,12 @@ describe("mapPreventiveOutcomeToExpectedResult", () => {
     );
     expect(mapPreventiveOutcomeToExpectedResult("deceased")).toBe(
       FollowUpExpectedResult.DECEASED,
+    );
+    expect(mapPreventiveOutcomeToExpectedResult("no_forecast")).toBe(
+      FollowUpExpectedResult.NO_FORECAST,
+    );
+    expect(mapPreventiveOutcomeToExpectedResult("not_located")).toBe(
+      FollowUpExpectedResult.NOT_LOCATED,
     );
     expect(mapPreventiveOutcomeToExpectedResult("other")).toBe(
       FollowUpExpectedResult.OTHER,
@@ -86,5 +93,19 @@ describe("buildPreventiveFollowUpPayload", () => {
     expect(payload.longitude).toBeUndefined();
     expect(payload.followUpType).toBe(FollowUpType.MESSAGE);
     expect(payload.party).toBe(FollowUpParty.CLIENT);
+  });
+});
+
+describe("getPreventiveOutcomes", () => {
+  it("exibe não localizado apenas para visitas", () => {
+    expect(
+      getPreventiveOutcomes("phone").map((option) => option.value),
+    ).not.toContain("not_located");
+    expect(
+      getPreventiveOutcomes("visit").map((option) => option.value),
+    ).toContain("not_located");
+    expect(
+      getPreventiveOutcomes("whatsapp").map((option) => option.value),
+    ).toContain("no_forecast");
   });
 });
