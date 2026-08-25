@@ -24,6 +24,14 @@ export function NotFoundStatus({
   onConfirmManual,
 }: NotFoundStatusProps) {
   const hasDistance = distanceMeters !== undefined;
+  // AUREA-352: quando o geocoding não é confiável, a distância calculada
+  // pode estar errada por vários km (caso real: parceiro confirmadamente no
+  // endereço certo, sistema acusou ~35km). Mostrar esse número, mesmo ao
+  // lado de um aviso, ainda passa a mensagem falsa de "você está longe" —
+  // por isso aqui nem o título nem a distância assumem que o parceiro está
+  // no lugar errado; só dizemos que não foi possível confirmar.
+  const unreliableDistance = hasDistance && addressLikelyWrong;
+
   let title = "Você não está no endereço";
   let description =
     "Para registrar a visita, vá ao endereço ou confirme presença manualmente.";
@@ -31,6 +39,10 @@ export function NotFoundStatus({
     title = "Não foi possível obter sua localização";
     description =
       "Vá ao endereço ou confirme presença manualmente para continuar.";
+  } else if (unreliableDistance) {
+    title = "Não foi possível confirmar sua localização";
+    description =
+      "Verifique se o endereço cadastrado está correto ou confirme presença manualmente.";
   }
 
   return (
@@ -40,17 +52,19 @@ export function NotFoundStatus({
         <div>
           <p className="text-sm font-semibold text-destructive">{title}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            <VisitDistanceLabel
-              distanceMeters={distanceMeters}
-              radiusMeters={radiusMeters}
-              variant="not_found"
-              centered={false}
-            />
+            {!unreliableDistance && (
+              <VisitDistanceLabel
+                distanceMeters={distanceMeters}
+                radiusMeters={radiusMeters}
+                variant="not_found"
+                centered={false}
+              />
+            )}
             {description}
           </p>
         </div>
       </div>
-      {hasDistance && addressLikelyWrong && <AddressMismatchAlert />}
+      {unreliableDistance && <AddressMismatchAlert />}
       <NavigateToAddressButton
         address={address}
         destinationCoordinates={destinationCoordinates}
