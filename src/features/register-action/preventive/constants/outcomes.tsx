@@ -5,6 +5,7 @@ import {
   Ellipsis,
   Handshake,
   HeartCrack,
+  MapPinOff,
   PhoneOff,
 } from "lucide-react";
 import type { OutcomeOption } from "@/features/register-action/components/OutcomeOptionList";
@@ -53,6 +54,13 @@ export const OUTCOMES: OutcomeOption[] = [
     color: "blue",
   },
   {
+    value: "no_forecast",
+    label: "Sem previsão",
+    desc: "Não soube informar quando poderá pagar",
+    icon: <PhoneOff size={18} />,
+    color: "amber",
+  },
+  {
     value: "other",
     label: "Outro",
     desc: "Registrar outra situação",
@@ -60,3 +68,19 @@ export const OUTCOMES: OutcomeOption[] = [
     color: "blue",
   },
 ];
+
+const VISIT_ONLY_OUTCOMES: OutcomeOption[] = [
+  {
+    value: "not_located",
+    label: "Não localizado",
+    desc: "Não foi localizado no endereço da visita",
+    icon: <MapPinOff size={18} />,
+    color: "gray",
+  },
+];
+
+export function getPreventiveOutcomes(
+  channel: "whatsapp" | "phone" | "visit" | null,
+): OutcomeOption[] {
+  return channel === "visit" ? [...OUTCOMES, ...VISIT_ONLY_OUTCOMES] : OUTCOMES;
+}
