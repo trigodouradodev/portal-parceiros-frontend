@@ -1,6 +1,7 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import type { ChargeQueueSegmentCode } from "@/features/dashboard/constants/charge-queue-segments";
@@ -18,8 +19,15 @@ import type {
 
 export const activitiesKeys = {
   all: ["activities"] as const,
-  todayQueueInfinite: (limit: number) =>
-    [...activitiesKeys.all, "today-queue", "infinite", limit] as const,
+  subordinates: () => [...activitiesKeys.all, "subordinates"] as const,
+  todayQueueInfinite: (limit: number, assignedToId?: string) =>
+    [
+      ...activitiesKeys.all,
+      "today-queue",
+      "infinite",
+      limit,
+      assignedToId ?? "mine",
+    ] as const,
 };
 
 export function flattenTodayQueueCards(
@@ -64,11 +72,19 @@ export function buildSegmentCountsFromApi(
 /**
  * Fila "Ações de hoje" (Cobrança v2) com scroll infinito no bloco `locked`.
  */
-export function useTodayQueueInfinite(limit = 30) {
+export function useSubordinates() {
+  return useQuery({
+    queryKey: activitiesKeys.subordinates(),
+    queryFn: () => activitiesService.getSubordinates(),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useTodayQueueInfinite(limit = 30, assignedToId?: string) {
   return useInfiniteQuery({
-    queryKey: activitiesKeys.todayQueueInfinite(limit),
+    queryKey: activitiesKeys.todayQueueInfinite(limit, assignedToId),
     queryFn: ({ pageParam = 1 }) =>
-      activitiesService.getTodayQueue(pageParam, limit),
+      activitiesService.getTodayQueue(pageParam, limit, assignedToId),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.locked.pagination.hasNextPage) {

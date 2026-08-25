@@ -24,7 +24,7 @@ import {
   WhatsAppPanel,
   type Channel,
 } from "@/features/register-action/preventive/components";
-import { OUTCOMES } from "@/features/register-action/preventive/constants/outcomes";
+import { getPreventiveOutcomes } from "@/features/register-action/preventive/constants/outcomes";
 import { useVisitLocationCheck } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
 import { getWaTemplates } from "@/features/register-action/preventive/utils/wa-templates";
 import { buildPreventiveFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
@@ -319,10 +319,14 @@ export function PreventiveFollowUpForm({
 
         {step === "outcome" && (
           <OutcomeOptionList
-            options={OUTCOMES}
+            options={getPreventiveOutcomes(channel)}
             value={outcome}
             onChange={handleOutcomeChange}
-            prompt="Qual foi o resultado do contato?"
+            prompt={
+              channel === "visit"
+                ? "Qual foi o resultado da visita?"
+                : "Qual foi o resultado do contato?"
+            }
             afterOptions={
               requiresForecast ? (
                 <PaymentForecastField

@@ -26,4 +26,11 @@ export interface LocationCheckResult {
   matchedAddress: string;
   locationType: string;
   partialMatch: boolean;
+  /**
+   * true quando o endereço formatado não menciona a cidade cadastrada —
+   * sinal de que o geocoding pode ter casado com uma via de mesmo nome em
+   * outro município (AUREA-352). Diferente de partialMatch: não é só
+   * impreciso, é provavelmente errado — a distância não é confiável.
+   */
+  addressLikelyWrong: boolean;
 }

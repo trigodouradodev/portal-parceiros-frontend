@@ -12,11 +12,11 @@ import type {
   ChargeQueueView,
 } from "@/features/dashboard/utils/charge-queue";
 import type { QueueTaskCard } from "@/services/activities/activities.types";
-import { ActivityTaskStatus } from "@/services/activities/activity.enums";
 
 /** Monta a fila preservando ordem e segmentos vindos da API v2 (`/activities/tasks/today`). */
 export function buildChargeQueueFromApiCards(
   cards: QueueTaskCard[],
+  canInteractWithTask: (task: QueueTaskCard) => boolean,
 ): ChargeQueueView {
   const flat: ChargeQueueFlatEntry[] = cards.map((card, globalIndex) => {
     const item = mapQueueTaskCardToOverdueItem(card);
@@ -24,9 +24,9 @@ export function buildChargeQueueFromApiCards(
       item,
       globalIndex,
       segmentCode: normalizeQueueSegmentCode(card.segmentCode),
-      // AUREA-319: toda pendente do segmento ativo do responsável é executável,
-      // não só a recomendada — is_active já vem assim calculado do backend.
-      unlocked: card.isActive,
+      // Todas as pendentes do segmento ativo do usuário autenticado são
+      // executáveis. Uma fila de subordinado é apenas para visualização.
+      unlocked: canInteractWithTask(card),
     };
   });
 
@@ -46,15 +46,15 @@ export function buildChargeQueueFromApiCards(
     groups[groups.length - 1].items.push(entry.item);
   }
 
-  // Hero = a recomendada (isRecommended), não "a primeira com isActive" — desde
-  // AUREA-319 isActive pode valer para várias tarefas do mesmo segmento.
-  const recommendedIndex = cards.findIndex((card) => card.isRecommended);
-  const actionableIndex =
-    recommendedIndex >= 0
-      ? recommendedIndex
-      : (flat.find(
-          (entry) => entry.item.task?.status === ActivityTaskStatus.PENDING,
-        )?.globalIndex ?? null);
+  // Hero = a recomendada executável; as demais do segmento ativo também ficam
+  // executáveis como cards secundários.
+  const actionableIndex = cards.findIndex(
+    (card) => card.isRecommended && canInteractWithTask(card),
+  );
 
-  return { groups, flat, actionableIndex };
+  return {
+    groups,
+    flat,
+    actionableIndex: actionableIndex >= 0 ? actionableIndex : null,
+  };
 }

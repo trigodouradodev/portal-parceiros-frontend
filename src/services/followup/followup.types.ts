@@ -16,6 +16,7 @@ export const FollowUpStatus = {
   RENEGOTIATION: "renegotiation",
   DECEASED: "deceased",
   NO_FORECAST: "no_forecast",
+  NOT_LOCATED: "not_located",
   WHATSAPP_MESSAGE: "whatsapp_message",
 } as const;
 
@@ -54,6 +55,8 @@ export const FollowUpExpectedResult = {
   DISPUTE: "dispute",
   WANTS_RENEGOTIATION: "wants_renegotiation",
   DECEASED: "deceased",
+  NO_FORECAST: "no_forecast",
+  NOT_LOCATED: "not_located",
   OTHER: "other",
 } as const;
 

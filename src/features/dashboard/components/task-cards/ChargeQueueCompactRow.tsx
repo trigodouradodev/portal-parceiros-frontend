@@ -57,9 +57,7 @@ export function ChargeQueueCompactRow({
           #{queuePosition}
         </span>
         {locked && <Lock size={10} className="text-[#C8CBD8]" />}
-        {!locked && expandable && (
-          <ChevronDown size={10} className="text-brand-navy/50" />
-        )}
+        {expandable && <ChevronDown size={10} className="text-brand-navy/50" />}
       </div>
 
       <InitialsAvatar initials={initials} size="sm" variant="muted" />

@@ -1,4 +1,5 @@
 import {
+  activitiesKeys,
   buildSegmentCountsFromApi,
   extractTodayQueueMeta,
   flattenTodayQueueCards,
@@ -90,19 +91,61 @@ describe("buildChargeQueueTabView", () => {
   it("allows a second visit reschedule and blocks a third", () => {
     const buildHero = (rescheduleCount: number) =>
       buildChargeQueueTabView(
-        buildChargeQueueFromApiCards([
-          makeCard({
-            taskId: `visit-${rescheduleCount}`,
-            taskType: ActivityTaskType.VISIT,
-            isActive: true,
-            isRecommended: true,
-            rescheduleCount,
-          }),
-        ]),
+        buildChargeQueueFromApiCards(
+          [
+            makeCard({
+              taskId: `visit-${rescheduleCount}`,
+              taskType: ActivityTaskType.VISIT,
+              isActive: true,
+              isRecommended: true,
+              assignedTo: { id: "user-1", name: "Usuário" },
+              rescheduleCount,
+            }),
+          ],
+          (task) => task.isActive && task.assignedTo?.id === "user-1",
+        ),
       ).hero;
 
     expect(buildHero(1)?.canRescheduleVisit).toBe(true);
     expect(buildHero(2)?.canRescheduleVisit).toBe(false);
+  });
+
+  it("does not allow interacting with an active task assigned to a subordinate", () => {
+    const view = buildChargeQueueTabView(
+      buildChargeQueueFromApiCards(
+        [
+          makeCard({
+            taskId: "subordinate-task",
+            isActive: true,
+            isRecommended: true,
+            assignedTo: { id: "user-2", name: "Subordinado" },
+          }),
+        ],
+        (task) => task.isActive && task.assignedTo?.id === "user-1",
+      ),
+    );
+
+    expect(view.hero).toBeNull();
+    expect(view.blocks[0]?.rows[0]?.locked).toBe(true);
+  });
+});
+
+describe("activitiesKeys", () => {
+  it("keeps today queues for each responsible in separate cache entries", () => {
+    expect(activitiesKeys.todayQueueInfinite(30)).toEqual([
+      "activities",
+      "today-queue",
+      "infinite",
+      30,
+      "mine",
+    ]);
+    expect(activitiesKeys.todayQueueInfinite(30, "user-2")).toEqual([
+      "activities",
+      "today-queue",
+      "infinite",
+      30,
+      "user-2",
+    ]);
   });
 });
 
