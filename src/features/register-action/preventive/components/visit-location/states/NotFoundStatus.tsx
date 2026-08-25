@@ -1,4 +1,5 @@
 import { MapPinOff } from "lucide-react";
+import { AddressMismatchAlert } from "../AddressMismatchAlert";
 import { ManualVisitConfirm } from "../ManualVisitConfirm";
 import { NavigateToAddressButton } from "../NavigateToAddressButton";
 import { VisitDistanceLabel } from "../VisitDistanceLabel";
@@ -9,6 +10,8 @@ interface NotFoundStatusProps {
   destinationCoordinates?: { latitude: number; longitude: number };
   distanceMeters?: number;
   radiusMeters?: number;
+  /** AUREA-352: distância provavelmente não confiável — endereço cadastrado pode estar errado. */
+  addressLikelyWrong?: boolean;
   onConfirmManual: () => void;
 }
 
@@ -17,6 +20,7 @@ export function NotFoundStatus({
   destinationCoordinates,
   distanceMeters,
   radiusMeters,
+  addressLikelyWrong = false,
   onConfirmManual,
 }: NotFoundStatusProps) {
   const hasDistance = distanceMeters !== undefined;
@@ -46,6 +50,7 @@ export function NotFoundStatus({
           </p>
         </div>
       </div>
+      {hasDistance && addressLikelyWrong && <AddressMismatchAlert />}
       <NavigateToAddressButton
         address={address}
         destinationCoordinates={destinationCoordinates}
