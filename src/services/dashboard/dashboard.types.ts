@@ -74,6 +74,7 @@ export type FollowupLatestStatus =
   | "renegotiation"
   | "deceased"
   | "no_forecast"
+  | "not_located"
   | "whatsapp_message";
 
 export interface ClientAddress {

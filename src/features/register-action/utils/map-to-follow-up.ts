@@ -34,6 +34,10 @@ export function mapPreventiveOutcomeToExpectedResult(
       return FollowUpExpectedResult.WANTS_RENEGOTIATION;
     case "deceased":
       return FollowUpExpectedResult.DECEASED;
+    case "no_forecast":
+      return FollowUpExpectedResult.NO_FORECAST;
+    case "not_located":
+      return FollowUpExpectedResult.NOT_LOCATED;
     case "other":
       return FollowUpExpectedResult.OTHER;
     default:
