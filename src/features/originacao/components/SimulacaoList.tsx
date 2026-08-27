@@ -10,16 +10,16 @@ import {
   dueDayFromIsoDate,
   formatCreatedAtPtBr,
 } from "@/features/originacao/data/simulacao";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
+import type { SimulationSnapshot } from "@/features/originacao/types";
 import { fmtBRL } from "@/lib/utils";
 
 interface SimulacaoListProps {
-  simulations: SimulacaoSnapshot[];
+  simulations: SimulationSnapshot[];
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
   onNewSimulation: () => void;
-  onStartProposal: (snapshot: SimulacaoSnapshot) => void;
+  onStartProposal: (snapshot: SimulationSnapshot) => void;
 }
 
 export function SimulacaoList({

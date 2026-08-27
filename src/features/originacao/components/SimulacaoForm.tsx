@@ -53,7 +53,7 @@ import {
   createSimulationSchema,
   type SimulationFormValues,
 } from "@/features/originacao/schemas/simulation-form";
-import type { DadosElegibilidade } from "@/features/originacao/types";
+import type { EligibilityPrefill } from "@/features/originacao/types";
 import { useToast } from "@/contexts/toast/toast-context";
 import { useProducts } from "@/hooks/useProducts";
 import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
@@ -65,7 +65,7 @@ import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 interface SimulacaoFormProps {
-  prefill: DadosElegibilidade | null;
+  prefill: EligibilityPrefill | null;
   hasList: boolean;
   onViewList: () => void;
   onCompleted: () => void;
@@ -113,11 +113,11 @@ export function SimulacaoForm({
     mode: "onSubmit",
     reValidateMode: "onChange",
     defaultValues: {
-      nome: prefill?.nome ?? "",
+      name: prefill?.name ?? "",
       cpf: formatCpf(prefill?.cpf ?? ""),
-      nascimento: prefill?.nascimento ?? "",
+      birthDate: prefill?.birthDate ?? "",
       email: "",
-      celular: "",
+      phone: "",
       product: "",
       amount: AMOUNT_DEFAULT,
     },
@@ -173,11 +173,11 @@ export function SimulacaoForm({
 
     try {
       await createSimulation.mutateAsync({
-        name: values.nome,
+        name: values.name,
         document: values.cpf.replace(/\D/g, ""),
-        birthDate: values.nascimento,
+        birthDate: values.birthDate,
         email: values.email,
-        telephone: digitsOnlyPhone(values.celular),
+        telephone: digitsOnlyPhone(values.phone),
         productId: values.product,
         amount: values.amount,
         installments: values.installments,
@@ -231,7 +231,7 @@ export function SimulacaoForm({
           ) : null}
 
           <FormInput<SimulationFormValues>
-            name="nome"
+            name="name"
             label="Nome completo"
             icon={<User size={16} />}
             placeholder="Nome do cliente"
@@ -248,7 +248,7 @@ export function SimulacaoForm({
             required
           />
           <FormDate<SimulationFormValues>
-            name="nascimento"
+            name="birthDate"
             label="Data de nascimento"
             max={MAX_BIRTH_ISO}
             captionLayout="dropdown"
@@ -263,7 +263,7 @@ export function SimulacaoForm({
             required
           />
           <FormInput<SimulationFormValues>
-            name="celular"
+            name="phone"
             label="Celular"
             transform={formatPhone}
             icon={<Phone size={16} />}

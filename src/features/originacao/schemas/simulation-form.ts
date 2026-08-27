@@ -22,15 +22,15 @@ export function createSimulationSchema(options: {
   const installmentMax = installmentOptions[installmentOptions.length - 1];
 
   return z.object({
-    nome: z.string().trim().min(3, "Informe o nome completo"),
+    name: z.string().trim().min(3, "Informe o nome completo"),
     cpf: z.string().refine(isValidCpf, "CPF inválido"),
-    nascimento: birthDateSchema(CLIENT_BIRTH_DATE_MESSAGE),
+    birthDate: birthDateSchema(CLIENT_BIRTH_DATE_MESSAGE),
     email: z
       .string()
       .trim()
       .min(1, "Informe o e-mail")
       .email("Informe um e-mail válido"),
-    celular: z
+    phone: z
       .string()
       .refine(
         (value) => digitsOnlyPhone(value).length >= 10,

@@ -14,9 +14,9 @@ import {
   isPartnerOpinionValid,
   isRegistrationValid,
 } from "@/features/originacao/schemas/proposal-form";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
+import type { SimulationSnapshot } from "@/features/originacao/types";
 
-const simulation: SimulacaoSnapshot = {
+const simulation: SimulationSnapshot = {
   id: "sim-1",
   createdAt: "2026-08-13T12:00:00.000Z",
   name: "Maria Silva",

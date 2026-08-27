@@ -6,11 +6,11 @@ const productId = "11111111-1111-4111-8111-111111111111";
 
 function validValues() {
   return {
-    nome: "Maria Souza",
+    name: "Maria Souza",
     cpf: "529.982.247-25",
-    nascimento: "1990-05-20",
+    birthDate: "1990-05-20",
     email: "maria@email.com",
-    celular: "(11) 98765-4321",
+    phone: "(11) 98765-4321",
     product: productId,
     amount: 5000,
     installments: 10,
@@ -29,7 +29,7 @@ describe("createSimulationSchema", () => {
   });
 
   it("rejects a name shorter than 3 characters", () => {
-    const result = schema.safeParse({ ...validValues(), nome: "Jo" });
+    const result = schema.safeParse({ ...validValues(), name: "Jo" });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toBe("Informe o nome completo");

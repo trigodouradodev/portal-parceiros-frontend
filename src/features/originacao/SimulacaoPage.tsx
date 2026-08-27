@@ -5,37 +5,37 @@ import { useOriginacao } from "@/features/originacao/originacao-context";
 
 export function SimulacaoPage() {
   const {
-    dadosIniciais,
-    consumeDadosIniciais,
-    simulacoes,
-    simulacoesLoading,
-    simulacoesError,
-    refetchSimulacoes,
+    eligibilityPrefill,
+    clearEligibilityPrefill,
+    simulations,
+    simulationsLoading,
+    simulationsError,
+    refetchSimulations,
     startProposal,
   } = useOriginacao();
   const [blankFormKey, setBlankFormKey] = useState<number | null>(null);
 
-  const fromEligibility = dadosIniciais != null;
+  const fromEligibility = eligibilityPrefill != null;
   const showForm = fromEligibility || blankFormKey != null;
   const formKey = fromEligibility ? "prefill" : String(blankFormKey);
 
   function closeForm() {
-    consumeDadosIniciais();
+    clearEligibilityPrefill();
     setBlankFormKey(null);
   }
 
   function handleNewSimulation() {
-    consumeDadosIniciais();
+    clearEligibilityPrefill();
     setBlankFormKey((key) => (key ?? 0) + 1);
   }
 
   if (!showForm) {
     return (
       <SimulacaoList
-        simulations={simulacoes}
-        isLoading={simulacoesLoading}
-        isError={simulacoesError}
-        onRetry={refetchSimulacoes}
+        simulations={simulations}
+        isLoading={simulationsLoading}
+        isError={simulationsError}
+        onRetry={refetchSimulations}
         onNewSimulation={handleNewSimulation}
         onStartProposal={startProposal}
       />
@@ -45,8 +45,8 @@ export function SimulacaoPage() {
   return (
     <SimulacaoForm
       key={formKey}
-      prefill={dadosIniciais}
-      hasList={simulacoes.length > 0 || blankFormKey != null}
+      prefill={eligibilityPrefill}
+      hasList={simulations.length > 0 || blankFormKey != null}
       onViewList={closeForm}
       onCompleted={closeForm}
     />

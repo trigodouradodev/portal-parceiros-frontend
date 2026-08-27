@@ -28,7 +28,7 @@ const EMPTY_VALUES: EligibilityFormValues = {
 };
 
 export function ElegibilidadePage() {
-  const { setDadosIniciais, setActiveTab } = useOriginacao();
+  const { setEligibilityPrefill, setActiveTab } = useOriginacao();
   const [status, setStatus] = useState<Status>("idle");
 
   const form = useForm<EligibilityFormValues>({
@@ -40,7 +40,7 @@ export function ElegibilidadePage() {
 
   const fieldsLocked = status === "loading" || status === "valid";
 
-  function onConsultar(values: EligibilityFormValues) {
+  function onSubmitEligibility(values: EligibilityFormValues) {
     if (status === "loading") return;
     setStatus("loading");
     window.setTimeout(() => {
@@ -53,14 +53,14 @@ export function ElegibilidadePage() {
     setStatus("idle");
   }
 
-  function handleIniciarSimulacao() {
+  function handleStartSimulation() {
     const values = form.getValues();
-    setDadosIniciais({
-      nome: values.name,
+    setEligibilityPrefill({
+      name: values.name,
       cpf: values.cpf,
-      nascimento: values.birthDate,
+      birthDate: values.birthDate,
     });
-    setActiveTab("simulacao");
+    setActiveTab("simulation");
   }
 
   return (
@@ -72,7 +72,7 @@ export function ElegibilidadePage() {
       <Form {...form}>
         <form
           className="flex flex-col gap-5"
-          onSubmit={form.handleSubmit(onConsultar, scrollToFirstError)}
+          onSubmit={form.handleSubmit(onSubmitEligibility, scrollToFirstError)}
           noValidate
         >
           <FormInput<EligibilityFormValues>
@@ -141,7 +141,7 @@ export function ElegibilidadePage() {
               type="button"
               variant="outline"
               size="pill"
-              onClick={handleIniciarSimulacao}
+              onClick={handleStartSimulation}
             >
               Iniciar simulação
             </Button>

@@ -21,10 +21,10 @@ describe("firstErrorPath", () => {
   it("prefers earlier keys in object order", () => {
     expect(
       firstErrorPath({
-        nome: { type: "manual", message: "Informe o nome" },
+        name: { type: "manual", message: "Informe o nome" },
         cpf: { type: "manual", message: "CPF inválido" },
       }),
-    ).toBe("nome");
+    ).toBe("name");
   });
 });
 
