@@ -1,11 +1,12 @@
 import { useFieldArray, useFormContext } from "react-hook-form";
-import { AlertTriangle, Plus, Trash2, Wallet } from "lucide-react";
+import { AlertTriangle, Wallet } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { FormField } from "@/components/ui/form";
-import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/ui/select-field";
+import { FormInput, FormSelect } from "@/components/ui/rhf-fields";
 import { toSelectOptions } from "@/components/ui/select-option";
+import {
+  RepeatableGroup,
+  RemovableCard,
+} from "@/features/originacao/components/proposta/RepeatableGroup";
 import {
   AGIOTA_CREDITOR,
   CREDITOR_INSTITUTION_OPTIONS,
@@ -66,200 +67,96 @@ export function FinancialSection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <Label className="text-sm font-medium text-[#1A1D2E]">
-            Despesas pessoais
-          </Label>
-          <button
-            type="button"
-            onClick={addExpense}
-            className="flex items-center gap-1 text-sm font-semibold text-brand-navy"
+      <RepeatableGroup
+        title="Despesas pessoais"
+        addLabel="Adicionar despesa"
+        emptyLabel="Nenhuma despesa adicionada."
+        isEmpty={expenses.length === 0}
+        onAdd={addExpense}
+      >
+        {expenses.map((expense, index) => (
+          <RemovableCard
+            key={expense.fieldId}
+            removeLabel="Remover despesa"
+            onRemove={() => removeExpense(index)}
+            header={
+              <FormSelect<ProposalFormData>
+                name={`financial.expenses.${index}.category`}
+                placeholder="Categoria"
+                options={toSelectOptions(EXPENSE_CATEGORY_OPTIONS)}
+              />
+            }
           >
-            <Plus size={14} />
-            Adicionar despesa
-          </button>
-        </div>
-        {expenses.length === 0 ? (
-          <p className="mb-1 text-xs text-[#9DA3B4]">
-            Nenhuma despesa adicionada.
-          </p>
-        ) : null}
-        <div className="flex flex-col gap-3">
-          {expenses.map((expense, index) => (
-            <div
-              key={expense.fieldId}
-              className="flex flex-col gap-3 rounded-2xl bg-[#F5F6FA] p-3"
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <FormField
-                    control={control}
-                    name={`financial.expenses.${index}.category`}
-                    render={({ field }) => (
-                      <SelectField
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Categoria"
-                        options={toSelectOptions(EXPENSE_CATEGORY_OPTIONS)}
-                      />
-                    )}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeExpense(index)}
-                  className="shrink-0 p-2 text-[#D84040]"
-                  aria-label="Remover despesa"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={control}
-                  name={`financial.expenses.${index}.amount`}
-                  render={({ field }) => (
-                    <InputField
-                      label="Valor"
-                      value={field.value}
-                      onChange={(value) =>
-                        field.onChange(formatMoneyBrl(value))
-                      }
-                      icon={<Wallet size={14} />}
-                      placeholder="R$ 0,00"
-                      inputMode="numeric"
-                    />
-                  )}
-                />
-                <FormField
-                  control={control}
-                  name={`financial.expenses.${index}.description`}
-                  render={({ field }) => (
-                    <InputField
-                      label="Descrição"
-                      value={field.value}
-                      onChange={field.onChange}
-                      icon={<Wallet size={14} />}
-                      placeholder="Opcional"
-                    />
-                  )}
-                />
-              </div>
+            <div className="grid min-w-0 grid-cols-2 gap-2">
+              <FormInput<ProposalFormData>
+                name={`financial.expenses.${index}.amount`}
+                label="Valor"
+                transform={formatMoneyBrl}
+                icon={<Wallet size={14} />}
+                placeholder="R$ 0,00"
+                inputMode="numeric"
+              />
+              <FormInput<ProposalFormData>
+                name={`financial.expenses.${index}.description`}
+                label="Descrição"
+                placeholder="Opcional"
+              />
             </div>
-          ))}
-        </div>
-      </div>
+          </RemovableCard>
+        ))}
+      </RepeatableGroup>
 
-      <div className="border-t border-[#E2E4EC] pt-2">
-        <div className="mb-3 flex items-center justify-between">
-          <Label className="text-sm font-medium text-[#1A1D2E]">
-            Empréstimos
-          </Label>
-          <button
-            type="button"
-            onClick={addLoan}
-            className="flex items-center gap-1 text-sm font-semibold text-brand-navy"
-          >
-            <Plus size={14} />
-            Adicionar empréstimo
-          </button>
-        </div>
-        {loans.length === 0 ? (
-          <p className="mb-1 text-xs text-[#9DA3B4]">
-            Nenhum empréstimo adicionado.
-          </p>
-        ) : null}
-        <div className="flex flex-col gap-3">
+      <div className="border-t border-border pt-2">
+        <RepeatableGroup
+          title="Empréstimos"
+          addLabel="Adicionar empréstimo"
+          emptyLabel="Nenhum empréstimo adicionado."
+          isEmpty={loans.length === 0}
+          onAdd={addLoan}
+        >
           {loans.map((loan, index) => (
-            <div
+            <RemovableCard
               key={loan.fieldId}
-              className="flex flex-col gap-3 rounded-2xl bg-[#F5F6FA] p-3"
+              removeLabel="Remover empréstimo"
+              onRemove={() => removeLoan(index)}
+              header={
+                <FormSelect<ProposalFormData>
+                  name={`financial.loans.${index}.institution`}
+                  placeholder="Instituição/Credor"
+                  options={toSelectOptions(CREDITOR_INSTITUTION_OPTIONS)}
+                />
+              }
             >
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <FormField
-                    control={control}
-                    name={`financial.loans.${index}.institution`}
-                    render={({ field }) => (
-                      <SelectField
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Instituição/Credor"
-                        options={toSelectOptions(CREDITOR_INSTITUTION_OPTIONS)}
-                      />
-                    )}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeLoan(index)}
-                  className="shrink-0 p-2 text-[#D84040]"
-                  aria-label="Remover empréstimo"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={control}
+              <div className="grid min-w-0 grid-cols-2 gap-2">
+                <FormInput<ProposalFormData>
                   name={`financial.loans.${index}.installmentAmount`}
-                  render={({ field }) => (
-                    <InputField
-                      label="Valor da parcela"
-                      value={field.value}
-                      onChange={(value) =>
-                        field.onChange(formatMoneyBrl(value))
-                      }
-                      icon={<Wallet size={14} />}
-                      placeholder="R$ 0,00"
-                      inputMode="numeric"
-                    />
-                  )}
+                  label="Valor da parcela"
+                  transform={formatMoneyBrl}
+                  icon={<Wallet size={14} />}
+                  placeholder="R$ 0,00"
+                  inputMode="numeric"
                 />
-                <FormField
-                  control={control}
+                <FormSelect<ProposalFormData>
                   name={`financial.loans.${index}.frequency`}
-                  render={({ field }) => (
-                    <SelectField
-                      label="Frequência"
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={toSelectOptions(LOAN_FREQUENCY_OPTIONS)}
-                    />
-                  )}
+                  label="Frequência"
+                  options={toSelectOptions(LOAN_FREQUENCY_OPTIONS)}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={control}
+              <div className="grid min-w-0 grid-cols-2 gap-2">
+                <FormSelect<ProposalFormData>
                   name={`financial.loans.${index}.category`}
-                  render={({ field }) => (
-                    <SelectField
-                      label="Categoria"
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={toSelectOptions(LOAN_CATEGORY_OPTIONS)}
-                    />
-                  )}
+                  label="Categoria"
+                  options={toSelectOptions(LOAN_CATEGORY_OPTIONS)}
                 />
-                <FormField
-                  control={control}
+                <FormInput<ProposalFormData>
                   name={`financial.loans.${index}.description`}
-                  render={({ field }) => (
-                    <InputField
-                      label="Descrição"
-                      value={field.value}
-                      onChange={field.onChange}
-                      icon={<Wallet size={14} />}
-                      placeholder="Opcional"
-                    />
-                  )}
+                  label="Descrição"
+                  placeholder="Opcional"
                 />
               </div>
-            </div>
+            </RemovableCard>
           ))}
-        </div>
+        </RepeatableGroup>
 
         {hasAgiota ? (
           <Alert variant="warning" className="mt-3">

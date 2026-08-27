@@ -1,30 +1,16 @@
-import { useFormContext } from "react-hook-form";
-import { FormField } from "@/components/ui/form";
-import { TextareaField } from "@/components/ui/textarea-field";
+import { FormTextarea } from "@/components/ui/rhf-fields";
 import { AddressFields } from "@/features/originacao/components/AddressFields";
-import {
-  CLIENT_MOCK_ADDRESS,
-  type ProposalFormData,
-} from "@/features/originacao/data/proposal";
+import type { ProposalFormData } from "@/features/originacao/data/proposal";
 
 export function AddressSection() {
-  const { control } = useFormContext<ProposalFormData>();
-
   return (
     <div className="flex flex-col gap-5">
-      <AddressFields namePrefix="address" mock={CLIENT_MOCK_ADDRESS} />
+      <AddressFields namePrefix="address" />
 
-      <FormField
-        control={control}
+      <FormTextarea<ProposalFormData>
         name="address.landmark"
-        render={({ field }) => (
-          <TextareaField
-            label="Ponto de referência"
-            value={field.value}
-            onChange={field.onChange}
-            placeholder="Descreva um local conhecido próximo (ex: perto do shopping, igreja, escola)"
-          />
-        )}
+        label="Ponto de referência"
+        placeholder="Descreva um local conhecido próximo (ex: perto do shopping, igreja, escola)"
       />
     </div>
   );

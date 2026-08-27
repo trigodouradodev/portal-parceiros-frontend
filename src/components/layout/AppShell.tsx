@@ -20,6 +20,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  const [hideBottomNav, setHideBottomNav] = useState(false);
 
   const activeTab = pathToNavTab(location.pathname);
 
@@ -40,7 +41,13 @@ export function AppShell() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background font-sans md:flex">
+    <div
+      className={
+        hideBottomNav
+          ? "flex h-dvh overflow-hidden bg-background font-sans md:flex"
+          : "flex min-h-dvh bg-background font-sans md:flex"
+      }
+    >
       <AppSidebar
         activeTab={activeTab}
         items={NAV_ITEMS}
@@ -48,15 +55,22 @@ export function AppShell() {
         onRequestLogout={handleRequestLogout}
       />
 
-      <div className="flex w-full min-w-0 flex-1 flex-col md:ml-56">
-        <Outlet context={{ onMobileLogout: handleRequestLogout }} />
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col md:ml-56">
+        <Outlet
+          context={{
+            onMobileLogout: handleRequestLogout,
+            setHideBottomNav,
+          }}
+        />
       </div>
 
-      <BottomNav
-        activeTab={activeTab}
-        items={NAV_ITEMS}
-        onNavigate={handleNavigate}
-      />
+      {hideBottomNav ? null : (
+        <BottomNav
+          activeTab={activeTab}
+          items={NAV_ITEMS}
+          onNavigate={handleNavigate}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmLogoutOpen}
