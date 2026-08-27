@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormDate, FormInput } from "@/components/ui/rhf-fields";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
-import { isEligibleCpf } from "@/features/originacao/data/eligibility";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import {
   eligibilitySchema,
@@ -15,7 +14,10 @@ import {
 } from "@/features/originacao/schemas/eligibility-form";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
+import { useToast } from "@/contexts/toast/toast-context";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import { formatCpf } from "@/lib/format/tax-id";
+import { eligibilityService } from "@/services/eligibility/eligibility.service";
 
 type Status = "idle" | "loading" | "valid" | "invalid";
 
@@ -29,6 +31,7 @@ const EMPTY_VALUES: EligibilityFormValues = {
 
 export function ElegibilidadePage() {
   const { setEligibilityPrefill, setActiveTab } = useOriginacao();
+  const { showToast } = useToast();
   const [status, setStatus] = useState<Status>("idle");
 
   const form = useForm<EligibilityFormValues>({
@@ -40,12 +43,23 @@ export function ElegibilidadePage() {
 
   const fieldsLocked = status === "loading" || status === "valid";
 
-  function onSubmitEligibility(values: EligibilityFormValues) {
+  async function onSubmitEligibility(values: EligibilityFormValues) {
     if (status === "loading") return;
     setStatus("loading");
-    window.setTimeout(() => {
-      setStatus(isEligibleCpf(values.cpf) ? "valid" : "invalid");
-    }, 1200);
+    try {
+      const result = await eligibilityService.check({
+        name: values.name,
+        document: values.cpf,
+        birthDate: values.birthDate,
+      });
+      setStatus(result.eligible ? "valid" : "invalid");
+    } catch (err) {
+      setStatus("idle");
+      showToast(
+        getApiErrorMessage(err, "Não foi possível consultar a elegibilidade."),
+        { variant: "destructive" },
+      );
+    }
   }
 
   function handleReset() {
