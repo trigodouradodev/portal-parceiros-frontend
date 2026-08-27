@@ -16,6 +16,7 @@ import { ProposalList } from "@/features/originacao/components/proposta/Proposal
 import { ProposalSuccess } from "@/features/originacao/components/proposta/ProposalSuccess";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
 import { useOriginacao } from "@/features/originacao/originacao-context";
+import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
   PROPOSAL_STEPS,
   type ProposalFormData,
@@ -172,7 +173,7 @@ function ProposalWizard({
       header={
         <OriginacaoTaskHeader
           title={`${PROPOSAL_STEPS[step]} · ${step + 1}/${PROPOSAL_STEPS.length}`}
-          subtitle={`${fmtBRL(simulation.valor)} · ${simulation.parcelas}x · ${simulation.produto}`}
+          subtitle={`${fmtBRL(simulation.amount)} · ${simulation.installments}x · ${simulation.productName}`}
           progress={((step + 1) / PROPOSAL_STEPS.length) * 100}
           backLabel="Salvar rascunho e ver todas as propostas"
           onBack={handleClose}
@@ -191,13 +192,15 @@ function ProposalWizard({
         >
           {step === 0 ? (
             <RegistrationSection
-              product={simulation.produto}
-              rate={simulation.taxa}
-              cpf={simulation.cpf}
-              name={simulation.nome}
-              birthDate={simulation.nascimento}
+              product={simulation.productName}
+              rate={productRatePercent({
+                maxInterestRate: simulation.interestRate,
+              })}
+              cpf={simulation.document}
+              name={simulation.name}
+              birthDate={simulation.birthDate}
               email={simulation.email}
-              phone={simulation.celular}
+              phone={simulation.telephone}
             />
           ) : null}
           {step === 1 ? <ActivityIncomeSection /> : null}

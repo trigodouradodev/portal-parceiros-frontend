@@ -2,14 +2,15 @@ import { useState } from "react";
 import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import { SimulacaoList } from "@/features/originacao/components/SimulacaoList";
 import { useOriginacao } from "@/features/originacao/originacao-context";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
 
 export function SimulacaoPage() {
   const {
     dadosIniciais,
     consumeDadosIniciais,
     simulacoes,
-    addSimulacao,
+    simulacoesLoading,
+    simulacoesError,
+    refetchSimulacoes,
     startProposal,
   } = useOriginacao();
   const [blankFormKey, setBlankFormKey] = useState<number | null>(null);
@@ -28,15 +29,13 @@ export function SimulacaoPage() {
     setBlankFormKey((key) => (key ?? 0) + 1);
   }
 
-  function handleCompleted(snapshot: SimulacaoSnapshot) {
-    addSimulacao(snapshot);
-    closeForm();
-  }
-
   if (!showForm) {
     return (
       <SimulacaoList
         simulations={simulacoes}
+        isLoading={simulacoesLoading}
+        isError={simulacoesError}
+        onRetry={refetchSimulacoes}
         onNewSimulation={handleNewSimulation}
         onStartProposal={startProposal}
       />
@@ -47,9 +46,9 @@ export function SimulacaoPage() {
     <SimulacaoForm
       key={formKey}
       prefill={dadosIniciais}
-      hasList={simulacoes.length > 0}
+      hasList={simulacoes.length > 0 || blankFormKey != null}
       onViewList={closeForm}
-      onCompleted={handleCompleted}
+      onCompleted={closeForm}
     />
   );
 }

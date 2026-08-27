@@ -1,3 +1,5 @@
+import type { SimulationSnapshot } from "@/services/origination/origination.types";
+
 /** Dados repassados da elegibilidade para pré-preencher a simulação. */
 export interface DadosElegibilidade {
   nome: string;
@@ -5,21 +7,7 @@ export interface DadosElegibilidade {
   nascimento: string;
 }
 
-/** Snapshot de simulação — shape do design; API virá depois. */
-export interface SimulacaoSnapshot {
-  id: string;
-  criadaEm: string;
-  nome: string;
-  nascimento: string;
-  produto: string;
-  taxa: number;
-  cpf: string;
-  email: string;
-  celular: string;
-  valor: number;
-  parcelas: number;
-  vencimento: number;
-  parcelaCalc: number;
-}
+/** Snapshot de simulação persistida — mesmo contrato da API. */
+export type SimulacaoSnapshot = SimulationSnapshot;
 
 export type OriginacaoTab = "elegibilidade" | "simulacao" | "proposta";

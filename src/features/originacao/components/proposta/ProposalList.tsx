@@ -45,10 +45,10 @@ export function ProposalList({
               </OriginacaoToneBadge>
             }
             timestamp={proposal.updatedAt}
-            name={proposal.simulation.nome}
-            amount={proposal.simulation.valor}
-            subtitle={`${proposal.simulation.parcelas}x de ${fmtBRL(proposal.simulation.parcelaCalc)}`}
-            cpf={proposal.simulation.cpf}
+            name={proposal.simulation.name}
+            amount={proposal.simulation.amount}
+            subtitle={`${proposal.simulation.installments}x de ${fmtBRL(proposal.simulation.installmentAmount)}`}
+            cpf={proposal.simulation.document}
           >
             {proposal.status === "draft" ? (
               <>

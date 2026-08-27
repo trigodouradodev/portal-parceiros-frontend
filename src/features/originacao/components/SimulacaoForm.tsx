@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -7,6 +7,7 @@ import {
   CreditCard,
   Eye,
   EyeOff,
+  Loader2,
   Mail,
   Phone,
   RefreshCw,
@@ -33,7 +34,6 @@ import {
 import { Form, FormField } from "@/components/ui/form";
 import { FormDate, FormInput } from "@/components/ui/rhf-fields";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
-import { toSelectOptions } from "@/components/ui/select-option";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import { OriginacaoToneBadge } from "@/features/originacao/components/OriginacaoSnapshotCard";
 import {
@@ -42,35 +42,38 @@ import {
   AMOUNT_MIN,
   AMOUNT_STEP,
   FIRST_INSTALLMENT_MAX_DAYS,
-  INSTALLMENT_OPTIONS,
+  installmentOptionsForProduct,
   isAllowedDueDate,
-  PRODUCT_RATE,
-  PRODUCTS,
-  type SimulationProduct,
+  previewInstallmentAmount,
+  productRatePercent,
+  toIsoDate,
 } from "@/features/originacao/data/simulacao";
+import { useCreateSimulation } from "@/features/originacao/hooks/useCreateSimulation";
 import {
-  simulationSchema,
+  createSimulationSchema,
   type SimulationFormValues,
 } from "@/features/originacao/schemas/simulation-form";
-import type {
-  DadosElegibilidade,
-  SimulacaoSnapshot,
-} from "@/features/originacao/types";
-import { formatPhone } from "@/lib/format/phone";
+import type { DadosElegibilidade } from "@/features/originacao/types";
+import { useToast } from "@/contexts/toast/toast-context";
+import { useProducts } from "@/hooks/useProducts";
+import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
+import { getApiErrorMessage } from "@/lib/api/errors";
+import { formatPhone, digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
-import { calcInstallment, fmtBRL } from "@/lib/utils";
+import { fmtBRL } from "@/lib/utils";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
-
 interface SimulacaoFormProps {
   prefill: DadosElegibilidade | null;
   hasList: boolean;
   onViewList: () => void;
-  onCompleted: (snapshot: SimulacaoSnapshot) => void;
+  onCompleted: () => void;
 }
 
 const MAX_BIRTH_ISO = maxAdultBirthIso();
+const SIMULATE_BLOCKED_MESSAGE =
+  "Você possui ações de cobrança pendentes que impedem a simulação de proposta.";
 
 export function SimulacaoForm({
   prefill,
@@ -78,13 +81,35 @@ export function SimulacaoForm({
   onViewList,
   onCompleted,
 }: SimulacaoFormProps) {
+  const { showToast } = useToast();
+  const productsQuery = useProducts();
+  const permissionsQuery = useQuoteActivityPermissions();
+  const createSimulation = useCreateSimulation();
+  const products = useMemo(
+    () =>
+      (productsQuery.data ?? []).filter((product) => product.enabled !== false),
+    [productsQuery.data],
+  );
+  const canSimulateQuote = permissionsQuery.data?.canSimulateQuote === true;
+  const simulateBlocked = permissionsQuery.data?.canSimulateQuote === false;
+
+  const [today] = useState(() => startOfDay(new Date()));
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [draftDueDate, setDraftDueDate] = useState<Date | undefined>(undefined);
   const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
   const [showRate, setShowRate] = useState(false);
+  const constraintsRef = useRef({
+    installmentOptions: installmentOptionsForProduct(null),
+    today,
+  });
 
   const form = useForm<SimulationFormValues>({
-    resolver: zodResolver(simulationSchema),
+    resolver: (values, context, options) =>
+      zodResolver(createSimulationSchema(constraintsRef.current))(
+        values,
+        context,
+        options,
+      ),
     mode: "onSubmit",
     reValidateMode: "onChange",
     defaultValues: {
@@ -93,22 +118,37 @@ export function SimulacaoForm({
       nascimento: prefill?.nascimento ?? "",
       email: "",
       celular: "",
-      product: "Pessoal",
+      product: "",
       amount: AMOUNT_DEFAULT,
-    } as SimulationFormValues,
+    },
   });
 
-  const product = form.watch("product");
+  const productId = form.watch("product");
   const amount = form.watch("amount");
   const installments = form.watch("installments");
   const dueDate = form.watch("dueDate");
+  const selectedProduct = products.find((product) => product.id === productId);
+  const installmentOptions = installmentOptionsForProduct(selectedProduct);
+  const rate = productRatePercent(selectedProduct);
+  constraintsRef.current = { installmentOptions, today };
 
-  const today = startOfDay(new Date());
+  useEffect(() => {
+    if (!products.length || form.getValues("product")) return;
+    form.setValue("product", products[0].id, { shouldValidate: false });
+  }, [form, products]);
+
+  useEffect(() => {
+    if (installments == null) return;
+    if (installmentOptions.includes(installments)) return;
+    form.setValue("installments", undefined as unknown as number, {
+      shouldValidate: false,
+    });
+  }, [form, installmentOptions, installments]);
+
   const dueDateLimit = addDays(today, FIRST_INSTALLMENT_MAX_DAYS);
   const dueDay = dueDate?.getDate() ?? null;
-  const rate = PRODUCT_RATE[product];
   const installmentAmount = installments
-    ? calcInstallment(amount, installments, rate)
+    ? previewInstallmentAmount(amount, installments, rate)
     : 0;
 
   function openDueDateDialog() {
@@ -125,27 +165,40 @@ export function SimulacaoForm({
     setDueDateDialogOpen(false);
   }
 
-  function onContinue(values: SimulationFormValues) {
-    onCompleted({
-      id: crypto.randomUUID(),
-      criadaEm: new Date().toLocaleString("pt-BR"),
-      nome: values.nome,
-      nascimento: values.nascimento,
-      email: values.email,
-      celular: values.celular,
-      produto: values.product,
-      taxa: PRODUCT_RATE[values.product],
-      cpf: values.cpf,
-      valor: values.amount,
-      parcelas: values.installments,
-      vencimento: values.dueDate.getDate(),
-      parcelaCalc: calcInstallment(
-        values.amount,
-        values.installments,
-        PRODUCT_RATE[values.product],
-      ),
-    });
+  async function onContinue(values: SimulationFormValues) {
+    if (!canSimulateQuote) {
+      showToast(SIMULATE_BLOCKED_MESSAGE, { variant: "destructive" });
+      return;
+    }
+
+    try {
+      await createSimulation.mutateAsync({
+        name: values.nome,
+        document: values.cpf.replace(/\D/g, ""),
+        birthDate: values.nascimento,
+        email: values.email,
+        telephone: digitsOnlyPhone(values.celular),
+        productId: values.product,
+        amount: values.amount,
+        installments: values.installments,
+        firstInstallmentDate: toIsoDate(values.dueDate),
+      });
+      onCompleted();
+    } catch (err) {
+      showToast(
+        getApiErrorMessage(err, "Não foi possível salvar a simulação."),
+        { variant: "destructive" },
+      );
+    }
   }
+
+  const submitting = form.formState.isSubmitting || createSimulation.isPending;
+  const submitDisabled =
+    submitting ||
+    !canSimulateQuote ||
+    permissionsQuery.isPending ||
+    productsQuery.isLoading ||
+    products.length === 0;
 
   return (
     <OriginacaoPageFrame
@@ -171,6 +224,12 @@ export function SimulacaoForm({
           onSubmit={form.handleSubmit(onContinue, scrollToFirstError)}
           noValidate
         >
+          {simulateBlocked ? (
+            <p className="rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
+              {SIMULATE_BLOCKED_MESSAGE}
+            </p>
+          ) : null}
+
           <FormInput<SimulationFormValues>
             name="nome"
             label="Nome completo"
@@ -217,32 +276,40 @@ export function SimulacaoForm({
           <FormField
             control={form.control}
             name="product"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <div className="flex flex-col gap-1.5">
                 <FieldLabel required>Produto</FieldLabel>
                 <div className="flex items-start justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
                   <div>
-                    <OriginacaoToneBadge tone="warning">
-                      Sugerido
-                    </OriginacaoToneBadge>
+                    {selectedProduct ? (
+                      <OriginacaoToneBadge tone="warning">
+                        Sugerido
+                      </OriginacaoToneBadge>
+                    ) : null}
                     <p className="font-semibold text-foreground">
-                      {field.value}
+                      {selectedProduct?.description ??
+                        (productsQuery.isLoading
+                          ? "Carregando produtos…"
+                          : "Nenhum produto vinculado")}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setShowRate((value) => !value)}
-                      className="flex items-center gap-1 text-xs text-muted-foreground"
-                    >
-                      {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
-                      {showRate
-                        ? `Taxa de ${formatMonthlyRate(rate)} · definida pelo produto`
-                        : "Mostrar taxa"}
-                    </button>
+                    {selectedProduct ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowRate((value) => !value)}
+                        className="flex items-center gap-1 text-xs text-muted-foreground"
+                      >
+                        {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
+                        {showRate
+                          ? `Taxa de ${formatMonthlyRate(rate)} · definida pelo produto`
+                          : "Mostrar taxa"}
+                      </button>
+                    ) : null}
                   </div>
                   <button
                     type="button"
                     onClick={() => setProductDialogOpen(true)}
-                    className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy"
+                    disabled={!products.length}
+                    className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy disabled:opacity-50"
                   >
                     <RefreshCw size={13} />
                     Trocar
@@ -253,11 +320,13 @@ export function SimulacaoForm({
                   open={productDialogOpen}
                   onOpenChange={setProductDialogOpen}
                   value={field.value}
-                  onChange={(value) =>
-                    field.onChange(value as SimulationProduct)
-                  }
-                  options={toSelectOptions(PRODUCTS)}
+                  onChange={field.onChange}
+                  options={products.map((product) => ({
+                    value: product.id,
+                    label: product.description,
+                  }))}
                 />
+                <FieldErrorMessage error={fieldState.error?.message} />
               </div>
             )}
           />
@@ -299,7 +368,7 @@ export function SimulacaoForm({
                 label="Em quantas parcelas?"
                 value={field.value != null ? String(field.value) : ""}
                 onChange={(value) => field.onChange(Number(value))}
-                options={INSTALLMENT_OPTIONS.map((n) => ({
+                options={installmentOptions.map((n) => ({
                   value: String(n),
                   label: `${n}x`,
                 }))}
@@ -365,8 +434,21 @@ export function SimulacaoForm({
             </div>
           ) : null}
 
-          <Button type="submit" variant="yellow" size="pill" className="w-full">
-            Continuar
+          <Button
+            type="submit"
+            variant="yellow"
+            size="pill"
+            className="w-full"
+            disabled={submitDisabled}
+          >
+            {submitting ? (
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                Simulando…
+              </>
+            ) : (
+              "Continuar"
+            )}
           </Button>
         </form>
       </Form>

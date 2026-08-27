@@ -14,7 +14,9 @@ export interface OriginacaoContextValue {
   setDadosIniciais: (dados: DadosElegibilidade) => void;
   consumeDadosIniciais: () => void;
   simulacoes: SimulacaoSnapshot[];
-  addSimulacao: (snapshot: SimulacaoSnapshot) => void;
+  simulacoesLoading: boolean;
+  simulacoesError: boolean;
+  refetchSimulacoes: () => void;
   proposals: ProposalSnapshot[];
   openProposalId: string | null;
   startProposal: (simulation: SimulacaoSnapshot) => void;

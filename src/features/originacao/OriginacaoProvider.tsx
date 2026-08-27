@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   createProposalFromSimulation,
   type ProposalSnapshot,
@@ -12,14 +13,30 @@ import type {
   OriginacaoTab,
   SimulacaoSnapshot,
 } from "@/features/originacao/types";
+import {
+  originationKeys,
+  originationService,
+} from "@/services/origination/origination.service";
 
 export function OriginacaoProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState<OriginacaoTab>("elegibilidade");
   const [dadosIniciais, setDadosIniciaisState] =
     useState<DadosElegibilidade | null>(null);
-  const [simulacoes, setSimulacoes] = useState<SimulacaoSnapshot[]>([]);
   const [proposals, setProposals] = useState<ProposalSnapshot[]>([]);
   const [openProposalId, setOpenProposalId] = useState<string | null>(null);
+
+  const simulationsQuery = useQuery({
+    queryKey: originationKeys.simulations(),
+    queryFn: originationService.listSimulations,
+  });
+
+  const {
+    data: simulations,
+    isPending: simulationsPending,
+    isFetching: simulationsFetching,
+    isError: simulationsError,
+    refetch: refetchSimulations,
+  } = simulationsQuery;
 
   const setDadosIniciais = useCallback((dados: DadosElegibilidade) => {
     setDadosIniciaisState(dados);
@@ -27,10 +44,6 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
 
   const consumeDadosIniciais = useCallback(() => {
     setDadosIniciaisState(null);
-  }, []);
-
-  const addSimulacao = useCallback((snapshot: SimulacaoSnapshot) => {
-    setSimulacoes((prev) => [...prev, snapshot]);
   }, []);
 
   const startProposal = useCallback((simulation: SimulacaoSnapshot) => {
@@ -61,8 +74,11 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
       dadosIniciais,
       setDadosIniciais,
       consumeDadosIniciais,
-      simulacoes,
-      addSimulacao,
+      simulacoes: simulations ?? [],
+      simulacoesLoading:
+        simulationsPending || (simulationsFetching && simulationsError),
+      simulacoesError: simulationsError,
+      refetchSimulacoes: refetchSimulations,
       proposals,
       openProposalId,
       startProposal,
@@ -75,8 +91,11 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
       dadosIniciais,
       setDadosIniciais,
       consumeDadosIniciais,
-      simulacoes,
-      addSimulacao,
+      simulations,
+      simulationsPending,
+      simulationsFetching,
+      simulationsError,
+      refetchSimulations,
       proposals,
       openProposalId,
       startProposal,

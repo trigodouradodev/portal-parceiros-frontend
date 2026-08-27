@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OriginacaoEmptyState } from "@/features/originacao/components/OriginacaoEmptyState";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
@@ -6,24 +6,34 @@ import {
   OriginacaoSnapshotCard,
   OriginacaoToneBadge,
 } from "@/features/originacao/components/OriginacaoSnapshotCard";
+import {
+  dueDayFromIsoDate,
+  formatCreatedAtPtBr,
+} from "@/features/originacao/data/simulacao";
 import type { SimulacaoSnapshot } from "@/features/originacao/types";
 import { fmtBRL } from "@/lib/utils";
 
 interface SimulacaoListProps {
   simulations: SimulacaoSnapshot[];
+  isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
   onNewSimulation: () => void;
   onStartProposal: (snapshot: SimulacaoSnapshot) => void;
 }
 
 export function SimulacaoList({
   simulations,
+  isLoading = false,
+  isError = false,
+  onRetry,
   onNewSimulation,
   onStartProposal,
 }: SimulacaoListProps) {
   return (
     <OriginacaoPageFrame
       title="Simulações"
-      description="Simulações realizadas para clientes nesta sessão."
+      description="Simulações salvas deste parceiro."
       actions={
         <Button
           variant="yellow"
@@ -36,7 +46,29 @@ export function SimulacaoList({
         </Button>
       }
     >
-      {simulations.length === 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
+          <Loader2 size={16} className="animate-spin" />
+          Carregando simulações…
+        </div>
+      ) : null}
+
+      {!isLoading && isError ? (
+        <OriginacaoEmptyState
+          icon={<Plus size={22} />}
+          title="Não foi possível carregar"
+          description="Tente novamente em instantes."
+          action={
+            onRetry ? (
+              <Button variant="outline" size="pillSm" onClick={onRetry}>
+                Tentar novamente
+              </Button>
+            ) : null
+          }
+        />
+      ) : null}
+
+      {!isLoading && !isError && simulations.length === 0 ? (
         <OriginacaoEmptyState
           icon={<Plus size={22} />}
           title="Nenhuma simulação ainda"
@@ -44,31 +76,33 @@ export function SimulacaoList({
         />
       ) : null}
 
-      <div className="flex flex-col gap-3">
-        {[...simulations].reverse().map((item) => (
-          <OriginacaoSnapshotCard
-            key={item.id}
-            badge={
-              <OriginacaoToneBadge tone="warning">
-                {item.produto}
-              </OriginacaoToneBadge>
-            }
-            timestamp={item.criadaEm}
-            name={item.nome}
-            amount={item.valor}
-            subtitle={`${item.parcelas}x de ${fmtBRL(item.parcelaCalc)} · vencimento dia ${String(item.vencimento).padStart(2, "0")}`}
-            cpf={item.cpf}
-          >
-            <Button
-              variant="outline"
-              size="pillSm"
-              onClick={() => onStartProposal(item)}
+      {!isLoading && !isError ? (
+        <div className="flex flex-col gap-3">
+          {simulations.map((item) => (
+            <OriginacaoSnapshotCard
+              key={item.id}
+              badge={
+                <OriginacaoToneBadge tone="warning">
+                  {item.productName}
+                </OriginacaoToneBadge>
+              }
+              timestamp={formatCreatedAtPtBr(item.createdAt)}
+              name={item.name}
+              amount={item.amount}
+              subtitle={`${item.installments}x de ${fmtBRL(item.installmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
+              cpf={item.document}
             >
-              Iniciar proposta
-            </Button>
-          </OriginacaoSnapshotCard>
-        ))}
-      </div>
+              <Button
+                variant="outline"
+                size="pillSm"
+                onClick={() => onStartProposal(item)}
+              >
+                Iniciar proposta
+              </Button>
+            </OriginacaoSnapshotCard>
+          ))}
+        </div>
+      ) : null}
     </OriginacaoPageFrame>
   );
 }
