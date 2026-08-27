@@ -4,12 +4,14 @@ interface OriginacaoEmptyStateProps {
   icon: ReactNode;
   title: string;
   description: string;
+  action?: ReactNode;
 }
 
 export function OriginacaoEmptyState({
   icon,
   title,
   description,
+  action,
 }: OriginacaoEmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -18,6 +20,7 @@ export function OriginacaoEmptyState({
       </div>
       <p className="mb-1 font-semibold text-foreground">{title}</p>
       <p className="text-sm text-muted-foreground">{description}</p>
+      {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
 }

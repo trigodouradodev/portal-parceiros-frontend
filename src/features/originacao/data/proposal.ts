@@ -1,4 +1,4 @@
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
+import type { SimulationSnapshot } from "@/features/originacao/types";
 
 export const PROPOSAL_STEPS = [
   "Cadastro",
@@ -323,7 +323,7 @@ export interface ProposalSnapshot {
   createdAt: string;
   updatedAt: string;
   status: ProposalStatus;
-  simulation: SimulacaoSnapshot;
+  simulation: SimulationSnapshot;
   step: number;
   stepValid: boolean[];
   data: ProposalFormData;
@@ -405,7 +405,7 @@ export function createEmptyProposalForm(): ProposalFormData {
 }
 
 export function createProposalFromSimulation(
-  simulation: SimulacaoSnapshot,
+  simulation: SimulationSnapshot,
 ): ProposalSnapshot {
   const now = new Date().toLocaleString("pt-BR");
   return {

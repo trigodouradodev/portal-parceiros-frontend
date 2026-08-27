@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   createProposalFromSimulation,
   type ProposalSnapshot,
@@ -8,36 +9,48 @@ import {
   type OriginacaoContextValue,
 } from "@/features/originacao/originacao-context";
 import type {
-  DadosElegibilidade,
+  EligibilityPrefill,
   OriginacaoTab,
-  SimulacaoSnapshot,
+  SimulationSnapshot,
 } from "@/features/originacao/types";
+import {
+  originationKeys,
+  originationService,
+} from "@/services/origination/origination.service";
 
 export function OriginacaoProvider({ children }: { children: ReactNode }) {
-  const [activeTab, setActiveTab] = useState<OriginacaoTab>("elegibilidade");
-  const [dadosIniciais, setDadosIniciaisState] =
-    useState<DadosElegibilidade | null>(null);
-  const [simulacoes, setSimulacoes] = useState<SimulacaoSnapshot[]>([]);
+  const [activeTab, setActiveTab] = useState<OriginacaoTab>("eligibility");
+  const [eligibilityPrefill, setEligibilityPrefillState] =
+    useState<EligibilityPrefill | null>(null);
   const [proposals, setProposals] = useState<ProposalSnapshot[]>([]);
   const [openProposalId, setOpenProposalId] = useState<string | null>(null);
 
-  const setDadosIniciais = useCallback((dados: DadosElegibilidade) => {
-    setDadosIniciaisState(dados);
+  const simulationsQuery = useQuery({
+    queryKey: originationKeys.simulations(),
+    queryFn: originationService.listSimulations,
+  });
+
+  const {
+    data: simulations,
+    isPending: simulationsPending,
+    isFetching: simulationsFetching,
+    isError: simulationsError,
+    refetch: refetchSimulations,
+  } = simulationsQuery;
+
+  const setEligibilityPrefill = useCallback((data: EligibilityPrefill) => {
+    setEligibilityPrefillState(data);
   }, []);
 
-  const consumeDadosIniciais = useCallback(() => {
-    setDadosIniciaisState(null);
+  const clearEligibilityPrefill = useCallback(() => {
+    setEligibilityPrefillState(null);
   }, []);
 
-  const addSimulacao = useCallback((snapshot: SimulacaoSnapshot) => {
-    setSimulacoes((prev) => [...prev, snapshot]);
-  }, []);
-
-  const startProposal = useCallback((simulation: SimulacaoSnapshot) => {
+  const startProposal = useCallback((simulation: SimulationSnapshot) => {
     const proposal = createProposalFromSimulation(simulation);
     setProposals((prev) => [...prev, proposal]);
     setOpenProposalId(proposal.id);
-    setActiveTab("proposta");
+    setActiveTab("proposal");
   }, []);
 
   const openProposal = useCallback((id: string) => {
@@ -58,11 +71,14 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
     () => ({
       activeTab,
       setActiveTab,
-      dadosIniciais,
-      setDadosIniciais,
-      consumeDadosIniciais,
-      simulacoes,
-      addSimulacao,
+      eligibilityPrefill,
+      setEligibilityPrefill,
+      clearEligibilityPrefill,
+      simulations: simulations ?? [],
+      simulationsLoading:
+        simulationsPending || (simulationsFetching && simulationsError),
+      simulationsError,
+      refetchSimulations,
       proposals,
       openProposalId,
       startProposal,
@@ -72,11 +88,14 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
     }),
     [
       activeTab,
-      dadosIniciais,
-      setDadosIniciais,
-      consumeDadosIniciais,
-      simulacoes,
-      addSimulacao,
+      eligibilityPrefill,
+      setEligibilityPrefill,
+      clearEligibilityPrefill,
+      simulations,
+      simulationsPending,
+      simulationsFetching,
+      simulationsError,
+      refetchSimulations,
       proposals,
       openProposalId,
       startProposal,

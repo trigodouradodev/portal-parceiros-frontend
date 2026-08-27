@@ -1,23 +1,25 @@
 import { createContext, useContext } from "react";
 import type { ProposalSnapshot } from "@/features/originacao/data/proposal";
 import type {
-  DadosElegibilidade,
+  EligibilityPrefill,
   OriginacaoTab,
-  SimulacaoSnapshot,
+  SimulationSnapshot,
 } from "@/features/originacao/types";
 
 export interface OriginacaoContextValue {
   activeTab: OriginacaoTab;
   setActiveTab: (tab: OriginacaoTab) => void;
-  /** Prefill one-shot da elegibilidade → simulação. */
-  dadosIniciais: DadosElegibilidade | null;
-  setDadosIniciais: (dados: DadosElegibilidade) => void;
-  consumeDadosIniciais: () => void;
-  simulacoes: SimulacaoSnapshot[];
-  addSimulacao: (snapshot: SimulacaoSnapshot) => void;
+  /** One-shot eligibility → simulation prefill. */
+  eligibilityPrefill: EligibilityPrefill | null;
+  setEligibilityPrefill: (data: EligibilityPrefill) => void;
+  clearEligibilityPrefill: () => void;
+  simulations: SimulationSnapshot[];
+  simulationsLoading: boolean;
+  simulationsError: boolean;
+  refetchSimulations: () => void;
   proposals: ProposalSnapshot[];
   openProposalId: string | null;
-  startProposal: (simulation: SimulacaoSnapshot) => void;
+  startProposal: (simulation: SimulationSnapshot) => void;
   openProposal: (id: string) => void;
   closeProposal: () => void;
   updateProposal: (proposal: ProposalSnapshot) => void;

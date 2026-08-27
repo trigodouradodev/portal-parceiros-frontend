@@ -15,9 +15,9 @@ import type { OriginacaoTab } from "@/features/originacao/types";
 function OriginacaoLayout() {
   const { onMobileLogout, setHideBottomNav } =
     useOutletContext<AppShellOutletContext>();
-  const { activeTab, setActiveTab, simulacoes, openProposalId } =
+  const { activeTab, setActiveTab, simulations, openProposalId } =
     useOriginacao();
-  const propostaLocked = simulacoes.length === 0;
+  const proposalLocked = simulations.length === 0;
   const focusedProposal = Boolean(openProposalId);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ function OriginacaoLayout() {
   }, [focusedProposal, setHideBottomNav]);
 
   function goTo(tab: string) {
-    if (tab === "proposta" && propostaLocked) return;
+    if (tab === "proposal" && proposalLocked) return;
     setActiveTab(tab as OriginacaoTab);
   }
 
@@ -48,33 +48,33 @@ function OriginacaoLayout() {
         {focusedProposal ? null : (
           <div className="px-5 pt-5 md:px-8">
             <TabsList className="md:w-[26rem]">
-              <TabsTrigger value="elegibilidade">Elegibilidade</TabsTrigger>
-              <TabsTrigger value="simulacao">Simulação</TabsTrigger>
+              <TabsTrigger value="eligibility">Elegibilidade</TabsTrigger>
+              <TabsTrigger value="simulation">Simulação</TabsTrigger>
               <TabsTrigger
-                value="proposta"
-                disabled={propostaLocked}
+                value="proposal"
+                disabled={proposalLocked}
                 title={
-                  propostaLocked
+                  proposalLocked
                     ? "Conclua uma simulação para liberar a proposta"
                     : undefined
                 }
                 className="disabled:cursor-not-allowed disabled:opacity-100 disabled:text-muted-foreground/50"
               >
-                {propostaLocked ? <Lock size={12} aria-hidden /> : null}
+                {proposalLocked ? <Lock size={12} aria-hidden /> : null}
                 Proposta
               </TabsTrigger>
             </TabsList>
           </div>
         )}
 
-        <TabsContent value="elegibilidade" className="mt-0">
+        <TabsContent value="eligibility" className="mt-0">
           <ElegibilidadePage />
         </TabsContent>
-        <TabsContent value="simulacao" className="mt-0">
+        <TabsContent value="simulation" className="mt-0">
           <SimulacaoPage />
         </TabsContent>
         <TabsContent
-          value="proposta"
+          value="proposal"
           className={
             focusedProposal
               ? "mt-0 flex min-h-0 min-w-0 flex-1 flex-col"

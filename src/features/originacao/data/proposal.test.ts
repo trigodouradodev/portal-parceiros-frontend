@@ -14,22 +14,23 @@ import {
   isPartnerOpinionValid,
   isRegistrationValid,
 } from "@/features/originacao/schemas/proposal-form";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
+import type { SimulationSnapshot } from "@/features/originacao/types";
 
-const simulation: SimulacaoSnapshot = {
+const simulation: SimulationSnapshot = {
   id: "sim-1",
-  criadaEm: "13/08/2026",
-  nome: "Maria Silva",
-  nascimento: "1990-01-01",
-  produto: "Pessoal",
-  taxa: 3.39,
-  cpf: "11144477735",
+  createdAt: "2026-08-13T12:00:00.000Z",
+  name: "Maria Silva",
+  birthDate: "1990-01-01",
   email: "maria@email.com",
-  celular: "(88) 99702-6551",
-  valor: 5000,
-  parcelas: 12,
-  vencimento: 10,
-  parcelaCalc: 500,
+  telephone: "88997026551",
+  document: "11144477735",
+  productId: "e58843ce-ad74-4152-910d-83cd96fa6f6b",
+  productName: "PESSOAL",
+  interestRate: 0.0339,
+  amount: 5000,
+  installments: 12,
+  firstInstallmentDate: "2026-08-10",
+  installmentAmount: 500,
 };
 
 describe("createProposalFromSimulation", () => {

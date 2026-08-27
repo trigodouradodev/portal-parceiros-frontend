@@ -22,7 +22,7 @@ export function ProposalSuccess({
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto">
       <OriginacaoTaskHeader
         title="Proposta criada"
-        subtitle={`${fmtBRL(simulation.valor)} · ${simulation.parcelas}x · ${simulation.produto}`}
+        subtitle={`${fmtBRL(simulation.amount)} · ${simulation.installments}x · ${simulation.productName}`}
         backLabel="Ver todas as propostas"
         onBack={onBackToList}
         onLogout={onLogout}

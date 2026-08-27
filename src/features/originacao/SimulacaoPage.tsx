@@ -2,41 +2,40 @@ import { useState } from "react";
 import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import { SimulacaoList } from "@/features/originacao/components/SimulacaoList";
 import { useOriginacao } from "@/features/originacao/originacao-context";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
 
 export function SimulacaoPage() {
   const {
-    dadosIniciais,
-    consumeDadosIniciais,
-    simulacoes,
-    addSimulacao,
+    eligibilityPrefill,
+    clearEligibilityPrefill,
+    simulations,
+    simulationsLoading,
+    simulationsError,
+    refetchSimulations,
     startProposal,
   } = useOriginacao();
   const [blankFormKey, setBlankFormKey] = useState<number | null>(null);
 
-  const fromEligibility = dadosIniciais != null;
+  const fromEligibility = eligibilityPrefill != null;
   const showForm = fromEligibility || blankFormKey != null;
   const formKey = fromEligibility ? "prefill" : String(blankFormKey);
 
   function closeForm() {
-    consumeDadosIniciais();
+    clearEligibilityPrefill();
     setBlankFormKey(null);
   }
 
   function handleNewSimulation() {
-    consumeDadosIniciais();
+    clearEligibilityPrefill();
     setBlankFormKey((key) => (key ?? 0) + 1);
-  }
-
-  function handleCompleted(snapshot: SimulacaoSnapshot) {
-    addSimulacao(snapshot);
-    closeForm();
   }
 
   if (!showForm) {
     return (
       <SimulacaoList
-        simulations={simulacoes}
+        simulations={simulations}
+        isLoading={simulationsLoading}
+        isError={simulationsError}
+        onRetry={refetchSimulations}
         onNewSimulation={handleNewSimulation}
         onStartProposal={startProposal}
       />
@@ -46,10 +45,10 @@ export function SimulacaoPage() {
   return (
     <SimulacaoForm
       key={formKey}
-      prefill={dadosIniciais}
-      hasList={simulacoes.length > 0}
+      prefill={eligibilityPrefill}
+      hasList={simulations.length > 0 || blankFormKey != null}
       onViewList={closeForm}
-      onCompleted={handleCompleted}
+      onCompleted={closeForm}
     />
   );
 }
