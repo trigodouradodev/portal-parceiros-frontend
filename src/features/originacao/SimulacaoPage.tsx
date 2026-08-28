@@ -2,6 +2,7 @@ import { useState } from "react";
 import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import { SimulacaoList } from "@/features/originacao/components/SimulacaoList";
 import { useOriginacao } from "@/features/originacao/originacao-context";
+import type { SimulationSnapshot } from "@/features/originacao/types";
 
 export function SimulacaoPage() {
   const {
@@ -14,19 +15,32 @@ export function SimulacaoPage() {
     startProposal,
   } = useOriginacao();
   const [blankFormKey, setBlankFormKey] = useState<number | null>(null);
+  const [editing, setEditing] = useState<SimulationSnapshot | null>(null);
 
   const fromEligibility = eligibilityPrefill != null;
-  const showForm = fromEligibility || blankFormKey != null;
-  const formKey = fromEligibility ? "prefill" : String(blankFormKey);
+  const showForm = fromEligibility || blankFormKey != null || editing != null;
+  const formKey = editing
+    ? `edit-${editing.id}`
+    : fromEligibility
+      ? "prefill"
+      : String(blankFormKey);
 
   function closeForm() {
     clearEligibilityPrefill();
     setBlankFormKey(null);
+    setEditing(null);
   }
 
   function handleNewSimulation() {
     clearEligibilityPrefill();
+    setEditing(null);
     setBlankFormKey((key) => (key ?? 0) + 1);
+  }
+
+  function handleEdit(snapshot: SimulationSnapshot) {
+    clearEligibilityPrefill();
+    setBlankFormKey(null);
+    setEditing(snapshot);
   }
 
   if (!showForm) {
@@ -37,6 +51,7 @@ export function SimulacaoPage() {
         isError={simulationsError}
         onRetry={refetchSimulations}
         onNewSimulation={handleNewSimulation}
+        onEdit={handleEdit}
         onStartProposal={startProposal}
       />
     );
@@ -46,7 +61,10 @@ export function SimulacaoPage() {
     <SimulacaoForm
       key={formKey}
       prefill={eligibilityPrefill}
-      hasList={simulations.length > 0 || blankFormKey != null}
+      editing={editing}
+      hasList={
+        simulations.length > 0 || blankFormKey != null || editing != null
+      }
       onViewList={closeForm}
       onCompleted={closeForm}
     />
