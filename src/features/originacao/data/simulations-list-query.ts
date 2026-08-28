@@ -2,7 +2,7 @@ import type { ListSimulationsQuery } from "@/services/origination/origination.ty
 
 export const SIMULATIONS_SEARCH_DEBOUNCE_MS = 300;
 
-const CPF_MASK_CHARS = /[.\-\/\s]/g;
+const CPF_MASK_CHARS = /[.\-\s/]/g;
 
 export function buildSimulationsListQuery(
   search: string,
