@@ -8,9 +8,6 @@ export function SimulacaoPage() {
     eligibilityPrefill,
     clearEligibilityPrefill,
     simulations,
-    simulationsLoading,
-    simulationsError,
-    refetchSimulations,
     startProposal,
   } = useOriginacao();
   const [blankFormKey, setBlankFormKey] = useState<number | null>(null);
@@ -32,10 +29,7 @@ export function SimulacaoPage() {
   if (!showForm) {
     return (
       <SimulacaoList
-        simulations={simulations}
-        isLoading={simulationsLoading}
-        isError={simulationsError}
-        onRetry={refetchSimulations}
+        hasUnfilteredSimulations={simulations.length > 0}
         onNewSimulation={handleNewSimulation}
         onStartProposal={startProposal}
       />
