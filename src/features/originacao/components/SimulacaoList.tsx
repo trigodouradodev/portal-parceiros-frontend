@@ -1,5 +1,8 @@
-import { Loader2, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { Loader2, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InputField } from "@/components/ui/input-field";
 import { OriginacaoEmptyState } from "@/features/originacao/components/OriginacaoEmptyState";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import {
@@ -10,28 +13,60 @@ import {
   dueDayFromIsoDate,
   formatCreatedAtPtBr,
 } from "@/features/originacao/data/simulacao";
+import {
+  SIMULATIONS_SEARCH_DEBOUNCE_MS,
+  buildSimulationsListQuery,
+  isSimulationsFilterActive,
+} from "@/features/originacao/data/simulations-list-query";
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import { fmtBRL } from "@/lib/utils";
+import {
+  originationKeys,
+  originationService,
+} from "@/services/origination/origination.service";
 
 interface SimulacaoListProps {
-  simulations: SimulationSnapshot[];
-  isLoading?: boolean;
-  isError?: boolean;
-  onRetry?: () => void;
+  hasUnfilteredSimulations: boolean;
   onNewSimulation: () => void;
   onEdit: (snapshot: SimulationSnapshot) => void;
   onStartProposal: (snapshot: SimulationSnapshot) => void;
 }
 
 export function SimulacaoList({
-  simulations,
-  isLoading = false,
-  isError = false,
-  onRetry,
+  hasUnfilteredSimulations,
   onNewSimulation,
   onEdit,
   onStartProposal,
 }: SimulacaoListProps) {
+  const [searchInput, setSearchInput] = useState("");
+  const [filters, setFilters] = useState(() => buildSimulationsListQuery(""));
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setFilters(buildSimulationsListQuery(searchInput));
+    }, SIMULATIONS_SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  const listQuery = useQuery({
+    queryKey: originationKeys.simulations(filters),
+    queryFn: () => originationService.listSimulations(filters),
+    placeholderData: keepPreviousData,
+  });
+
+  const simulations = listQuery.data ?? [];
+  const filterActive = isSimulationsFilterActive(filters);
+  const showFilters = hasUnfilteredSimulations || filterActive;
+  const isLoading = listQuery.isPending && !listQuery.data;
+  const isError = listQuery.isError;
+  const noUnfiltered = !hasUnfilteredSimulations && !filterActive;
+  const noMatch = filterActive && simulations.length === 0;
+
+  function clearFilters() {
+    setSearchInput("");
+    setFilters({});
+  }
+
   return (
     <OriginacaoPageFrame
       title="Simulações"
@@ -48,6 +83,27 @@ export function SimulacaoList({
         </Button>
       }
     >
+      {showFilters ? (
+        <div className="mb-4 flex flex-col gap-3">
+          <InputField
+            label="Nome ou CPF"
+            icon={<Search size={16} />}
+            placeholder="Buscar por nome ou CPF"
+            value={searchInput}
+            onChange={setSearchInput}
+          />
+          {isSimulationsFilterActive(buildSimulationsListQuery(searchInput)) ? (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="self-start text-sm font-semibold text-brand-navy"
+            >
+              Limpar filtros
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
           <Loader2 size={16} className="animate-spin" />
@@ -61,16 +117,18 @@ export function SimulacaoList({
           title="Não foi possível carregar"
           description="Tente novamente em instantes."
           action={
-            onRetry ? (
-              <Button variant="outline" size="pillSm" onClick={onRetry}>
-                Tentar novamente
-              </Button>
-            ) : null
+            <Button
+              variant="outline"
+              size="pillSm"
+              onClick={() => void listQuery.refetch()}
+            >
+              Tentar novamente
+            </Button>
           }
         />
       ) : null}
 
-      {!isLoading && !isError && simulations.length === 0 ? (
+      {!isLoading && !isError && noUnfiltered ? (
         <OriginacaoEmptyState
           icon={<Plus size={22} />}
           title="Nenhuma simulação ainda"
@@ -78,7 +136,15 @@ export function SimulacaoList({
         />
       ) : null}
 
-      {!isLoading && !isError ? (
+      {!isLoading && !isError && noMatch ? (
+        <OriginacaoEmptyState
+          icon={<Search size={22} />}
+          title="Nenhuma simulação encontrada"
+          description="Tente outro nome ou CPF, ou limpe os filtros."
+        />
+      ) : null}
+
+      {!isLoading && !isError && simulations.length > 0 ? (
         <div className="flex flex-col gap-3">
           {simulations.map((item) => (
             <OriginacaoSnapshotCard

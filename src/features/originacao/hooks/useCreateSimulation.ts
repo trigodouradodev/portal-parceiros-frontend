@@ -18,6 +18,9 @@ export function useCreateSimulation() {
           ...(prev ?? []).filter((item) => item.id !== snapshot.id),
         ],
       );
+      void queryClient.invalidateQueries({
+        queryKey: originationKeys.simulationsRoot(),
+      });
     },
   });
 }

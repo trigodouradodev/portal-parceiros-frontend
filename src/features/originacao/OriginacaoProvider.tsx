@@ -27,7 +27,7 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
 
   const simulationsQuery = useQuery({
     queryKey: originationKeys.simulations(),
-    queryFn: originationService.listSimulations,
+    queryFn: () => originationService.listSimulations(),
   });
 
   const {

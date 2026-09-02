@@ -1,4 +1,4 @@
-/** Snapshot persistido de GET/POST/PATCH /simulations. */
+/** Snapshot persistido de GET/POST/PATCH /simulations (`name`/`document` no GET). */
 export interface SimulationSnapshot {
   id: string;
   createdAt: string;
@@ -30,3 +30,8 @@ export interface CreateSimulationPayload {
 }
 
 export type UpdateSimulationPayload = CreateSimulationPayload;
+
+export interface ListSimulationsQuery {
+  name?: string;
+  document?: string;
+}
