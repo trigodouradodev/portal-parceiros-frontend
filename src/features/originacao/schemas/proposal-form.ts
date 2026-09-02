@@ -3,6 +3,7 @@ import {
   DEBT_PURPOSE,
   HOW_KNOWS_OTHER,
   OTHER_OPTION,
+  hasSpouse,
   type ActivityIncomeData,
   type AddressData,
   type DocumentsData,
@@ -38,6 +39,34 @@ function cepSchema() {
   });
 }
 
+function countString(min: number) {
+  return z.string().superRefine((value, ctx) => {
+    const digits = value.replace(/\D/g, "");
+    if (digits === "" || Number(digits) < min) {
+      ctx.addIssue({ code: "custom", message: REQUIRED_FIELD_MESSAGE });
+    }
+  });
+}
+
+function cpfSchema(required: boolean) {
+  return z.string().superRefine((value, ctx) => {
+    if (required) {
+      if (isValidCpf(value)) return;
+      ctx.addIssue({
+        code: "custom",
+        message:
+          value.replace(/\D/g, "").length === 0
+            ? REQUIRED_FIELD_MESSAGE
+            : "CPF inválido",
+      });
+      return;
+    }
+    if (!isOptionalCpfValid(value)) {
+      ctx.addIssue({ code: "custom", message: "CPF inválido" });
+    }
+  });
+}
+
 const addressCoreSchema = z.object({
   zipCode: cepSchema(),
   street: requiredString,
@@ -48,58 +77,70 @@ const addressCoreSchema = z.object({
   state: requiredString,
 });
 
-export const registrationSchema: z.ZodType<RegistrationData> = z
-  .object({
-    isRenewal: requiredYesNo,
-    gender: requiredString,
-    rg: z.string(),
-    activityCategories: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
-    activityCategoryOther: z.string(),
-    occupation: requiredString,
-    maritalStatus: z.string(),
-    spouseCpf: z.string().refine(isOptionalCpfValid, "CPF inválido"),
-    childrenCount: z.string(),
-    householdSize: z.string(),
-    propertyStatus: z.string(),
-    residenceTime: z.string(),
-    governmentPrograms: z.array(z.string()),
-    hasVehicle: z.boolean().nullable(),
-    vehicleFinanced: z.boolean().nullable(),
-    creditPurpose: z
-      .string()
-      .nullable()
-      .refine((value) => value != null && value !== "", REQUIRED_FIELD_MESSAGE),
-    debtDescription: z.string(),
-    debtCreditor: z.string(),
-  })
-  .superRefine((data, ctx) => {
-    if (
-      data.activityCategories.includes(OTHER_OPTION) &&
-      data.activityCategoryOther.trim() === ""
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["activityCategoryOther"],
-        message: REQUIRED_FIELD_MESSAGE,
-      });
-    }
-    if (data.creditPurpose === DEBT_PURPOSE) {
-      if (data.debtDescription.trim() === "") {
+function registrationSchemaFor(data: RegistrationData) {
+  return z
+    .object({
+      isRenewal: requiredYesNo,
+      gender: requiredString,
+      rg: requiredString,
+      activityCategories: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
+      activityCategoryOther: z.string(),
+      occupation: z.string().trim().min(2, REQUIRED_FIELD_MESSAGE),
+      maritalStatus: requiredString,
+      spouseCpf: cpfSchema(hasSpouse(data.maritalStatus)),
+      childrenCount: countString(0),
+      householdSize: countString(1),
+      propertyStatus: requiredString,
+      residenceTime: requiredString,
+      governmentPrograms: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
+      hasVehicle: requiredYesNo,
+      vehicleFinanced: z.boolean().nullable(),
+      creditPurpose: z
+        .string()
+        .nullable()
+        .refine(
+          (value) => value != null && value !== "",
+          REQUIRED_FIELD_MESSAGE,
+        ),
+      debtDescription: z.string(),
+      debtCreditor: z.string(),
+    })
+    .superRefine((form, ctx) => {
+      if (
+        form.activityCategories.includes(OTHER_OPTION) &&
+        form.activityCategoryOther.trim() === ""
+      ) {
         ctx.addIssue({
           code: "custom",
-          path: ["debtDescription"],
+          path: ["activityCategoryOther"],
           message: REQUIRED_FIELD_MESSAGE,
         });
       }
-      if (data.debtCreditor.trim() === "") {
+      if (form.hasVehicle === true && form.vehicleFinanced == null) {
         ctx.addIssue({
           code: "custom",
-          path: ["debtCreditor"],
+          path: ["vehicleFinanced"],
           message: REQUIRED_FIELD_MESSAGE,
         });
       }
-    }
-  });
+      if (form.creditPurpose === DEBT_PURPOSE) {
+        if (form.debtDescription.trim() === "") {
+          ctx.addIssue({
+            code: "custom",
+            path: ["debtDescription"],
+            message: REQUIRED_FIELD_MESSAGE,
+          });
+        }
+        if (form.debtCreditor.trim() === "") {
+          ctx.addIssue({
+            code: "custom",
+            path: ["debtCreditor"],
+            message: REQUIRED_FIELD_MESSAGE,
+          });
+        }
+      }
+    });
+}
 
 export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z
   .object({
@@ -151,16 +192,7 @@ export const partnerOpinionSchema: z.ZodType<PartnerOpinionData> = z
 
 export const guarantorSchema: z.ZodType<GuarantorData> = z.object({
   name: requiredString,
-  cpf: z.string().superRefine((value, ctx) => {
-    if (isValidCpf(value)) return;
-    ctx.addIssue({
-      code: "custom",
-      message:
-        value.replace(/\D/g, "").length === 0
-          ? REQUIRED_FIELD_MESSAGE
-          : "CPF inválido",
-    });
-  }),
+  cpf: cpfSchema(true),
   birthDate: birthDateSchema(GUARANTOR_BIRTH_DATE_MESSAGE),
   email: requiredString,
   phone: requiredString,
@@ -183,7 +215,7 @@ export const documentsSchema: z.ZodType<DocumentsData> = z.object({
 });
 
 const STEP_SCHEMAS = [
-  registrationSchema,
+  null,
   activityIncomeSchema,
   addressSchema,
   partnerOpinionSchema,
@@ -205,6 +237,11 @@ const STEP_KEYS: Array<StepKey | null> = [
 ];
 
 export function parseProposalStep(step: number, data: ProposalFormData) {
+  if (step === 0) {
+    return registrationSchemaFor(data.registration).safeParse(
+      data.registration,
+    );
+  }
   const key = STEP_KEYS[step];
   const schema = STEP_SCHEMAS[step];
   if (!key || !schema) {
@@ -214,7 +251,7 @@ export function parseProposalStep(step: number, data: ProposalFormData) {
 }
 
 export function isRegistrationValid(data: RegistrationData): boolean {
-  return registrationSchema.safeParse(data).success;
+  return registrationSchemaFor(data).safeParse(data).success;
 }
 
 export function isActivityIncomeValid(data: ActivityIncomeData): boolean {

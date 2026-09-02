@@ -1,9 +1,11 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/contexts/toast/toast-context";
 import {
   createProposalFromSimulation,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
+import { useCreateQuoteDraft } from "@/features/originacao/hooks/useCreateQuoteDraft";
 import {
   OriginacaoContext,
   type OriginacaoContextValue,
@@ -13,12 +15,15 @@ import type {
   OriginacaoTab,
   SimulationSnapshot,
 } from "@/features/originacao/types";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import {
   originationKeys,
   originationService,
 } from "@/services/origination/origination.service";
 
 export function OriginacaoProvider({ children }: { children: ReactNode }) {
+  const { showToast } = useToast();
+  const { mutateAsync: createQuoteDraft } = useCreateQuoteDraft();
   const [activeTab, setActiveTab] = useState<OriginacaoTab>("eligibility");
   const [eligibilityPrefill, setEligibilityPrefillState] =
     useState<EligibilityPrefill | null>(null);
@@ -46,12 +51,35 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
     setEligibilityPrefillState(null);
   }, []);
 
-  const startProposal = useCallback((simulation: SimulationSnapshot) => {
-    const proposal = createProposalFromSimulation(simulation);
-    setProposals((prev) => [...prev, proposal]);
-    setOpenProposalId(proposal.id);
-    setActiveTab("proposal");
-  }, []);
+  const startProposal = useCallback(
+    async (simulation: SimulationSnapshot) => {
+      const existing = proposals.find(
+        (item) => item.simulation.id === simulation.id,
+      );
+      if (existing) {
+        setOpenProposalId(existing.id);
+        setActiveTab("proposal");
+        return;
+      }
+
+      try {
+        const draft = await createQuoteDraft(simulation.id);
+        const proposal = createProposalFromSimulation(simulation, {
+          id: draft.id,
+          createdAt: draft.createdAt,
+        });
+        setProposals((prev) => [...prev, proposal]);
+        setOpenProposalId(proposal.id);
+        setActiveTab("proposal");
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível iniciar a proposta."),
+          { variant: "destructive" },
+        );
+      }
+    },
+    [createQuoteDraft, proposals, showToast],
+  );
 
   const openProposal = useCallback((id: string) => {
     setOpenProposalId(id);

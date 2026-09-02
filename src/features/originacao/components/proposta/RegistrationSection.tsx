@@ -132,6 +132,7 @@ export function RegistrationSection({
         icon={<IdCard size={16} />}
         placeholder="Número do RG"
         maxLength={15}
+        required
       />
 
       <FormField
@@ -186,6 +187,7 @@ export function RegistrationSection({
           name="registration.maritalStatus"
           label="Estado civil"
           options={toSelectOptions(MARITAL_STATUS_OPTIONS)}
+          required
         />
 
         {spouseRequired ? (
@@ -197,6 +199,7 @@ export function RegistrationSection({
             placeholder="000.000.000-00"
             inputMode="numeric"
             maxLength={14}
+            required
           />
         ) : null}
 
@@ -209,6 +212,7 @@ export function RegistrationSection({
             inputMode="numeric"
             maxLength={2}
             placeholder="0"
+            required
           />
           <FormInput<ProposalFormData>
             name="registration.householdSize"
@@ -218,6 +222,7 @@ export function RegistrationSection({
             inputMode="numeric"
             maxLength={2}
             placeholder="0"
+            required
           />
         </div>
 
@@ -225,12 +230,14 @@ export function RegistrationSection({
           name="registration.propertyStatus"
           label="Situação do imóvel"
           options={toSelectOptions(PROPERTY_STATUS_OPTIONS)}
+          required
         />
 
         <FormSelect<ProposalFormData>
           name="registration.residenceTime"
           label="Tempo de residência"
           options={toSelectOptions(RESIDENCE_TIME_OPTIONS)}
+          required
         />
 
         <FormField
@@ -253,6 +260,7 @@ export function RegistrationSection({
                 field.onChange(value.filter((item) => item !== NONE_PROGRAM));
               }}
               options={toSelectOptions(GOVERNMENT_PROGRAM_OPTIONS)}
+              required
               error={fieldState.error?.message}
             />
           )}
@@ -262,12 +270,14 @@ export function RegistrationSection({
           name="registration.hasVehicle"
           label="Possui veículo?"
           onChange={handleHasVehicleChange}
+          required
         />
 
         {hasVehicle ? (
           <FormYesNo<ProposalFormData>
             name="registration.vehicleFinanced"
             label="Veículo financiado?"
+            required
           />
         ) : null}
       </FormSection>

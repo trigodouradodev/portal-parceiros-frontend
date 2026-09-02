@@ -3,6 +3,7 @@ import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import { SimulacaoList } from "@/features/originacao/components/SimulacaoList";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import type { SimulationSnapshot } from "@/features/originacao/types";
+import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
 
 export function SimulacaoPage() {
   const {
@@ -11,6 +12,7 @@ export function SimulacaoPage() {
     simulations,
     startProposal,
   } = useOriginacao();
+  const permissionsQuery = useQuoteActivityPermissions();
   const [blankFormKey, setBlankFormKey] = useState<number | null>(null);
   const [editing, setEditing] = useState<SimulationSnapshot | null>(null);
 
@@ -44,6 +46,7 @@ export function SimulacaoPage() {
     return (
       <SimulacaoList
         hasUnfilteredSimulations={simulations.length > 0}
+        canCreateQuote={permissionsQuery.data?.canCreateQuote !== false}
         onNewSimulation={handleNewSimulation}
         onEdit={handleEdit}
         onStartProposal={startProposal}

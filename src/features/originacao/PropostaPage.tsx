@@ -4,6 +4,7 @@ import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
+import { useToast } from "@/contexts/toast/toast-context";
 import { OriginacaoTaskHeader } from "@/features/originacao/components/OriginacaoTaskHeader";
 import { OriginacaoTaskLayout } from "@/features/originacao/components/OriginacaoTaskLayout";
 import { ActivityIncomeSection } from "@/features/originacao/components/proposta/ActivityIncomeSection";
@@ -15,6 +16,7 @@ import { PartnerOpinionSection } from "@/features/originacao/components/proposta
 import { ProposalList } from "@/features/originacao/components/proposta/ProposalList";
 import { ProposalSuccess } from "@/features/originacao/components/proposta/ProposalSuccess";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
+import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
@@ -22,6 +24,7 @@ import {
   type ProposalFormData,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import {
   isActivityIncomeValid,
   isAddressValid,
@@ -93,6 +96,9 @@ function ProposalWizard({
     mode: "onSubmit",
     reValidateMode: "onChange",
   });
+  const { showToast } = useToast();
+  const { mutateAsync: saveRegistration, isPending: savingRegistration } =
+    useSaveQuoteRegistration();
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const data = form.watch();
@@ -141,12 +147,26 @@ function ProposalWizard({
     return errors;
   }
 
-  function handleNext() {
+  async function handleNext() {
     const errors = applyStepErrors();
     setSubmitAttempted(true);
     if (errors.length > 0) {
       scrollToField(errors[0].name);
       return;
+    }
+    if (step === 0) {
+      try {
+        await saveRegistration({
+          quoteId: proposal.id,
+          registration: form.getValues().registration,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o cadastro."),
+          { variant: "destructive" },
+        );
+        return;
+      }
     }
     setSubmitAttempted(false);
     form.clearErrors();
@@ -186,7 +206,7 @@ function ProposalWizard({
           className="flex flex-col"
           onSubmit={(event) => {
             event.preventDefault();
-            handleNext();
+            void handleNext();
           }}
           noValidate
         >
@@ -218,6 +238,7 @@ function ProposalWizard({
                 size="pill"
                 className="shrink-0 px-6"
                 onClick={handleBack}
+                disabled={savingRegistration}
               >
                 Voltar
               </Button>
@@ -227,6 +248,7 @@ function ProposalWizard({
               variant="yellow"
               size="pill"
               className="min-w-0 flex-1"
+              disabled={savingRegistration}
             >
               {step === PROPOSAL_STEPS.length - 1
                 ? "Concluir proposta"

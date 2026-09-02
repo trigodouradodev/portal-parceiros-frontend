@@ -13,13 +13,38 @@ describe("getProposalStepFieldErrors", () => {
     ).toEqual([
       "registration.isRenewal",
       "registration.gender",
+      "registration.rg",
       "registration.activityCategories",
       "registration.occupation",
+      "registration.maritalStatus",
+      "registration.childrenCount",
+      "registration.householdSize",
+      "registration.propertyStatus",
+      "registration.residenceTime",
+      "registration.governmentPrograms",
+      "registration.hasVehicle",
       "registration.creditPurpose",
     ]);
     expect(getProposalStepFieldErrors(0, empty)[0]?.message).toBe(
       REQUIRED_FIELD_MESSAGE,
     );
+  });
+
+  it("flags spouse CPF even when other cadastro fields are still empty", () => {
+    const data = createEmptyProposalForm();
+    data.registration.maritalStatus = "Casado(a)";
+    const errors = getProposalStepFieldErrors(0, data);
+    expect(errors.map((item) => item.name)).toContain("registration.spouseCpf");
+    expect(
+      errors.find((item) => item.name === "registration.spouseCpf")?.message,
+    ).toBe(REQUIRED_FIELD_MESSAGE);
+
+    data.registration.spouseCpf = "000.000.000-00";
+    expect(
+      getProposalStepFieldErrors(0, data).find(
+        (item) => item.name === "registration.spouseCpf",
+      )?.message,
+    ).toBe("CPF inválido");
   });
 
   it("returns no errors on a valid activity/income step", () => {

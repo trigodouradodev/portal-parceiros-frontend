@@ -406,12 +406,13 @@ export function createEmptyProposalForm(): ProposalFormData {
 
 export function createProposalFromSimulation(
   simulation: SimulationSnapshot,
+  quote: { id: string; createdAt: string },
 ): ProposalSnapshot {
-  const now = new Date().toLocaleString("pt-BR");
+  const createdAt = new Date(quote.createdAt).toLocaleString("pt-BR");
   return {
-    id: crypto.randomUUID(),
-    createdAt: now,
-    updatedAt: now,
+    id: quote.id,
+    createdAt,
+    updatedAt: createdAt,
     status: "draft",
     simulation,
     step: 0,

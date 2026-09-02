@@ -1,5 +1,6 @@
 import type { ProductOption } from "@/services/products/products.types";
 import type { SimulationSnapshot } from "@/features/originacao/types";
+import { SimulationStatus } from "@/services/origination/origination.types";
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import { calcInstallment } from "@/lib/utils";
@@ -122,4 +123,10 @@ export function dueDayFromIsoDate(isoDate: string): number {
 
 export function formatCreatedAtPtBr(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR");
+}
+
+export function isSimulationConverted(
+  snapshot: Pick<SimulationSnapshot, "status">,
+): boolean {
+  return snapshot.status === SimulationStatus.CONVERTED;
 }

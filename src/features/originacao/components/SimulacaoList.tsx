@@ -12,6 +12,7 @@ import {
 import {
   dueDayFromIsoDate,
   formatCreatedAtPtBr,
+  isSimulationConverted,
 } from "@/features/originacao/data/simulacao";
 import {
   SIMULATIONS_SEARCH_DEBOUNCE_MS,
@@ -25,21 +26,27 @@ import {
   originationService,
 } from "@/services/origination/origination.service";
 
+const CREATE_QUOTE_BLOCKED_MESSAGE =
+  "Você possui ações de cobrança pendentes que impedem iniciar uma proposta.";
+
 interface SimulacaoListProps {
   hasUnfilteredSimulations: boolean;
+  canCreateQuote?: boolean;
   onNewSimulation: () => void;
   onEdit: (snapshot: SimulationSnapshot) => void;
-  onStartProposal: (snapshot: SimulationSnapshot) => void;
+  onStartProposal: (snapshot: SimulationSnapshot) => void | Promise<void>;
 }
 
 export function SimulacaoList({
   hasUnfilteredSimulations,
+  canCreateQuote = true,
   onNewSimulation,
   onEdit,
   onStartProposal,
 }: SimulacaoListProps) {
   const [searchInput, setSearchInput] = useState("");
   const [filters, setFilters] = useState(() => buildSimulationsListQuery(""));
+  const [startingId, setStartingId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -65,6 +72,18 @@ export function SimulacaoList({
   function clearFilters() {
     setSearchInput("");
     setFilters({});
+  }
+
+  async function handleStartProposal(item: SimulationSnapshot) {
+    if (!canCreateQuote || isSimulationConverted(item) || startingId != null) {
+      return;
+    }
+    setStartingId(item.id);
+    try {
+      await onStartProposal(item);
+    } finally {
+      setStartingId(null);
+    }
   }
 
   return (
@@ -103,6 +122,12 @@ export function SimulacaoList({
           ) : null}
         </div>
       ) : null}
+
+      {canCreateQuote ? null : (
+        <p className="mb-4 rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
+          {CREATE_QUOTE_BLOCKED_MESSAGE}
+        </p>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
@@ -146,38 +171,53 @@ export function SimulacaoList({
 
       {!isLoading && !isError && simulations.length > 0 ? (
         <div className="flex flex-col gap-3">
-          {simulations.map((item) => (
-            <OriginacaoSnapshotCard
-              key={item.id}
-              badge={
-                <OriginacaoToneBadge tone="warning">
-                  {item.productName}
-                </OriginacaoToneBadge>
-              }
-              timestamp={formatCreatedAtPtBr(item.createdAt)}
-              name={item.name}
-              amount={item.amount}
-              subtitle={`${item.installments}x de ${fmtBRL(item.installmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
-              cpf={item.document}
-            >
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="pillSm"
-                  onClick={() => onEdit(item)}
-                >
-                  Editar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="pillSm"
-                  onClick={() => onStartProposal(item)}
-                >
-                  Iniciar proposta
-                </Button>
-              </div>
-            </OriginacaoSnapshotCard>
-          ))}
+          {simulations.map((item) => {
+            const converted = isSimulationConverted(item);
+            const starting = startingId === item.id;
+            return (
+              <OriginacaoSnapshotCard
+                key={item.id}
+                badge={
+                  <OriginacaoToneBadge tone={converted ? "success" : "warning"}>
+                    {converted ? "Proposta iniciada" : item.productName}
+                  </OriginacaoToneBadge>
+                }
+                timestamp={formatCreatedAtPtBr(item.createdAt)}
+                name={item.name}
+                amount={item.amount}
+                subtitle={`${item.installments}x de ${fmtBRL(item.installmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
+                cpf={item.document}
+              >
+                {converted ? null : (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="pillSm"
+                      disabled={startingId != null}
+                      onClick={() => onEdit(item)}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="pillSm"
+                      disabled={!canCreateQuote || startingId != null}
+                      onClick={() => void handleStartProposal(item)}
+                    >
+                      {starting ? (
+                        <>
+                          <Loader2 size={15} className="animate-spin" />
+                          Iniciando…
+                        </>
+                      ) : (
+                        "Iniciar proposta"
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </OriginacaoSnapshotCard>
+            );
+          })}
         </div>
       ) : null}
     </OriginacaoPageFrame>
