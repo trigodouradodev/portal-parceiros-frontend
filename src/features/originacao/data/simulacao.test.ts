@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   ALLOWED_DUE_DAYS,
   dueDayFromIsoDate,
+  fromIsoDate,
   installmentOptionsForProduct,
   isAllowedDueDate,
   isDueDateInWindow,
   previewInstallmentAmount,
   productRatePercent,
+  simulationFormDefaultsFromSnapshot,
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
 
@@ -45,6 +47,43 @@ describe("isAllowedDueDate", () => {
 describe("toIsoDate", () => {
   it("formats local date without UTC shift", () => {
     expect(toIsoDate(new Date(2026, 8, 10))).toBe("2026-09-10");
+  });
+});
+
+describe("fromIsoDate", () => {
+  it("parses date-only ISO as a local calendar date", () => {
+    const date = fromIsoDate("2026-09-10");
+    expect(date.getFullYear()).toBe(2026);
+    expect(date.getMonth()).toBe(8);
+    expect(date.getDate()).toBe(10);
+  });
+});
+
+describe("simulationFormDefaultsFromSnapshot", () => {
+  it("maps persisted fields onto the create form", () => {
+    expect(
+      simulationFormDefaultsFromSnapshot({
+        name: "Maria Souza",
+        document: "52998224725",
+        birthDate: "1990-05-20",
+        email: "maria@email.com",
+        telephone: "11987654321",
+        productId: "11111111-1111-4111-8111-111111111111",
+        amount: 8000,
+        installments: 12,
+        firstInstallmentDate: "2026-09-10",
+      }),
+    ).toEqual({
+      name: "Maria Souza",
+      cpf: "529.982.247-25",
+      birthDate: "1990-05-20",
+      email: "maria@email.com",
+      phone: "(11) 98765-4321",
+      product: "11111111-1111-4111-8111-111111111111",
+      amount: 8000,
+      installments: 12,
+      dueDate: new Date(2026, 8, 10),
+    });
   });
 });
 

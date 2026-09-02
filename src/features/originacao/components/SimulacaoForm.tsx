@@ -46,14 +46,19 @@ import {
   isAllowedDueDate,
   previewInstallmentAmount,
   productRatePercent,
+  simulationFormDefaultsFromSnapshot,
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
 import { useCreateSimulation } from "@/features/originacao/hooks/useCreateSimulation";
+import { useUpdateSimulation } from "@/features/originacao/hooks/useUpdateSimulation";
 import {
   createSimulationSchema,
   type SimulationFormValues,
 } from "@/features/originacao/schemas/simulation-form";
-import type { EligibilityPrefill } from "@/features/originacao/types";
+import type {
+  EligibilityPrefill,
+  SimulationSnapshot,
+} from "@/features/originacao/types";
 import { useToast } from "@/contexts/toast/toast-context";
 import { useProducts } from "@/hooks/useProducts";
 import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
@@ -64,8 +69,10 @@ import { fmtBRL } from "@/lib/utils";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
+
 interface SimulacaoFormProps {
   prefill: EligibilityPrefill | null;
+  editing: SimulationSnapshot | null;
   hasList: boolean;
   onViewList: () => void;
   onCompleted: () => void;
@@ -77,6 +84,7 @@ const SIMULATE_BLOCKED_MESSAGE =
 
 export function SimulacaoForm({
   prefill,
+  editing,
   hasList,
   onViewList,
   onCompleted,
@@ -85,6 +93,7 @@ export function SimulacaoForm({
   const productsQuery = useProducts();
   const permissionsQuery = useQuoteActivityPermissions();
   const createSimulation = useCreateSimulation();
+  const updateSimulation = useUpdateSimulation();
   const products = useMemo(
     () =>
       (productsQuery.data ?? []).filter((product) => product.enabled !== false),
@@ -112,15 +121,17 @@ export function SimulacaoForm({
       ),
     mode: "onSubmit",
     reValidateMode: "onChange",
-    defaultValues: {
-      name: prefill?.name ?? "",
-      cpf: formatCpf(prefill?.cpf ?? ""),
-      birthDate: prefill?.birthDate ?? "",
-      email: "",
-      phone: "",
-      product: "",
-      amount: AMOUNT_DEFAULT,
-    },
+    defaultValues: editing
+      ? simulationFormDefaultsFromSnapshot(editing)
+      : {
+          name: prefill?.name ?? "",
+          cpf: formatCpf(prefill?.cpf ?? ""),
+          birthDate: prefill?.birthDate ?? "",
+          email: "",
+          phone: "",
+          product: "",
+          amount: AMOUNT_DEFAULT,
+        },
   });
 
   const productId = form.watch("product");
@@ -140,10 +151,17 @@ export function SimulacaoForm({
   useEffect(() => {
     if (installments == null) return;
     if (installmentOptions.includes(installments)) return;
+    if (editing && productsQuery.isLoading) return;
     form.setValue("installments", undefined as unknown as number, {
       shouldValidate: false,
     });
-  }, [form, installmentOptions, installments]);
+  }, [
+    editing,
+    form,
+    installmentOptions,
+    installments,
+    productsQuery.isLoading,
+  ]);
 
   const dueDateLimit = addDays(today, FIRST_INSTALLMENT_MAX_DAYS);
   const dueDay = dueDate?.getDate() ?? null;
@@ -172,7 +190,7 @@ export function SimulacaoForm({
     }
 
     try {
-      await createSimulation.mutateAsync({
+      const payload = {
         name: values.name,
         document: values.cpf.replace(/\D/g, ""),
         birthDate: values.birthDate,
@@ -182,7 +200,13 @@ export function SimulacaoForm({
         amount: values.amount,
         installments: values.installments,
         firstInstallmentDate: toIsoDate(values.dueDate),
-      });
+      };
+
+      if (editing) {
+        await updateSimulation.mutateAsync({ id: editing.id, payload });
+      } else {
+        await createSimulation.mutateAsync(payload);
+      }
       onCompleted();
     } catch (err) {
       showToast(
@@ -192,7 +216,10 @@ export function SimulacaoForm({
     }
   }
 
-  const submitting = form.formState.isSubmitting || createSimulation.isPending;
+  const submitting =
+    form.formState.isSubmitting ||
+    createSimulation.isPending ||
+    updateSimulation.isPending;
   const submitDisabled =
     submitting ||
     !canSimulateQuote ||
@@ -202,8 +229,12 @@ export function SimulacaoForm({
 
   return (
     <OriginacaoPageFrame
-      title="Simulação"
-      description="Simule uma cotação de crédito para o cliente."
+      title={editing ? "Editar simulação" : "Simulação"}
+      description={
+        editing
+          ? "Corrija os dados do cliente ou da cotação."
+          : "Simule uma cotação de crédito para o cliente."
+      }
       intro={
         hasList ? (
           <button
@@ -444,8 +475,10 @@ export function SimulacaoForm({
             {submitting ? (
               <>
                 <Loader2 size={15} className="animate-spin" />
-                Simulando…
+                {editing ? "Salvando…" : "Simulando…"}
               </>
+            ) : editing ? (
+              "Salvar"
             ) : (
               "Continuar"
             )}

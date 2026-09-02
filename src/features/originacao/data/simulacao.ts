@@ -1,4 +1,7 @@
 import type { ProductOption } from "@/services/products/products.types";
+import type { SimulationSnapshot } from "@/features/originacao/types";
+import { formatPhone } from "@/lib/format/phone";
+import { formatCpf } from "@/lib/format/tax-id";
 import { calcInstallment } from "@/lib/utils";
 
 export const ALLOWED_DUE_DAYS = [5, 10, 15, 20];
@@ -56,6 +59,41 @@ export function toIsoDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+/** Parse YYYY-MM-DD as a local calendar date, without UTC shift. */
+export function fromIsoDate(isoDate: string): Date {
+  const year = Number(isoDate.slice(0, 4));
+  const month = Number(isoDate.slice(5, 7));
+  const day = Number(isoDate.slice(8, 10));
+  return new Date(year, month - 1, day);
+}
+
+export function simulationFormDefaultsFromSnapshot(
+  snapshot: Pick<
+    SimulationSnapshot,
+    | "name"
+    | "document"
+    | "birthDate"
+    | "email"
+    | "telephone"
+    | "productId"
+    | "amount"
+    | "installments"
+    | "firstInstallmentDate"
+  >,
+) {
+  return {
+    name: snapshot.name,
+    cpf: formatCpf(snapshot.document),
+    birthDate: snapshot.birthDate,
+    email: snapshot.email,
+    phone: formatPhone(snapshot.telephone),
+    product: snapshot.productId,
+    amount: snapshot.amount,
+    installments: snapshot.installments,
+    dueDate: fromIsoDate(snapshot.firstInstallmentDate),
+  };
 }
 
 export function installmentOptionsForProduct(
