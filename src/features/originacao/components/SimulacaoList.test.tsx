@@ -60,6 +60,7 @@ describe("SimulacaoList", () => {
       <SimulacaoList
         hasUnfilteredSimulations={false}
         onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
@@ -82,6 +83,7 @@ describe("SimulacaoList", () => {
       <SimulacaoList
         hasUnfilteredSimulations
         onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
@@ -109,6 +111,7 @@ describe("SimulacaoList", () => {
       <SimulacaoList
         hasUnfilteredSimulations
         onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
@@ -131,6 +134,7 @@ describe("SimulacaoList", () => {
       <SimulacaoList
         hasUnfilteredSimulations
         onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
@@ -146,5 +150,28 @@ describe("SimulacaoList", () => {
         document: "52998224725",
       });
     });
+  });
+
+  it("offers edit without replacing start proposal", async () => {
+    listSimulations.mockResolvedValue([snapshot]);
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    const onStartProposal = vi.fn();
+
+    renderList(
+      <SimulacaoList
+        hasUnfilteredSimulations
+        onNewSimulation={vi.fn()}
+        onEdit={onEdit}
+        onStartProposal={onStartProposal}
+      />,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Editar" }));
+    expect(onEdit).toHaveBeenCalledWith(snapshot);
+    expect(onStartProposal).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "Iniciar proposta" }),
+    ).toBeInTheDocument();
   });
 });

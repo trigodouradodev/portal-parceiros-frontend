@@ -28,12 +28,14 @@ import {
 interface SimulacaoListProps {
   hasUnfilteredSimulations: boolean;
   onNewSimulation: () => void;
+  onEdit: (snapshot: SimulationSnapshot) => void;
   onStartProposal: (snapshot: SimulationSnapshot) => void;
 }
 
 export function SimulacaoList({
   hasUnfilteredSimulations,
   onNewSimulation,
+  onEdit,
   onStartProposal,
 }: SimulacaoListProps) {
   const [searchInput, setSearchInput] = useState("");
@@ -158,13 +160,22 @@ export function SimulacaoList({
               subtitle={`${item.installments}x de ${fmtBRL(item.installmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
               cpf={item.document}
             >
-              <Button
-                variant="outline"
-                size="pillSm"
-                onClick={() => onStartProposal(item)}
-              >
-                Iniciar proposta
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="pillSm"
+                  onClick={() => onEdit(item)}
+                >
+                  Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="pillSm"
+                  onClick={() => onStartProposal(item)}
+                >
+                  Iniciar proposta
+                </Button>
+              </div>
             </OriginacaoSnapshotCard>
           ))}
         </div>

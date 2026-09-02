@@ -3,6 +3,7 @@ import type {
   CreateSimulationPayload,
   ListSimulationsQuery,
   SimulationSnapshot,
+  UpdateSimulationPayload,
 } from "./origination.types";
 
 export const originationKeys = {
@@ -32,6 +33,18 @@ export const originationService = {
   ): Promise<SimulationSnapshot> {
     const { data } = await api.post<SimulationSnapshot>(
       "/simulations",
+      payload,
+    );
+    return data;
+  },
+
+  /** PATCH /simulations/:id */
+  async updateSimulation(
+    id: string,
+    payload: UpdateSimulationPayload,
+  ): Promise<SimulationSnapshot> {
+    const { data } = await api.patch<SimulationSnapshot>(
+      `/simulations/${id}`,
       payload,
     );
     return data;
