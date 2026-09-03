@@ -205,7 +205,7 @@ export const guarantorSchema: z.ZodType<GuarantorData> = z.object({
   email: requiredString,
   phone: requiredString,
   zipCode: cepSchema(),
-  street: z.string(),
+  street: requiredString,
   number: requiredString,
   complement: z.string(),
   neighborhood: requiredString,

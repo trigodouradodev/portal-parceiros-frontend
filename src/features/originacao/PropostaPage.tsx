@@ -17,6 +17,7 @@ import { ProposalList } from "@/features/originacao/components/proposta/Proposal
 import { ProposalSuccess } from "@/features/originacao/components/proposta/ProposalSuccess";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
 import { useSaveQuoteAddress } from "@/features/originacao/hooks/useSaveQuoteAddress";
+import { useSaveQuoteGuarantor } from "@/features/originacao/hooks/useSaveQuoteGuarantor";
 import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
 import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQuotePartnerOpinion";
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
@@ -108,9 +109,15 @@ function ProposalWizard({
     useSaveQuoteAddress();
   const { mutateAsync: savePartnerOpinion, isPending: savingPartnerOpinion } =
     useSaveQuotePartnerOpinion();
+  const { mutateAsync: saveGuarantor, isPending: savingGuarantor } =
+    useSaveQuoteGuarantor();
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const savingStep =
-    savingRegistration || savingIncome || savingAddress || savingPartnerOpinion;
+    savingRegistration ||
+    savingIncome ||
+    savingAddress ||
+    savingPartnerOpinion ||
+    savingGuarantor;
 
   const data = form.watch();
   const { simulation, step } = proposal;
@@ -220,6 +227,20 @@ function ProposalWizard({
       } catch (err) {
         showToast(
           getApiErrorMessage(err, "Não foi possível salvar o parecer."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 4) {
+      try {
+        await saveGuarantor({
+          quoteId: proposal.id,
+          guarantor: form.getValues().guarantor,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o avalista."),
           { variant: "destructive" },
         );
         return;
