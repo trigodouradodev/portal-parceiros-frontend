@@ -52,6 +52,7 @@ export function PropostaPage() {
   const {
     proposals,
     openProposalId,
+    openingProposalId,
     openProposal,
     closeProposal,
     updateProposal,
@@ -61,8 +62,16 @@ export function PropostaPage() {
     ? (proposals.find((item) => item.id === openProposalId) ?? null)
     : null;
 
+  if (!openProposalId) {
+    return <ProposalList onOpen={openProposal} openingId={openingProposalId} />;
+  }
+
   if (!proposal) {
-    return <ProposalList proposals={proposals} onOpen={openProposal} />;
+    return (
+      <div className="flex flex-1 items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
+        Carregando proposta…
+      </div>
+    );
   }
 
   if (proposal.status === "completed") {

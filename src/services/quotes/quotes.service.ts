@@ -1,13 +1,16 @@
 import { api } from "@/lib/api/axios";
 import type {
   CreateDraftQuotePayload,
+  ListQuotesQuery,
   QuoteAddressSnapshot,
+  QuoteDetail,
   QuoteDraftSnapshot,
   QuoteFinancialSnapshot,
   QuoteGuarantorSnapshot,
   QuoteIncomeSnapshot,
   QuotePartnerOpinionSnapshot,
   QuoteRegistrationSnapshot,
+  QuotesPage,
   QuoteStatusResponse,
   SaveQuoteAddressPayload,
   SaveQuoteFinancialPayload,
@@ -21,9 +24,32 @@ export const quotesKeys = {
   all: ["quotes"] as const,
   draftsRoot: () => [...quotesKeys.all, "drafts"] as const,
   draft: (quoteId: string) => [...quotesKeys.all, "draft", quoteId] as const,
+  listRoot: () => [...quotesKeys.all, "list"] as const,
+  list: (query: ListQuotesQuery = {}) =>
+    [...quotesKeys.listRoot(), query] as const,
+  detail: (quoteId: string) => [...quotesKeys.all, "detail", quoteId] as const,
 };
 
 export const quotesService = {
+  /** GET /quotes */
+  async list(query: ListQuotesQuery = {}): Promise<QuotesPage> {
+    const { data } = await api.get<QuotesPage>("/quotes", {
+      params: {
+        page: query.page ?? 1,
+        limit: query.limit ?? 30,
+        ...(query.search ? { search: query.search } : {}),
+        ...(query.status ? { status: query.status } : {}),
+      },
+    });
+    return data;
+  },
+
+  /** GET /quotes/:quoteId */
+  async getById(quoteId: string): Promise<QuoteDetail> {
+    const { data } = await api.get<QuoteDetail>(`/quotes/${quoteId}`);
+    return data;
+  },
+
   /** POST /quotes/draft */
   async createDraft(
     payload: CreateDraftQuotePayload,

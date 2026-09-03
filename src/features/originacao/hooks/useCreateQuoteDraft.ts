@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import { originationKeys } from "@/services/origination/origination.service";
 import { SimulationStatus } from "@/services/origination/origination.types";
-import { quotesService } from "@/services/quotes/quotes.service";
+import { quotesKeys, quotesService } from "@/services/quotes/quotes.service";
 import type { QuoteDraftSnapshot } from "@/services/quotes/quotes.types";
 
 function markSimulationConverted(
@@ -30,6 +30,9 @@ export function useCreateQuoteDraft() {
       );
       queryClient.invalidateQueries({
         queryKey: originationKeys.simulationsRoot(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: quotesKeys.listRoot(),
       });
     },
   });

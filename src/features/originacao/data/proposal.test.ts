@@ -57,6 +57,7 @@ describe("createProposalFromSimulation", () => {
     });
     expect(proposal.id).toBe("quote-1");
     expect(proposal.status).toBe("draft");
+    expect(proposal.canEdit).toBe(true);
     expect(proposal.step).toBe(0);
     expect(proposal.stepValid).toEqual(
       Array(PROPOSAL_STEPS.length).fill(false),
