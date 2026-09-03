@@ -13,6 +13,8 @@ export const QuoteDraftStep = {
   ADDRESS: "address",
   PARTNER_OPINION: "partner_opinion",
   GUARANTOR: "guarantor",
+  FINANCIAL: "financial",
+  DOCUMENTATION: "documentation",
 } as const;
 export type QuoteDraftStep =
   (typeof QuoteDraftStep)[keyof typeof QuoteDraftStep];
@@ -156,7 +158,7 @@ export const GuarantorRelationship = {
 export type GuarantorRelationship =
   (typeof GuarantorRelationship)[keyof typeof GuarantorRelationship];
 
-/** Enums do passo Financeiro (branch BE ainda não mergeada em dev). */
+/** Enums do passo Financeiro. */
 export const ExpenseCategory = {
   HOUSING_OR_RENT: "housing_or_rent",
   SCHOOL_OR_DAYCARE: "school_or_daycare",
