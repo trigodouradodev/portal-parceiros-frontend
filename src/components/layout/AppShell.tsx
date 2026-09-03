@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Outlet, ScrollRestoration, useLocation, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
@@ -43,22 +48,22 @@ export function AppShell() {
     <>
       <ScrollRestoration />
       <div className="flex min-h-screen bg-background font-sans md:flex">
-      <AppSidebar
-        activeTab={activeTab}
-        items={NAV_ITEMS}
-        onNavigate={handleNavigate}
-        onRequestLogout={handleRequestLogout}
-      />
+        <AppSidebar
+          activeTab={activeTab}
+          items={NAV_ITEMS}
+          onNavigate={handleNavigate}
+          onRequestLogout={handleRequestLogout}
+        />
 
-      <div className="flex w-full min-w-0 flex-1 flex-col md:ml-56">
-        <Outlet context={{ onMobileLogout: handleRequestLogout }} />
-      </div>
+        <div className="flex w-full min-w-0 flex-1 flex-col md:ml-56">
+          <Outlet context={{ onMobileLogout: handleRequestLogout }} />
+        </div>
 
-      <BottomNav
-        activeTab={activeTab}
-        items={NAV_ITEMS}
-        onNavigate={handleNavigate}
-      />
+        <BottomNav
+          activeTab={activeTab}
+          items={NAV_ITEMS}
+          onNavigate={handleNavigate}
+        />
 
         <ConfirmDialog
           open={confirmLogoutOpen}
