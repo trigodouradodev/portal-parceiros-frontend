@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   DEBT_PURPOSE,
   HOW_KNOWS_OTHER,
+  AUREA_REFERRAL_OPTION,
   OTHER_OPTION,
   hasSpouse,
   type ActivityIncomeData,
@@ -194,6 +195,17 @@ export const partnerOpinionSchema: z.ZodType<PartnerOpinionData> = z
         code: "custom",
         path: ["howKnowsOther"],
         message: REQUIRED_FIELD_MESSAGE,
+      });
+    }
+    if (data.howKnows === AUREA_REFERRAL_OPTION) {
+      if (isValidCpf(data.referrerCpf)) return;
+      ctx.addIssue({
+        code: "custom",
+        path: ["referrerCpf"],
+        message:
+          data.referrerCpf.replace(/\D/g, "").length === 0
+            ? REQUIRED_FIELD_MESSAGE
+            : "CPF inválido",
       });
     }
   });

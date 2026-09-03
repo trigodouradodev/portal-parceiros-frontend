@@ -166,7 +166,10 @@ export function mapPartnerOpinionToPayload(
   }
 
   if (data.howKnows === CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL) {
-    payload.referrerDocument = data.referrerCpf.trim();
+    const referrerDocument = data.referrerCpf.trim();
+    if (referrerDocument.replace(/\D/g, "").length >= 11) {
+      payload.referrerDocument = referrerDocument;
+    }
   }
 
   return payload;

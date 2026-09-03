@@ -50,4 +50,19 @@ describe("mapPartnerOpinionToApi", () => {
     expect(payload.referrerDocument).toBeUndefined();
     expect(payload.opinion).toBe("Precisa de análise.");
   });
+
+  it("omits empty referrerDocument on Áurea referral", () => {
+    const form = createEmptyProposalForm().partnerOpinion;
+    const payload = mapPartnerOpinionToApi({
+      ...form,
+      relationshipTime: CustomerRelationshipDuration.ONE_TO_3_YEARS,
+      howKnows: CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL,
+      referrerCpf: "   ",
+      overallRating: PartnerAssessment.RECOMMEND,
+      informalDebtSigns: false,
+      financialUrgencySigns: false,
+      notes: "Cliente estável.",
+    });
+    expect(payload.referrerDocument).toBeUndefined();
+  });
 });
