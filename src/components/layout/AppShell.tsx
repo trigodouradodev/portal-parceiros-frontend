@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
@@ -40,34 +45,37 @@ export function AppShell() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background font-sans md:flex">
-      <AppSidebar
-        activeTab={activeTab}
-        items={NAV_ITEMS}
-        onNavigate={handleNavigate}
-        onRequestLogout={handleRequestLogout}
-      />
+    <>
+      <ScrollRestoration />
+      <div className="flex min-h-screen bg-background font-sans md:flex">
+        <AppSidebar
+          activeTab={activeTab}
+          items={NAV_ITEMS}
+          onNavigate={handleNavigate}
+          onRequestLogout={handleRequestLogout}
+        />
 
-      <div className="flex w-full min-w-0 flex-1 flex-col md:ml-56">
-        <Outlet context={{ onMobileLogout: handleRequestLogout }} />
+        <div className="flex w-full min-w-0 flex-1 flex-col md:ml-56">
+          <Outlet context={{ onMobileLogout: handleRequestLogout }} />
+        </div>
+
+        <BottomNav
+          activeTab={activeTab}
+          items={NAV_ITEMS}
+          onNavigate={handleNavigate}
+        />
+
+        <ConfirmDialog
+          open={confirmLogoutOpen}
+          onOpenChange={setConfirmLogoutOpen}
+          title="Deseja sair?"
+          description="Você precisará entrar novamente para acessar o portal."
+          confirmLabel="Sair"
+          cancelLabel="Cancelar"
+          onConfirm={handleConfirmLogout}
+          destructive
+        />
       </div>
-
-      <BottomNav
-        activeTab={activeTab}
-        items={NAV_ITEMS}
-        onNavigate={handleNavigate}
-      />
-
-      <ConfirmDialog
-        open={confirmLogoutOpen}
-        onOpenChange={setConfirmLogoutOpen}
-        title="Deseja sair?"
-        description="Você precisará entrar novamente para acessar o portal."
-        confirmLabel="Sair"
-        cancelLabel="Cancelar"
-        onConfirm={handleConfirmLogout}
-        destructive
-      />
-    </div>
+    </>
   );
 }
