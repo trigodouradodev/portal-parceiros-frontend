@@ -29,7 +29,6 @@ export function AddressFields({ namePrefix }: AddressFieldsProps) {
     useCepAutoFill(namePrefix);
   const { geoStatus, captureLocation, resetGeo } = useGeoAutoFill(namePrefix);
   const searching = cepStatus === "searching";
-  const streetRequired = namePrefix === "address";
 
   function handleZipCodeChange(formatted: string) {
     resetGeo();
@@ -105,7 +104,7 @@ export function AddressFields({ namePrefix }: AddressFieldsProps) {
         name={addressPath(namePrefix, "street")}
         label="Rua"
         placeholder="Nome da rua"
-        required={streetRequired}
+        required
         disabled={searching}
       />
       <div className="grid min-w-0 grid-cols-2 gap-3">
