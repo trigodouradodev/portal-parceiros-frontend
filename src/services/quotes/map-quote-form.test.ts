@@ -163,6 +163,31 @@ describe("mapAddressToPayload", () => {
       referencePoint: "Próximo à estação",
     });
   });
+
+  it("forwards geolocation when present", () => {
+    const form = createEmptyProposalForm().address;
+    expect(
+      mapAddressToPayload({
+        ...form,
+        zipCode: "01001-000",
+        street: "Praça da Sé",
+        number: "100",
+        neighborhood: "Sé",
+        city: "São Paulo",
+        state: "SP",
+        landmark: "Próximo à estação",
+        geolocation: {
+          latitude: -23.55052,
+          longitude: -46.633308,
+          precision: "12m",
+        },
+      }).geolocation,
+    ).toEqual({
+      latitude: -23.55052,
+      longitude: -46.633308,
+      precision: "12m",
+    });
+  });
 });
 
 describe("mapPartnerOpinionToPayload", () => {

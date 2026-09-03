@@ -44,4 +44,28 @@ describe("mapAddressToApi", () => {
     expect(payload.streetComplement).toBeUndefined();
     expect(payload.referencePoint).toBe("Estação Sé");
   });
+
+  it("includes geolocation when captured", () => {
+    const form = createEmptyProposalForm().address;
+    const payload = mapAddressToApi({
+      ...form,
+      zipCode: "01001-000",
+      street: "Praça da Sé",
+      number: "100",
+      neighborhood: "Sé",
+      city: "São Paulo",
+      state: "SP",
+      landmark: "Estação Sé",
+      geolocation: {
+        latitude: -23.55052,
+        longitude: -46.633308,
+        precision: "15m",
+      },
+    });
+    expect(payload.geolocation).toEqual({
+      latitude: -23.55052,
+      longitude: -46.633308,
+      precision: "15m",
+    });
+  });
 });
