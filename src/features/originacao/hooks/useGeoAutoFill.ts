@@ -12,6 +12,7 @@ import {
 } from "@/features/originacao/utils/apply-address-fill";
 import type { ProposalFormData } from "@/features/originacao/data/proposal";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import { roundGeoCoordinate } from "@/services/locations/geo-coords";
 import {
   locationsKeys,
   locationsService,
@@ -40,11 +41,6 @@ function geoPositionErrorMessage(error: GeolocationPositionError): string {
     return "Tempo esgotado ao obter a localização.";
   }
   return "Não foi possível obter a localização.";
-}
-
-/** Arredonda coordenada para chave de cache estável. */
-function roundCoord(value: number): number {
-  return Math.round(value * 1e6) / 1e6;
 }
 
 export function useGeoAutoFill(namePrefix: AddressPrefix) {
@@ -105,15 +101,13 @@ export function useGeoAutoFill(namePrefix: AddressPrefix) {
     requestId: number,
     position: GeolocationPosition,
   ) {
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
+    const latitude = roundGeoCoordinate(position.coords.latitude);
+    const longitude = roundGeoCoordinate(position.coords.longitude);
     const precision = formatGeoPrecision(position.coords.accuracy);
-    const cacheLat = roundCoord(latitude);
-    const cacheLng = roundCoord(longitude);
 
     try {
       const data = await queryClient.fetchQuery({
-        queryKey: locationsKeys.reverseGeocode(cacheLat, cacheLng),
+        queryKey: locationsKeys.reverseGeocode(latitude, longitude),
         queryFn: ({ signal }) =>
           locationsService.reverseGeocode(latitude, longitude, signal),
         staleTime: 60 * 60 * 1000,
@@ -130,7 +124,7 @@ export function useGeoAutoFill(namePrefix: AddressPrefix) {
 
       setGeoStatus("idle");
       queryClient.removeQueries({
-        queryKey: locationsKeys.reverseGeocode(cacheLat, cacheLng),
+        queryKey: locationsKeys.reverseGeocode(latitude, longitude),
       });
       showToast(
         getApiErrorMessage(

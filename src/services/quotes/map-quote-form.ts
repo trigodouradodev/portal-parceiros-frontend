@@ -6,6 +6,7 @@ import type {
   RegistrationData,
 } from "@/features/originacao/data/proposal";
 import { parseMoneyBrl } from "@/lib/format/money";
+import { roundGeoCoordinate } from "@/services/locations/geo-coords";
 import {
   CreditPurpose,
   CustomerRelationshipOrigin,
@@ -129,8 +130,8 @@ export function mapAddressToPayload(
 
   if (data.geolocation) {
     payload.geolocation = {
-      latitude: data.geolocation.latitude,
-      longitude: data.geolocation.longitude,
+      latitude: roundGeoCoordinate(data.geolocation.latitude),
+      longitude: roundGeoCoordinate(data.geolocation.longitude),
       precision: data.geolocation.precision.trim(),
     };
   }

@@ -50,6 +50,20 @@ describe("locationsService.reverseGeocode", () => {
     );
   });
 
+  it("rounds coordinates to 8 decimal places before calling the API", async () => {
+    await locationsService.reverseGeocode(
+      -7.237684265483068,
+      -39.29954049920408,
+    );
+
+    expect(get).toHaveBeenCalledWith(
+      "/locations/reverse-geocode",
+      expect.objectContaining({
+        params: { latitude: -7.23768427, longitude: -39.2995405 },
+      }),
+    );
+  });
+
   it("propagates HTTP errors", async () => {
     get.mockRejectedValue(
       new AxiosError("error", "ERR_BAD_REQUEST", undefined, undefined, {

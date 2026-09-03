@@ -1,4 +1,5 @@
 import { api } from "@/lib/api/axios";
+import { roundGeoCoordinate } from "./geo-coords";
 import type {
   PostalCodeAddress,
   ReverseGeocodedAddress,
@@ -34,10 +35,15 @@ export const locationsService = {
     longitude: number,
     signal?: AbortSignal,
   ): Promise<ReverseGeocodedAddress> {
+    const roundedLatitude = roundGeoCoordinate(latitude);
+    const roundedLongitude = roundGeoCoordinate(longitude);
     const { data } = await api.get<ReverseGeocodedAddress>(
       "/locations/reverse-geocode",
       {
-        params: { latitude, longitude },
+        params: {
+          latitude: roundedLatitude,
+          longitude: roundedLongitude,
+        },
         signal,
         timeout: REVERSE_GEOCODE_TIMEOUT_MS,
       },

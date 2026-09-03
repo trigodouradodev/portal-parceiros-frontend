@@ -177,14 +177,14 @@ describe("mapAddressToPayload", () => {
         state: "SP",
         landmark: "Próximo à estação",
         geolocation: {
-          latitude: -23.55052,
-          longitude: -46.633308,
+          latitude: -7.237684265483068,
+          longitude: -39.29954049920408,
           precision: "12m",
         },
       }).geolocation,
     ).toEqual({
-      latitude: -23.55052,
-      longitude: -46.633308,
+      latitude: -7.23768427,
+      longitude: -39.2995405,
       precision: "12m",
     });
   });
