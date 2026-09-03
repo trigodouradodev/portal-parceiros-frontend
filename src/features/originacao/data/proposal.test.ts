@@ -255,6 +255,7 @@ describe("proposal validators", () => {
       email: "joao@email.com",
       phone: "(11) 99999-0000",
       zipCode: "01310-100",
+      street: "Av. Paulista",
       number: "1000",
       neighborhood: "Bela Vista",
       city: "São Paulo",
