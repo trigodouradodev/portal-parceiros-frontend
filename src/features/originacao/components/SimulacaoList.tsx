@@ -145,7 +145,7 @@ export function SimulacaoList({
             <Button
               variant="outline"
               size="pillSm"
-              onClick={() => void listQuery.refetch()}
+              onClick={() => listQuery.refetch()}
             >
               Tentar novamente
             </Button>
@@ -202,7 +202,7 @@ export function SimulacaoList({
                       variant="outline"
                       size="pillSm"
                       disabled={!canCreateQuote || startingId != null}
-                      onClick={() => void handleStartProposal(item)}
+                      onClick={() => handleStartProposal(item)}
                     >
                       {starting ? (
                         <>

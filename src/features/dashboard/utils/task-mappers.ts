@@ -38,7 +38,7 @@ function mapChannelToActivityType(channel?: ActivityChannel): ActivityType {
 }
 
 export function mapTaskToChargeStage(task: ActivityTaskSummary): ChargeStage {
-  void task;
+  task;
   return "initial";
 }
 

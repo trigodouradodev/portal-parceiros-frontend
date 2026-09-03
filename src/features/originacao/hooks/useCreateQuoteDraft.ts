@@ -28,7 +28,7 @@ export function useCreateQuoteDraft() {
         { queryKey: originationKeys.simulationsRoot() },
         (prev) => markSimulationConverted(prev, draft.simulationId),
       );
-      void queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: originationKeys.simulationsRoot(),
       });
     },

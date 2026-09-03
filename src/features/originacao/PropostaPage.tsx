@@ -206,7 +206,7 @@ function ProposalWizard({
           className="flex flex-col"
           onSubmit={(event) => {
             event.preventDefault();
-            void handleNext();
+            handleNext();
           }}
           noValidate
         >

@@ -37,7 +37,7 @@ export function useCepAutoFill(namePrefix: AddressPrefix) {
     return () => {
       const digits = activeDigitsRef.current;
       if (digits) {
-        void queryClient.cancelQueries({ queryKey: cepKeys.byCep(digits) });
+        queryClient.cancelQueries({ queryKey: cepKeys.byCep(digits) });
       }
     };
   }, [queryClient]);
@@ -45,7 +45,7 @@ export function useCepAutoFill(namePrefix: AddressPrefix) {
   async function lookup(digits: string) {
     const previous = activeDigitsRef.current;
     if (previous && previous !== digits) {
-      void queryClient.cancelQueries({ queryKey: cepKeys.byCep(previous) });
+      queryClient.cancelQueries({ queryKey: cepKeys.byCep(previous) });
     }
     activeDigitsRef.current = digits;
 
@@ -85,14 +85,14 @@ export function useCepAutoFill(namePrefix: AddressPrefix) {
   }
 
   function onZipCodeComplete(digits: string) {
-    void lookup(digits);
+    lookup(digits);
   }
 
   function onZipCodeIncomplete() {
     const previous = activeDigitsRef.current;
     activeDigitsRef.current = null;
     if (previous) {
-      void queryClient.cancelQueries({ queryKey: cepKeys.byCep(previous) });
+      queryClient.cancelQueries({ queryKey: cepKeys.byCep(previous) });
     }
     setCepStatus("idle");
   }
