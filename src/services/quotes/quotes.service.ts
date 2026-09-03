@@ -2,6 +2,9 @@ import { api } from "@/lib/api/axios";
 import type {
   CreateDraftQuotePayload,
   QuoteAddressSnapshot,
+  QuoteAttachmentSnapshot,
+  QuoteDocumentationAttachments,
+  QuoteDocumentationSnapshot,
   QuoteDraftSnapshot,
   QuoteGuarantorSnapshot,
   QuoteIncomeSnapshot,
@@ -13,13 +16,26 @@ import type {
   SaveQuoteIncomePayload,
   SaveQuotePartnerOpinionPayload,
   SaveQuoteRegistrationPayload,
+  UploadQuoteAttachmentInput,
 } from "./quotes.types";
 
 export const quotesKeys = {
   all: ["quotes"] as const,
   draftsRoot: () => [...quotesKeys.all, "drafts"] as const,
   draft: (quoteId: string) => [...quotesKeys.all, "draft", quoteId] as const,
+  attachments: (quoteId: string) =>
+    [...quotesKeys.draft(quoteId), "attachments"] as const,
 };
+
+function toMultipartBody(input: UploadQuoteAttachmentInput): FormData {
+  const body = new FormData();
+  body.append("attachmentType", input.attachmentType);
+  if (input.incomeProofType) {
+    body.append("incomeProofType", input.incomeProofType);
+  }
+  body.append("file", input.file);
+  return body;
+}
 
 export const quotesService = {
   /** POST /quotes/draft */
@@ -89,6 +105,54 @@ export const quotesService = {
     const { data } = await api.patch<QuoteGuarantorSnapshot>(
       `/quotes/draft/${quoteId}/guarantor`,
       payload,
+    );
+    return data;
+  },
+
+  /** POST /quotes/draft/:quoteId/attachments */
+  async uploadAttachment(
+    quoteId: string,
+    input: UploadQuoteAttachmentInput,
+  ): Promise<QuoteAttachmentSnapshot> {
+    const { data } = await api.post<QuoteAttachmentSnapshot>(
+      `/quotes/draft/${quoteId}/attachments`,
+      toMultipartBody(input),
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        transformRequest: [
+          (payload, headers) => {
+            if (payload instanceof FormData) {
+              delete headers["Content-Type"];
+            }
+            return payload;
+          },
+        ],
+      },
+    );
+    return data;
+  },
+
+  /** GET /quotes/draft/:quoteId/attachments */
+  async listAttachments(
+    quoteId: string,
+  ): Promise<QuoteDocumentationAttachments> {
+    const { data } = await api.get<QuoteDocumentationAttachments>(
+      `/quotes/draft/${quoteId}/attachments`,
+    );
+    return data;
+  },
+
+  /** DELETE /quotes/draft/:quoteId/attachments/:attachmentId */
+  async removeAttachment(quoteId: string, attachmentId: string): Promise<void> {
+    await api.delete(`/quotes/draft/${quoteId}/attachments/${attachmentId}`);
+  },
+
+  /** PATCH /quotes/draft/:quoteId/documentation */
+  async completeDocumentation(
+    quoteId: string,
+  ): Promise<QuoteDocumentationSnapshot> {
+    const { data } = await api.patch<QuoteDocumentationSnapshot>(
+      `/quotes/draft/${quoteId}/documentation`,
     );
     return data;
   },

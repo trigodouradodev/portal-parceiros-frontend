@@ -18,6 +18,7 @@ import {
   GENDER_OPTIONS as QUOTE_GENDER_OPTIONS,
   GOVERNMENT_PROGRAM_OPTIONS as QUOTE_GOVERNMENT_PROGRAM_OPTIONS,
   HOW_KNOWS_CLIENT_OPTIONS as QUOTE_HOW_KNOWS_CLIENT_OPTIONS,
+  DOCUMENTATION_INCOME_PROOF_OPTIONS as QUOTE_DOCUMENTATION_INCOME_PROOF_OPTIONS,
   INCOME_PROOF_OPTIONS as QUOTE_INCOME_PROOF_OPTIONS,
   INCOME_SOURCE_OPTIONS as QUOTE_INCOME_SOURCE_OPTIONS,
   KINSHIP_OPTIONS as QUOTE_KINSHIP_OPTIONS,
@@ -113,12 +114,8 @@ export const DEBT_CREDITOR_OPTIONS = [
   "Caixinha",
 ];
 
-export const INCOME_DOCUMENT_TYPE_OPTIONS = [
-  "Extrato bancário",
-  "Holerite",
-  "Benefício INSS",
-  "MEI / DAS",
-];
+export const INCOME_DOCUMENT_TYPE_OPTIONS: SelectOption[] =
+  QUOTE_DOCUMENTATION_INCOME_PROOF_OPTIONS;
 
 export const DEBT_PURPOSE = CreditPurpose.DEBT_PAYOFF_OR_REFINANCING;
 export const OTHER_OPTION = EconomicActivityCategory.OTHER;
@@ -228,12 +225,18 @@ export interface FinancialData {
   nextId: number;
 }
 
+export interface DocumentAttachmentItem {
+  id: string;
+  filename: string;
+  incomeProofType?: string;
+}
+
 export interface DocumentsData {
-  identification: string[];
-  proofOfResidence: string[];
-  activityPhotos: string[];
+  identification: DocumentAttachmentItem[];
+  proofOfResidence: DocumentAttachmentItem[];
+  activityPhotos: DocumentAttachmentItem[];
   incomeProofTypes: string[];
-  incomeProofs: string[];
+  incomeProofs: DocumentAttachmentItem[];
 }
 
 export interface ProposalFormData {

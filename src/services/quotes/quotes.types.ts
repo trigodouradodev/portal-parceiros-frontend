@@ -9,9 +9,11 @@ import type {
   GovernmentProgram,
   GuarantorRelationship,
   HousingStatus,
+  IncomeProofType,
   IncomeSource,
   MaritalStatus,
   PartnerAssessment,
+  QuoteAttachmentType,
   QuoteDraftStep,
   QuoteStatus,
   ResidenceDuration,
@@ -180,6 +182,38 @@ export interface QuoteGuarantorSnapshot extends SaveQuoteGuarantorPayload {
   step: typeof QuoteDraftStep.GUARANTOR | "guarantor";
   completedAt: string;
   updatedAt: string;
+}
+
+export interface QuoteAttachmentSnapshot {
+  id: string;
+  attachmentType: QuoteAttachmentType;
+  filename: string;
+  mimetype: string;
+  size: number;
+  createdAt: string;
+  incomeProofType?: IncomeProofType;
+  signedUrl?: string;
+}
+
+export interface QuoteDocumentationAttachments {
+  identificationDocuments: QuoteAttachmentSnapshot[];
+  proofOfResidence: QuoteAttachmentSnapshot[];
+  activityPhotos: QuoteAttachmentSnapshot[];
+  proofOfIncome: QuoteAttachmentSnapshot[];
+}
+
+export interface QuoteDocumentationSnapshot extends QuoteDocumentationAttachments {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.DOCUMENTATION | "documentation";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface UploadQuoteAttachmentInput {
+  attachmentType: QuoteAttachmentType;
+  incomeProofType?: IncomeProofType;
+  file: File;
 }
 
 export interface QuoteStatusResponse {

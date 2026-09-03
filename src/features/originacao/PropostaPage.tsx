@@ -20,6 +20,7 @@ import { useSaveQuoteAddress } from "@/features/originacao/hooks/useSaveQuoteAdd
 import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
 import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQuotePartnerOpinion";
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
+import { useCompleteQuoteDocumentation } from "@/features/originacao/hooks/useQuoteDocumentation";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
@@ -28,6 +29,7 @@ import {
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
 import {
   isActivityIncomeValid,
   isAddressValid,
@@ -108,14 +110,24 @@ function ProposalWizard({
     useSaveQuoteAddress();
   const { mutateAsync: savePartnerOpinion, isPending: savingPartnerOpinion } =
     useSaveQuotePartnerOpinion();
+  const {
+    mutateAsync: completeDocumentation,
+    isPending: completingDocumentation,
+  } = useCompleteQuoteDocumentation();
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const savingStep =
-    savingRegistration || savingIncome || savingAddress || savingPartnerOpinion;
+    savingRegistration ||
+    savingIncome ||
+    savingAddress ||
+    savingPartnerOpinion ||
+    completingDocumentation;
 
   const data = form.watch();
   const { simulation, step } = proposal;
 
   function computeStepValid(values: ProposalFormData) {
+    const incomeProofRequired =
+      values.activityIncome.availableProof !== AvailableIncomeProof.NONE;
     return [
       isRegistrationValid(values.registration),
       isActivityIncomeValid(values.activityIncome),
@@ -123,7 +135,7 @@ function ProposalWizard({
       isPartnerOpinionValid(values.partnerOpinion),
       isGuarantorValid(values.guarantor),
       isFinancialValid(),
-      isDocumentsValid(values.documents),
+      isDocumentsValid(values.documents, incomeProofRequired),
     ];
   }
 
@@ -225,6 +237,17 @@ function ProposalWizard({
         return;
       }
     }
+    if (step === 6) {
+      try {
+        await completeDocumentation(proposal.id);
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível concluir a documentação."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
     setSubmitAttempted(false);
     form.clearErrors();
     if (step === PROPOSAL_STEPS.length - 1) {
@@ -285,7 +308,7 @@ function ProposalWizard({
           {step === 3 ? <PartnerOpinionSection /> : null}
           {step === 4 ? <GuarantorSection /> : null}
           {step === 5 ? <FinancialSection /> : null}
-          {step === 6 ? <DocumentsSection /> : null}
+          {step === 6 ? <DocumentsSection quoteId={proposal.id} /> : null}
 
           <div className="mt-6 flex gap-2">
             {step > 0 ? (
