@@ -133,8 +133,7 @@ export function mapPartnerOpinionToPayload(
   data: PartnerOpinionData,
 ): SaveQuotePartnerOpinionPayload {
   const payload: SaveQuotePartnerOpinionPayload = {
-    relationshipDuration:
-      data.relationshipTime as CustomerRelationshipDuration,
+    relationshipDuration: data.relationshipTime as CustomerRelationshipDuration,
     relationshipOrigin: data.howKnows as CustomerRelationshipOrigin,
     assessment: data.overallRating as PartnerAssessment,
     hasInformalDebtSigns: Boolean(data.informalDebtSigns),

@@ -41,20 +41,14 @@ export const ACTIVITY_CATEGORY_OPTIONS = options([
     EconomicActivityCategory.SELF_EMPLOYED_OR_INFORMAL,
     "Autônomo/Informal (MEI)",
   ],
-  [
-    EconomicActivityCategory.UNEMPLOYED,
-    "Sem ocupação remunerada/Desempregado",
-  ],
+  [EconomicActivityCategory.UNEMPLOYED, "Sem ocupação remunerada/Desempregado"],
   [EconomicActivityCategory.OTHER, "Outros"],
 ]);
 
 export const CREDIT_PURPOSE_OPTIONS = options([
   [CreditPurpose.BUSINESS_WORKING_CAPITAL, "Fluxo de caixa do negócio"],
   [CreditPurpose.INVENTORY_PURCHASE, "Compra de mercadoria/estoque"],
-  [
-    CreditPurpose.WORK_EQUIPMENT_OR_VEHICLE,
-    "Equipamento/veículo de trabalho",
-  ],
+  [CreditPurpose.WORK_EQUIPMENT_OR_VEHICLE, "Equipamento/veículo de trabalho"],
   [CreditPurpose.RENOVATION_OR_CONSTRUCTION, "Reforma ou construção"],
   [CreditPurpose.NEW_BUSINESS, "Abertura de novo negócio"],
   [CreditPurpose.DEBT_PAYOFF_OR_REFINANCING, "Quitação/troca de dívida"],
@@ -125,7 +119,10 @@ export const RELATIONSHIP_TIME_OPTIONS = options([
 ]);
 
 export const HOW_KNOWS_CLIENT_OPTIONS = options([
-  [CustomerRelationshipOrigin.PREVIOUS_CUSTOMER, "Cliente antigo (já teve contrato)"],
+  [
+    CustomerRelationshipOrigin.PREVIOUS_CUSTOMER,
+    "Cliente antigo (já teve contrato)",
+  ],
   [
     CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL,
     "Indicação de cliente Áurea",

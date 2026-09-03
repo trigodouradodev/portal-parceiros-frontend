@@ -146,8 +146,7 @@ export interface SaveQuotePartnerOpinionPayload {
   opinion: string;
 }
 
-export interface QuotePartnerOpinionSnapshot
-  extends SaveQuotePartnerOpinionPayload {
+export interface QuotePartnerOpinionSnapshot extends SaveQuotePartnerOpinionPayload {
   id: string;
   status: QuoteDraftStatus;
   step: typeof QuoteDraftStep.PARTNER_OPINION | "partner_opinion";

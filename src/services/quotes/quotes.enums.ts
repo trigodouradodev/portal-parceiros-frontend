@@ -43,8 +43,7 @@ export const MaritalStatus = {
   DIVORCED: "divorced",
   WIDOWED: "widowed",
 } as const;
-export type MaritalStatus =
-  (typeof MaritalStatus)[keyof typeof MaritalStatus];
+export type MaritalStatus = (typeof MaritalStatus)[keyof typeof MaritalStatus];
 
 export const HousingStatus = {
   OWNED_PAID_OFF: "owned_paid_off",
@@ -52,8 +51,7 @@ export const HousingStatus = {
   RENTED: "rented",
   CEDED: "ceded",
 } as const;
-export type HousingStatus =
-  (typeof HousingStatus)[keyof typeof HousingStatus];
+export type HousingStatus = (typeof HousingStatus)[keyof typeof HousingStatus];
 
 export const ResidenceDuration = {
   LESS_THAN_6_MONTHS: "less_than_6_months",
@@ -85,8 +83,7 @@ export const CreditPurpose = {
   EDUCATION: "education",
   OTHER: "other",
 } as const;
-export type CreditPurpose =
-  (typeof CreditPurpose)[keyof typeof CreditPurpose];
+export type CreditPurpose = (typeof CreditPurpose)[keyof typeof CreditPurpose];
 
 export const ActivityDuration = {
   LESS_THAN_6_MONTHS: "less_than_6_months",
@@ -191,8 +188,7 @@ export const LoanFrequency = {
   WEEKLY: "weekly",
   DAILY: "daily",
 } as const;
-export type LoanFrequency =
-  (typeof LoanFrequency)[keyof typeof LoanFrequency];
+export type LoanFrequency = (typeof LoanFrequency)[keyof typeof LoanFrequency];
 
 export const LoanCategory = {
   CREDIT_CARD: "credit_card",
