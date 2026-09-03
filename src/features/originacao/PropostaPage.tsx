@@ -103,15 +103,18 @@ function ProposalWizard({
 
   const data = form.watch();
   const { simulation, step } = proposal;
-  const stepValid = [
-    isRegistrationValid(data.registration),
-    isActivityIncomeValid(data.activityIncome),
-    isAddressValid(data.address),
-    isPartnerOpinionValid(data.partnerOpinion),
-    isGuarantorValid(data.guarantor),
-    isFinancialValid(),
-    isDocumentsValid(data.documents),
-  ];
+
+  function computeStepValid(values: ProposalFormData) {
+    return [
+      isRegistrationValid(values.registration),
+      isActivityIncomeValid(values.activityIncome),
+      isAddressValid(values.address),
+      isPartnerOpinionValid(values.partnerOpinion),
+      isGuarantorValid(values.guarantor),
+      isFinancialValid(),
+      isDocumentsValid(values.documents),
+    ];
+  }
 
   useEffect(() => {
     if (!submitAttempted) return;
@@ -129,10 +132,11 @@ function ProposalWizard({
   }, [step]);
 
   function persist(patch: Partial<ProposalSnapshot> = {}) {
+    const values = form.getValues();
     onUpdate({
       ...proposal,
-      data: form.getValues(),
-      stepValid,
+      data: values,
+      stepValid: computeStepValid(values),
       updatedAt: new Date().toLocaleString("pt-BR"),
       ...patch,
     });

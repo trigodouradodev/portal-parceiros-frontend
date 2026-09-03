@@ -171,55 +171,80 @@ export function SimulacaoList({
 
       {!isLoading && !isError && simulations.length > 0 ? (
         <div className="flex flex-col gap-3">
-          {simulations.map((item) => {
-            const converted = isSimulationConverted(item);
-            const starting = startingId === item.id;
-            return (
-              <OriginacaoSnapshotCard
-                key={item.id}
-                badge={
-                  <OriginacaoToneBadge tone={converted ? "success" : "warning"}>
-                    {converted ? "Proposta iniciada" : item.productName}
-                  </OriginacaoToneBadge>
-                }
-                timestamp={formatCreatedAtPtBr(item.createdAt)}
-                name={item.name}
-                amount={item.amount}
-                subtitle={`${item.installments}x de ${fmtBRL(item.installmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
-                cpf={item.document}
-              >
-                {converted ? null : (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="pillSm"
-                      disabled={startingId != null}
-                      onClick={() => onEdit(item)}
-                    >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="pillSm"
-                      disabled={!canCreateQuote || startingId != null}
-                      onClick={() => handleStartProposal(item)}
-                    >
-                      {starting ? (
-                        <>
-                          <Loader2 size={15} className="animate-spin" />
-                          Iniciando…
-                        </>
-                      ) : (
-                        "Iniciar proposta"
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </OriginacaoSnapshotCard>
-            );
-          })}
+          {simulations.map((item) => (
+            <SimulacaoListItem
+              key={item.id}
+              item={item}
+              canCreateQuote={canCreateQuote}
+              startingId={startingId}
+              onEdit={onEdit}
+              onStartProposal={handleStartProposal}
+            />
+          ))}
         </div>
       ) : null}
     </OriginacaoPageFrame>
+  );
+}
+
+interface SimulacaoListItemProps {
+  item: SimulationSnapshot;
+  canCreateQuote: boolean;
+  startingId: string | null;
+  onEdit: (snapshot: SimulationSnapshot) => void;
+  onStartProposal: (snapshot: SimulationSnapshot) => void;
+}
+
+function SimulacaoListItem({
+  item,
+  canCreateQuote,
+  startingId,
+  onEdit,
+  onStartProposal,
+}: SimulacaoListItemProps) {
+  const converted = isSimulationConverted(item);
+  const starting = startingId === item.id;
+
+  return (
+    <OriginacaoSnapshotCard
+      badge={
+        <OriginacaoToneBadge tone={converted ? "success" : "warning"}>
+          {converted ? "Proposta iniciada" : item.productName}
+        </OriginacaoToneBadge>
+      }
+      timestamp={formatCreatedAtPtBr(item.createdAt)}
+      name={item.name}
+      amount={item.amount}
+      subtitle={`${item.installments}x de ${fmtBRL(item.installmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
+      cpf={item.document}
+    >
+      {converted ? null : (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="pillSm"
+            disabled={startingId != null}
+            onClick={() => onEdit(item)}
+          >
+            Editar
+          </Button>
+          <Button
+            variant="outline"
+            size="pillSm"
+            disabled={!canCreateQuote || startingId != null}
+            onClick={() => onStartProposal(item)}
+          >
+            {starting ? (
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                Iniciando…
+              </>
+            ) : (
+              "Iniciar proposta"
+            )}
+          </Button>
+        </div>
+      )}
+    </OriginacaoSnapshotCard>
   );
 }
