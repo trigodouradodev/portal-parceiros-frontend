@@ -1,34 +1,34 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import {
-  CreditCard,
-  Eye,
-  EyeOff,
-  IdCard,
-  Mail,
-  Phone,
-  User,
-} from "lucide-react";
 import { ChipField } from "@/components/ui/chip-field";
 import { DateFilterField } from "@/components/ui/date-filter-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
 import { FormInput, FormSelect, FormYesNo } from "@/components/ui/rhf-fields";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
-import { toSelectOptions } from "@/components/ui/select-option";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
-  ACTIVITY_CATEGORY_OPTIONS,
-  CREDIT_PURPOSE_OPTIONS,
-  DEBT_CREDITOR_OPTIONS,
+  ACTIVITY_CATEGORY_SELECT_OPTIONS,
+  CREDIT_CARD_ICON,
+  CREDIT_PURPOSE_SELECT_OPTIONS,
+  DEBT_CREDITOR_SELECT_OPTIONS,
+  EYE_ICON,
+  EYE_OFF_ICON,
+  GENDER_SELECT_OPTIONS,
+  GOVERNMENT_PROGRAM_SELECT_OPTIONS,
+  ID_CARD_ICON,
+  MAIL_ICON,
+  MARITAL_STATUS_SELECT_OPTIONS,
+  PHONE_ICON,
+  PROPERTY_STATUS_SELECT_OPTIONS,
+  RESIDENCE_TIME_SELECT_OPTIONS,
+  USER_ICON,
+  noop,
+} from "@/features/originacao/constants/registration-section";
+import {
   DEBT_PURPOSE,
-  GENDER_OPTIONS,
-  GOVERNMENT_PROGRAM_OPTIONS,
-  MARITAL_STATUS_OPTIONS,
   NONE_PROGRAM,
   OTHER_OPTION,
-  PROPERTY_STATUS_OPTIONS,
-  RESIDENCE_TIME_OPTIONS,
   hasSpouse,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
@@ -88,7 +88,7 @@ export function RegistrationSection({
             onClick={() => setShowRate((value) => !value)}
             className="flex shrink-0 items-center gap-1 text-xs font-semibold text-brand-navy"
           >
-            {showRate ? <EyeOff size={13} /> : <Eye size={13} />}
+            {showRate ? EYE_OFF_ICON : EYE_ICON}
             {showRate ? "Ocultar" : "Mostrar taxa"}
           </button>
         </div>
@@ -101,35 +101,35 @@ export function RegistrationSection({
       <InputField
         label="Nome completo"
         value={name}
-        onChange={() => {}}
-        icon={<User size={16} />}
+        onChange={noop}
+        icon={USER_ICON}
         disabled
       />
       <DateFilterField
         label="Data de nascimento"
         value={birthDate}
-        onChange={() => {}}
+        onChange={noop}
         disabled
       />
 
       <FormSelect<ProposalFormData>
         name="registration.gender"
         label="Gênero"
-        options={toSelectOptions(GENDER_OPTIONS)}
+        options={GENDER_SELECT_OPTIONS}
         required
       />
 
       <InputField
         label="CPF"
         value={formatCpf(cpf)}
-        onChange={() => {}}
-        icon={<CreditCard size={16} />}
+        onChange={noop}
+        icon={CREDIT_CARD_ICON}
         disabled
       />
       <FormInput<ProposalFormData>
         name="registration.rg"
         label="RG"
-        icon={<IdCard size={16} />}
+        icon={ID_CARD_ICON}
         placeholder="Número do RG"
         maxLength={15}
         required
@@ -144,7 +144,7 @@ export function RegistrationSection({
             label="Atividade econômica"
             value={field.value[0] ?? ""}
             onChange={(value) => field.onChange(value ? [value] : [])}
-            options={toSelectOptions(ACTIVITY_CATEGORY_OPTIONS)}
+            options={ACTIVITY_CATEGORY_SELECT_OPTIONS}
             required
             error={fieldState.error?.message}
           />
@@ -162,7 +162,7 @@ export function RegistrationSection({
       <FormInput<ProposalFormData>
         name="registration.occupation"
         label="Profissão"
-        icon={<User size={16} />}
+        icon={USER_ICON}
         placeholder="Informe a profissão"
         required
       />
@@ -170,15 +170,15 @@ export function RegistrationSection({
       <InputField
         label="E-mail"
         value={email}
-        onChange={() => {}}
-        icon={<Mail size={16} />}
+        onChange={noop}
+        icon={MAIL_ICON}
         disabled
       />
       <InputField
         label="Celular"
         value={phone}
-        onChange={() => {}}
-        icon={<Phone size={16} />}
+        onChange={noop}
+        icon={PHONE_ICON}
         disabled
       />
 
@@ -186,7 +186,7 @@ export function RegistrationSection({
         <FormSelect<ProposalFormData>
           name="registration.maritalStatus"
           label="Estado civil"
-          options={toSelectOptions(MARITAL_STATUS_OPTIONS)}
+          options={MARITAL_STATUS_SELECT_OPTIONS}
           required
         />
 
@@ -195,7 +195,7 @@ export function RegistrationSection({
             name="registration.spouseCpf"
             label="CPF do cônjuge"
             transform={formatCpf}
-            icon={<CreditCard size={16} />}
+            icon={CREDIT_CARD_ICON}
             placeholder="000.000.000-00"
             inputMode="numeric"
             maxLength={14}
@@ -208,7 +208,7 @@ export function RegistrationSection({
             name="registration.childrenCount"
             label="Filhos menores de 18"
             transform={formatCount}
-            icon={<User size={16} />}
+            icon={USER_ICON}
             inputMode="numeric"
             maxLength={2}
             placeholder="0"
@@ -218,7 +218,7 @@ export function RegistrationSection({
             name="registration.householdSize"
             label="Pessoas na casa"
             transform={formatCount}
-            icon={<User size={16} />}
+            icon={USER_ICON}
             inputMode="numeric"
             maxLength={2}
             placeholder="0"
@@ -229,14 +229,14 @@ export function RegistrationSection({
         <FormSelect<ProposalFormData>
           name="registration.propertyStatus"
           label="Situação do imóvel"
-          options={toSelectOptions(PROPERTY_STATUS_OPTIONS)}
+          options={PROPERTY_STATUS_SELECT_OPTIONS}
           required
         />
 
         <FormSelect<ProposalFormData>
           name="registration.residenceTime"
           label="Tempo de residência"
-          options={toSelectOptions(RESIDENCE_TIME_OPTIONS)}
+          options={RESIDENCE_TIME_SELECT_OPTIONS}
           required
         />
 
@@ -259,7 +259,7 @@ export function RegistrationSection({
                 }
                 field.onChange(value.filter((item) => item !== NONE_PROGRAM));
               }}
-              options={toSelectOptions(GOVERNMENT_PROGRAM_OPTIONS)}
+              options={GOVERNMENT_PROGRAM_SELECT_OPTIONS}
               required
               error={fieldState.error?.message}
             />
@@ -285,7 +285,7 @@ export function RegistrationSection({
       <FormSelect<ProposalFormData>
         name="registration.creditPurpose"
         label="Finalidade do crédito"
-        options={toSelectOptions(CREDIT_PURPOSE_OPTIONS)}
+        options={CREDIT_PURPOSE_SELECT_OPTIONS}
         required
       />
       {debtRequired ? (
@@ -299,7 +299,7 @@ export function RegistrationSection({
           <FormSelect<ProposalFormData>
             name="registration.debtCreditor"
             label="Credor"
-            options={toSelectOptions(DEBT_CREDITOR_OPTIONS)}
+            options={DEBT_CREDITOR_SELECT_OPTIONS}
             required
           />
         </div>

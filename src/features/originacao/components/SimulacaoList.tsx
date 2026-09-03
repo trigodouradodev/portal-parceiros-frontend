@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Loader2, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { OriginacaoEmptyState } from "@/features/originacao/components/OriginacaoEmptyState";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import { SimulacaoListItem } from "@/features/originacao/components/SimulacaoListItem";
+import {
+  CREATE_QUOTE_BLOCKED_MESSAGE,
+  EMPTY_FILTERS,
+  EMPTY_PLUS_ICON,
+  EMPTY_SEARCH_ICON,
+  LIST_LOADING_ICON,
+  NEW_SIMULATION_ICON,
+  SEARCH_FIELD_ICON,
+} from "@/features/originacao/constants/simulacao-list";
 import { isSimulationConverted } from "@/features/originacao/data/simulacao";
 import {
   SIMULATIONS_SEARCH_DEBOUNCE_MS,
@@ -17,9 +25,6 @@ import {
   originationKeys,
   originationService,
 } from "@/services/origination/origination.service";
-
-const CREATE_QUOTE_BLOCKED_MESSAGE =
-  "Você possui ações de cobrança pendentes que impedem iniciar uma proposta.";
 
 interface SimulacaoListProps {
   hasUnfilteredSimulations: boolean;
@@ -63,7 +68,7 @@ export function SimulacaoList({
 
   function clearFilters() {
     setSearchInput("");
-    setFilters({});
+    setFilters(EMPTY_FILTERS);
   }
 
   async function handleStartProposal(item: SimulationSnapshot) {
@@ -89,7 +94,7 @@ export function SimulacaoList({
           className="shrink-0 gap-1.5"
           onClick={onNewSimulation}
         >
-          <Plus size={15} />
+          {NEW_SIMULATION_ICON}
           Nova simulação
         </Button>
       }
@@ -98,7 +103,7 @@ export function SimulacaoList({
         <div className="mb-4 flex flex-col gap-3">
           <InputField
             label="Nome ou CPF"
-            icon={<Search size={16} />}
+            icon={SEARCH_FIELD_ICON}
             placeholder="Buscar por nome ou CPF"
             value={searchInput}
             onChange={setSearchInput}
@@ -123,14 +128,14 @@ export function SimulacaoList({
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-          <Loader2 size={16} className="animate-spin" />
+          {LIST_LOADING_ICON}
           Carregando simulações…
         </div>
       ) : null}
 
       {!isLoading && isError ? (
         <OriginacaoEmptyState
-          icon={<Plus size={22} />}
+          icon={EMPTY_PLUS_ICON}
           title="Não foi possível carregar"
           description="Tente novamente em instantes."
           action={
@@ -147,7 +152,7 @@ export function SimulacaoList({
 
       {!isLoading && !isError && noUnfiltered ? (
         <OriginacaoEmptyState
-          icon={<Plus size={22} />}
+          icon={EMPTY_PLUS_ICON}
           title="Nenhuma simulação ainda"
           description='Clique em "Nova simulação" para começar.'
         />
@@ -155,7 +160,7 @@ export function SimulacaoList({
 
       {!isLoading && !isError && noMatch ? (
         <OriginacaoEmptyState
-          icon={<Search size={22} />}
+          icon={EMPTY_SEARCH_ICON}
           title="Nenhuma simulação encontrada"
           description="Tente outro nome ou CPF, ou limpe os filtros."
         />

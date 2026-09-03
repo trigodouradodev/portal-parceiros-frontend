@@ -1,9 +1,9 @@
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   OriginacaoSnapshotCard,
   OriginacaoToneBadge,
 } from "@/features/originacao/components/OriginacaoSnapshotCard";
+import { STARTING_ICON } from "@/features/originacao/constants/simulacao-list";
 import {
   dueDayFromIsoDate,
   formatCreatedAtPtBr,
@@ -61,7 +61,7 @@ export function SimulacaoListItem({
           >
             {starting ? (
               <>
-                <Loader2 size={15} className="animate-spin" />
+                {STARTING_ICON}
                 Iniciando…
               </>
             ) : (
