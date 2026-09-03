@@ -11,6 +11,7 @@ export function AddressSection() {
         name="address.landmark"
         label="Ponto de referência"
         placeholder="Descreva um local conhecido próximo (ex: perto do shopping, igreja, escola)"
+        required
       />
     </div>
   );

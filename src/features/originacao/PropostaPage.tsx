@@ -16,8 +16,9 @@ import { PartnerOpinionSection } from "@/features/originacao/components/proposta
 import { ProposalList } from "@/features/originacao/components/proposta/ProposalList";
 import { ProposalSuccess } from "@/features/originacao/components/proposta/ProposalSuccess";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
-import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
+import { useSaveQuoteAddress } from "@/features/originacao/hooks/useSaveQuoteAddress";
 import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
+import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
@@ -102,8 +103,10 @@ function ProposalWizard({
     useSaveQuoteRegistration();
   const { mutateAsync: saveIncome, isPending: savingIncome } =
     useSaveQuoteIncome();
+  const { mutateAsync: saveAddress, isPending: savingAddress } =
+    useSaveQuoteAddress();
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const savingStep = savingRegistration || savingIncome;
+  const savingStep = savingRegistration || savingIncome || savingAddress;
 
   const data = form.watch();
   const { simulation, step } = proposal;
@@ -185,6 +188,20 @@ function ProposalWizard({
       } catch (err) {
         showToast(
           getApiErrorMessage(err, "Não foi possível salvar atividade e renda."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 2) {
+      try {
+        await saveAddress({
+          quoteId: proposal.id,
+          address: form.getValues().address,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o endereço."),
           { variant: "destructive" },
         );
         return;

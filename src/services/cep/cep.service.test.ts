@@ -1,46 +1,44 @@
+import { AxiosError, CanceledError } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CepLookupError } from "@/services/cep/cep-lookup-error";
 import { CEP_LOOKUP_TIMEOUT_MS, cepService } from "@/services/cep/cep.service";
 
-const VIA_CEP_OK = {
-  cep: "63031-130",
-  logradouro: "Rua Artesão Manoel Barros",
-  complemento: "",
-  bairro: "Tiradentes",
-  localidade: "Juazeiro do Norte",
-  uf: "CE",
+const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+
+vi.mock("@/lib/api/axios", () => ({
+  api: { get },
+  default: { get },
+}));
+
+const POSTAL_CODE_OK = {
+  zipCode: "63031130",
+  streetName: "Rua Artesão Manoel Barros",
+  streetDistrict: "Tiradentes",
+  city: "Juazeiro do Norte",
+  state: "CE",
 };
 
-function mockFetch(impl: typeof fetch) {
-  vi.stubGlobal("fetch", impl);
-}
-
-function abortableHang(): typeof fetch {
-  return (_url, init) =>
-    new Promise((_, reject) => {
-      init?.signal?.addEventListener("abort", () => {
-        reject(new DOMException("Aborted", "AbortError"));
-      });
-    });
+function axiosError(status: number) {
+  return new AxiosError("error", "ERR_BAD_REQUEST", undefined, undefined, {
+    status,
+    data: {},
+    statusText: "Error",
+    headers: {},
+    config: { headers: {} as never },
+  });
 }
 
 beforeEach(() => {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(VIA_CEP_OK),
-    }),
-  );
+  get.mockReset();
+  get.mockResolvedValue({ data: POSTAL_CODE_OK });
 });
 
 afterEach(() => {
-  vi.useRealTimers();
-  vi.unstubAllGlobals();
+  vi.clearAllMocks();
 });
 
 describe("cepService.lookup", () => {
-  it("GETs ViaCEP with digits only and maps the address", async () => {
+  it("GETs /locations/postal-code with digits and maps the address", async () => {
     await expect(cepService.lookup("63031-130")).resolves.toEqual({
       zipCode: "63031-130",
       street: "Rua Artesão Manoel Barros",
@@ -49,47 +47,45 @@ describe("cepService.lookup", () => {
       state: "CE",
     });
 
-    expect(fetch).toHaveBeenCalledWith(
-      "https://viacep.com.br/ws/63031130/json/",
-      expect.objectContaining({ method: "GET" }),
+    expect(get).toHaveBeenCalledWith(
+      "/locations/postal-code/63031130",
+      expect.objectContaining({ timeout: CEP_LOOKUP_TIMEOUT_MS }),
     );
   });
 
-  it("does not call ViaCEP when the CEP is incomplete", async () => {
+  it("does not call the API when the CEP is incomplete", async () => {
     await expect(cepService.lookup("63031")).rejects.toEqual(
       expect.objectContaining({ code: "invalid" }),
     );
-    expect(fetch).not.toHaveBeenCalled();
+    expect(get).not.toHaveBeenCalled();
   });
 
-  it("treats { erro: true } as not found", async () => {
-    mockFetch(
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ erro: true }),
-      }),
-    );
+  it("treats HTTP 404 as not found", async () => {
+    get.mockRejectedValue(axiosError(404));
 
     await expect(cepService.lookup("00000000")).rejects.toEqual(
       new CepLookupError("CEP não encontrado.", "not_found"),
     );
   });
 
-  it("times out when ViaCEP does not answer", async () => {
-    vi.useFakeTimers();
-    mockFetch(abortableHang());
+  it("treats axios timeout as lookup timeout", async () => {
+    const timeout = new AxiosError("timeout", "ECONNABORTED");
+    get.mockRejectedValue(timeout);
 
-    const pending = cepService.lookup("63031130");
-    const assertion = expect(pending).rejects.toMatchObject({
+    await expect(cepService.lookup("63031130")).rejects.toMatchObject({
       code: "timeout",
     });
-    await vi.advanceTimersByTimeAsync(CEP_LOOKUP_TIMEOUT_MS);
-    await assertion;
   });
 
   it("propagates caller abort instead of mapping it to timeout", async () => {
-    mockFetch(abortableHang());
     const controller = new AbortController();
+    get.mockImplementation((_url, config: { signal?: AbortSignal }) => {
+      return new Promise((_resolve, reject) => {
+        config.signal?.addEventListener("abort", () => {
+          reject(new CanceledError());
+        });
+      });
+    });
 
     const pending = cepService.lookup("63031130", controller.signal);
     controller.abort();

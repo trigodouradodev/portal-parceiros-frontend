@@ -215,6 +215,7 @@ describe("proposal validators", () => {
         neighborhood: "Centro",
         city: "São Paulo",
         state: "SP",
+        landmark: "Próximo à estação",
       }),
     ).toBe(true);
   });

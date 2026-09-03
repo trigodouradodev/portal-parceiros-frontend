@@ -1,24 +1,39 @@
-import { CepLookupError } from "@/services/cep/cep-lookup-error";
-import type { CepLookupResult, ViaCepResponse } from "@/services/cep/cep.types";
-import { mapViaCepResponse } from "@/services/cep/map-via-cep";
+import { isAxiosError, isCancel } from "axios";
+import { formatCep } from "@/features/originacao/utils/format-cep";
+import {
+  CepLookupError,
+  isCepLookupError,
+} from "@/services/cep/cep-lookup-error";
+import type { CepLookupResult } from "@/services/cep/cep.types";
+import {
+  CEP_LOOKUP_TIMEOUT_MS,
+  locationsService,
+} from "@/services/locations/locations.service";
+import type { PostalCodeAddress } from "@/services/locations/locations.types";
 
-export const CEP_LOOKUP_TIMEOUT_MS = 5_000;
-
-const VIA_CEP_URL = "https://viacep.com.br/ws";
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException
-    ? error.name === "AbortError"
-    : error instanceof Error && error.name === "AbortError";
-}
+export { CEP_LOOKUP_TIMEOUT_MS };
 
 function digitsOf(cep: string): string {
   return cep.replace(/\D/g, "");
 }
 
+export function mapPostalCodeAddress(data: PostalCodeAddress): CepLookupResult {
+  return {
+    zipCode: formatCep(data.zipCode),
+    street: data.streetName.trim(),
+    neighborhood: data.streetDistrict.trim(),
+    city: data.city.trim(),
+    state: data.state.trim().toUpperCase(),
+  };
+}
+
+function isTimeoutError(error: unknown): boolean {
+  return isAxiosError(error) && error.code === "ECONNABORTED";
+}
+
 export const cepService = {
   /**
-   * Consulta o ViaCEP direto (API pública, sem o axios autenticado do portal).
+   * Consulta CEP via portal (`GET /locations/postal-code/:zipCode`).
    * Cancela no `signal` do caller ou após {@link CEP_LOOKUP_TIMEOUT_MS}.
    */
   async lookup(cep: string, signal?: AbortSignal): Promise<CepLookupResult> {
@@ -27,44 +42,30 @@ export const cepService = {
       throw new CepLookupError("CEP deve ter 8 dígitos.", "invalid");
     }
 
-    const controller = new AbortController();
-    const onParentAbort = () => controller.abort();
-    signal?.addEventListener("abort", onParentAbort);
-    const timer = setTimeout(() => controller.abort(), CEP_LOOKUP_TIMEOUT_MS);
-
     try {
-      const response = await fetch(`${VIA_CEP_URL}/${digits}/json/`, {
-        method: "GET",
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        throw new CepLookupError(
-          "Não foi possível buscar o endereço pelo CEP.",
-          "network",
-        );
-      }
-
-      const data = (await response.json()) as ViaCepResponse;
-      if (data.erro) {
-        throw new CepLookupError("CEP não encontrado.", "not_found");
-      }
-
-      return mapViaCepResponse(data);
+      const data = await locationsService.findPostalCode(digits, signal);
+      return mapPostalCodeAddress(data);
     } catch (error) {
-      if (error instanceof CepLookupError) throw error;
-      if (isAbortError(error)) {
-        if (signal?.aborted) throw error;
+      if (isCepLookupError(error)) throw error;
+      if (signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      if (isCancel(error) || isTimeoutError(error)) {
         throw new CepLookupError("Tempo de busca do CEP esgotado.", "timeout");
+      }
+      if (isAxiosError(error)) {
+        const status = error.response?.status;
+        if (status === 400) {
+          throw new CepLookupError("CEP deve ter 8 dígitos.", "invalid");
+        }
+        if (status === 404) {
+          throw new CepLookupError("CEP não encontrado.", "not_found");
+        }
       }
       throw new CepLookupError(
         "Não foi possível buscar o endereço pelo CEP.",
         "network",
       );
-    } finally {
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", onParentAbort);
     }
   },
 };
