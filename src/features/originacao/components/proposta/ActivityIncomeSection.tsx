@@ -1,7 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { Building2, Wallet } from "lucide-react";
 import { FormInput, FormSelect, FormYesNo } from "@/components/ui/rhf-fields";
-import { toSelectOptions } from "@/components/ui/select-option";
 import {
   ACTIVITY_TIME_OPTIONS,
   INCOME_PROOF_OPTIONS,
@@ -36,7 +35,7 @@ export function ActivityIncomeSection() {
       <FormSelect<ProposalFormData>
         name="activityIncome.activityTime"
         label="Tempo na atividade"
-        options={toSelectOptions(ACTIVITY_TIME_OPTIONS)}
+        options={ACTIVITY_TIME_OPTIONS}
         required
       />
 
@@ -53,7 +52,7 @@ export function ActivityIncomeSection() {
       <FormSelect<ProposalFormData>
         name="activityIncome.incomeSource"
         label="Fonte da renda"
-        options={toSelectOptions(INCOME_SOURCE_OPTIONS)}
+        options={INCOME_SOURCE_OPTIONS}
         required
       />
 
@@ -78,7 +77,7 @@ export function ActivityIncomeSection() {
       <FormSelect<ProposalFormData>
         name="activityIncome.availableProof"
         label="Comprovante disponível?"
-        options={toSelectOptions(INCOME_PROOF_OPTIONS)}
+        options={INCOME_PROOF_OPTIONS}
         required
       />
     </div>

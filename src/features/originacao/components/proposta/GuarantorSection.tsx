@@ -1,6 +1,5 @@
 import { CreditCard, Mail, Phone, User } from "lucide-react";
 import { FormDate, FormInput, FormSelect } from "@/components/ui/rhf-fields";
-import { toSelectOptions } from "@/components/ui/select-option";
 import { AddressFields } from "@/features/originacao/components/AddressFields";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
@@ -65,7 +64,7 @@ export function GuarantorSection() {
       <FormSelect<ProposalFormData>
         name="guarantor.kinship"
         label="Grau de parentesco com o tomador"
-        options={toSelectOptions(KINSHIP_OPTIONS)}
+        options={KINSHIP_OPTIONS}
         required
       />
     </div>

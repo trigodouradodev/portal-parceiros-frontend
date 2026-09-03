@@ -1,7 +1,48 @@
-/** Status persistido em GET /simulations e no draft de GET/POST /quotes. */
-export type QuoteDraftStatus = "draft";
+import type {
+  ActivityDuration,
+  AvailableIncomeProof,
+  CreditPurpose,
+  CustomerRelationshipDuration,
+  CustomerRelationshipOrigin,
+  EconomicActivityCategory,
+  Gender,
+  GovernmentProgram,
+  GuarantorRelationship,
+  HousingStatus,
+  IncomeSource,
+  MaritalStatus,
+  PartnerAssessment,
+  QuoteDraftStep,
+  QuoteStatus,
+  ResidenceDuration,
+} from "./quotes.enums";
 
-/** Draft recém-criado por POST /quotes/draft. */
+/** Aliases usados pelo fluxo AUREA-429 (registration). */
+export type QuoteDraftStatus = typeof QuoteStatus.DRAFT | "draft";
+export type QuoteGender = Gender;
+export type QuoteEconomicActivityCategory = EconomicActivityCategory;
+export type QuoteMaritalStatus = MaritalStatus;
+export type QuoteHousingStatus = HousingStatus;
+export type QuoteResidenceDuration = ResidenceDuration;
+export type QuoteGovernmentProgram = GovernmentProgram;
+export type QuoteCreditPurpose = CreditPurpose;
+
+export interface CreateDraftQuotePayload {
+  simulationId: string;
+}
+
+export interface QuoteDraftAddressPrefill {
+  zipCode: string;
+  streetName: string;
+  streetNumber: string;
+  streetComplement: string;
+  streetDistrict: string;
+  city: string;
+  state: string;
+  referencePoint?: string | null;
+}
+
+/** Resposta de POST /quotes/draft */
 export interface QuoteDraftSnapshot {
   id: string;
   simulationId: string;
@@ -20,80 +61,130 @@ export interface QuoteDraftSnapshot {
   firstInstallmentDate: string;
   installmentAmount: number;
   totalAmountOwed?: number;
+  address?: QuoteDraftAddressPrefill;
 }
 
-export interface CreateDraftQuotePayload {
-  simulationId: string;
-}
-
-export type QuoteGender = "male" | "female" | "not_informed";
-
-export type QuoteEconomicActivityCategory =
-  | "retired_or_pensioner"
-  | "public_servant"
-  | "clt_employee"
-  | "business_owner"
-  | "self_employed_or_informal"
-  | "unemployed"
-  | "other";
-
-export type QuoteMaritalStatus =
-  | "single"
-  | "married"
-  | "stable_union"
-  | "divorced"
-  | "widowed";
-
-export type QuoteHousingStatus =
-  | "owned_paid_off"
-  | "owned_financed"
-  | "rented"
-  | "ceded";
-
-export type QuoteResidenceDuration =
-  | "less_than_6_months"
-  | "6_months_to_2_years"
-  | "2_to_5_years"
-  | "more_than_5_years";
-
-export type QuoteGovernmentProgram = "none" | "bolsa_familia" | "bpc" | "other";
-
-export type QuoteCreditPurpose =
-  | "business_working_capital"
-  | "inventory_purchase"
-  | "work_equipment_or_vehicle"
-  | "renovation_or_construction"
-  | "new_business"
-  | "debt_payoff_or_refinancing"
-  | "personal_expense"
-  | "health"
-  | "education"
-  | "other";
-
-/** Body de PATCH /quotes/draft/:quoteId/registration. */
 export interface SaveQuoteRegistrationPayload {
   isRenegotiation: boolean;
-  gender: QuoteGender;
+  gender: Gender;
   secondaryDocument: string;
   profession: string;
-  economicActivityCategories: QuoteEconomicActivityCategory[];
+  economicActivityCategories: EconomicActivityCategory[];
   economicActivityOther?: string;
-  maritalStatus: QuoteMaritalStatus;
+  maritalStatus: MaritalStatus;
   spouseDocument?: string;
   childrenCount: number;
   householdMembers: number;
-  housingStatus: QuoteHousingStatus;
-  residenceDuration: QuoteResidenceDuration;
-  governmentPrograms: QuoteGovernmentProgram[];
+  housingStatus: HousingStatus;
+  residenceDuration: ResidenceDuration;
+  governmentPrograms: GovernmentProgram[];
   ownsVehicle: boolean;
   vehicleFinanced?: boolean;
-  creditPurpose: QuoteCreditPurpose;
+  creditPurpose: CreditPurpose;
 }
 
 export interface QuoteRegistrationSnapshot extends SaveQuoteRegistrationPayload {
   id: string;
   status: QuoteDraftStatus;
-  step: "registration";
+  step: typeof QuoteDraftStep.REGISTRATION | "registration";
   completedAt: string;
+  updatedAt: string;
+}
+
+export interface SaveQuoteIncomePayload {
+  businessDocument?: string;
+  activityDuration: ActivityDuration;
+  declaredMonthlyIncome: number;
+  incomeSource: IncomeSource;
+  hasMultipleIncomeSources: boolean;
+  secondaryIncome?: number;
+  availableIncomeProof: AvailableIncomeProof;
+}
+
+export interface QuoteIncomeSnapshot extends SaveQuoteIncomePayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.INCOME | "income";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteGeolocationPayload {
+  latitude: number;
+  longitude: number;
+  precision: string;
+}
+
+export interface SaveQuoteAddressPayload {
+  zipCode: string;
+  streetName: string;
+  streetNumber: string;
+  streetComplement?: string;
+  streetDistrict: string;
+  city: string;
+  state: string;
+  referencePoint: string;
+  geolocation?: QuoteGeolocationPayload | null;
+}
+
+export interface QuoteAddressSnapshot extends SaveQuoteAddressPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.ADDRESS | "address";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface SaveQuotePartnerOpinionPayload {
+  relationshipDuration: CustomerRelationshipDuration;
+  relationshipOrigin: CustomerRelationshipOrigin;
+  relationshipOriginOther?: string;
+  referrerDocument?: string;
+  assessment: PartnerAssessment;
+  hasInformalDebtSigns: boolean;
+  hasFinancialUrgencySigns: boolean;
+  opinion: string;
+}
+
+export interface QuotePartnerOpinionSnapshot
+  extends SaveQuotePartnerOpinionPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.PARTNER_OPINION | "partner_opinion";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteGuarantorAddressPayload {
+  zipCode: string;
+  streetName: string;
+  streetNumber: string;
+  streetComplement?: string;
+  streetDistrict: string;
+  city: string;
+  state: string;
+}
+
+export interface SaveQuoteGuarantorPayload {
+  name: string;
+  document: string;
+  birthDate: string;
+  email: string;
+  telephone: string;
+  address: QuoteGuarantorAddressPayload;
+  relationship: GuarantorRelationship;
+}
+
+export interface QuoteGuarantorSnapshot extends SaveQuoteGuarantorPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.GUARANTOR | "guarantor";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteStatusResponse {
+  id: string;
+  status: QuoteStatus;
   updatedAt: string;
 }

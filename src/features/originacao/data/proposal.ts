@@ -1,4 +1,34 @@
+import type { SelectOption } from "@/components/ui/select-option";
 import type { SimulationSnapshot } from "@/features/originacao/types";
+import {
+  CreditPurpose,
+  CustomerRelationshipOrigin,
+  EconomicActivityCategory,
+  GovernmentProgram,
+  LoanInstitution,
+  MaritalStatus,
+  PartnerAssessment,
+} from "@/services/quotes/quotes.enums";
+import {
+  ACTIVITY_CATEGORY_OPTIONS as QUOTE_ACTIVITY_CATEGORY_OPTIONS,
+  ACTIVITY_TIME_OPTIONS as QUOTE_ACTIVITY_TIME_OPTIONS,
+  CREDIT_PURPOSE_OPTIONS as QUOTE_CREDIT_PURPOSE_OPTIONS,
+  CREDITOR_INSTITUTION_OPTIONS as QUOTE_CREDITOR_INSTITUTION_OPTIONS,
+  EXPENSE_CATEGORY_OPTIONS as QUOTE_EXPENSE_CATEGORY_OPTIONS,
+  GENDER_OPTIONS as QUOTE_GENDER_OPTIONS,
+  GOVERNMENT_PROGRAM_OPTIONS as QUOTE_GOVERNMENT_PROGRAM_OPTIONS,
+  HOW_KNOWS_CLIENT_OPTIONS as QUOTE_HOW_KNOWS_CLIENT_OPTIONS,
+  INCOME_PROOF_OPTIONS as QUOTE_INCOME_PROOF_OPTIONS,
+  INCOME_SOURCE_OPTIONS as QUOTE_INCOME_SOURCE_OPTIONS,
+  KINSHIP_OPTIONS as QUOTE_KINSHIP_OPTIONS,
+  LOAN_CATEGORY_OPTIONS as QUOTE_LOAN_CATEGORY_OPTIONS,
+  LOAN_FREQUENCY_OPTIONS as QUOTE_LOAN_FREQUENCY_OPTIONS,
+  MARITAL_STATUS_OPTIONS as QUOTE_MARITAL_STATUS_OPTIONS,
+  OVERALL_RATING_OPTIONS as QUOTE_OVERALL_RATING_OPTIONS,
+  PROPERTY_STATUS_OPTIONS as QUOTE_PROPERTY_STATUS_OPTIONS,
+  RELATIONSHIP_TIME_OPTIONS as QUOTE_RELATIONSHIP_TIME_OPTIONS,
+  RESIDENCE_TIME_OPTIONS as QUOTE_RESIDENCE_TIME_OPTIONS,
+} from "@/services/quotes/quotes.labels";
 
 export const PROPOSAL_STEPS = [
   "Cadastro",
@@ -40,159 +70,47 @@ export const UF_LIST = [
   "TO",
 ] as const;
 
-export const ACTIVITY_CATEGORY_OPTIONS = [
-  "Aposentado/Pensionista",
-  "Servidor Público",
-  "Empregado CLT",
-  "Empresário (CNPJ ativo)",
-  "Autônomo/Informal (MEI)",
-  "Sem ocupação remunerada/Desempregado",
-  "Outros",
-];
+/** Options com `value` = código estável do backend e `label` em PT. */
+export const ACTIVITY_CATEGORY_OPTIONS: SelectOption[] =
+  QUOTE_ACTIVITY_CATEGORY_OPTIONS;
+export const CREDIT_PURPOSE_OPTIONS: SelectOption[] =
+  QUOTE_CREDIT_PURPOSE_OPTIONS;
+export const RESIDENCE_TIME_OPTIONS: SelectOption[] =
+  QUOTE_RESIDENCE_TIME_OPTIONS;
+export const PROPERTY_STATUS_OPTIONS: SelectOption[] =
+  QUOTE_PROPERTY_STATUS_OPTIONS;
+export const GOVERNMENT_PROGRAM_OPTIONS: SelectOption[] =
+  QUOTE_GOVERNMENT_PROGRAM_OPTIONS;
+export const GENDER_OPTIONS: SelectOption[] = QUOTE_GENDER_OPTIONS;
+export const MARITAL_STATUS_OPTIONS: SelectOption[] =
+  QUOTE_MARITAL_STATUS_OPTIONS;
+export const ACTIVITY_TIME_OPTIONS: SelectOption[] =
+  QUOTE_ACTIVITY_TIME_OPTIONS;
+export const INCOME_SOURCE_OPTIONS: SelectOption[] =
+  QUOTE_INCOME_SOURCE_OPTIONS;
+export const INCOME_PROOF_OPTIONS: SelectOption[] = QUOTE_INCOME_PROOF_OPTIONS;
+export const RELATIONSHIP_TIME_OPTIONS: SelectOption[] =
+  QUOTE_RELATIONSHIP_TIME_OPTIONS;
+export const HOW_KNOWS_CLIENT_OPTIONS: SelectOption[] =
+  QUOTE_HOW_KNOWS_CLIENT_OPTIONS;
+export const OVERALL_RATING_OPTIONS: SelectOption[] =
+  QUOTE_OVERALL_RATING_OPTIONS;
+export const EXPENSE_CATEGORY_OPTIONS: SelectOption[] =
+  QUOTE_EXPENSE_CATEGORY_OPTIONS;
+export const LOAN_FREQUENCY_OPTIONS: SelectOption[] =
+  QUOTE_LOAN_FREQUENCY_OPTIONS;
+export const CREDITOR_INSTITUTION_OPTIONS: SelectOption[] =
+  QUOTE_CREDITOR_INSTITUTION_OPTIONS;
+export const LOAN_CATEGORY_OPTIONS: SelectOption[] =
+  QUOTE_LOAN_CATEGORY_OPTIONS;
+export const KINSHIP_OPTIONS: SelectOption[] = QUOTE_KINSHIP_OPTIONS;
 
-export const CREDIT_PURPOSE_OPTIONS = [
-  "Fluxo de caixa do negócio",
-  "Compra de mercadoria/estoque",
-  "Equipamento/veículo de trabalho",
-  "Reforma ou construção",
-  "Abertura de novo negócio",
-  "Quitação/troca de dívida",
-  "Despesa pessoal",
-  "Saúde",
-  "Educação",
-  "Outro",
-];
-
+/** Credor de dívida do passo Cadastro — campo só de UI (não vai no PATCH registration). */
 export const DEBT_CREDITOR_OPTIONS = [
   "Banco",
   "Cartão de crédito",
   "Agiota",
   "Caixinha",
-];
-
-export const RESIDENCE_TIME_OPTIONS = [
-  "Menos de 6 meses",
-  "6 meses a 2 anos",
-  "2 a 5 anos",
-  "Mais de 5 anos",
-];
-
-export const PROPERTY_STATUS_OPTIONS = [
-  "Próprio quitado",
-  "Próprio financiado",
-  "Alugado",
-  "Cedido",
-];
-
-export const GOVERNMENT_PROGRAM_OPTIONS = [
-  "Nenhum",
-  "Bolsa Família",
-  "BPC",
-  "Outro",
-];
-
-export const GENDER_OPTIONS = ["Masculino", "Feminino", "Não informado"];
-
-export const MARITAL_STATUS_OPTIONS = [
-  "Solteiro(a)",
-  "Casado(a)",
-  "União estável",
-  "Divorciado(a)",
-  "Viúvo(a)",
-];
-
-export const ACTIVITY_TIME_OPTIONS = [
-  "Menos de 6 meses",
-  "6 meses a 1 ano",
-  "1 a 3 anos",
-  "3 a 5 anos",
-  "Mais de 5 anos",
-];
-
-export const INCOME_SOURCE_OPTIONS = [
-  "Salário",
-  "Negócio próprio",
-  "Benefício",
-  "Aluguel",
-  "Renda mista",
-];
-
-export const INCOME_PROOF_OPTIONS = [
-  "Holerite",
-  "Extrato bancário",
-  "DAS-MEI",
-  "Benefício INSS",
-  "Nenhum",
-];
-
-export const RELATIONSHIP_TIME_OPTIONS = [
-  "Conheci agora",
-  "Menos de 1 ano",
-  "1 a 3 anos",
-  "Mais de 3 anos",
-];
-
-export const HOW_KNOWS_CLIENT_OPTIONS = [
-  "Cliente antigo (já teve contrato)",
-  "Indicação de cliente Áurea",
-  "Indicação de terceiro (não cliente)",
-  "Prospecção presencial",
-  "Cliente me procurou espontaneamente",
-  "Redes sociais ou WhatsApp",
-  "Parente ou amigo do consultor",
-  "Outro",
-];
-
-export const OVERALL_RATING_OPTIONS = [
-  "Recomendo e confio fortemente",
-  "Recomendo",
-  "Tenho dúvidas",
-  "Não recomendo",
-];
-
-export const EXPENSE_CATEGORY_OPTIONS = [
-  "Aluguel/Moradia",
-  "Escola/Creche",
-  "Remédios/Saúde",
-  "Despesas da casa",
-  "Lazer",
-  "Caixa financeiro/consórcio",
-  "Cartão de crédito",
-  "Outros",
-];
-
-export const LOAN_FREQUENCY_OPTIONS = [
-  "Mensal",
-  "Quinzenal",
-  "Semanal",
-  "Diária",
-];
-
-export const CREDITOR_INSTITUTION_OPTIONS = [
-  "Itaú",
-  "Santander",
-  "CrediAmigo",
-  "Caixa",
-  "Nubank",
-  "Outros",
-  "Agiota",
-];
-
-export const LOAN_CATEGORY_OPTIONS = [
-  "Cartão de crédito",
-  "Cheque especial",
-  "Caixa financeira/consórcio",
-  "Agiota",
-  "Outros",
-];
-
-export const KINSHIP_OPTIONS = [
-  "Pai/Mãe",
-  "Cônjuge",
-  "Irmão/Irmã",
-  "Filho(a)",
-  "Outro parente",
-  "Sem parentesco",
 ];
 
 export const INCOME_DOCUMENT_TYPE_OPTIONS = [
@@ -202,14 +120,18 @@ export const INCOME_DOCUMENT_TYPE_OPTIONS = [
   "MEI / DAS",
 ];
 
-export const DEBT_PURPOSE = "Quitação/troca de dívida";
-export const OTHER_OPTION = "Outros";
-export const NONE_PROGRAM = "Nenhum";
-export const HOW_KNOWS_OTHER = "Outro";
-export const AUREA_REFERRAL_OPTION = "Indicação de cliente Áurea";
-export const DOUBTS_RATING = "Tenho dúvidas";
-export const AGIOTA_CREDITOR = "Agiota";
-export const MARRIED_STATUSES = ["Casado(a)", "União estável"] as const;
+export const DEBT_PURPOSE = CreditPurpose.DEBT_PAYOFF_OR_REFINANCING;
+export const OTHER_OPTION = EconomicActivityCategory.OTHER;
+export const NONE_PROGRAM = GovernmentProgram.NONE;
+export const HOW_KNOWS_OTHER = CustomerRelationshipOrigin.OTHER;
+export const AUREA_REFERRAL_OPTION =
+  CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL;
+export const DOUBTS_RATING = PartnerAssessment.HAVE_DOUBTS;
+export const AGIOTA_CREDITOR = LoanInstitution.LOAN_SHARK;
+export const MARRIED_STATUSES = [
+  MaritalStatus.MARRIED,
+  MaritalStatus.STABLE_UNION,
+] as const;
 
 export interface RegistrationData {
   isRenewal: boolean | null;
