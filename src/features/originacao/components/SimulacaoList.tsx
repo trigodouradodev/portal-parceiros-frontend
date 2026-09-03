@@ -1,25 +1,26 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Loader2, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { OriginacaoEmptyState } from "@/features/originacao/components/OriginacaoEmptyState";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
+import { SimulacaoListItem } from "@/features/originacao/components/SimulacaoListItem";
 import {
-  OriginacaoSnapshotCard,
-  OriginacaoToneBadge,
-} from "@/features/originacao/components/OriginacaoSnapshotCard";
-import {
-  dueDayFromIsoDate,
-  formatCreatedAtPtBr,
-} from "@/features/originacao/data/simulacao";
+  CREATE_QUOTE_BLOCKED_MESSAGE,
+  EMPTY_FILTERS,
+  EMPTY_PLUS_ICON,
+  EMPTY_SEARCH_ICON,
+  LIST_LOADING_ICON,
+  NEW_SIMULATION_ICON,
+  SEARCH_FIELD_ICON,
+} from "@/features/originacao/constants/simulacao-list";
+import { isSimulationConverted } from "@/features/originacao/data/simulacao";
 import {
   SIMULATIONS_SEARCH_DEBOUNCE_MS,
   buildSimulationsListQuery,
   isSimulationsFilterActive,
 } from "@/features/originacao/data/simulations-list-query";
 import type { SimulationSnapshot } from "@/features/originacao/types";
-import { fmtBRL } from "@/lib/utils";
 import {
   originationKeys,
   originationService,
@@ -27,19 +28,22 @@ import {
 
 interface SimulacaoListProps {
   hasUnfilteredSimulations: boolean;
+  canCreateQuote?: boolean;
   onNewSimulation: () => void;
   onEdit: (snapshot: SimulationSnapshot) => void;
-  onStartProposal: (snapshot: SimulationSnapshot) => void;
+  onStartProposal: (snapshot: SimulationSnapshot) => void | Promise<void>;
 }
 
 export function SimulacaoList({
   hasUnfilteredSimulations,
+  canCreateQuote = true,
   onNewSimulation,
   onEdit,
   onStartProposal,
 }: SimulacaoListProps) {
   const [searchInput, setSearchInput] = useState("");
   const [filters, setFilters] = useState(() => buildSimulationsListQuery(""));
+  const [startingId, setStartingId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -64,7 +68,19 @@ export function SimulacaoList({
 
   function clearFilters() {
     setSearchInput("");
-    setFilters({});
+    setFilters(EMPTY_FILTERS);
+  }
+
+  async function handleStartProposal(item: SimulationSnapshot) {
+    if (!canCreateQuote || isSimulationConverted(item) || startingId != null) {
+      return;
+    }
+    setStartingId(item.id);
+    try {
+      await onStartProposal(item);
+    } finally {
+      setStartingId(null);
+    }
   }
 
   return (
@@ -78,7 +94,7 @@ export function SimulacaoList({
           className="shrink-0 gap-1.5"
           onClick={onNewSimulation}
         >
-          <Plus size={15} />
+          {NEW_SIMULATION_ICON}
           Nova simulação
         </Button>
       }
@@ -87,7 +103,7 @@ export function SimulacaoList({
         <div className="mb-4 flex flex-col gap-3">
           <InputField
             label="Nome ou CPF"
-            icon={<Search size={16} />}
+            icon={SEARCH_FIELD_ICON}
             placeholder="Buscar por nome ou CPF"
             value={searchInput}
             onChange={setSearchInput}
@@ -104,23 +120,29 @@ export function SimulacaoList({
         </div>
       ) : null}
 
+      {canCreateQuote ? null : (
+        <p className="mb-4 rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
+          {CREATE_QUOTE_BLOCKED_MESSAGE}
+        </p>
+      )}
+
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-          <Loader2 size={16} className="animate-spin" />
+          {LIST_LOADING_ICON}
           Carregando simulações…
         </div>
       ) : null}
 
       {!isLoading && isError ? (
         <OriginacaoEmptyState
-          icon={<Plus size={22} />}
+          icon={EMPTY_PLUS_ICON}
           title="Não foi possível carregar"
           description="Tente novamente em instantes."
           action={
             <Button
               variant="outline"
               size="pillSm"
-              onClick={() => void listQuery.refetch()}
+              onClick={() => listQuery.refetch()}
             >
               Tentar novamente
             </Button>
@@ -130,7 +152,7 @@ export function SimulacaoList({
 
       {!isLoading && !isError && noUnfiltered ? (
         <OriginacaoEmptyState
-          icon={<Plus size={22} />}
+          icon={EMPTY_PLUS_ICON}
           title="Nenhuma simulação ainda"
           description='Clique em "Nova simulação" para começar.'
         />
@@ -138,7 +160,7 @@ export function SimulacaoList({
 
       {!isLoading && !isError && noMatch ? (
         <OriginacaoEmptyState
-          icon={<Search size={22} />}
+          icon={EMPTY_SEARCH_ICON}
           title="Nenhuma simulação encontrada"
           description="Tente outro nome ou CPF, ou limpe os filtros."
         />
@@ -147,36 +169,14 @@ export function SimulacaoList({
       {!isLoading && !isError && simulations.length > 0 ? (
         <div className="flex flex-col gap-3">
           {simulations.map((item) => (
-            <OriginacaoSnapshotCard
+            <SimulacaoListItem
               key={item.id}
-              badge={
-                <OriginacaoToneBadge tone="warning">
-                  {item.productName}
-                </OriginacaoToneBadge>
-              }
-              timestamp={formatCreatedAtPtBr(item.createdAt)}
-              name={item.name}
-              amount={item.amount}
-              subtitle={`${item.installments}x de ${fmtBRL(item.installmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
-              cpf={item.document}
-            >
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="pillSm"
-                  onClick={() => onEdit(item)}
-                >
-                  Editar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="pillSm"
-                  onClick={() => onStartProposal(item)}
-                >
-                  Iniciar proposta
-                </Button>
-              </div>
-            </OriginacaoSnapshotCard>
+              item={item}
+              canCreateQuote={canCreateQuote}
+              startingId={startingId}
+              onEdit={onEdit}
+              onStartProposal={handleStartProposal}
+            />
           ))}
         </div>
       ) : null}

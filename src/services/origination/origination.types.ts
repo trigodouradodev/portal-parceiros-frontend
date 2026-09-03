@@ -1,7 +1,16 @@
+export const SimulationStatus = {
+  AVAILABLE: "available",
+  CONVERTED: "converted",
+} as const;
+
+export type SimulationStatus =
+  (typeof SimulationStatus)[keyof typeof SimulationStatus];
+
 /** Snapshot persistido de GET/POST/PATCH /simulations (`name`/`document` no GET). */
 export interface SimulationSnapshot {
   id: string;
   createdAt: string;
+  status: SimulationStatus;
   name: string;
   birthDate: string;
   email: string;
@@ -14,6 +23,7 @@ export interface SimulationSnapshot {
   installments: number;
   firstInstallmentDate: string;
   installmentAmount: number;
+  totalAmountOwed?: number;
   simulationResult?: unknown;
 }
 

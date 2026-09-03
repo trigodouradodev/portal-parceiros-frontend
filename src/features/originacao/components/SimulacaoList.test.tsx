@@ -23,6 +23,7 @@ vi.mock("@/services/origination/origination.service", async () => {
 const snapshot: SimulationSnapshot = {
   id: "sim-a",
   createdAt: "2026-08-26T12:00:00.000Z",
+  status: "available",
   name: "Maria Souza",
   birthDate: "1990-05-20",
   email: "maria@email.com",
@@ -173,5 +174,51 @@ describe("SimulacaoList", () => {
     expect(
       screen.getByRole("button", { name: "Iniciar proposta" }),
     ).toBeInTheDocument();
+  });
+
+  it("hides edit and start when the simulation already originated a quote", async () => {
+    listSimulations.mockResolvedValue([{ ...snapshot, status: "converted" }]);
+
+    renderList(
+      <SimulacaoList
+        hasUnfilteredSimulations
+        onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText("Proposta iniciada")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Editar" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Iniciar proposta" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("disables start proposal when the partner cannot create quotes", async () => {
+    listSimulations.mockResolvedValue([snapshot]);
+
+    renderList(
+      <SimulacaoList
+        hasUnfilteredSimulations
+        canCreateQuote={false}
+        onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText("Maria Souza")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Você possui ações de cobrança pendentes que impedem iniciar uma proposta.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Iniciar proposta" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Editar" })).toBeEnabled();
   });
 });

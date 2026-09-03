@@ -537,7 +537,7 @@ export function DashboardPage() {
           hasNextPage={Boolean(hasNextPage)}
           isFetchingNextPage={isFetchingNextPage}
           onLoadMore={() => {
-            void fetchNextPage();
+            fetchNextPage();
           }}
         />
       </div>

@@ -6,6 +6,7 @@ import {
   installmentOptionsForProduct,
   isAllowedDueDate,
   isDueDateInWindow,
+  isSimulationConverted,
   previewInstallmentAmount,
   productRatePercent,
   simulationFormDefaultsFromSnapshot,
@@ -114,5 +115,12 @@ describe("productRatePercent", () => {
   it("converts the decimal max rate to percent for preview", () => {
     expect(productRatePercent({ maxInterestRate: 0.0339 })).toBe(3.39);
     expect(productRatePercent(null)).toBe(0);
+  });
+});
+
+describe("isSimulationConverted", () => {
+  it("treats converted simulations as locked", () => {
+    expect(isSimulationConverted({ status: "converted" })).toBe(true);
+    expect(isSimulationConverted({ status: "available" })).toBe(false);
   });
 });

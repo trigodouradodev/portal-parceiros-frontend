@@ -19,7 +19,7 @@ export interface OriginacaoContextValue {
   refetchSimulations: () => void;
   proposals: ProposalSnapshot[];
   openProposalId: string | null;
-  startProposal: (simulation: SimulationSnapshot) => void;
+  startProposal: (simulation: SimulationSnapshot) => Promise<void>;
   openProposal: (id: string) => void;
   closeProposal: () => void;
   updateProposal: (proposal: ProposalSnapshot) => void;

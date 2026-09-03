@@ -25,7 +25,7 @@ export function useUpdateSimulation() {
             item.id === snapshot.id ? snapshot : item,
           ),
       );
-      void queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: originationKeys.simulationsRoot(),
       });
     },

@@ -19,6 +19,7 @@ import type { SimulationSnapshot } from "@/features/originacao/types";
 const simulation: SimulationSnapshot = {
   id: "sim-1",
   createdAt: "2026-08-13T12:00:00.000Z",
+  status: "available",
   name: "Maria Silva",
   birthDate: "1990-01-01",
   email: "maria@email.com",
@@ -35,7 +36,11 @@ const simulation: SimulationSnapshot = {
 
 describe("createProposalFromSimulation", () => {
   it("starts as a 7-step draft with empty form", () => {
-    const proposal = createProposalFromSimulation(simulation);
+    const proposal = createProposalFromSimulation(simulation, {
+      id: "quote-1",
+      createdAt: "2026-09-02T12:00:00.000Z",
+    });
+    expect(proposal.id).toBe("quote-1");
     expect(proposal.status).toBe("draft");
     expect(proposal.step).toBe(0);
     expect(proposal.stepValid).toEqual(
@@ -48,36 +53,36 @@ describe("createProposalFromSimulation", () => {
 });
 
 describe("proposal validators", () => {
-  it("requires occupation and economic activity before the first step is valid", () => {
+  const validRegistration = {
+    ...createEmptyProposalForm().registration,
+    isRenewal: false,
+    gender: "Feminino",
+    rg: "1234567",
+    occupation: "Vendedora",
+    activityCategories: ["Empregado CLT"],
+    maritalStatus: "Solteiro(a)",
+    childrenCount: "0",
+    householdSize: "2",
+    propertyStatus: "Alugado",
+    residenceTime: "6 meses a 2 anos",
+    governmentPrograms: ["Nenhum"],
+    hasVehicle: false,
+    creditPurpose: "Despesa pessoal",
+  };
+
+  it("requires cadastro fields that the draft PATCH validates", () => {
     const empty = createEmptyProposalForm().registration;
     expect(isRegistrationValid(empty)).toBe(false);
+    expect(isRegistrationValid(validRegistration)).toBe(true);
     expect(
       isRegistrationValid({
-        ...empty,
-        isRenewal: false,
-        gender: "Feminino",
-        occupation: "Vendedora",
-        activityCategories: ["Empregado CLT"],
-        creditPurpose: "Despesa pessoal",
-      }),
-    ).toBe(true);
-    expect(
-      isRegistrationValid({
-        ...empty,
-        isRenewal: false,
-        gender: "Feminino",
-        activityCategories: ["Empregado CLT"],
-        creditPurpose: "Despesa pessoal",
+        ...validRegistration,
+        occupation: "",
       }),
     ).toBe(false);
     expect(
       isRegistrationValid({
-        ...empty,
-        isRenewal: false,
-        gender: "Feminino",
-        occupation: "Vendedora",
-        activityCategories: ["Empregado CLT"],
-        creditPurpose: "Despesa pessoal",
+        ...validRegistration,
         spouseCpf: "111.111.111-11",
       }),
     ).toBe(false);
@@ -85,10 +90,7 @@ describe("proposal validators", () => {
 
   it("requires extra occupation text and debt details when those options are chosen", () => {
     const base = {
-      ...createEmptyProposalForm().registration,
-      isRenewal: false,
-      gender: "Feminino",
-      occupation: "Vendedora",
+      ...validRegistration,
       activityCategories: ["Outros"],
       creditPurpose: "Quitação/troca de dívida",
     };
@@ -101,6 +103,48 @@ describe("proposal validators", () => {
         debtCreditor: "Banco",
       }),
     ).toBe(true);
+  });
+
+  it("requires spouse CPF and vehicle financing when those answers apply", () => {
+    expect(
+      isRegistrationValid({
+        ...validRegistration,
+        maritalStatus: "Casado(a)",
+      }),
+    ).toBe(false);
+    expect(
+      isRegistrationValid({
+        ...validRegistration,
+        maritalStatus: "Casado(a)",
+        spouseCpf: "111.444.777-35",
+      }),
+    ).toBe(true);
+    expect(
+      isRegistrationValid({
+        ...validRegistration,
+        hasVehicle: true,
+      }),
+    ).toBe(false);
+    expect(
+      isRegistrationValid({
+        ...validRegistration,
+        hasVehicle: true,
+        vehicleFinanced: false,
+      }),
+    ).toBe(true);
+    expect(
+      isRegistrationValid({
+        ...validRegistration,
+        householdSize: "0",
+      }),
+    ).toBe(false);
+    expect(
+      isRegistrationValid({
+        ...validRegistration,
+        maritalStatus: "Casado(a)",
+        spouseCpf: "000.000.000-00",
+      }),
+    ).toBe(false);
   });
 
   it("treats married statuses as having a spouse", () => {
