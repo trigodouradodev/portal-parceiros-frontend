@@ -18,6 +18,7 @@ import { ProposalSuccess } from "@/features/originacao/components/proposta/Propo
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
 import { useSaveQuoteAddress } from "@/features/originacao/hooks/useSaveQuoteAddress";
 import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
+import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQuotePartnerOpinion";
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { productRatePercent } from "@/features/originacao/data/simulacao";
@@ -105,8 +106,11 @@ function ProposalWizard({
     useSaveQuoteIncome();
   const { mutateAsync: saveAddress, isPending: savingAddress } =
     useSaveQuoteAddress();
+  const { mutateAsync: savePartnerOpinion, isPending: savingPartnerOpinion } =
+    useSaveQuotePartnerOpinion();
   const [submitAttempted, setSubmitAttempted] = useState(false);
-  const savingStep = savingRegistration || savingIncome || savingAddress;
+  const savingStep =
+    savingRegistration || savingIncome || savingAddress || savingPartnerOpinion;
 
   const data = form.watch();
   const { simulation, step } = proposal;
@@ -202,6 +206,20 @@ function ProposalWizard({
       } catch (err) {
         showToast(
           getApiErrorMessage(err, "Não foi possível salvar o endereço."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 3) {
+      try {
+        await savePartnerOpinion({
+          quoteId: proposal.id,
+          partnerOpinion: form.getValues().partnerOpinion,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o parecer."),
           { variant: "destructive" },
         );
         return;
