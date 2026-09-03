@@ -6,6 +6,7 @@ export {
   QUOTE_FORM_CODES,
   mapAddressToPayload,
   mapDraftAddressPrefillToForm,
+  mapFinancialToPayload,
   mapGuarantorToPayload,
   mapIncomeToPayload,
   mapPartnerOpinionToPayload,

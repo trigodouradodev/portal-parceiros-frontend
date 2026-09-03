@@ -54,6 +54,7 @@ export function PartnerOpinionSection() {
           placeholder="000.000.000-00"
           inputMode="numeric"
           maxLength={14}
+          required
         />
       ) : null}
 

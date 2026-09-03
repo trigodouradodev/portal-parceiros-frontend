@@ -5,12 +5,16 @@ import type {
   CustomerRelationshipDuration,
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
+  ExpenseCategory,
   Gender,
   GovernmentProgram,
   GuarantorRelationship,
   HousingStatus,
   IncomeProofType,
   IncomeSource,
+  LoanCategory,
+  LoanFrequency,
+  LoanInstitution,
   MaritalStatus,
   PartnerAssessment,
   QuoteAttachmentType,
@@ -180,6 +184,33 @@ export interface QuoteGuarantorSnapshot extends SaveQuoteGuarantorPayload {
   id: string;
   status: QuoteDraftStatus;
   step: typeof QuoteDraftStep.GUARANTOR | "guarantor";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteExpensePayload {
+  category: ExpenseCategory;
+  amount: number;
+  description?: string;
+}
+
+export interface QuoteLoanPayload {
+  installmentAmount: number;
+  frequency: LoanFrequency;
+  institution: LoanInstitution;
+  category: LoanCategory;
+  description?: string;
+}
+
+export interface SaveQuoteFinancialPayload {
+  expenses: QuoteExpensePayload[];
+  loans: QuoteLoanPayload[];
+}
+
+export interface QuoteFinancialSnapshot extends SaveQuoteFinancialPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.FINANCIAL | "financial";
   completedAt: string;
   updatedAt: string;
 }

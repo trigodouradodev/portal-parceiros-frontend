@@ -4,6 +4,7 @@ import {
   REQUIRED_FIELD_MESSAGE,
   getProposalStepFieldErrors,
 } from "@/features/originacao/utils/proposal-step-errors";
+import { MaritalStatus } from "@/services/quotes/quotes.enums";
 
 describe("getProposalStepFieldErrors", () => {
   it("lists registration required fields in visual order", () => {
@@ -32,7 +33,7 @@ describe("getProposalStepFieldErrors", () => {
 
   it("flags spouse CPF even when other cadastro fields are still empty", () => {
     const data = createEmptyProposalForm();
-    data.registration.maritalStatus = "Casado(a)";
+    data.registration.maritalStatus = MaritalStatus.MARRIED;
     const errors = getProposalStepFieldErrors(0, data);
     expect(errors.map((item) => item.name)).toContain("registration.spouseCpf");
     expect(
@@ -57,6 +58,34 @@ describe("getProposalStepFieldErrors", () => {
       availableProof: "Holerite",
     };
     expect(getProposalStepFieldErrors(1, data)).toEqual([]);
+  });
+
+  it("requires referrer CPF on Áurea customer referral", () => {
+    const data = createEmptyProposalForm();
+    data.partnerOpinion = {
+      ...data.partnerOpinion,
+      relationshipTime: "1_to_3_years",
+      howKnows: "aurea_customer_referral",
+      overallRating: "recommend",
+      informalDebtSigns: false,
+      financialUrgencySigns: false,
+      notes: "Cliente conhecido.",
+    };
+    expect(
+      getProposalStepFieldErrors(3, data).find(
+        (item) => item.name === "partnerOpinion.referrerCpf",
+      )?.message,
+    ).toBe(REQUIRED_FIELD_MESSAGE);
+
+    data.partnerOpinion.referrerCpf = "000.000.000-00";
+    expect(
+      getProposalStepFieldErrors(3, data).find(
+        (item) => item.name === "partnerOpinion.referrerCpf",
+      )?.message,
+    ).toBe("CPF inválido");
+
+    data.partnerOpinion.referrerCpf = "529.982.247-25";
+    expect(getProposalStepFieldErrors(3, data)).toEqual([]);
   });
 
   it("keeps the financial step without blocking errors", () => {

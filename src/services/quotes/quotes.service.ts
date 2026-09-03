@@ -6,12 +6,14 @@ import type {
   QuoteDocumentationAttachments,
   QuoteDocumentationSnapshot,
   QuoteDraftSnapshot,
+  QuoteFinancialSnapshot,
   QuoteGuarantorSnapshot,
   QuoteIncomeSnapshot,
   QuotePartnerOpinionSnapshot,
   QuoteRegistrationSnapshot,
   QuoteStatusResponse,
   SaveQuoteAddressPayload,
+  SaveQuoteFinancialPayload,
   SaveQuoteGuarantorPayload,
   SaveQuoteIncomePayload,
   SaveQuotePartnerOpinionPayload,
@@ -104,6 +106,18 @@ export const quotesService = {
   ): Promise<QuoteGuarantorSnapshot> {
     const { data } = await api.patch<QuoteGuarantorSnapshot>(
       `/quotes/draft/${quoteId}/guarantor`,
+      payload,
+    );
+    return data;
+  },
+
+  /** PATCH /quotes/draft/:quoteId/financial */
+  async saveFinancial(
+    quoteId: string,
+    payload: SaveQuoteFinancialPayload,
+  ): Promise<QuoteFinancialSnapshot> {
+    const { data } = await api.patch<QuoteFinancialSnapshot>(
+      `/quotes/draft/${quoteId}/financial`,
       payload,
     );
     return data;

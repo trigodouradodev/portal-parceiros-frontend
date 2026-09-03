@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   DEBT_PURPOSE,
   HOW_KNOWS_OTHER,
+  AUREA_REFERRAL_OPTION,
   OTHER_OPTION,
   hasSpouse,
   type ActivityIncomeData,
@@ -197,6 +198,17 @@ export const partnerOpinionSchema: z.ZodType<PartnerOpinionData> = z
         message: REQUIRED_FIELD_MESSAGE,
       });
     }
+    if (data.howKnows === AUREA_REFERRAL_OPTION) {
+      if (isValidCpf(data.referrerCpf)) return;
+      ctx.addIssue({
+        code: "custom",
+        path: ["referrerCpf"],
+        message:
+          data.referrerCpf.replace(/\D/g, "").length === 0
+            ? REQUIRED_FIELD_MESSAGE
+            : "CPF inválido",
+      });
+    }
   });
 
 export const guarantorSchema: z.ZodType<GuarantorData> = z.object({
@@ -206,7 +218,7 @@ export const guarantorSchema: z.ZodType<GuarantorData> = z.object({
   email: requiredString,
   phone: requiredString,
   zipCode: cepSchema(),
-  street: z.string(),
+  street: requiredString,
   number: requiredString,
   complement: z.string(),
   neighborhood: requiredString,
