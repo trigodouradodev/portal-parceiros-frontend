@@ -1,7 +1,10 @@
 import type {
   ActivityIncomeData,
   AddressData,
+  ExpenseItem,
+  FinancialData,
   GuarantorData,
+  LoanItem,
   PartnerOpinionData,
   RegistrationData,
 } from "@/features/originacao/data/proposal";
@@ -11,7 +14,9 @@ import {
   CreditPurpose,
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
+  ExpenseCategory,
   GovernmentProgram,
+  LoanCategory,
   LoanInstitution,
   MaritalStatus,
   PartnerAssessment,
@@ -22,11 +27,15 @@ import {
   type GuarantorRelationship,
   type HousingStatus,
   type IncomeSource,
+  type LoanFrequency,
   type ResidenceDuration,
 } from "./quotes.enums";
 import type {
   QuoteDraftAddressPrefill,
+  QuoteExpensePayload,
+  QuoteLoanPayload,
   SaveQuoteAddressPayload,
+  SaveQuoteFinancialPayload,
   SaveQuoteGuarantorPayload,
   SaveQuoteIncomePayload,
   SaveQuotePartnerOpinionPayload,
@@ -185,6 +194,86 @@ export function mapGuarantorToPayload(
     },
     relationship: data.kinship as GuarantorRelationship,
   };
+}
+
+function isBlankExpense(item: ExpenseItem): boolean {
+  return (
+    item.category.trim() === "" &&
+    item.amount.replace(/\D/g, "") === "" &&
+    item.description.trim() === ""
+  );
+}
+
+function isBlankLoan(item: LoanItem): boolean {
+  return (
+    item.institution.trim() === "" &&
+    item.installmentAmount.replace(/\D/g, "") === "" &&
+    item.frequency.trim() === "" &&
+    item.category.trim() === "" &&
+    item.description.trim() === ""
+  );
+}
+
+function mapExpenseItem(item: ExpenseItem, index: number): QuoteExpensePayload {
+  if (!item.category.trim()) {
+    throw new Error(`Informe a categoria da despesa ${index + 1}.`);
+  }
+  const amount = parseMoneyBrl(item.amount);
+  if (amount < 0.01) {
+    throw new Error(`Informe o valor da despesa ${index + 1}.`);
+  }
+  const description = optionalTrimmed(item.description);
+  if (item.category === ExpenseCategory.OTHER && !description) {
+    throw new Error(`Informe a descrição da despesa ${index + 1}.`);
+  }
+  return {
+    category: item.category as ExpenseCategory,
+    amount,
+    ...(description ? { description } : {}),
+  };
+}
+
+function mapLoanItem(item: LoanItem, index: number): QuoteLoanPayload {
+  if (!item.institution.trim()) {
+    throw new Error(`Informe a instituição do empréstimo ${index + 1}.`);
+  }
+  const installmentAmount = parseMoneyBrl(item.installmentAmount);
+  if (installmentAmount < 0.01) {
+    throw new Error(`Informe o valor da parcela do empréstimo ${index + 1}.`);
+  }
+  if (!item.frequency.trim()) {
+    throw new Error(`Informe a frequência do empréstimo ${index + 1}.`);
+  }
+  if (!item.category.trim()) {
+    throw new Error(`Informe a categoria do empréstimo ${index + 1}.`);
+  }
+  const description = optionalTrimmed(item.description);
+  const needsDescription =
+    item.category === LoanCategory.OTHER ||
+    item.institution === LoanInstitution.OTHER;
+  if (needsDescription && !description) {
+    throw new Error(`Informe a descrição do empréstimo ${index + 1}.`);
+  }
+  return {
+    installmentAmount,
+    frequency: item.frequency as LoanFrequency,
+    institution: item.institution as LoanInstitution,
+    category: item.category as LoanCategory,
+    ...(description ? { description } : {}),
+  };
+}
+
+/** Form Financeiro → PATCH .../financial */
+export function mapFinancialToPayload(
+  data: FinancialData,
+): SaveQuoteFinancialPayload {
+  const expenses = data.expenses
+    .filter((item) => !isBlankExpense(item))
+    .map((item, index) => mapExpenseItem(item, index));
+  const loans = data.loans
+    .filter((item) => !isBlankLoan(item))
+    .map((item, index) => mapLoanItem(item, index));
+  return { expenses, loans };
 }
 
 /** Prefill de endereço do draft → campos do formulário */

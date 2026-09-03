@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
@@ -17,6 +18,7 @@ import { ProposalList } from "@/features/originacao/components/proposta/Proposal
 import { ProposalSuccess } from "@/features/originacao/components/proposta/ProposalSuccess";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
 import { useSaveQuoteAddress } from "@/features/originacao/hooks/useSaveQuoteAddress";
+import { useSaveQuoteFinancial } from "@/features/originacao/hooks/useSaveQuoteFinancial";
 import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
 import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQuotePartnerOpinion";
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
@@ -108,9 +110,15 @@ function ProposalWizard({
     useSaveQuoteAddress();
   const { mutateAsync: savePartnerOpinion, isPending: savingPartnerOpinion } =
     useSaveQuotePartnerOpinion();
+  const { mutateAsync: saveFinancial, isPending: savingFinancial } =
+    useSaveQuoteFinancial();
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const savingStep =
-    savingRegistration || savingIncome || savingAddress || savingPartnerOpinion;
+    savingRegistration ||
+    savingIncome ||
+    savingAddress ||
+    savingPartnerOpinion ||
+    savingFinancial;
 
   const data = form.watch();
   const { simulation, step } = proposal;
@@ -222,6 +230,22 @@ function ProposalWizard({
           getApiErrorMessage(err, "Não foi possível salvar o parecer."),
           { variant: "destructive" },
         );
+        return;
+      }
+    }
+    if (step === 5) {
+      try {
+        await saveFinancial({
+          quoteId: proposal.id,
+          financial: form.getValues().financial,
+        });
+      } catch (err) {
+        const message = isAxiosError(err)
+          ? getApiErrorMessage(err, "Não foi possível salvar o financeiro.")
+          : err instanceof Error
+            ? err.message
+            : "Não foi possível salvar o financeiro.";
+        showToast(message, { variant: "destructive" });
         return;
       }
     }
