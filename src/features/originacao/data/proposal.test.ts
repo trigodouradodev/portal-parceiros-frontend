@@ -242,6 +242,19 @@ describe("proposal validators", () => {
         howKnows: CustomerRelationshipOrigin.OTHER,
       }),
     ).toBe(false);
+    expect(
+      isPartnerOpinionValid({
+        ...valid,
+        howKnows: CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL,
+      }),
+    ).toBe(false);
+    expect(
+      isPartnerOpinionValid({
+        ...valid,
+        howKnows: CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL,
+        referrerCpf: "529.982.247-25",
+      }),
+    ).toBe(true);
   });
 
   it("rejects guarantor under 18 and accepts adult with address", () => {
