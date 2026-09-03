@@ -2,7 +2,6 @@ import { useFieldArray, useFormContext } from "react-hook-form";
 import { AlertTriangle, Wallet } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { FormInput, FormSelect } from "@/components/ui/rhf-fields";
-import { toSelectOptions } from "@/components/ui/select-option";
 import {
   RepeatableGroup,
   RemovableCard,
@@ -83,7 +82,7 @@ export function FinancialSection() {
               <FormSelect<ProposalFormData>
                 name={`financial.expenses.${index}.category`}
                 placeholder="Categoria"
-                options={toSelectOptions(EXPENSE_CATEGORY_OPTIONS)}
+                options={EXPENSE_CATEGORY_OPTIONS}
               />
             }
           >
@@ -123,7 +122,7 @@ export function FinancialSection() {
                 <FormSelect<ProposalFormData>
                   name={`financial.loans.${index}.institution`}
                   placeholder="Instituição/Credor"
-                  options={toSelectOptions(CREDITOR_INSTITUTION_OPTIONS)}
+                  options={CREDITOR_INSTITUTION_OPTIONS}
                 />
               }
             >
@@ -139,14 +138,14 @@ export function FinancialSection() {
                 <FormSelect<ProposalFormData>
                   name={`financial.loans.${index}.frequency`}
                   label="Frequência"
-                  options={toSelectOptions(LOAN_FREQUENCY_OPTIONS)}
+                  options={LOAN_FREQUENCY_OPTIONS}
                 />
               </div>
               <div className="grid min-w-0 grid-cols-2 gap-2">
                 <FormSelect<ProposalFormData>
                   name={`financial.loans.${index}.category`}
                   label="Categoria"
-                  options={toSelectOptions(LOAN_CATEGORY_OPTIONS)}
+                  options={LOAN_CATEGORY_OPTIONS}
                 />
                 <FormInput<ProposalFormData>
                   name={`financial.loans.${index}.description`}

@@ -7,7 +7,6 @@ import {
   FormTextarea,
   FormYesNo,
 } from "@/components/ui/rhf-fields";
-import { toSelectOptions } from "@/components/ui/select-option";
 import {
   AUREA_REFERRAL_OPTION,
   DOUBTS_RATING,
@@ -29,14 +28,14 @@ export function PartnerOpinionSection() {
       <FormSelect<ProposalFormData>
         name="partnerOpinion.relationshipTime"
         label="Tempo de relacionamento com o cliente"
-        options={toSelectOptions(RELATIONSHIP_TIME_OPTIONS)}
+        options={RELATIONSHIP_TIME_OPTIONS}
         required
       />
 
       <FormSelect<ProposalFormData>
         name="partnerOpinion.howKnows"
         label="Como conhece o cliente"
-        options={toSelectOptions(HOW_KNOWS_CLIENT_OPTIONS)}
+        options={HOW_KNOWS_CLIENT_OPTIONS}
         required
       />
       {howKnows === HOW_KNOWS_OTHER ? (
@@ -61,7 +60,7 @@ export function PartnerOpinionSection() {
       <FormSelect<ProposalFormData>
         name="partnerOpinion.overallRating"
         label="Avaliação geral"
-        options={toSelectOptions(OVERALL_RATING_OPTIONS)}
+        options={OVERALL_RATING_OPTIONS}
         required
       />
       {overallRating === DOUBTS_RATING ? (

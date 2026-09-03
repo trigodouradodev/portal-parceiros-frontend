@@ -15,6 +15,21 @@ import {
   isRegistrationValid,
 } from "@/features/originacao/schemas/proposal-form";
 import type { SimulationSnapshot } from "@/features/originacao/types";
+import {
+  ActivityDuration,
+  AvailableIncomeProof,
+  CreditPurpose,
+  CustomerRelationshipOrigin,
+  EconomicActivityCategory,
+  Gender,
+  GuarantorRelationship,
+  HousingStatus,
+  IncomeSource,
+  MaritalStatus,
+  PartnerAssessment,
+  ResidenceDuration,
+  GovernmentProgram,
+} from "@/services/quotes/quotes.enums";
 
 const simulation: SimulationSnapshot = {
   id: "sim-1",
@@ -56,18 +71,18 @@ describe("proposal validators", () => {
   const validRegistration = {
     ...createEmptyProposalForm().registration,
     isRenewal: false,
-    gender: "Feminino",
+    gender: Gender.FEMALE,
     rg: "1234567",
     occupation: "Vendedora",
-    activityCategories: ["Empregado CLT"],
-    maritalStatus: "Solteiro(a)",
+    activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
+    maritalStatus: MaritalStatus.SINGLE,
     childrenCount: "0",
     householdSize: "2",
-    propertyStatus: "Alugado",
-    residenceTime: "6 meses a 2 anos",
-    governmentPrograms: ["Nenhum"],
+    propertyStatus: HousingStatus.RENTED,
+    residenceTime: ResidenceDuration.SIX_MONTHS_TO_2_YEARS,
+    governmentPrograms: [GovernmentProgram.NONE],
     hasVehicle: false,
-    creditPurpose: "Despesa pessoal",
+    creditPurpose: CreditPurpose.PERSONAL_EXPENSE,
   };
 
   it("requires cadastro fields that the draft PATCH validates", () => {
@@ -91,8 +106,8 @@ describe("proposal validators", () => {
   it("requires extra occupation text and debt details when those options are chosen", () => {
     const base = {
       ...validRegistration,
-      activityCategories: ["Outros"],
-      creditPurpose: "Quitação/troca de dívida",
+      activityCategories: [EconomicActivityCategory.OTHER],
+      creditPurpose: CreditPurpose.DEBT_PAYOFF_OR_REFINANCING,
     };
     expect(isRegistrationValid(base)).toBe(false);
     expect(
@@ -109,13 +124,13 @@ describe("proposal validators", () => {
     expect(
       isRegistrationValid({
         ...validRegistration,
-        maritalStatus: "Casado(a)",
+        maritalStatus: MaritalStatus.MARRIED,
       }),
     ).toBe(false);
     expect(
       isRegistrationValid({
         ...validRegistration,
-        maritalStatus: "Casado(a)",
+        maritalStatus: MaritalStatus.MARRIED,
         spouseCpf: "111.444.777-35",
       }),
     ).toBe(true);
@@ -141,16 +156,16 @@ describe("proposal validators", () => {
     expect(
       isRegistrationValid({
         ...validRegistration,
-        maritalStatus: "Casado(a)",
+        maritalStatus: MaritalStatus.MARRIED,
         spouseCpf: "000.000.000-00",
       }),
     ).toBe(false);
   });
 
   it("treats married statuses as having a spouse", () => {
-    expect(hasSpouse("Casado(a)")).toBe(true);
-    expect(hasSpouse("União estável")).toBe(true);
-    expect(hasSpouse("Solteiro(a)")).toBe(false);
+    expect(hasSpouse(MaritalStatus.MARRIED)).toBe(true);
+    expect(hasSpouse(MaritalStatus.STABLE_UNION)).toBe(true);
+    expect(hasSpouse(MaritalStatus.SINGLE)).toBe(false);
   });
 
   it("validates activity/income required fields", () => {
@@ -159,19 +174,19 @@ describe("proposal validators", () => {
     expect(
       isActivityIncomeValid({
         ...empty,
-        activityTime: "1 a 3 anos",
+        activityTime: ActivityDuration.ONE_TO_3_YEARS,
         monthlyIncome: "3000",
-        incomeSource: "Salário",
-        availableProof: "Holerite",
+        incomeSource: IncomeSource.SALARY,
+        availableProof: AvailableIncomeProof.PAYSLIP,
       }),
     ).toBe(true);
     expect(
       isActivityIncomeValid({
         ...empty,
-        activityTime: "1 a 3 anos",
+        activityTime: ActivityDuration.ONE_TO_3_YEARS,
         monthlyIncome: "3000",
-        incomeSource: "Salário",
-        availableProof: "Holerite",
+        incomeSource: IncomeSource.SALARY,
+        availableProof: AvailableIncomeProof.PAYSLIP,
         hasMultipleSources: true,
       }),
     ).toBe(false);
@@ -209,9 +224,9 @@ describe("proposal validators", () => {
     expect(isPartnerOpinionValid(empty)).toBe(false);
     const valid = {
       ...empty,
-      relationshipTime: "1 a 3 anos",
-      howKnows: "Prospecção presencial",
-      overallRating: "Recomendo",
+      relationshipTime: "1_to_3_years",
+      howKnows: CustomerRelationshipOrigin.IN_PERSON_PROSPECTING,
+      overallRating: PartnerAssessment.RECOMMEND,
       informalDebtSigns: false,
       financialUrgencySigns: false,
       notes: "Cliente conhecido da praça.",
@@ -220,7 +235,12 @@ describe("proposal validators", () => {
     expect(
       isPartnerOpinionValid({ ...valid, referrerCpf: "111.111.111-11" }),
     ).toBe(false);
-    expect(isPartnerOpinionValid({ ...valid, howKnows: "Outro" })).toBe(false);
+    expect(
+      isPartnerOpinionValid({
+        ...valid,
+        howKnows: CustomerRelationshipOrigin.OTHER,
+      }),
+    ).toBe(false);
   });
 
   it("rejects guarantor under 18 and accepts adult with address", () => {
@@ -238,7 +258,7 @@ describe("proposal validators", () => {
       neighborhood: "Bela Vista",
       city: "São Paulo",
       state: "SP",
-      kinship: "Cônjuge",
+      kinship: GuarantorRelationship.SPOUSE,
     };
     expect(isGuarantorValid({ ...adult, birthDate: "2015-01-01" })).toBe(false);
     expect(isGuarantorValid({ ...adult, cpf: "111.111.111-11" })).toBe(false);

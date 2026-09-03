@@ -11,6 +11,15 @@ import {
   type RegistrationData,
 } from "@/features/originacao/data/proposal";
 import { mapRegistrationToApi } from "@/features/originacao/mappers/map-registration-to-api";
+import {
+  CreditPurpose,
+  EconomicActivityCategory,
+  Gender,
+  GovernmentProgram,
+  HousingStatus,
+  MaritalStatus,
+  ResidenceDuration,
+} from "@/services/quotes/quotes.enums";
 
 function completeRegistration(
   overrides: Partial<RegistrationData> = {},
@@ -18,24 +27,24 @@ function completeRegistration(
   return {
     ...createEmptyProposalForm().registration,
     isRenewal: true,
-    gender: "Feminino",
+    gender: Gender.FEMALE,
     rg: "12.345.678-9",
     occupation: "Vendedora",
-    activityCategories: ["Empregado CLT"],
-    maritalStatus: "Solteiro(a)",
+    activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
+    maritalStatus: MaritalStatus.SINGLE,
     childrenCount: "0",
     householdSize: "3",
-    propertyStatus: "Alugado",
-    residenceTime: "6 meses a 2 anos",
-    governmentPrograms: ["Nenhum"],
+    propertyStatus: HousingStatus.RENTED,
+    residenceTime: ResidenceDuration.SIX_MONTHS_TO_2_YEARS,
+    governmentPrograms: [GovernmentProgram.NONE],
     hasVehicle: false,
-    creditPurpose: "Despesa pessoal",
+    creditPurpose: CreditPurpose.PERSONAL_EXPENSE,
     ...overrides,
   };
 }
 
 describe("mapRegistrationToApi", () => {
-  it("maps labels to backend codes and omits unused conditional fields", () => {
+  it("maps form codes to the registration PATCH payload", () => {
     expect(mapRegistrationToApi(completeRegistration())).toEqual({
       isRenegotiation: true,
       gender: "female",
@@ -58,11 +67,11 @@ describe("mapRegistrationToApi", () => {
       mapRegistrationToApi(
         completeRegistration({
           isRenewal: false,
-          maritalStatus: "Casado(a)",
+          maritalStatus: MaritalStatus.MARRIED,
           spouseCpf: "111.444.777-35",
           hasVehicle: true,
           vehicleFinanced: false,
-          activityCategories: ["Outros"],
+          activityCategories: [EconomicActivityCategory.OTHER],
           activityCategoryOther: "Feirante",
         }),
       ),
@@ -89,7 +98,7 @@ describe("mapRegistrationToApi", () => {
   it("does not send debt fields from the cadastro step", () => {
     const payload = mapRegistrationToApi(
       completeRegistration({
-        creditPurpose: "Quitação/troca de dívida",
+        creditPurpose: CreditPurpose.DEBT_PAYOFF_OR_REFINANCING,
         debtDescription: "Cartão",
         debtCreditor: "Banco",
       }),
@@ -100,58 +109,66 @@ describe("mapRegistrationToApi", () => {
   });
 
   it("maps every cadastro option used in the form", () => {
-    for (const label of GENDER_OPTIONS) {
+    for (const option of GENDER_OPTIONS) {
       expect(
-        mapRegistrationToApi(completeRegistration({ gender: label })).gender,
-      ).toBeTruthy();
+        mapRegistrationToApi(completeRegistration({ gender: option.value }))
+          .gender,
+      ).toBe(option.value);
     }
-    for (const label of ACTIVITY_CATEGORY_OPTIONS) {
+    for (const option of ACTIVITY_CATEGORY_OPTIONS) {
       expect(
         mapRegistrationToApi(
           completeRegistration({
-            activityCategories: [label],
-            activityCategoryOther: label === "Outros" ? "Artesanato" : "",
+            activityCategories: [option.value],
+            activityCategoryOther:
+              option.value === EconomicActivityCategory.OTHER
+                ? "Artesanato"
+                : "",
           }),
         ).economicActivityCategories[0],
-      ).toBeTruthy();
+      ).toBe(option.value);
     }
-    for (const label of MARITAL_STATUS_OPTIONS) {
+    for (const option of MARITAL_STATUS_OPTIONS) {
       expect(
         mapRegistrationToApi(
           completeRegistration({
-            maritalStatus: label,
+            maritalStatus: option.value,
             spouseCpf:
-              label === "Casado(a)" || label === "União estável"
+              option.value === MaritalStatus.MARRIED ||
+              option.value === MaritalStatus.STABLE_UNION
                 ? "111.444.777-35"
                 : "",
           }),
         ).maritalStatus,
-      ).toBeTruthy();
+      ).toBe(option.value);
     }
-    for (const label of PROPERTY_STATUS_OPTIONS) {
-      expect(
-        mapRegistrationToApi(completeRegistration({ propertyStatus: label }))
-          .housingStatus,
-      ).toBeTruthy();
-    }
-    for (const label of RESIDENCE_TIME_OPTIONS) {
-      expect(
-        mapRegistrationToApi(completeRegistration({ residenceTime: label }))
-          .residenceDuration,
-      ).toBeTruthy();
-    }
-    for (const label of GOVERNMENT_PROGRAM_OPTIONS) {
+    for (const option of PROPERTY_STATUS_OPTIONS) {
       expect(
         mapRegistrationToApi(
-          completeRegistration({ governmentPrograms: [label] }),
-        ).governmentPrograms[0],
-      ).toBeTruthy();
+          completeRegistration({ propertyStatus: option.value }),
+        ).housingStatus,
+      ).toBe(option.value);
     }
-    for (const label of CREDIT_PURPOSE_OPTIONS) {
+    for (const option of RESIDENCE_TIME_OPTIONS) {
       expect(
-        mapRegistrationToApi(completeRegistration({ creditPurpose: label }))
-          .creditPurpose,
-      ).toBeTruthy();
+        mapRegistrationToApi(
+          completeRegistration({ residenceTime: option.value }),
+        ).residenceDuration,
+      ).toBe(option.value);
+    }
+    for (const option of GOVERNMENT_PROGRAM_OPTIONS) {
+      expect(
+        mapRegistrationToApi(
+          completeRegistration({ governmentPrograms: [option.value] }),
+        ).governmentPrograms[0],
+      ).toBe(option.value);
+    }
+    for (const option of CREDIT_PURPOSE_OPTIONS) {
+      expect(
+        mapRegistrationToApi(
+          completeRegistration({ creditPurpose: option.value }),
+        ).creditPurpose,
+      ).toBe(option.value);
     }
   });
 });

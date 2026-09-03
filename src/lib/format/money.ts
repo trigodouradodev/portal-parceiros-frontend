@@ -8,3 +8,10 @@ export function formatMoneyBrl(value: string, maxDigits = 10): string {
   if (digits === "") return "";
   return fmtBRL(Number(digits) / 100);
 }
+
+/** Converte máscara BRL de volta para number (`R$ 1.500,00` → `1500`). */
+export function parseMoneyBrl(value: string): number {
+  const digits = value.replace(/\D/g, "");
+  if (digits === "") return 0;
+  return Number(digits) / 100;
+}

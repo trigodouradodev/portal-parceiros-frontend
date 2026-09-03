@@ -17,6 +17,7 @@ import { ProposalList } from "@/features/originacao/components/proposta/Proposal
 import { ProposalSuccess } from "@/features/originacao/components/proposta/ProposalSuccess";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
+import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
@@ -99,7 +100,10 @@ function ProposalWizard({
   const { showToast } = useToast();
   const { mutateAsync: saveRegistration, isPending: savingRegistration } =
     useSaveQuoteRegistration();
+  const { mutateAsync: saveIncome, isPending: savingIncome } =
+    useSaveQuoteIncome();
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const savingStep = savingRegistration || savingIncome;
 
   const data = form.watch();
   const { simulation, step } = proposal;
@@ -167,6 +171,20 @@ function ProposalWizard({
       } catch (err) {
         showToast(
           getApiErrorMessage(err, "Não foi possível salvar o cadastro."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 1) {
+      try {
+        await saveIncome({
+          quoteId: proposal.id,
+          activityIncome: form.getValues().activityIncome,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar atividade e renda."),
           { variant: "destructive" },
         );
         return;
@@ -242,7 +260,7 @@ function ProposalWizard({
                 size="pill"
                 className="shrink-0 px-6"
                 onClick={handleBack}
-                disabled={savingRegistration}
+                disabled={savingStep}
               >
                 Voltar
               </Button>
@@ -252,7 +270,7 @@ function ProposalWizard({
               variant="yellow"
               size="pill"
               className="min-w-0 flex-1"
-              disabled={savingRegistration}
+              disabled={savingStep}
             >
               {step === PROPOSAL_STEPS.length - 1
                 ? "Concluir proposta"
