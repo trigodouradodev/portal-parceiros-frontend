@@ -174,8 +174,16 @@ export interface AddressValue {
   state: string;
 }
 
+export interface AddressGeolocation {
+  latitude: number;
+  longitude: number;
+  precision: string;
+}
+
 export interface AddressData extends AddressValue {
   landmark: string;
+  /** Preenchido só após captura via geolocalização; opcional no PATCH. */
+  geolocation?: AddressGeolocation | null;
 }
 
 export interface PartnerOpinionData {
@@ -295,6 +303,7 @@ export function createEmptyProposalForm(): ProposalFormData {
     address: {
       ...EMPTY_ADDRESS,
       landmark: "",
+      geolocation: null,
     },
     partnerOpinion: {
       relationshipTime: "",

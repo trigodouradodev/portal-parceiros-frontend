@@ -6,6 +6,7 @@ import type {
   RegistrationData,
 } from "@/features/originacao/data/proposal";
 import { parseMoneyBrl } from "@/lib/format/money";
+import { roundGeoCoordinate } from "@/services/locations/geo-coords";
 import {
   CreditPurpose,
   CustomerRelationshipOrigin,
@@ -116,7 +117,7 @@ export function mapAddressToPayload(
   data: AddressData,
 ): SaveQuoteAddressPayload {
   const complement = optionalTrimmed(data.complement);
-  return {
+  const payload: SaveQuoteAddressPayload = {
     zipCode: data.zipCode.trim(),
     streetName: data.street.trim(),
     streetNumber: data.number.trim(),
@@ -126,6 +127,16 @@ export function mapAddressToPayload(
     state: data.state.trim(),
     referencePoint: data.landmark.trim(),
   };
+
+  if (data.geolocation) {
+    payload.geolocation = {
+      latitude: roundGeoCoordinate(data.geolocation.latitude),
+      longitude: roundGeoCoordinate(data.geolocation.longitude),
+      precision: data.geolocation.precision.trim(),
+    };
+  }
+
+  return payload;
 }
 
 /** Form Parecer → PATCH .../partner-opinion */

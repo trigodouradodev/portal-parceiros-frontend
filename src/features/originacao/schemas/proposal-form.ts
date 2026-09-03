@@ -167,6 +167,14 @@ export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z
 
 export const addressSchema: z.ZodType<AddressData> = addressCoreSchema.extend({
   landmark: requiredString,
+  geolocation: z
+    .object({
+      latitude: z.number(),
+      longitude: z.number(),
+      precision: z.string().min(1),
+    })
+    .nullable()
+    .optional(),
 });
 
 export const partnerOpinionSchema: z.ZodType<PartnerOpinionData> = z
