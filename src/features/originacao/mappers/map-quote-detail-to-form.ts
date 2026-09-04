@@ -3,6 +3,7 @@ import {
   createEmptyProposalForm,
   type ActivityIncomeData,
   type AddressData,
+  type DocumentAttachmentItem,
   type DocumentsData,
   type ExpenseItem,
   type FinancialData,
@@ -19,6 +20,7 @@ import { formatCpf } from "@/lib/format/tax-id";
 import { SimulationStatus } from "@/services/origination/origination.types";
 import { QuoteDraftStep, QuoteStatus } from "@/services/quotes/quotes.enums";
 import type {
+  QuoteAttachmentListItem,
   QuoteDetail,
   QuoteDocumentationDetail,
   QuoteFinancialDetail,
@@ -176,6 +178,16 @@ function mapFinancial(detail: QuoteFinancialDetail): FinancialData {
   };
 }
 
+function mapAttachment(item: QuoteAttachmentListItem): DocumentAttachmentItem {
+  return {
+    id: item.id,
+    filename: item.filename,
+    ...(item.incomeProofType
+      ? { incomeProofType: item.incomeProofType }
+      : {}),
+  };
+}
+
 function mapDocuments(detail: QuoteDocumentationDetail): DocumentsData {
   const incomeTypes = [
     ...new Set(
@@ -185,11 +197,11 @@ function mapDocuments(detail: QuoteDocumentationDetail): DocumentsData {
     ),
   ];
   return {
-    identification: detail.identificationDocuments.map((item) => item.filename),
-    proofOfResidence: detail.proofOfResidence.map((item) => item.filename),
-    activityPhotos: detail.activityPhotos.map((item) => item.filename),
+    identification: detail.identificationDocuments.map(mapAttachment),
+    proofOfResidence: detail.proofOfResidence.map(mapAttachment),
+    activityPhotos: detail.activityPhotos.map(mapAttachment),
     incomeProofTypes: incomeTypes,
-    incomeProofs: detail.proofOfIncome.map((item) => item.filename),
+    incomeProofs: detail.proofOfIncome.map(mapAttachment),
   };
 }
 

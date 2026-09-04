@@ -131,6 +131,8 @@ describe("mapQuoteDetailToProposal", () => {
     expect(proposal.data.registration.occupation).toBe("Vendedora");
     expect(proposal.data.activityIncome.monthlyIncome).toMatch(/2\.500/);
     expect(proposal.data.address.street).toBe("Av Paulista");
-    expect(proposal.data.documents.identification).toEqual(["rg.pdf"]);
+    expect(proposal.data.documents.identification).toEqual([
+      { id: "att-1", filename: "rg.pdf" },
+    ]);
   });
 });
