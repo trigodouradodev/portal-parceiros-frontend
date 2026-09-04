@@ -5,7 +5,13 @@ import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { OriginacaoTaskHeader } from "@/features/originacao/components/OriginacaoTaskHeader";
 import { originacaoCardClassName } from "@/features/originacao/components/OriginacaoPageFrame";
 import type { ProposalSnapshot } from "@/features/originacao/data/proposal";
+import { hasCallablePhone, openWhatsApp } from "@/lib/contact-actions";
 import { fmtBRL } from "@/lib/utils";
+
+function buildProposalWhatsAppMessage(clientName: string): string {
+  const firstName = clientName.split(" ")[0] ?? clientName;
+  return `Olá, ${firstName}! Sua proposta na Aurea foi criada. Acesse o Portal do Cliente para revisar os dados, dar os consentimentos e concluir a aprovação.`;
+}
 
 export function ProposalSuccess({
   proposal,
@@ -17,6 +23,8 @@ export function ProposalSuccess({
   onLogout?: () => void;
 }) {
   const { simulation } = proposal;
+  const phone = simulation.telephone;
+  const canSendWhatsApp = hasCallablePhone(phone);
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto">
@@ -46,8 +54,9 @@ export function ProposalSuccess({
               size="pill"
               className="w-full py-3.5"
               showExternalIcon
+              disabled={!canSendWhatsApp}
               onClick={() =>
-                alert("Abrirá o WhatsApp com o link do Portal do Cliente.")
+                openWhatsApp(phone, buildProposalWhatsAppMessage(simulation.name))
               }
             >
               Enviar link pelo WhatsApp
