@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuth } from "@/contexts/auth/auth-context";
+import { isNotFoundError, usePartnerProfile } from "@/hooks/usePerformanceData";
 
 function pathToNavTab(pathname: string): NavTab {
   const match = NAV_ITEMS.find(
@@ -21,11 +22,19 @@ export function AppShell() {
   const { logout } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
   const [hideBottomNav, setHideBottomNav] = useState(false);
+  const profileQuery = usePartnerProfile();
+
+  const isNotEnrolled =
+    profileQuery.isError && isNotFoundError(profileQuery.error);
+
+  const navItems = isNotEnrolled
+    ? NAV_ITEMS.filter((item) => item.key !== "desempenho")
+    : NAV_ITEMS;
 
   const activeTab = pathToNavTab(location.pathname);
 
   const handleNavigate = (tab: NavTab) => {
-    const item = NAV_ITEMS.find((nav) => nav.key === tab);
+    const item = navItems.find((nav) => nav.key === tab);
     if (item) {
       navigate(item.path);
     }
@@ -50,7 +59,7 @@ export function AppShell() {
     >
       <AppSidebar
         activeTab={activeTab}
-        items={NAV_ITEMS}
+        items={navItems}
         onNavigate={handleNavigate}
         onRequestLogout={handleRequestLogout}
       />
@@ -67,7 +76,7 @@ export function AppShell() {
       {hideBottomNav ? null : (
         <BottomNav
           activeTab={activeTab}
-          items={NAV_ITEMS}
+          items={navItems}
           onNavigate={handleNavigate}
         />
       )}
