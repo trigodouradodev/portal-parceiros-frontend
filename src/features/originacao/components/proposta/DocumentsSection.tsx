@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { FormChips } from "@/components/ui/rhf-fields";
 import { useToast } from "@/contexts/toast/toast-context";
@@ -15,7 +15,10 @@ import {
   QuoteAttachmentType,
 } from "@/services/quotes/quotes.enums";
 import type { IncomeProofType } from "@/services/quotes/quotes.enums";
-import type { QuoteAttachmentSnapshot } from "@/services/quotes/quotes.types";
+import type {
+  QuoteAttachmentSnapshot,
+  QuoteDocumentationAttachments,
+} from "@/services/quotes/quotes.types";
 
 function toFormAttachment(
   snapshot: QuoteAttachmentSnapshot,
@@ -44,40 +47,50 @@ export function DocumentsSection({ quoteId }: DocumentsSectionProps) {
     (incomeProofTypes[0] as IncomeProofType | undefined) ?? null;
   const loading = attachmentsQuery.isLoading || attachmentsQuery.isFetching;
 
+  const syncAttachmentsToForm = useCallback(
+    (groups: QuoteDocumentationAttachments) => {
+      setValue(
+        "documents.identification",
+        groups.identificationDocuments.map(toFormAttachment),
+        { shouldDirty: false },
+      );
+      setValue(
+        "documents.proofOfResidence",
+        groups.proofOfResidence.map(toFormAttachment),
+        { shouldDirty: false },
+      );
+      setValue(
+        "documents.activityPhotos",
+        groups.activityPhotos.map(toFormAttachment),
+        { shouldDirty: false },
+      );
+      setValue(
+        "documents.incomeProofs",
+        groups.proofOfIncome.map(toFormAttachment),
+        { shouldDirty: false },
+      );
+      const types = [
+        ...new Set(
+          groups.proofOfIncome
+            .map((item) => item.incomeProofType)
+            .filter((value): value is IncomeProofType => Boolean(value)),
+        ),
+      ];
+      if (types.length > 0) {
+        setValue("documents.incomeProofTypes", types, { shouldDirty: false });
+      }
+    },
+    [setValue],
+  );
+
   useEffect(() => {
     if (!attachmentsQuery.isSuccess || !attachmentsQuery.data) return;
-    const groups = attachmentsQuery.data;
-    setValue(
-      "documents.identification",
-      groups.identificationDocuments.map(toFormAttachment),
-      { shouldDirty: false },
-    );
-    setValue(
-      "documents.proofOfResidence",
-      groups.proofOfResidence.map(toFormAttachment),
-      { shouldDirty: false },
-    );
-    setValue(
-      "documents.activityPhotos",
-      groups.activityPhotos.map(toFormAttachment),
-      { shouldDirty: false },
-    );
-    setValue(
-      "documents.incomeProofs",
-      groups.proofOfIncome.map(toFormAttachment),
-      { shouldDirty: false },
-    );
-    const types = [
-      ...new Set(
-        groups.proofOfIncome
-          .map((item) => item.incomeProofType)
-          .filter((value): value is IncomeProofType => Boolean(value)),
-      ),
-    ];
-    if (types.length > 0) {
-      setValue("documents.incomeProofTypes", types, { shouldDirty: false });
-    }
-  }, [attachmentsQuery.data, attachmentsQuery.isSuccess, setValue]);
+    syncAttachmentsToForm(attachmentsQuery.data);
+  }, [
+    attachmentsQuery.data,
+    attachmentsQuery.isSuccess,
+    syncAttachmentsToForm,
+  ]);
 
   useEffect(() => {
     if (!attachmentsQuery.isError) return;

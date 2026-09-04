@@ -146,9 +146,7 @@ export function QuoteAttachmentUpload({
         accept={accept}
         className="hidden"
         disabled={disabled || busy}
-        onChange={(event) => {
-          void handleChange(event);
-        }}
+        onChange={handleChange}
       />
       {files.map((file) => (
         <div
@@ -162,7 +160,7 @@ export function QuoteAttachmentUpload({
           <button
             type="button"
             onClick={() => {
-              void handleRemove(file);
+              handleRemove(file);
             }}
             disabled={busy}
             className="shrink-0 text-success hover:text-success/80 disabled:opacity-50"
