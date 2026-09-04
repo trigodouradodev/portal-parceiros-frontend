@@ -56,7 +56,10 @@ export function ProposalSuccess({
               showExternalIcon
               disabled={!canSendWhatsApp}
               onClick={() =>
-                openWhatsApp(phone, buildProposalWhatsAppMessage(simulation.name))
+                openWhatsApp(
+                  phone,
+                  buildProposalWhatsAppMessage(simulation.name),
+                )
               }
             >
               Enviar link pelo WhatsApp
