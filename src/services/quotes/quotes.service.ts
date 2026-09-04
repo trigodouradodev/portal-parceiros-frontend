@@ -3,7 +3,10 @@ import type {
   CreateDraftQuotePayload,
   ListQuotesQuery,
   QuoteAddressSnapshot,
+  QuoteAttachmentSnapshot,
   QuoteDetail,
+  QuoteDocumentationAttachments,
+  QuoteDocumentationSnapshot,
   QuoteDraftSnapshot,
   QuoteFinancialSnapshot,
   QuoteGuarantorSnapshot,
@@ -18,17 +21,30 @@ import type {
   SaveQuoteIncomePayload,
   SaveQuotePartnerOpinionPayload,
   SaveQuoteRegistrationPayload,
+  UploadQuoteAttachmentInput,
 } from "./quotes.types";
 
 export const quotesKeys = {
   all: ["quotes"] as const,
   draftsRoot: () => [...quotesKeys.all, "drafts"] as const,
   draft: (quoteId: string) => [...quotesKeys.all, "draft", quoteId] as const,
+  attachments: (quoteId: string) =>
+    [...quotesKeys.draft(quoteId), "attachments"] as const,
   listRoot: () => [...quotesKeys.all, "list"] as const,
   list: (query: ListQuotesQuery = {}) =>
     [...quotesKeys.listRoot(), query] as const,
   detail: (quoteId: string) => [...quotesKeys.all, "detail", quoteId] as const,
 };
+
+function toMultipartBody(input: UploadQuoteAttachmentInput): FormData {
+  const body = new FormData();
+  body.append("attachmentType", input.attachmentType);
+  if (input.incomeProofType) {
+    body.append("incomeProofType", input.incomeProofType);
+  }
+  body.append("file", input.file);
+  return body;
+}
 
 export const quotesService = {
   /** GET /quotes */
@@ -129,6 +145,54 @@ export const quotesService = {
     const { data } = await api.patch<QuoteFinancialSnapshot>(
       `/quotes/draft/${quoteId}/financial`,
       payload,
+    );
+    return data;
+  },
+
+  /** POST /quotes/draft/:quoteId/attachments */
+  async uploadAttachment(
+    quoteId: string,
+    input: UploadQuoteAttachmentInput,
+  ): Promise<QuoteAttachmentSnapshot> {
+    const { data } = await api.post<QuoteAttachmentSnapshot>(
+      `/quotes/draft/${quoteId}/attachments`,
+      toMultipartBody(input),
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        transformRequest: [
+          (payload, headers) => {
+            if (payload instanceof FormData) {
+              delete headers["Content-Type"];
+            }
+            return payload;
+          },
+        ],
+      },
+    );
+    return data;
+  },
+
+  /** GET /quotes/draft/:quoteId/attachments */
+  async listAttachments(
+    quoteId: string,
+  ): Promise<QuoteDocumentationAttachments> {
+    const { data } = await api.get<QuoteDocumentationAttachments>(
+      `/quotes/draft/${quoteId}/attachments`,
+    );
+    return data;
+  },
+
+  /** DELETE /quotes/draft/:quoteId/attachments/:attachmentId */
+  async removeAttachment(quoteId: string, attachmentId: string): Promise<void> {
+    await api.delete(`/quotes/draft/${quoteId}/attachments/${attachmentId}`);
+  },
+
+  /** PATCH /quotes/draft/:quoteId/documentation */
+  async completeDocumentation(
+    quoteId: string,
+  ): Promise<QuoteDocumentationSnapshot> {
+    const { data } = await api.patch<QuoteDocumentationSnapshot>(
+      `/quotes/draft/${quoteId}/documentation`,
     );
     return data;
   },

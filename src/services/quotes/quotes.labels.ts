@@ -11,6 +11,7 @@ import {
   GovernmentProgram,
   GuarantorRelationship,
   HousingStatus,
+  IncomeProofType,
   IncomeSource,
   LoanCategory,
   LoanFrequency,
@@ -197,4 +198,12 @@ export const LOAN_CATEGORY_OPTIONS = options([
   [LoanCategory.SAVINGS_GROUP_OR_CONSORTIUM, "Caixa financeira/consórcio"],
   [LoanCategory.LOAN_SHARK, "Agiota"],
   [LoanCategory.OTHER, "Outros"],
+]);
+
+/** Tipos de comprovante no upload de documentação (passo Documentos). */
+export const DOCUMENTATION_INCOME_PROOF_OPTIONS = options([
+  [IncomeProofType.BANK_STATEMENT, "Extrato bancário"],
+  [IncomeProofType.PAYSLIP, "Holerite"],
+  [IncomeProofType.INSS_BENEFIT, "Benefício INSS"],
+  [IncomeProofType.MEI_DAS, "MEI / DAS"],
 ]);
