@@ -5,10 +5,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuth } from "@/contexts/auth/auth-context";
-import {
-  isNotFoundError,
-  usePartnerProfile,
-} from "@/hooks/usePerformanceData";
+import { isNotFoundError, usePartnerProfile } from "@/hooks/usePerformanceData";
 
 function pathToNavTab(pathname: string): NavTab {
   const match = NAV_ITEMS.find(
