@@ -19,12 +19,74 @@ import {
 import { nextWizardStepIndex } from "@/features/originacao/mappers/map-quote-detail-to-form";
 import { QuoteStatus } from "@/services/quotes/quotes.enums";
 import { quotesKeys, quotesService } from "@/services/quotes/quotes.service";
+import type { QuoteListItem } from "@/services/quotes/quotes.types";
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
   return date.toLocaleString("pt-BR");
+}
+
+interface ProposalListItemCardProps {
+  item: QuoteListItem;
+  openingId: string | null;
+  onOpen: (id: string) => void;
+}
+
+function ProposalListItemCard({
+  item,
+  openingId,
+  onOpen,
+}: ProposalListItemCardProps) {
+  const isDraft = item.status === QuoteStatus.DRAFT;
+  const step = nextWizardStepIndex(item.completedSteps);
+  const busy = openingId === item.id;
+
+  return (
+    <OriginacaoSnapshotCard
+      badge={
+        <OriginacaoToneBadge tone={isDraft ? "warning" : "success"}>
+          {isDraft ? "Rascunho" : "Concluída"}
+        </OriginacaoToneBadge>
+      }
+      timestamp={formatTimestamp(item.updatedAt)}
+      name={item.name}
+      amount={item.financeAmount}
+      subtitle={item.productName}
+      cpf={item.document}
+    >
+      {isDraft && item.canEdit ? (
+        <>
+          <OriginacaoProgress
+            value={((step + 1) / PROPOSAL_STEPS.length) * 100}
+          />
+          <p className="text-xs text-muted-foreground">
+            Passo {step + 1} de {PROPOSAL_STEPS.length} · {PROPOSAL_STEPS[step]}
+          </p>
+          <Button
+            variant="outline"
+            size="pillSm"
+            disabled={openingId != null}
+            onClick={() => onOpen(item.id)}
+          >
+            {busy ? <Loader2 size={15} className="animate-spin" /> : null}
+            Continuar preenchimento
+          </Button>
+        </>
+      ) : (
+        <Button
+          variant="ghost"
+          size="pillSm"
+          disabled={openingId != null}
+          onClick={() => onOpen(item.id)}
+        >
+          {busy ? <Loader2 size={15} className="animate-spin" /> : null}
+          Ver proposta
+        </Button>
+      )}
+    </OriginacaoSnapshotCard>
+  );
 }
 
 interface ProposalListProps {
@@ -137,59 +199,14 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
       ) : null}
 
       <div className="flex flex-col gap-3">
-        {items.map((item) => {
-          const isDraft = item.status === QuoteStatus.DRAFT;
-          const step = nextWizardStepIndex(item.completedSteps);
-          const busy = openingId === item.id;
-          return (
-            <OriginacaoSnapshotCard
-              key={item.id}
-              badge={
-                <OriginacaoToneBadge tone={isDraft ? "warning" : "success"}>
-                  {isDraft ? "Rascunho" : "Concluída"}
-                </OriginacaoToneBadge>
-              }
-              timestamp={formatTimestamp(item.updatedAt)}
-              name={item.name}
-              amount={item.financeAmount}
-              subtitle={item.productName}
-              cpf={item.document}
-            >
-              {isDraft && item.canEdit ? (
-                <>
-                  <OriginacaoProgress
-                    value={((step + 1) / PROPOSAL_STEPS.length) * 100}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Passo {step + 1} de {PROPOSAL_STEPS.length} ·{" "}
-                    {PROPOSAL_STEPS[step]}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="pillSm"
-                    disabled={openingId != null}
-                    onClick={() => void handleOpen(item.id)}
-                  >
-                    {busy ? (
-                      <Loader2 size={15} className="animate-spin" />
-                    ) : null}
-                    Continuar preenchimento
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="pillSm"
-                  disabled={openingId != null}
-                  onClick={() => void handleOpen(item.id)}
-                >
-                  {busy ? <Loader2 size={15} className="animate-spin" /> : null}
-                  Ver proposta
-                </Button>
-              )}
-            </OriginacaoSnapshotCard>
-          );
-        })}
+        {items.map((item) => (
+          <ProposalListItemCard
+            key={item.id}
+            item={item}
+            openingId={openingId}
+            onOpen={handleOpen}
+          />
+        ))}
       </div>
 
       {page && page.pagination.totalPages > 1 ? (
