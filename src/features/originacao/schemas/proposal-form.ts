@@ -19,6 +19,7 @@ import {
 } from "@/features/originacao/schemas/birth-date";
 import { isCompleteCep } from "@/features/originacao/utils/format-cep";
 import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
+import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
 
 export const REQUIRED_FIELD_MESSAGE = "Campo obrigatório";
 
@@ -227,12 +228,64 @@ export const guarantorSchema: z.ZodType<GuarantorData> = z.object({
 });
 
 export const documentsSchema: z.ZodType<DocumentsData> = z.object({
-  identification: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
-  proofOfResidence: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
-  activityPhotos: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
-  incomeProofTypes: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
-  incomeProofs: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
+  identification: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        filename: z.string().min(1),
+        incomeProofType: z.string().optional(),
+      }),
+    )
+    .min(1, REQUIRED_FIELD_MESSAGE),
+  proofOfResidence: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        filename: z.string().min(1),
+        incomeProofType: z.string().optional(),
+      }),
+    )
+    .min(1, REQUIRED_FIELD_MESSAGE),
+  activityPhotos: z
+    .array(
+      z.object({
+        id: z.string().min(1),
+        filename: z.string().min(1),
+        incomeProofType: z.string().optional(),
+      }),
+    )
+    .min(1, REQUIRED_FIELD_MESSAGE),
+  incomeProofTypes: z.array(z.string()),
+  incomeProofs: z.array(
+    z.object({
+      id: z.string().min(1),
+      filename: z.string().min(1),
+      incomeProofType: z.string().optional(),
+    }),
+  ),
 });
+
+function documentsSchemaFor(
+  incomeProofRequired: boolean,
+): z.ZodType<DocumentsData> {
+  if (!incomeProofRequired) return documentsSchema;
+  return documentsSchema.superRefine((data, ctx) => {
+    if (data.incomeProofTypes.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["incomeProofTypes"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    }
+    if (data.incomeProofs.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["incomeProofs"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    }
+  });
+}
 
 const STEP_SCHEMAS = [
   null,
@@ -241,7 +294,7 @@ const STEP_SCHEMAS = [
   partnerOpinionSchema,
   guarantorSchema,
   null,
-  documentsSchema,
+  null,
 ] as const;
 
 type StepKey = Exclude<keyof ProposalFormData, "financial">;
@@ -261,6 +314,11 @@ export function parseProposalStep(step: number, data: ProposalFormData) {
     return registrationSchemaFor(data.registration).safeParse(
       data.registration,
     );
+  }
+  if (step === 6) {
+    const incomeProofRequired =
+      data.activityIncome.availableProof !== AvailableIncomeProof.NONE;
+    return documentsSchemaFor(incomeProofRequired).safeParse(data.documents);
   }
   const key = STEP_KEYS[step];
   const schema = STEP_SCHEMAS[step];
@@ -294,6 +352,9 @@ export function isFinancialValid(): boolean {
   return true;
 }
 
-export function isDocumentsValid(data: DocumentsData): boolean {
-  return documentsSchema.safeParse(data).success;
+export function isDocumentsValid(
+  data: DocumentsData,
+  incomeProofRequired = true,
+): boolean {
+  return documentsSchemaFor(incomeProofRequired).safeParse(data).success;
 }

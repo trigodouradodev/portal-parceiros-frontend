@@ -290,12 +290,24 @@ describe("proposal validators", () => {
     expect(isDocumentsValid(empty)).toBe(false);
     expect(
       isDocumentsValid({
-        identification: ["rg.pdf"],
-        proofOfResidence: ["conta.pdf"],
-        activityPhotos: ["fachada.jpg"],
-        incomeProofTypes: ["Holerite"],
-        incomeProofs: ["holerite.pdf"],
+        identification: [{ id: "1", filename: "rg.pdf" }],
+        proofOfResidence: [{ id: "2", filename: "conta.pdf" }],
+        activityPhotos: [{ id: "3", filename: "fachada.jpg" }],
+        incomeProofTypes: ["payslip"],
+        incomeProofs: [{ id: "4", filename: "holerite.pdf" }],
       }),
+    ).toBe(true);
+    expect(
+      isDocumentsValid(
+        {
+          identification: [{ id: "1", filename: "rg.pdf" }],
+          proofOfResidence: [{ id: "2", filename: "conta.pdf" }],
+          activityPhotos: [{ id: "3", filename: "fachada.jpg" }],
+          incomeProofTypes: [],
+          incomeProofs: [],
+        },
+        false,
+      ),
     ).toBe(true);
   });
 });

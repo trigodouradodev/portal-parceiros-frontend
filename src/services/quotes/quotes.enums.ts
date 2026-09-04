@@ -158,6 +158,24 @@ export const GuarantorRelationship = {
 export type GuarantorRelationship =
   (typeof GuarantorRelationship)[keyof typeof GuarantorRelationship];
 
+export const QuoteAttachmentType = {
+  IDENTIFICATION_DOCUMENT: "identification_document",
+  PROOF_OF_RESIDENCE: "proof_of_residence",
+  ACTIVITY_PHOTO: "activity_photo",
+  PROOF_OF_INCOME: "proof_of_income",
+} as const;
+export type QuoteAttachmentType =
+  (typeof QuoteAttachmentType)[keyof typeof QuoteAttachmentType];
+
+export const IncomeProofType = {
+  BANK_STATEMENT: "bank_statement",
+  PAYSLIP: "payslip",
+  INSS_BENEFIT: "inss_benefit",
+  MEI_DAS: "mei_das",
+} as const;
+export type IncomeProofType =
+  (typeof IncomeProofType)[keyof typeof IncomeProofType];
+
 /** Enums do passo Financeiro. */
 export const ExpenseCategory = {
   HOUSING_OR_RENT: "housing_or_rent",
