@@ -300,41 +300,27 @@ export function ChargeTasksTab({
           />
           {scheduledItems
             .filter((item) => item.installment.id !== pinnedInstallmentId)
-            .map((item, index) => {
-              const display = mapOverdueToQueueDisplay(item, index + 1);
-              const canExecuteEarly =
-                canExecuteScheduledEarly(item) && Boolean(item.expireDate);
-              const isExpanded = expandedIds.has(item.installment.id);
-
-              if (canExecuteEarly && item.expireDate && isExpanded) {
-                return (
-                  <ScheduledTaskCard
-                    key={item.installment.id}
-                    display={display}
-                    scheduledDate={item.expireDate}
-                    onOpen={() => onOpen(item)}
-                    onCollapse={() => toggleExpanded(item.installment.id)}
-                    onExecuteNow={() => onExecuteScheduledEarly(item)}
-                  />
-                );
-              }
-
-              return (
+            .map((item, index) =>
+              canExecuteScheduledEarly(item) && item.expireDate ? (
+                <ScheduledTaskCard
+                  key={item.installment.id}
+                  item={item}
+                  position={index + 1}
+                  highlighted={item.installment.id === highlightedInstallmentId}
+                  onOpen={() => onOpen(item)}
+                  onExecuteNow={() => onExecuteScheduledEarly(item)}
+                />
+              ) : (
                 <ChargeQueueCompactRow
                   key={item.installment.id}
-                  display={display}
-                  locked={!canExecuteEarly}
-                  expandable={canExecuteEarly}
+                  display={mapOverdueToQueueDisplay(item, index + 1)}
+                  locked
                   installmentId={item.installment.id}
                   highlighted={item.installment.id === highlightedInstallmentId}
-                  onOpen={() =>
-                    canExecuteEarly
-                      ? toggleExpanded(item.installment.id)
-                      : onOpen(item)
-                  }
+                  onOpen={() => onOpen(item)}
                 />
-              );
-            })}
+              ),
+            )}
         </section>
       )}
 

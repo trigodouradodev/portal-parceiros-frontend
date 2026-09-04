@@ -73,16 +73,6 @@ export function DashboardPage() {
   const { setActionData } = useActionContext();
   const canInteractWithTask = useTaskInteractionPermission();
   const canExecuteScheduledEarly = useScheduledEarlyExecutionPermission();
-  const canExecuteScheduledEarlyItem = useCallback(
-    (item: OverdueCollectionItem) =>
-      canExecuteScheduledEarly({
-        isActive: item.isActive,
-        assignedTo: item.assignedTo,
-        expireDate: item.expireDate,
-        status: item.task?.status,
-      }),
-    [canExecuteScheduledEarly],
-  );
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
@@ -278,7 +268,7 @@ export function DashboardPage() {
     options?: { allowScheduledEarly?: boolean },
   ) => {
     const executingScheduledEarly =
-      options?.allowScheduledEarly && canExecuteScheduledEarlyItem(item);
+      options?.allowScheduledEarly && canExecuteScheduledEarly(item);
 
     if (
       !executingScheduledEarly &&
@@ -556,7 +546,7 @@ export function DashboardPage() {
           onPostpone={handlePostpone}
           onRescheduleVisit={handleRescheduleVisit}
           onExecuteScheduledEarly={handleExecuteScheduledEarly}
-          canExecuteScheduledEarly={canExecuteScheduledEarlyItem}
+          canExecuteScheduledEarly={canExecuteScheduledEarly}
           isPostponing={postponeTask.isPending}
           isRescheduling={rescheduleTask.isPending}
           highlightedInstallmentId={highlightedInstallmentId}

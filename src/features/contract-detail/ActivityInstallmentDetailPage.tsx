@@ -66,12 +66,7 @@ export function ActivityInstallmentDetailPage() {
   const sourceItem = isOverdueCollectionItem(locationState?.item)
     ? locationState.item
     : undefined;
-  const isEarlyScheduledExecution = canExecuteScheduledEarly({
-    isActive: sourceItem?.isActive,
-    assignedTo: sourceItem?.assignedTo,
-    expireDate: sourceItem?.expireDate,
-    status: sourceItem?.task?.status,
-  });
+  const isEarlyScheduledExecution = canExecuteScheduledEarly(sourceItem);
   const canRegisterAction =
     canInteractWithTask(sourceItem) || isEarlyScheduledExecution;
   const installmentDetailQuery = useInstallmentDetail(installmentId);

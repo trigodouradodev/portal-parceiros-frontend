@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { isAfter, isValid, parseISO, startOfDay } from "date-fns";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { ActivityTaskStatus } from "@/services/activities/activity.enums";
+import type { ActivityTaskSummary } from "@/services/dashboard/dashboard.types";
 
 export interface TaskInteractionCandidate {
   isActive?: boolean;
@@ -9,8 +10,8 @@ export interface TaskInteractionCandidate {
 }
 
 export interface ScheduledEarlyExecutionCandidate extends TaskInteractionCandidate {
-  status?: string;
   expireDate?: string;
+  task?: Pick<ActivityTaskSummary, "status"> | null;
 }
 
 export function canInteractWithTask(
@@ -26,21 +27,21 @@ export function canInteractWithTask(
  * tarefa para as demais ações da fila.
  */
 export function canExecuteScheduledTaskEarly(
-  task: ScheduledEarlyExecutionCandidate | null | undefined,
+  item: ScheduledEarlyExecutionCandidate | null | undefined,
   currentUserId?: string,
   referenceDate = new Date(),
 ) {
   if (
-    !task ||
-    task.isActive !== false ||
-    task.status !== ActivityTaskStatus.PENDING ||
-    task.assignedTo?.id !== currentUserId ||
-    !task.expireDate
+    !item ||
+    item.isActive !== false ||
+    item.task?.status !== ActivityTaskStatus.PENDING ||
+    item.assignedTo?.id !== currentUserId ||
+    !item.expireDate
   ) {
     return false;
   }
 
-  const scheduledDate = parseISO(task.expireDate);
+  const scheduledDate = parseISO(item.expireDate);
   return (
     isValid(scheduledDate) &&
     isAfter(startOfDay(scheduledDate), startOfDay(referenceDate))
@@ -65,8 +66,8 @@ export function useScheduledEarlyExecutionPermission() {
   const { user } = useAuth();
 
   return useCallback(
-    (task: ScheduledEarlyExecutionCandidate | null | undefined) =>
-      canExecuteScheduledTaskEarly(task, user?.id),
+    (item: ScheduledEarlyExecutionCandidate | null | undefined) =>
+      canExecuteScheduledTaskEarly(item, user?.id),
     [user?.id],
   );
 }

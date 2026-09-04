@@ -34,9 +34,9 @@ describe("canExecuteScheduledTaskEarly", () => {
       canExecuteScheduledTaskEarly(
         {
           isActive: false,
-          status: "pending",
           expireDate: "2026-09-09",
           assignedTo: { id: "user-1" },
+          task: { status: "pending" },
         },
         "user-1",
         today,
@@ -49,39 +49,39 @@ describe("canExecuteScheduledTaskEarly", () => {
       "is active",
       {
         isActive: true,
-        status: "pending",
         expireDate: "2026-09-09",
         assignedTo: { id: "user-1" },
+        task: { status: "pending" },
       },
     ],
     [
       "is from another user",
       {
         isActive: false,
-        status: "pending",
         expireDate: "2026-09-09",
         assignedTo: { id: "user-2" },
+        task: { status: "pending" },
       },
     ],
     [
       "is no longer pending",
       {
         isActive: false,
-        status: "completed",
         expireDate: "2026-09-09",
         assignedTo: { id: "user-1" },
+        task: { status: "completed" },
       },
     ],
     [
       "is due today",
       {
         isActive: false,
-        status: "pending",
         expireDate: "2026-09-04",
         assignedTo: { id: "user-1" },
+        task: { status: "pending" },
       },
     ],
-  ])("does not permit a task that %s", (_reason, task) => {
+  ] as const)("does not permit a task that %s", (_reason, task) => {
     expect(canExecuteScheduledTaskEarly(task, "user-1", today)).toBe(false);
   });
 });

@@ -1,28 +1,49 @@
+import { useMemo, useState } from "react";
 import { CalendarDays, ChevronUp, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ChargeQueueCompactRow } from "@/features/dashboard/components/task-cards/ChargeQueueCompactRow";
 import { InitialsAvatar } from "@/features/dashboard/components/task-cards/InitialsAvatar";
-import type { ChargeQueueDisplayItem } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
+import { mapOverdueToQueueDisplay } from "@/features/dashboard/mappers/map-overdue-to-queue-display";
 import { getInitials } from "@/lib/user-display";
 import { fmtBRL } from "@/lib/utils";
 import { formatDate } from "@/lib/format/date";
+import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 interface ScheduledTaskCardProps {
-  display: ChargeQueueDisplayItem;
-  scheduledDate: string;
+  item: OverdueCollectionItem;
+  position: number;
+  highlighted?: boolean;
   onOpen: () => void;
-  onCollapse: () => void;
   onExecuteNow: () => void;
 }
 
 /** Tarefa futura que pode ser executada antecipadamente pelo responsável. */
 export function ScheduledTaskCard({
-  display,
-  scheduledDate,
+  item,
+  position,
+  highlighted = false,
   onOpen,
-  onCollapse,
   onExecuteNow,
 }: ScheduledTaskCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const display = useMemo(
+    () => mapOverdueToQueueDisplay(item, position),
+    [item, position],
+  );
   const { client, contractLabel } = display;
+
+  if (!isExpanded) {
+    return (
+      <ChargeQueueCompactRow
+        display={display}
+        locked={false}
+        expandable
+        installmentId={item.installment.id}
+        highlighted={highlighted}
+        onOpen={() => setIsExpanded(true)}
+      />
+    );
+  }
 
   return (
     <div className="rounded-xl border border-[#B8DED2] bg-[#F5FBF8] p-3">
@@ -53,7 +74,7 @@ export function ScheduledTaskCard({
             size="icon"
             variant="ghost"
             className="size-7 text-brand-navy/60"
-            onClick={onCollapse}
+            onClick={() => setIsExpanded(false)}
             aria-label="Recolher tarefa agendada"
           >
             <ChevronUp size={15} />
@@ -63,7 +84,7 @@ export function ScheduledTaskCard({
 
       <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#0F6E56]">
         <CalendarDays size={13} />
-        Agendada para {formatDate(scheduledDate)}
+        Agendada para {item.expireDate ? formatDate(item.expireDate) : "—"}
       </div>
 
       <Button
