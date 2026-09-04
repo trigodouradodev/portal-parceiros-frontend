@@ -182,9 +182,7 @@ function mapAttachment(item: QuoteAttachmentListItem): DocumentAttachmentItem {
   return {
     id: item.id,
     filename: item.filename,
-    ...(item.incomeProofType
-      ? { incomeProofType: item.incomeProofType }
-      : {}),
+    ...(item.incomeProofType ? { incomeProofType: item.incomeProofType } : {}),
   };
 }
 
