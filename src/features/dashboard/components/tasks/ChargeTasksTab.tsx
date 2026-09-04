@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import {
   ChargeQueueCompactRow,
   DoneCard,
+  ScheduledTaskCard,
 } from "@/features/dashboard/components/task-cards";
 import { ChargeQueueHeroCard } from "@/features/dashboard/components/task-cards/ChargeQueueHeroCard";
 import { ChargeQueueSectionHeader } from "@/features/dashboard/components/tasks/ChargeQueueSectionHeader";
@@ -32,6 +33,8 @@ interface ChargeTasksTabProps {
     item: OverdueCollectionItem,
     date: string,
   ) => boolean | Promise<boolean>;
+  onExecuteScheduledEarly: (item: OverdueCollectionItem) => void;
+  canExecuteScheduledEarly: (item: OverdueCollectionItem) => boolean;
   isPostponing?: boolean;
   isRescheduling?: boolean;
   hasNextPage: boolean;
@@ -82,6 +85,8 @@ export function ChargeTasksTab({
   onVisit,
   onPostpone,
   onRescheduleVisit,
+  onExecuteScheduledEarly,
+  canExecuteScheduledEarly,
   isPostponing = false,
   isRescheduling = false,
   hasNextPage,
@@ -295,16 +300,27 @@ export function ChargeTasksTab({
           />
           {scheduledItems
             .filter((item) => item.installment.id !== pinnedInstallmentId)
-            .map((item, index) => (
-              <ChargeQueueCompactRow
-                key={item.installment.id}
-                display={mapOverdueToQueueDisplay(item, index + 1)}
-                locked
-                installmentId={item.installment.id}
-                highlighted={item.installment.id === highlightedInstallmentId}
-                onOpen={() => onOpen(item)}
-              />
-            ))}
+            .map((item, index) =>
+              canExecuteScheduledEarly(item) && item.expireDate ? (
+                <ScheduledTaskCard
+                  key={item.installment.id}
+                  item={item}
+                  position={index + 1}
+                  highlighted={item.installment.id === highlightedInstallmentId}
+                  onOpen={() => onOpen(item)}
+                  onExecuteNow={() => onExecuteScheduledEarly(item)}
+                />
+              ) : (
+                <ChargeQueueCompactRow
+                  key={item.installment.id}
+                  display={mapOverdueToQueueDisplay(item, index + 1)}
+                  locked
+                  installmentId={item.installment.id}
+                  highlighted={item.installment.id === highlightedInstallmentId}
+                  onOpen={() => onOpen(item)}
+                />
+              ),
+            )}
         </section>
       )}
 

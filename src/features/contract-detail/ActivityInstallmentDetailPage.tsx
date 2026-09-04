@@ -16,7 +16,10 @@ import {
   getChargeRegisterPath,
 } from "@/features/dashboard/utils/launch-action";
 import { useInstallmentDetail } from "@/hooks/useInstallmentDetail";
-import { useTaskInteractionPermission } from "@/hooks/useTaskInteractionPermission";
+import {
+  useScheduledEarlyExecutionPermission,
+  useTaskInteractionPermission,
+} from "@/hooks/useTaskInteractionPermission";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
 
 function isOverdueCollectionItem(
@@ -57,12 +60,15 @@ export function ActivityInstallmentDetailPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const canInteractWithTask = useTaskInteractionPermission();
+  const canExecuteScheduledEarly = useScheduledEarlyExecutionPermission();
   const locationState =
     location.state as ActivityInstallmentLocationState | null;
   const sourceItem = isOverdueCollectionItem(locationState?.item)
     ? locationState.item
     : undefined;
-  const canRegisterAction = canInteractWithTask(sourceItem);
+  const isEarlyScheduledExecution = canExecuteScheduledEarly(sourceItem);
+  const canRegisterAction =
+    canInteractWithTask(sourceItem) || isEarlyScheduledExecution;
   const installmentDetailQuery = useInstallmentDetail(installmentId);
 
   const detail = installmentDetailQuery.data
@@ -149,6 +155,9 @@ export function ActivityInstallmentDetailPage() {
                 onRegisterAction={handleRegisterAction}
                 showAction={canRegisterAction}
                 title="Cobrança"
+                actionLabel={
+                  isEarlyScheduledExecution ? "Executar agora" : undefined
+                }
               />
             </div>
           </div>
@@ -159,6 +168,9 @@ export function ActivityInstallmentDetailPage() {
               onRegisterAction={handleRegisterAction}
               showAction={canRegisterAction}
               title="Cobrança"
+              actionLabel={
+                isEarlyScheduledExecution ? "Executar agora" : undefined
+              }
             />
           </div>
         </div>
