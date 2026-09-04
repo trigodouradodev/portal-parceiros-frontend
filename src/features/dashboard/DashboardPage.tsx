@@ -32,7 +32,10 @@ import {
   useSubordinates,
   useTodayQueueInfinite,
 } from "@/hooks/useActivities";
-import { useTaskInteractionPermission } from "@/hooks/useTaskInteractionPermission";
+import {
+  useScheduledEarlyExecutionPermission,
+  useTaskInteractionPermission,
+} from "@/hooks/useTaskInteractionPermission";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
 import type { OverdueCollectionItem } from "@/services/dashboard/dashboard.types";
@@ -69,6 +72,17 @@ export function DashboardPage() {
   const location = useLocation();
   const { setActionData } = useActionContext();
   const canInteractWithTask = useTaskInteractionPermission();
+  const canExecuteScheduledEarly = useScheduledEarlyExecutionPermission();
+  const canExecuteScheduledEarlyItem = useCallback(
+    (item: OverdueCollectionItem) =>
+      canExecuteScheduledEarly({
+        isActive: item.isActive,
+        assignedTo: item.assignedTo,
+        expireDate: item.expireDate,
+        status: item.task?.status,
+      }),
+    [canExecuteScheduledEarly],
+  );
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
@@ -261,8 +275,15 @@ export function DashboardPage() {
   const launchChargeAction = async (
     item: OverdueCollectionItem,
     contactType?: PreventiveContactType,
+    options?: { allowScheduledEarly?: boolean },
   ) => {
-    if (isChargeQueueItemBlocked(chargeQueueView, item)) {
+    const executingScheduledEarly =
+      options?.allowScheduledEarly && canExecuteScheduledEarlyItem(item);
+
+    if (
+      !executingScheduledEarly &&
+      isChargeQueueItemBlocked(chargeQueueView, item)
+    ) {
       showToast(
         "Esta tarefa está bloqueada. Complete as tarefas do segmento atual (mais prioritário) para liberá-la.",
         {
@@ -313,6 +334,10 @@ export function DashboardPage() {
 
   const handleChargeAction = (item: OverdueCollectionItem) => {
     launchChargeAction(item);
+  };
+
+  const handleExecuteScheduledEarly = (item: OverdueCollectionItem) => {
+    launchChargeAction(item, undefined, { allowScheduledEarly: true });
   };
 
   const handleChargeOpen = (item: OverdueCollectionItem) => {
@@ -530,6 +555,8 @@ export function DashboardPage() {
           onVisit={handleChargeVisit}
           onPostpone={handlePostpone}
           onRescheduleVisit={handleRescheduleVisit}
+          onExecuteScheduledEarly={handleExecuteScheduledEarly}
+          canExecuteScheduledEarly={canExecuteScheduledEarlyItem}
           isPostponing={postponeTask.isPending}
           isRescheduling={rescheduleTask.isPending}
           highlightedInstallmentId={highlightedInstallmentId}
