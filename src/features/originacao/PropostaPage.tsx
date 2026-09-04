@@ -23,7 +23,10 @@ import { useSaveQuoteGuarantor } from "@/features/originacao/hooks/useSaveQuoteG
 import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
 import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQuotePartnerOpinion";
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
-import { useCompleteQuoteDocumentation } from "@/features/originacao/hooks/useQuoteDocumentation";
+import {
+  useCompleteQuoteDocumentation,
+  useSubmitQuoteDraft,
+} from "@/features/originacao/hooks/useQuoteDocumentation";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
@@ -130,6 +133,8 @@ function ProposalWizard({
     mutateAsync: completeDocumentation,
     isPending: completingDocumentation,
   } = useCompleteQuoteDocumentation();
+  const { mutateAsync: submitDraft, isPending: submittingDraft } =
+    useSubmitQuoteDraft();
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const savingStep =
     savingRegistration ||
@@ -138,7 +143,8 @@ function ProposalWizard({
     savingPartnerOpinion ||
     savingGuarantor ||
     savingFinancial ||
-    completingDocumentation;
+    completingDocumentation ||
+    submittingDraft;
 
   const data = form.watch();
   const { simulation, step } = proposal;
@@ -288,9 +294,10 @@ function ProposalWizard({
     if (step === 6) {
       try {
         await completeDocumentation(proposal.id);
+        await submitDraft(proposal.id);
       } catch (err) {
         showToast(
-          getApiErrorMessage(err, "Não foi possível concluir a documentação."),
+          getApiErrorMessage(err, "Não foi possível concluir a proposta."),
           { variant: "destructive" },
         );
         return;
