@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { Lock } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -15,9 +14,7 @@ import type { OriginacaoTab } from "@/features/originacao/types";
 function OriginacaoLayout() {
   const { onMobileLogout, setHideBottomNav } =
     useOutletContext<AppShellOutletContext>();
-  const { activeTab, setActiveTab, simulations, openProposalId } =
-    useOriginacao();
-  const proposalLocked = simulations.length === 0;
+  const { activeTab, setActiveTab, openProposalId } = useOriginacao();
   const focusedProposal = Boolean(openProposalId);
 
   useEffect(() => {
@@ -26,7 +23,6 @@ function OriginacaoLayout() {
   }, [focusedProposal, setHideBottomNav]);
 
   function goTo(tab: string) {
-    if (tab === "proposal" && proposalLocked) return;
     setActiveTab(tab as OriginacaoTab);
   }
 
@@ -50,19 +46,7 @@ function OriginacaoLayout() {
             <TabsList className="md:w-[26rem]">
               <TabsTrigger value="eligibility">Elegibilidade</TabsTrigger>
               <TabsTrigger value="simulation">Simulação</TabsTrigger>
-              <TabsTrigger
-                value="proposal"
-                disabled={proposalLocked}
-                title={
-                  proposalLocked
-                    ? "Conclua uma simulação para liberar a proposta"
-                    : undefined
-                }
-                className="disabled:cursor-not-allowed disabled:opacity-100 disabled:text-muted-foreground/50"
-              >
-                {proposalLocked ? <Lock size={12} aria-hidden /> : null}
-                Proposta
-              </TabsTrigger>
+              <TabsTrigger value="proposal">Proposta</TabsTrigger>
             </TabsList>
           </div>
         )}

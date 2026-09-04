@@ -1,8 +1,10 @@
 import { api } from "@/lib/api/axios";
 import type {
   CreateDraftQuotePayload,
+  ListQuotesQuery,
   QuoteAddressSnapshot,
   QuoteAttachmentSnapshot,
+  QuoteDetail,
   QuoteDocumentationAttachments,
   QuoteDocumentationSnapshot,
   QuoteDraftSnapshot,
@@ -11,6 +13,7 @@ import type {
   QuoteIncomeSnapshot,
   QuotePartnerOpinionSnapshot,
   QuoteRegistrationSnapshot,
+  QuotesPage,
   QuoteStatusResponse,
   SaveQuoteAddressPayload,
   SaveQuoteFinancialPayload,
@@ -27,6 +30,10 @@ export const quotesKeys = {
   draft: (quoteId: string) => [...quotesKeys.all, "draft", quoteId] as const,
   attachments: (quoteId: string) =>
     [...quotesKeys.draft(quoteId), "attachments"] as const,
+  listRoot: () => [...quotesKeys.all, "list"] as const,
+  list: (query: ListQuotesQuery = {}) =>
+    [...quotesKeys.listRoot(), query] as const,
+  detail: (quoteId: string) => [...quotesKeys.all, "detail", quoteId] as const,
 };
 
 function toMultipartBody(input: UploadQuoteAttachmentInput): FormData {
@@ -40,6 +47,25 @@ function toMultipartBody(input: UploadQuoteAttachmentInput): FormData {
 }
 
 export const quotesService = {
+  /** GET /quotes */
+  async list(query: ListQuotesQuery = {}): Promise<QuotesPage> {
+    const { data } = await api.get<QuotesPage>("/quotes", {
+      params: {
+        page: query.page ?? 1,
+        limit: query.limit ?? 30,
+        ...(query.search ? { search: query.search } : {}),
+        ...(query.status ? { status: query.status } : {}),
+      },
+    });
+    return data;
+  },
+
+  /** GET /quotes/:quoteId */
+  async getById(quoteId: string): Promise<QuoteDetail> {
+    const { data } = await api.get<QuoteDetail>(`/quotes/${quoteId}`);
+    return data;
+  },
+
   /** POST /quotes/draft */
   async createDraft(
     payload: CreateDraftQuotePayload,

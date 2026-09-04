@@ -256,6 +256,8 @@ export interface ProposalSnapshot {
   createdAt: string;
   updatedAt: string;
   status: ProposalStatus;
+  /** Indica se o usuário autenticado pode editar (API `canEdit`). */
+  canEdit: boolean;
   simulation: SimulationSnapshot;
   step: number;
   stepValid: boolean[];
@@ -348,6 +350,7 @@ export function createProposalFromSimulation(
     createdAt,
     updatedAt: createdAt,
     status: "draft",
+    canEdit: true,
     simulation,
     step: 0,
     stepValid: Array(PROPOSAL_STEPS.length).fill(false),

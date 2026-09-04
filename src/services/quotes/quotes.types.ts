@@ -252,3 +252,160 @@ export interface QuoteStatusResponse {
   status: QuoteStatus;
   updatedAt: string;
 }
+
+export interface QuoteConsultantSummary {
+  id: string;
+  name: string;
+}
+
+export interface QuoteListItem {
+  id: string;
+  simulationId: string | null;
+  status: string;
+  name: string;
+  document: string;
+  productId: string;
+  productName: string;
+  financeAmount: number;
+  consultant: QuoteConsultantSummary;
+  completedSteps: QuoteDraftStep[];
+  canEdit: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface QuotesPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+}
+
+export interface QuotesPage {
+  items: QuoteListItem[];
+  pagination: QuotesPagination;
+}
+
+export interface ListQuotesQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+}
+
+export interface QuoteRegistrationDetail {
+  isRenegotiation: boolean;
+  gender: Gender | null;
+  secondaryDocument: string | null;
+  profession: string;
+  economicActivityCategories: EconomicActivityCategory[];
+  economicActivityOther: string | null;
+  maritalStatus: MaritalStatus | null;
+  spouseDocument: string | null;
+  childrenCount: number | null;
+  householdMembers: number | null;
+  housingStatus: HousingStatus | null;
+  residenceDuration: ResidenceDuration | null;
+  governmentPrograms: GovernmentProgram[];
+  ownsVehicle: boolean | null;
+  vehicleFinanced: boolean | null;
+  creditPurpose: CreditPurpose | null;
+}
+
+export interface QuoteIncomeDetail {
+  businessDocument: string | null;
+  activityDuration: ActivityDuration | null;
+  declaredMonthlyIncome: number;
+  incomeSource: IncomeSource | null;
+  hasMultipleIncomeSources: boolean | null;
+  secondaryIncome: number | null;
+  availableIncomeProof: AvailableIncomeProof | null;
+}
+
+export interface QuoteAddressDetail {
+  zipCode: string;
+  streetName: string;
+  streetNumber: string;
+  streetComplement: string;
+  streetDistrict: string;
+  city: string;
+  state: string | null;
+  referencePoint: string | null;
+  geolocation: {
+    latitude: number;
+    longitude: number;
+    precision: string;
+  } | null;
+}
+
+export interface QuotePartnerOpinionDetail {
+  relationshipDuration: CustomerRelationshipDuration | null;
+  relationshipOrigin: CustomerRelationshipOrigin | null;
+  relationshipOriginOther: string | null;
+  referrerDocument: string | null;
+  assessment: PartnerAssessment | null;
+  hasInformalDebtSigns: boolean | null;
+  hasFinancialUrgencySigns: boolean | null;
+  opinion: string | null;
+}
+
+export interface QuoteGuarantorDetail {
+  name: string;
+  document: string;
+  birthDate: string;
+  email: string;
+  telephone: string;
+  address: {
+    zipCode: string;
+    streetName: string;
+    streetNumber: string;
+    streetComplement: string;
+    streetDistrict: string;
+    city: string;
+    state: string | null;
+  };
+  relationship: GuarantorRelationship | null;
+}
+
+export interface QuoteFinancialDetail {
+  expenses: QuoteExpensePayload[];
+  loans: QuoteLoanPayload[];
+}
+
+export interface QuoteAttachmentListItem {
+  id: string;
+  attachmentType: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  createdAt: string;
+  incomeProofType?: string;
+  signedUrl?: string;
+}
+
+export interface QuoteDocumentationDetail {
+  identificationDocuments: QuoteAttachmentListItem[];
+  proofOfResidence: QuoteAttachmentListItem[];
+  activityPhotos: QuoteAttachmentListItem[];
+  proofOfIncome: QuoteAttachmentListItem[];
+}
+
+export interface QuoteDetail extends QuoteListItem {
+  partyId: string | null;
+  birthDate: string | null;
+  email: string;
+  telephone: string;
+  interestRate: number | null;
+  installmentNumbers: number;
+  firstInstallmentDate: string;
+  installmentAmount: number | null;
+  totalAmountOwed: number | null;
+  registration: QuoteRegistrationDetail;
+  income: QuoteIncomeDetail;
+  address: QuoteAddressDetail;
+  partnerOpinion: QuotePartnerOpinionDetail;
+  guarantor: QuoteGuarantorDetail | null;
+  financial: QuoteFinancialDetail;
+  documentation: QuoteDocumentationDetail;
+}
