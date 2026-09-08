@@ -1,8 +1,12 @@
+import { CircleHelp } from "lucide-react";
 import { AureaLogo } from "@/components/brand/AureaLogo";
 import { LogoutAvatarButton } from "@/components/layout/LogoutAvatarButton";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getFirstName, getGreeting, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
+
+/** Manual "Primeiros Passos no Portal", servido como asset estático (public/ajuda). */
+const HELP_MANUAL_URL = "/ajuda/primeiros-passos.html";
 
 interface PageHeaderProps {
   subtitle?: string;
@@ -43,15 +47,25 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
             <p className="mt-0.5 text-sm text-brand-navy/60">{subtitle}</p>
           )}
         </div>
-        {onLogout ? (
-          <div className="mt-1 flex items-center gap-3">
+        <div className="mt-1 flex items-center gap-2">
+          <a
+            href={HELP_MANUAL_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-brand-navy/70 transition-colors hover:bg-brand-navy/10 hover:text-brand-navy"
+            aria-label="Ajuda: primeiros passos no Portal"
+            title="Ajuda"
+          >
+            <CircleHelp size={20} />
+          </a>
+          {onLogout ? (
             <LogoutAvatarButton
               initials={getInitials(displayName)}
               onLogout={onLogout}
               tone="onYellow"
             />
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </div>
   );

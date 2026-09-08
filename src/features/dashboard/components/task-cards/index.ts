@@ -10,3 +10,4 @@ export { HeroPrimaryActions } from "./HeroPrimaryActions";
 export { VisitSecondaryActions } from "./VisitSecondaryActions";
 export { RescheduledVisitBadge } from "./RescheduledVisitBadge";
 export { DoneCard } from "./DoneCard";
+export { ScheduledTaskCard } from "./ScheduledTaskCard";
