@@ -2,16 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QuoteAttachmentType } from "@/services/quotes/quotes.enums";
 import { quotesService } from "@/services/quotes/quotes.service";
 
-const { post, get, deleteFn, patch } = vi.hoisted(() => ({
+const { post, get, deleteFn, patch, put } = vi.hoisted(() => ({
   post: vi.fn(),
   get: vi.fn(),
   deleteFn: vi.fn(),
   patch: vi.fn(),
+  put: vi.fn(),
 }));
 
 vi.mock("@/lib/api/axios", () => ({
-  api: { post, get, delete: deleteFn, patch },
-  default: { post, get, delete: deleteFn, patch },
+  api: { post, get, delete: deleteFn, patch, put },
+  default: { post, get, delete: deleteFn, patch, put },
 }));
 
 beforeEach(() => {
@@ -19,6 +20,7 @@ beforeEach(() => {
   get.mockReset();
   deleteFn.mockReset();
   patch.mockReset();
+  put.mockReset();
 });
 
 afterEach(() => {
@@ -78,5 +80,22 @@ describe("quotesService documentation", () => {
 
     await quotesService.completeDocumentation("quote-1");
     expect(patch).toHaveBeenCalledWith("/quotes/draft/quote-1/documentation");
+  });
+
+  it("submits draft via PUT", async () => {
+    put.mockResolvedValue({
+      data: {
+        id: "quote-1",
+        status: "client_review",
+        updatedAt: "2026-09-03T12:00:00.000Z",
+      },
+    });
+
+    await expect(quotesService.submitDraft("quote-1")).resolves.toEqual({
+      id: "quote-1",
+      status: "client_review",
+      updatedAt: "2026-09-03T12:00:00.000Z",
+    });
+    expect(put).toHaveBeenCalledWith("/quotes/draft/quote-1/submit");
   });
 });
