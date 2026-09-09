@@ -8,6 +8,7 @@ import {
   EconomicActivityCategory,
   Gender,
   GovernmentProgram,
+  GuarantorRelationship,
   HousingStatus,
   MaritalStatus,
   QuoteDraftStep,
@@ -134,5 +135,31 @@ describe("mapQuoteDetailToProposal", () => {
     expect(proposal.data.documents.identification).toEqual([
       { id: "att-1", filename: "rg.pdf" },
     ]);
+  });
+
+  it("strips DDI 55 from guarantor telephone before masking (AUREA-478)", () => {
+    const proposal = mapQuoteDetailToProposal(
+      baseDetail({
+        guarantor: {
+          name: "João Avalista",
+          document: "52998224725",
+          birthDate: "1985-05-20",
+          email: "joao@example.com",
+          telephone: "+5571988887777",
+          address: {
+            zipCode: "40010000",
+            streetName: "Rua Chile",
+            streetNumber: "10",
+            streetComplement: "",
+            streetDistrict: "Comércio",
+            city: "Salvador",
+            state: "BA",
+          },
+          relationship: GuarantorRelationship.SIBLING,
+        },
+      }),
+    );
+
+    expect(proposal.data.guarantor.phone).toBe("(71) 98888-7777");
   });
 });
