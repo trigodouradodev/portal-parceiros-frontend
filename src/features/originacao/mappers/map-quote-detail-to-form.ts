@@ -14,8 +14,8 @@ import {
   type ProposalSnapshot,
   type RegistrationData,
 } from "@/features/originacao/data/proposal";
+import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
 import { fmtBRL } from "@/lib/format/money";
-import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import { SimulationStatus } from "@/services/origination/origination.types";
 import { QuoteDraftStep, QuoteStatus } from "@/services/quotes/quotes.enums";
@@ -144,7 +144,7 @@ function mapGuarantor(detail: QuoteGuarantorDetail | null): GuarantorData {
     cpf: formatCpf(detail.document),
     birthDate: detail.birthDate,
     email: detail.email,
-    phone: formatPhone(detail.telephone),
+    phone: formatPartyTelephone(detail.telephone),
     zipCode: detail.address.zipCode ?? "",
     street: detail.address.streetName ?? "",
     number: detail.address.streetNumber ?? "",
