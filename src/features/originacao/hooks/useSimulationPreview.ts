@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   originationKeys,
@@ -27,14 +27,16 @@ export function useSimulationPreview(
   options?: { enabled?: boolean },
 ) {
   const key = previewKey(payload);
+  const payloadRef = useRef(payload);
+  payloadRef.current = payload;
   const [debounced, setDebounced] = useState(payload);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDebounced(payload);
+      setDebounced(payloadRef.current);
     }, PREVIEW_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [key, payload]);
+  }, [key]);
 
   const enabled =
     (options?.enabled ?? true) &&
