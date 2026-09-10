@@ -22,6 +22,13 @@ const FILL_FIELDS = [
   "state",
 ] as const satisfies ReadonlyArray<keyof CepLookupResult>;
 
+const CLEAR_ON_INVALID_CEP = [
+  "street",
+  "neighborhood",
+  "city",
+  "state",
+] as const satisfies ReadonlyArray<AddressFieldName>;
+
 const GEO_FILL_FIELDS = [
   "zipCode",
   "street",
@@ -48,6 +55,16 @@ export function applyAddressFill(
   const options = { shouldDirty: true, shouldValidate: true };
   for (const field of FILL_FIELDS) {
     setValue(addressPath(prefix, field), fill[field], options);
+  }
+}
+
+export function clearAddressFill(
+  setValue: UseFormSetValue<ProposalFormData>,
+  prefix: AddressPrefix,
+) {
+  const options = { shouldDirty: true, shouldValidate: true };
+  for (const field of CLEAR_ON_INVALID_CEP) {
+    setValue(addressPath(prefix, field), "", options);
   }
 }
 
