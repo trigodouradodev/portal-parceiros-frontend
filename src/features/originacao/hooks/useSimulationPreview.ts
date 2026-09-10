@@ -18,6 +18,17 @@ function previewKey(payload: PreviewSimulationPayload | null): string {
   ].join("|");
 }
 
+function isPreviewReady(
+  payload: PreviewSimulationPayload | null,
+): payload is PreviewSimulationPayload {
+  if (!payload) return false;
+  if (!payload.productId) return false;
+  if (!payload.firstInstallmentDate) return false;
+  if (!Number.isFinite(payload.amount)) return false;
+  if (!Number.isFinite(payload.installments)) return false;
+  return true;
+}
+
 /**
  * Preview da parcela oficial (Celcoin) com debounce nos inputs financeiros.
  * Não usa PRICE local — o valor bate com o que o POST/PATCH persiste.
@@ -38,22 +49,19 @@ export function useSimulationPreview(
     return () => window.clearTimeout(timer);
   }, [key]);
 
-  const enabled =
-    (options?.enabled ?? true) &&
-    debounced != null &&
-    Boolean(debounced.productId) &&
-    Number.isFinite(debounced.amount) &&
-    Number.isFinite(debounced.installments) &&
-    Boolean(debounced.firstInstallmentDate);
+  const ready = isPreviewReady(debounced);
+  const enabled = (options?.enabled ?? true) && ready;
 
   return useQuery({
     queryKey: originationKeys.preview(
-      debounced ?? {
-        productId: "",
-        amount: 0,
-        installments: 0,
-        firstInstallmentDate: "",
-      },
+      ready
+        ? debounced
+        : {
+            productId: "",
+            amount: 0,
+            installments: 0,
+            firstInstallmentDate: "",
+          },
     ),
     queryFn: () => originationService.previewSimulation(debounced!),
     enabled,

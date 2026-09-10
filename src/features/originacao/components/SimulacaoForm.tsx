@@ -3,48 +3,28 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
-  CalendarDays,
   CreditCard,
-  Eye,
-  EyeOff,
   Loader2,
   Mail,
   Phone,
-  RefreshCw,
   User,
 } from "lucide-react";
-import { addDays, startOfDay } from "date-fns";
+import { startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { ChipField } from "@/components/ui/chip-field";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  FieldErrorMessage,
-  FieldHint,
-  FieldLabel,
-  fieldAnchorProps,
-} from "@/components/ui/field-hint";
+import { FieldLabel } from "@/components/ui/field-hint";
 import { Form, FormField } from "@/components/ui/form";
 import { FormDate, FormInput } from "@/components/ui/rhf-fields";
-import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
-import { OriginacaoToneBadge } from "@/features/originacao/components/OriginacaoSnapshotCard";
+import { SimulationDueDateField } from "@/features/originacao/components/simulacao/SimulationDueDateField";
+import { SimulationInstallmentPreview } from "@/features/originacao/components/simulacao/SimulationInstallmentPreview";
+import { SimulationProductField } from "@/features/originacao/components/simulacao/SimulationProductField";
 import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
   AMOUNT_MIN,
   AMOUNT_STEP,
-  FIRST_INSTALLMENT_MAX_DAYS,
   installmentOptionsForProduct,
-  isAllowedDueDate,
-  productRatePercent,
   simulationFormDefaultsFromSnapshot,
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
@@ -67,7 +47,6 @@ import { formatPhone, digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import { fmtBRL } from "@/lib/utils";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
-import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 
 interface SimulacaoFormProps {
@@ -103,10 +82,6 @@ export function SimulacaoForm({
   const simulateBlocked = permissionsQuery.data?.canSimulateQuote === false;
 
   const [today] = useState(() => startOfDay(new Date()));
-  const [productDialogOpen, setProductDialogOpen] = useState(false);
-  const [draftDueDate, setDraftDueDate] = useState<Date | undefined>(undefined);
-  const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
-  const [showRate, setShowRate] = useState(false);
   const constraintsRef = useRef({
     installmentOptions: installmentOptionsForProduct(null),
     today,
@@ -147,7 +122,6 @@ export function SimulacaoForm({
       selectedProduct?.maxInstallmentCount,
     ],
   );
-  const rate = productRatePercent(selectedProduct);
   constraintsRef.current = { installmentOptions, today };
 
   // Default sugerido só se o campo ainda estiver vazio (edição / Trocar não passam por aqui).
@@ -171,35 +145,18 @@ export function SimulacaoForm({
     productsQuery.isLoading,
   ]);
 
-  const dueDateLimit = addDays(today, FIRST_INSTALLMENT_MAX_DAYS);
-  const dueDay = dueDate?.getDate() ?? null;
   const previewPayload =
-    productId && installments != null && dueDate
-      ? {
+    !productId || installments == null || !dueDate
+      ? null
+      : {
           productId,
           amount,
           installments,
           firstInstallmentDate: toIsoDate(dueDate),
-        }
-      : null;
+        };
   const previewQuery = useSimulationPreview(previewPayload, {
     enabled: canSimulateQuote,
   });
-  const installmentAmount = previewQuery.data?.installmentAmount;
-
-  function openDueDateDialog() {
-    setDraftDueDate(dueDate);
-    setDueDateDialogOpen(true);
-  }
-
-  function confirmDueDate() {
-    if (!draftDueDate) return;
-    form.setValue("dueDate", draftDueDate, {
-      shouldValidate: true,
-      shouldDirty: true,
-    });
-    setDueDateDialogOpen(false);
-  }
 
   async function onContinue(values: SimulationFormValues) {
     if (!canSimulateQuote) {
@@ -322,62 +279,10 @@ export function SimulacaoForm({
             required
           />
 
-          <FormField
-            control={form.control}
-            name="product"
-            render={({ field, fieldState }) => (
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel required>Produto</FieldLabel>
-                <div className="flex items-start justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
-                  <div>
-                    {productId && productId === suggestedProductId ? (
-                      <OriginacaoToneBadge tone="warning">
-                        Sugerido
-                      </OriginacaoToneBadge>
-                    ) : null}
-                    <p className="font-semibold text-foreground">
-                      {selectedProduct?.description ??
-                        (productsQuery.isLoading
-                          ? "Carregando produtos…"
-                          : "Nenhum produto vinculado")}
-                    </p>
-                    {selectedProduct ? (
-                      <button
-                        type="button"
-                        onClick={() => setShowRate((value) => !value)}
-                        className="flex items-center gap-1 text-xs text-muted-foreground"
-                      >
-                        {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
-                        {showRate
-                          ? `Taxa de ${formatMonthlyRate(rate)} · definida pelo produto`
-                          : "Mostrar taxa"}
-                      </button>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setProductDialogOpen(true)}
-                    disabled={!products.length}
-                    className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy disabled:opacity-50"
-                  >
-                    <RefreshCw size={13} />
-                    Trocar
-                  </button>
-                </div>
-                <SelectDialogField
-                  hideTrigger
-                  open={productDialogOpen}
-                  onOpenChange={setProductDialogOpen}
-                  value={field.value}
-                  onChange={field.onChange}
-                  options={products.map((product) => ({
-                    value: product.id,
-                    label: product.description,
-                  }))}
-                />
-                <FieldErrorMessage error={fieldState.error?.message} />
-              </div>
-            )}
+          <SimulationProductField
+            products={products}
+            productsLoading={productsQuery.isLoading}
+            suggestedProductId={suggestedProductId}
           />
 
           <FormField
@@ -428,73 +333,15 @@ export function SimulacaoForm({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="dueDate"
-            render={({ fieldState }) => (
-              <div
-                className="flex flex-col gap-1.5"
-                {...fieldAnchorProps("dueDate", fieldState.error?.message)}
-              >
-                <FieldLabel required>Melhor dia de vencimento</FieldLabel>
-                <FieldHint>
-                  Vencimento sempre no dia 5, 10, 15 ou 20, dentro de uma janela
-                  de até {FIRST_INSTALLMENT_MAX_DAYS} dias (D+
-                  {FIRST_INSTALLMENT_MAX_DAYS}) a partir de hoje.
-                </FieldHint>
-                <button
-                  type="button"
-                  onClick={openDueDateDialog}
-                  className="flex items-center gap-2 rounded-2xl bg-muted px-4 py-3 text-left transition-colors hover:bg-muted/80"
-                >
-                  <CalendarDays
-                    size={16}
-                    className="shrink-0 text-muted-foreground"
-                  />
-                  <span
-                    className={
-                      dueDate
-                        ? "font-semibold text-foreground"
-                        : "text-muted-foreground/70"
-                    }
-                  >
-                    {dueDate
-                      ? dueDate.toLocaleDateString("pt-BR", {
-                          day: "2-digit",
-                          month: "long",
-                          year: "numeric",
-                        })
-                      : "Selecionar data"}
-                  </span>
-                </button>
-                <FieldErrorMessage error={fieldState.error?.message} />
-              </div>
-            )}
-          />
+          <SimulationDueDateField today={today} />
 
-          {installments && dueDay !== null ? (
-            <div className="rounded-2xl bg-muted px-4 py-3">
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="text-sm text-muted-foreground">Parcela</span>
-                {previewQuery.isError && canSimulateQuote ? (
-                  <span className="text-sm text-destructive">
-                    Não foi possível calcular
-                  </span>
-                ) : installmentAmount != null ? (
-                  <span className="font-display text-xl font-bold text-foreground">
-                    {fmtBRL(installmentAmount)}/mês
-                  </span>
-                ) : canSimulateQuote && previewPayload ? (
-                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <Loader2 size={14} className="animate-spin" />
-                    Calculando…
-                  </span>
-                ) : (
-                  <span className="text-sm text-muted-foreground">—</span>
-                )}
-              </div>
-            </div>
-          ) : null}
+          <SimulationInstallmentPreview
+            visible={installments != null && dueDate != null}
+            canSimulate={canSimulateQuote}
+            hasPayload={previewPayload != null}
+            isError={previewQuery.isError}
+            amount={previewQuery.data?.installmentAmount}
+          />
 
           <Button
             type="submit"
@@ -516,49 +363,6 @@ export function SimulacaoForm({
           </Button>
         </form>
       </Form>
-
-      <Dialog open={dueDateDialogOpen} onOpenChange={setDueDateDialogOpen}>
-        <DialogContent className="max-w-[340px]">
-          <DialogHeader>
-            <DialogTitle>Selecionar o dia de vencimento</DialogTitle>
-            <DialogDescription>
-              Sempre no dia 5, 10, 15 ou 20, dentro de uma janela de até{" "}
-              {FIRST_INSTALLMENT_MAX_DAYS} dias a partir de hoje.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={draftDueDate}
-              onSelect={setDraftDueDate}
-              disabled={[
-                { before: today },
-                { after: dueDateLimit },
-                (date) => !isAllowedDueDate(date),
-              ]}
-              className="rounded-lg border"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              size="pillSm"
-              onClick={() => setDueDateDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              size="pillSm"
-              disabled={!draftDueDate}
-              onClick={confirmDueDate}
-            >
-              Confirmar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </OriginacaoPageFrame>
   );
 }
