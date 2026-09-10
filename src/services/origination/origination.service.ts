@@ -2,6 +2,8 @@ import { api } from "@/lib/api/axios";
 import type {
   CreateSimulationPayload,
   ListSimulationsQuery,
+  PreviewSimulationPayload,
+  SimulationPreview,
   SimulationSnapshot,
   UpdateSimulationPayload,
 } from "./origination.types";
@@ -11,6 +13,8 @@ export const originationKeys = {
   simulationsRoot: () => [...originationKeys.all, "simulations"] as const,
   simulations: (query: ListSimulationsQuery = {}) =>
     [...originationKeys.simulationsRoot(), query] as const,
+  preview: (payload: PreviewSimulationPayload) =>
+    [...originationKeys.simulationsRoot(), "preview", payload] as const,
 };
 
 export const originationService = {
@@ -24,6 +28,17 @@ export const originationService = {
         ...(query.document ? { document: query.document } : {}),
       },
     });
+    return data;
+  },
+
+  /** POST /simulations/preview — parcela Celcoin sem persistir */
+  async previewSimulation(
+    payload: PreviewSimulationPayload,
+  ): Promise<SimulationPreview> {
+    const { data } = await api.post<SimulationPreview>(
+      "/simulations/preview",
+      payload,
+    );
     return data;
   },
 
