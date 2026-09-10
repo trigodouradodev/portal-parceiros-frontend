@@ -20,7 +20,9 @@ function InstallmentPreviewValue({
   }
   if (isError) {
     return (
-      <span className="text-sm text-destructive">Não foi possível calcular</span>
+      <span className="text-sm text-destructive">
+        Não foi possível calcular
+      </span>
     );
   }
   if (amount != null) {

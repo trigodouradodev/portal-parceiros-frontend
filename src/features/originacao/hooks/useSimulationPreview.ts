@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   originationKeys,
@@ -38,15 +38,17 @@ export function useSimulationPreview(
   options?: { enabled?: boolean },
 ) {
   const key = previewKey(payload);
-  const payloadRef = useRef(payload);
-  payloadRef.current = payload;
   const [debounced, setDebounced] = useState(payload);
 
   useEffect(() => {
+    // `key` muda só quando product/amount/installments/dueDate mudam;
+    // captura o payload desse render (evita resetar o debounce a cada re-render).
+    const next = payload;
     const timer = window.setTimeout(() => {
-      setDebounced(payloadRef.current);
+      setDebounced(next);
     }, PREVIEW_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce por chave estável
   }, [key]);
 
   const ready = isPreviewReady(debounced);
