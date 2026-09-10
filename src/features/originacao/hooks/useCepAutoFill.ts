@@ -4,6 +4,7 @@ import { useFormContext } from "react-hook-form";
 import { useToast } from "@/contexts/toast/toast-context";
 import {
   applyAddressFill,
+  clearAddressFill,
   type AddressPrefix,
 } from "@/features/originacao/utils/apply-address-fill";
 import type { ProposalFormData } from "@/features/originacao/data/proposal";
@@ -11,7 +12,7 @@ import { isCepLookupError } from "@/services/cep/cep-lookup-error";
 import { cepService } from "@/services/cep/cep.service";
 import type { CepLookupResult } from "@/services/cep/cep.types";
 
-export type CepStatus = "idle" | "searching" | "found";
+export type CepStatus = "idle" | "searching" | "found" | "not_found" | "error";
 
 export const cepKeys = {
   all: ["cep"] as const,
@@ -27,7 +28,8 @@ function isAbortError(error: unknown): boolean {
 }
 
 export function useCepAutoFill(namePrefix: AddressPrefix) {
-  const { setValue } = useFormContext<ProposalFormData>();
+  const { setValue, setError, clearErrors } =
+    useFormContext<ProposalFormData>();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [cepStatus, setCepStatus] = useState<CepStatus>("idle");
@@ -42,12 +44,22 @@ export function useCepAutoFill(namePrefix: AddressPrefix) {
     };
   }, [queryClient]);
 
+  function markCepLookupFailed(message: string, status: "not_found" | "error") {
+    clearAddressFill(setValue, namePrefix);
+    setCepStatus(status);
+    setError(`${namePrefix}.zipCode`, {
+      type: "manual",
+      message,
+    });
+  }
+
   async function lookup(digits: string) {
     const previous = activeDigitsRef.current;
     if (previous && previous !== digits) {
       queryClient.cancelQueries({ queryKey: cepKeys.byCep(previous) });
     }
     activeDigitsRef.current = digits;
+    clearErrors(`${namePrefix}.zipCode`);
 
     const cached = queryClient.getQueryData<CepLookupResult>(
       cepKeys.byCep(digits),
@@ -73,14 +85,16 @@ export function useCepAutoFill(namePrefix: AddressPrefix) {
       if (activeDigitsRef.current !== digits) return;
       if (isAbortError(error)) return;
 
-      setCepStatus("idle");
       queryClient.removeQueries({ queryKey: cepKeys.byCep(digits) });
-      showToast(
-        isCepLookupError(error)
-          ? error.message
-          : "Não foi possível buscar o endereço pelo CEP.",
-        { variant: "destructive" },
-      );
+      const message = isCepLookupError(error)
+        ? error.message
+        : "Não foi possível buscar o endereço pelo CEP.";
+      const status =
+        isCepLookupError(error) && error.code === "not_found"
+          ? "not_found"
+          : "error";
+      markCepLookupFailed(message, status);
+      showToast(message, { variant: "destructive" });
     }
   }
 
@@ -94,6 +108,8 @@ export function useCepAutoFill(namePrefix: AddressPrefix) {
     if (previous) {
       queryClient.cancelQueries({ queryKey: cepKeys.byCep(previous) });
     }
+    clearErrors(`${namePrefix}.zipCode`);
+    clearAddressFill(setValue, namePrefix);
     setCepStatus("idle");
   }
 
