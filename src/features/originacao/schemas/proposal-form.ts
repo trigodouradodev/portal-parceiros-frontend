@@ -18,10 +18,12 @@ import {
   birthDateSchema,
 } from "@/features/originacao/schemas/birth-date";
 import { isCompleteCep } from "@/features/originacao/utils/format-cep";
+import { parseMoneyBrl } from "@/lib/format/money";
 import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
 import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
 
 export const REQUIRED_FIELD_MESSAGE = "Campo obrigatório";
+export const POSITIVE_MONEY_MESSAGE = "Informe um valor maior que zero";
 
 const requiredString = z.string().trim().min(1, REQUIRED_FIELD_MESSAGE);
 
@@ -46,6 +48,19 @@ function countString(min: number) {
     const digits = value.replace(/\D/g, "");
     if (digits === "" || Number(digits) < min) {
       ctx.addIssue({ code: "custom", message: REQUIRED_FIELD_MESSAGE });
+    }
+  });
+}
+
+/** Valor monetário mascarado (BRL) obrigatório e maior que zero (AUREA-482). */
+function positiveMoneyString() {
+  return z.string().superRefine((value, ctx) => {
+    if (value.trim() === "") {
+      ctx.addIssue({ code: "custom", message: REQUIRED_FIELD_MESSAGE });
+      return;
+    }
+    if (parseMoneyBrl(value) < 0.01) {
+      ctx.addIssue({ code: "custom", message: POSITIVE_MONEY_MESSAGE });
     }
   });
 }
@@ -148,7 +163,7 @@ export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z
   .object({
     cnpj: z.string(),
     activityTime: requiredString,
-    monthlyIncome: requiredString,
+    monthlyIncome: positiveMoneyString(),
     incomeSource: requiredString,
     hasMultipleSources: z.boolean().nullable(),
     secondaryIncome: z.string(),
