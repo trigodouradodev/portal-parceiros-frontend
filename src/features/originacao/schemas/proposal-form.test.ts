@@ -8,7 +8,9 @@ import {
 import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
 
 function baseIncome(
-  overrides: Partial<ReturnType<typeof createEmptyProposalForm>["activityIncome"]> = {},
+  overrides: Partial<
+    ReturnType<typeof createEmptyProposalForm>["activityIncome"]
+  > = {},
 ) {
   return {
     ...createEmptyProposalForm().activityIncome,
