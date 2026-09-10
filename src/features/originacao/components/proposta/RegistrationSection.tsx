@@ -211,7 +211,6 @@ export function RegistrationSection({
             icon={USER_ICON}
             inputMode="numeric"
             maxLength={2}
-            placeholder="0"
             required
           />
           <FormInput<ProposalFormData>
@@ -221,7 +220,6 @@ export function RegistrationSection({
             icon={USER_ICON}
             inputMode="numeric"
             maxLength={2}
-            placeholder="0"
             required
           />
         </div>
