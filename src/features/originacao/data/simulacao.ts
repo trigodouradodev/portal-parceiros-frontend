@@ -45,7 +45,7 @@ export function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-/** Preview PRICE rounded like the backend persist (`round2`). */
+/** Preview PRICE local (legado). Persistência e UI usam Celcoin via /simulations/preview. */
 export function previewInstallmentAmount(
   amount: number,
   installments: number,

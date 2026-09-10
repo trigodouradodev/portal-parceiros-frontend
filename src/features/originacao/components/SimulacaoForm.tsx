@@ -44,12 +44,12 @@ import {
   FIRST_INSTALLMENT_MAX_DAYS,
   installmentOptionsForProduct,
   isAllowedDueDate,
-  previewInstallmentAmount,
   productRatePercent,
   simulationFormDefaultsFromSnapshot,
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
 import { useCreateSimulation } from "@/features/originacao/hooks/useCreateSimulation";
+import { useSimulationPreview } from "@/features/originacao/hooks/useSimulationPreview";
 import { useUpdateSimulation } from "@/features/originacao/hooks/useUpdateSimulation";
 import {
   createSimulationSchema,
@@ -107,6 +107,8 @@ export function SimulacaoForm({
   const [draftDueDate, setDraftDueDate] = useState<Date | undefined>(undefined);
   const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
   const [showRate, setShowRate] = useState(false);
+  /** Evita reaplicar products[0] após Trocar (AUREA-480). */
+  const didSetDefaultProduct = useRef(Boolean(editing?.productId));
   const constraintsRef = useRef({
     installmentOptions: installmentOptionsForProduct(null),
     today,
@@ -139,13 +141,29 @@ export function SimulacaoForm({
   const installments = form.watch("installments");
   const dueDate = form.watch("dueDate");
   const selectedProduct = products.find((product) => product.id === productId);
-  const installmentOptions = installmentOptionsForProduct(selectedProduct);
+  const suggestedProductId = products[0]?.id;
+  const showSuggestedBadge =
+    Boolean(selectedProduct) &&
+    Boolean(suggestedProductId) &&
+    productId === suggestedProductId;
+  const installmentOptions = useMemo(
+    () => installmentOptionsForProduct(selectedProduct),
+    [
+      selectedProduct?.minInstallmentCount,
+      selectedProduct?.maxInstallmentCount,
+    ],
+  );
   const rate = productRatePercent(selectedProduct);
   constraintsRef.current = { installmentOptions, today };
 
   useEffect(() => {
-    if (!products.length || form.getValues("product")) return;
+    if (!products.length || didSetDefaultProduct.current) return;
+    if (form.getValues("product")) {
+      didSetDefaultProduct.current = true;
+      return;
+    }
     form.setValue("product", products[0].id, { shouldValidate: false });
+    didSetDefaultProduct.current = true;
   }, [form, products]);
 
   useEffect(() => {
@@ -165,9 +183,26 @@ export function SimulacaoForm({
 
   const dueDateLimit = addDays(today, FIRST_INSTALLMENT_MAX_DAYS);
   const dueDay = dueDate?.getDate() ?? null;
-  const installmentAmount = installments
-    ? previewInstallmentAmount(amount, installments, rate)
-    : 0;
+  const previewPayload = useMemo(() => {
+    if (!productId || installments == null || !dueDate) return null;
+    return {
+      productId,
+      amount,
+      installments,
+      firstInstallmentDate: toIsoDate(dueDate),
+    };
+  }, [productId, amount, installments, dueDate]);
+  const previewQuery = useSimulationPreview(previewPayload, {
+    enabled: canSimulateQuote,
+  });
+  const installmentAmount = previewQuery.data?.installmentAmount;
+  const previewFailed =
+    previewPayload != null && canSimulateQuote && previewQuery.isError;
+  const previewPending =
+    previewPayload != null &&
+    canSimulateQuote &&
+    !previewFailed &&
+    installmentAmount == null;
 
   function openDueDateDialog() {
     setDraftDueDate(dueDate);
@@ -312,7 +347,7 @@ export function SimulacaoForm({
                 <FieldLabel required>Produto</FieldLabel>
                 <div className="flex items-start justify-between gap-3 rounded-2xl bg-muted px-4 py-3">
                   <div>
-                    {selectedProduct ? (
+                    {showSuggestedBadge ? (
                       <OriginacaoToneBadge tone="warning">
                         Sugerido
                       </OriginacaoToneBadge>
@@ -351,7 +386,12 @@ export function SimulacaoForm({
                   open={productDialogOpen}
                   onOpenChange={setProductDialogOpen}
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(next) => {
+                    form.setValue("product", next, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                  }}
                   options={products.map((product) => ({
                     value: product.id,
                     label: product.description,
@@ -456,11 +496,24 @@ export function SimulacaoForm({
 
           {installments && dueDay !== null ? (
             <div className="rounded-2xl bg-muted px-4 py-3">
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between gap-3">
                 <span className="text-sm text-muted-foreground">Parcela</span>
-                <span className="font-display text-xl font-bold text-foreground">
-                  {fmtBRL(installmentAmount)}/mês
-                </span>
+                {previewPending ? (
+                  <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <Loader2 size={14} className="animate-spin" />
+                    Calculando…
+                  </span>
+                ) : previewFailed ? (
+                  <span className="text-sm text-destructive">
+                    Não foi possível calcular
+                  </span>
+                ) : installmentAmount != null ? (
+                  <span className="font-display text-xl font-bold text-foreground">
+                    {fmtBRL(installmentAmount)}/mês
+                  </span>
+                ) : (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )}
               </div>
             </div>
           ) : null}

@@ -41,6 +41,25 @@ export interface CreateSimulationPayload {
 
 export type UpdateSimulationPayload = CreateSimulationPayload;
 
+/** Payload financeiro de POST /simulations/preview (sem persistir). */
+export interface PreviewSimulationPayload {
+  productId: string;
+  amount: number;
+  installments: number;
+  firstInstallmentDate: string;
+}
+
+/** Resposta de POST /simulations/preview (parcela Celcoin). */
+export interface SimulationPreview {
+  productId: string;
+  amount: number;
+  installments: number;
+  firstInstallmentDate: string;
+  interestRate: number;
+  installmentAmount: number;
+  totalAmountOwed: number;
+}
+
 export interface ListSimulationsQuery {
   name?: string;
   document?: string;
