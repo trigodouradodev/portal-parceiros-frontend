@@ -43,3 +43,9 @@ export const NAV_ITEMS: {
     path: "/profile",
   },
 ];
+
+export function getNavItemsForPermissions(permissions?: readonly string[]) {
+  if (!permissions?.includes("ROLE_COLLECTION_AGENT")) return NAV_ITEMS;
+
+  return NAV_ITEMS.filter((item) => item.key !== "carteira");
+}

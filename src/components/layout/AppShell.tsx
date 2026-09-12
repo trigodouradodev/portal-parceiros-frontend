@@ -7,7 +7,11 @@ import {
 } from "react-router-dom";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { NAV_ITEMS, type NavTab } from "@/components/layout/nav-config";
+import {
+  getNavItemsForPermissions,
+  NAV_ITEMS,
+  type NavTab,
+} from "@/components/layout/nav-config";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useAuth } from "@/contexts/auth/auth-context";
 
@@ -23,10 +27,11 @@ function pathToNavTab(pathname: string): NavTab {
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
   const activeTab = pathToNavTab(location.pathname);
+  const navItems = getNavItemsForPermissions(user?.permissions);
 
   const handleNavigate = (tab: NavTab) => {
     const item = NAV_ITEMS.find((nav) => nav.key === tab);
@@ -50,7 +55,7 @@ export function AppShell() {
       <div className="flex min-h-screen bg-background font-sans md:flex">
         <AppSidebar
           activeTab={activeTab}
-          items={NAV_ITEMS}
+          items={navItems}
           onNavigate={handleNavigate}
           onRequestLogout={handleRequestLogout}
         />
@@ -61,7 +66,7 @@ export function AppShell() {
 
         <BottomNav
           activeTab={activeTab}
-          items={NAV_ITEMS}
+          items={navItems}
           onNavigate={handleNavigate}
         />
 
