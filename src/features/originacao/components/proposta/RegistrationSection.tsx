@@ -1,38 +1,40 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import {
-  CreditCard,
-  Eye,
-  EyeOff,
-  IdCard,
-  Mail,
-  Phone,
-  User,
-} from "lucide-react";
 import { ChipField } from "@/components/ui/chip-field";
+import { DateFilterField } from "@/components/ui/date-filter-field";
 import { FormField } from "@/components/ui/form";
 import { InputField } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
-import { toSelectOptions } from "@/components/ui/select-option";
-import { YesNoField } from "@/components/ui/yes-no-field";
+import { FormInput, FormSelect, FormYesNo } from "@/components/ui/rhf-fields";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
+import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
-  ACTIVITY_CATEGORY_OPTIONS,
-  CREDIT_PURPOSE_OPTIONS,
-  DEBT_CREDITOR_OPTIONS,
+  ACTIVITY_CATEGORY_SELECT_OPTIONS,
+  CREDIT_CARD_ICON,
+  CREDIT_PURPOSE_SELECT_OPTIONS,
+  DEBT_CREDITOR_SELECT_OPTIONS,
+  EYE_ICON,
+  EYE_OFF_ICON,
+  GENDER_SELECT_OPTIONS,
+  GOVERNMENT_PROGRAM_SELECT_OPTIONS,
+  ID_CARD_ICON,
+  MAIL_ICON,
+  MARITAL_STATUS_SELECT_OPTIONS,
+  PHONE_ICON,
+  PROPERTY_STATUS_SELECT_OPTIONS,
+  RESIDENCE_TIME_SELECT_OPTIONS,
+  USER_ICON,
+  noop,
+} from "@/features/originacao/constants/registration-section";
+import {
   DEBT_PURPOSE,
-  GENDER_OPTIONS,
-  GOVERNMENT_PROGRAM_OPTIONS,
-  MARITAL_STATUS_OPTIONS,
-  OCCUPATION_OPTIONS,
+  NONE_PROGRAM,
   OTHER_OPTION,
-  PROPERTY_STATUS_OPTIONS,
-  RESIDENCE_TIME_OPTIONS,
   hasSpouse,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 import { formatCount } from "@/features/originacao/utils/format-count";
+import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
 import { formatCpf } from "@/lib/format/tax-id";
-import { cpfFieldError } from "@/lib/validation/cpf";
 
 interface RegistrationSectionProps {
   product: string;
@@ -63,7 +65,6 @@ export function RegistrationSection({
   const debtRequired = creditPurpose === DEBT_PURPOSE;
 
   function handleHasVehicleChange(value: boolean) {
-    setValue("registration.hasVehicle", value, { shouldDirty: true });
     if (!value) {
       setValue("registration.vehicleFinanced", null, { shouldDirty: true });
     }
@@ -71,21 +72,15 @@ export function RegistrationSection({
 
   return (
     <div className="flex flex-col gap-5">
-      <FormField
-        control={control}
+      <FormYesNo<ProposalFormData>
         name="registration.isRenewal"
-        render={({ field }) => (
-          <YesNoField
-            label="É uma renovação de contrato?"
-            value={field.value}
-            onChange={field.onChange}
-          />
-        )}
+        label="É uma renovação de contrato?"
+        required
       />
 
-      <div className="rounded-2xl bg-[#F5F6FA] px-4 py-3">
+      <div className="rounded-2xl bg-muted px-4 py-3">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs text-[#6B7080]">
+          <p className="text-xs text-muted-foreground">
             Produto e taxa (definidos na simulação)
           </p>
           <button
@@ -93,294 +88,217 @@ export function RegistrationSection({
             onClick={() => setShowRate((value) => !value)}
             className="flex shrink-0 items-center gap-1 text-xs font-semibold text-brand-navy"
           >
-            {showRate ? <EyeOff size={13} /> : <Eye size={13} />}
+            {showRate ? EYE_OFF_ICON : EYE_ICON}
             {showRate ? "Ocultar" : "Mostrar taxa"}
           </button>
         </div>
-        <p className="font-semibold text-[#1A1D2E]">
+        <p className="font-semibold text-foreground">
           {product}
-          {showRate ? ` · ${rate.toFixed(2).replace(".", ",")}% ao mês` : ""}
+          {showRate ? ` · ${formatMonthlyRate(rate)}` : ""}
         </p>
       </div>
 
       <InputField
         label="Nome completo"
         value={name}
-        onChange={() => {}}
-        icon={<User size={16} />}
+        onChange={noop}
+        icon={USER_ICON}
         disabled
       />
-      <InputField
+      <DateFilterField
         label="Data de nascimento"
         value={birthDate}
-        onChange={() => {}}
-        icon={<User size={16} />}
-        type="date"
+        onChange={noop}
         disabled
       />
 
-      <FormField
-        control={control}
+      <FormSelect<ProposalFormData>
         name="registration.gender"
-        render={({ field }) => (
-          <ChipField
-            label="Gênero"
-            value={field.value}
-            onChange={field.onChange}
-            options={toSelectOptions(GENDER_OPTIONS)}
-          />
-        )}
+        label="Gênero"
+        options={GENDER_SELECT_OPTIONS}
+        required
       />
 
       <InputField
         label="CPF"
         value={formatCpf(cpf)}
-        onChange={() => {}}
-        icon={<CreditCard size={16} />}
+        onChange={noop}
+        icon={CREDIT_CARD_ICON}
         disabled
       />
-      <FormField
-        control={control}
+      <FormInput<ProposalFormData>
         name="registration.rg"
-        render={({ field }) => (
-          <InputField
-            label="RG"
-            value={field.value}
-            onChange={field.onChange}
-            icon={<IdCard size={16} />}
-            placeholder="Número do RG"
-            maxLength={15}
-          />
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="registration.occupation"
-        render={({ field }) => (
-          <SelectField
-            label="Profissão"
-            value={field.value}
-            onChange={field.onChange}
-            options={toSelectOptions(OCCUPATION_OPTIONS)}
-          />
-        )}
+        label="RG"
+        icon={ID_CARD_ICON}
+        placeholder="Número do RG"
+        maxLength={15}
+        required
       />
 
       <FormField
         control={control}
         name="registration.activityCategories"
-        render={({ field }) => (
-          <ChipField
-            label="Categoria da atividade"
-            multiple
-            value={field.value}
-            onChange={field.onChange}
-            options={toSelectOptions(ACTIVITY_CATEGORY_OPTIONS)}
+        render={({ field, fieldState }) => (
+          <SelectDialogField
+            name={field.name}
+            label="Atividade econômica"
+            value={field.value[0] ?? ""}
+            onChange={(value) => field.onChange(value ? [value] : [])}
+            options={ACTIVITY_CATEGORY_SELECT_OPTIONS}
+            required
+            error={fieldState.error?.message}
           />
         )}
       />
       {activityCategories.includes(OTHER_OPTION) ? (
-        <FormField
-          control={control}
+        <FormInput<ProposalFormData>
           name="registration.activityCategoryOther"
-          render={({ field }) => (
-            <InputField
-              label="Qual?"
-              value={field.value}
-              onChange={field.onChange}
-              icon={<User size={16} />}
-              placeholder="Descreva a ocupação"
-            />
-          )}
+          label="Qual?"
+          placeholder="Descreva a ocupação"
+          required
         />
       ) : null}
 
+      <FormInput<ProposalFormData>
+        name="registration.occupation"
+        label="Profissão"
+        icon={USER_ICON}
+        placeholder="Informe a profissão"
+        required
+      />
+
       <InputField
-        label="Email"
+        label="E-mail"
         value={email}
-        onChange={() => {}}
-        icon={<Mail size={16} />}
+        onChange={noop}
+        icon={MAIL_ICON}
         disabled
       />
       <InputField
         label="Celular"
         value={phone}
-        onChange={() => {}}
-        icon={<Phone size={16} />}
+        onChange={noop}
+        icon={PHONE_ICON}
         disabled
       />
 
-      <div className="border-t border-[#E2E4EC] pt-2">
-        <p className="mb-3 text-sm font-semibold text-[#1A1D2E]">
-          Composição familiar
-        </p>
-        <div className="flex flex-col gap-5">
-          <FormField
-            control={control}
-            name="registration.maritalStatus"
-            render={({ field }) => (
-              <ChipField
-                label="Estado civil"
-                value={field.value}
-                onChange={field.onChange}
-                options={toSelectOptions(MARITAL_STATUS_OPTIONS)}
-              />
-            )}
+      <FormSection title="Composição familiar">
+        <FormSelect<ProposalFormData>
+          name="registration.maritalStatus"
+          label="Estado civil"
+          options={MARITAL_STATUS_SELECT_OPTIONS}
+          required
+        />
+
+        {spouseRequired ? (
+          <FormInput<ProposalFormData>
+            name="registration.spouseCpf"
+            label="CPF do cônjuge"
+            transform={formatCpf}
+            icon={CREDIT_CARD_ICON}
+            placeholder="000.000.000-00"
+            inputMode="numeric"
+            maxLength={14}
+            required
           />
+        ) : null}
 
-          {spouseRequired ? (
-            <FormField
-              control={control}
-              name="registration.spouseCpf"
-              render={({ field }) => (
-                <InputField
-                  label="CPF do cônjuge"
-                  value={formatCpf(field.value)}
-                  onChange={(value) => field.onChange(formatCpf(value))}
-                  icon={<CreditCard size={16} />}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
-                  maxLength={14}
-                  error={cpfFieldError(field.value)}
-                />
-              )}
-            />
-          ) : null}
-
-          <div className="grid grid-cols-2 gap-3">
-            <FormField
-              control={control}
-              name="registration.childrenCount"
-              render={({ field }) => (
-                <InputField
-                  label="Filhos menores de 18"
-                  value={field.value}
-                  onChange={(value) => field.onChange(formatCount(value))}
-                  icon={<User size={16} />}
-                  inputMode="numeric"
-                  maxLength={2}
-                  placeholder="0"
-                />
-              )}
-            />
-            <FormField
-              control={control}
-              name="registration.householdSize"
-              render={({ field }) => (
-                <InputField
-                  label="Pessoas na casa"
-                  value={field.value}
-                  onChange={(value) => field.onChange(formatCount(value))}
-                  icon={<User size={16} />}
-                  inputMode="numeric"
-                  maxLength={2}
-                  placeholder="0"
-                />
-              )}
-            />
-          </div>
-
-          <FormField
-            control={control}
-            name="registration.propertyStatus"
-            render={({ field }) => (
-              <ChipField
-                label="Situação do imóvel"
-                value={field.value}
-                onChange={field.onChange}
-                options={toSelectOptions(PROPERTY_STATUS_OPTIONS)}
-              />
-            )}
+        <div className="grid min-w-0 grid-cols-2 gap-3">
+          <FormInput<ProposalFormData>
+            name="registration.childrenCount"
+            label="Filhos menores de 18"
+            transform={formatCount}
+            icon={USER_ICON}
+            inputMode="numeric"
+            maxLength={2}
+            required
           />
-
-          <FormField
-            control={control}
-            name="registration.residenceTime"
-            render={({ field }) => (
-              <ChipField
-                label="Tempo de residência"
-                value={field.value}
-                onChange={field.onChange}
-                options={toSelectOptions(RESIDENCE_TIME_OPTIONS)}
-              />
-            )}
+          <FormInput<ProposalFormData>
+            name="registration.householdSize"
+            label="Pessoas na casa"
+            transform={formatCount}
+            icon={USER_ICON}
+            inputMode="numeric"
+            maxLength={2}
+            required
           />
-
-          <FormField
-            control={control}
-            name="registration.governmentPrograms"
-            render={({ field }) => (
-              <ChipField
-                label="Vínculo a programas de governo"
-                multiple
-                value={field.value}
-                onChange={field.onChange}
-                options={toSelectOptions(GOVERNMENT_PROGRAM_OPTIONS)}
-              />
-            )}
-          />
-
-          <YesNoField
-            label="Possui veículo?"
-            value={hasVehicle}
-            onChange={handleHasVehicleChange}
-          />
-
-          {hasVehicle ? (
-            <FormField
-              control={control}
-              name="registration.vehicleFinanced"
-              render={({ field }) => (
-                <YesNoField
-                  label="Veículo financiado?"
-                  value={field.value}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-          ) : null}
         </div>
-      </div>
 
-      <FormField
-        control={control}
-        name="registration.creditPurpose"
-        render={({ field }) => (
-          <ChipField
-            label="Finalidade do crédito"
-            value={field.value ?? ""}
-            onChange={field.onChange}
-            options={toSelectOptions(CREDIT_PURPOSE_OPTIONS)}
+        <FormSelect<ProposalFormData>
+          name="registration.propertyStatus"
+          label="Situação do imóvel"
+          options={PROPERTY_STATUS_SELECT_OPTIONS}
+          required
+        />
+
+        <FormSelect<ProposalFormData>
+          name="registration.residenceTime"
+          label="Tempo de residência"
+          options={RESIDENCE_TIME_SELECT_OPTIONS}
+          required
+        />
+
+        <FormField
+          control={control}
+          name="registration.governmentPrograms"
+          render={({ field, fieldState }) => (
+            <ChipField
+              name={field.name}
+              label="Vínculo a programas de governo"
+              multiple
+              value={field.value}
+              onChange={(value) => {
+                if (
+                  value.includes(NONE_PROGRAM) &&
+                  !field.value.includes(NONE_PROGRAM)
+                ) {
+                  field.onChange([NONE_PROGRAM]);
+                  return;
+                }
+                field.onChange(value.filter((item) => item !== NONE_PROGRAM));
+              }}
+              options={GOVERNMENT_PROGRAM_SELECT_OPTIONS}
+              required
+              error={fieldState.error?.message}
+            />
+          )}
+        />
+
+        <FormYesNo<ProposalFormData>
+          name="registration.hasVehicle"
+          label="Possui veículo?"
+          onChange={handleHasVehicleChange}
+          required
+        />
+
+        {hasVehicle ? (
+          <FormYesNo<ProposalFormData>
+            name="registration.vehicleFinanced"
+            label="Veículo financiado?"
+            required
           />
-        )}
+        ) : null}
+      </FormSection>
+
+      <FormSelect<ProposalFormData>
+        name="registration.creditPurpose"
+        label="Finalidade do crédito"
+        options={CREDIT_PURPOSE_SELECT_OPTIONS}
+        required
       />
       {debtRequired ? (
         <div className="flex flex-col gap-3">
-          <FormField
-            control={control}
+          <FormInput<ProposalFormData>
             name="registration.debtDescription"
-            render={({ field }) => (
-              <InputField
-                label="Qual dívida?"
-                value={field.value}
-                onChange={field.onChange}
-                icon={<User size={16} />}
-                placeholder="Descreva a dívida"
-              />
-            )}
+            label="Qual dívida?"
+            placeholder="Descreva a dívida"
+            required
           />
-          <FormField
-            control={control}
+          <FormSelect<ProposalFormData>
             name="registration.debtCreditor"
-            render={({ field }) => (
-              <SelectField
-                label="Credor"
-                value={field.value}
-                onChange={field.onChange}
-                options={toSelectOptions(DEBT_CREDITOR_OPTIONS)}
-              />
-            )}
+            label="Credor"
+            options={DEBT_CREDITOR_SELECT_OPTIONS}
+            required
           />
         </div>
       ) : null}

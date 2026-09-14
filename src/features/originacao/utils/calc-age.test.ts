@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calcAge,
   isAdultAge,
+  maxAdultBirthIso,
   todayIsoLocal,
 } from "@/features/originacao/utils/calc-age";
 
@@ -34,5 +35,11 @@ describe("isAdultAge", () => {
 describe("todayIsoLocal", () => {
   it("formats local calendar date", () => {
     expect(todayIsoLocal(new Date(2026, 7, 12))).toBe("2026-08-12");
+  });
+});
+
+describe("maxAdultBirthIso", () => {
+  it("is 18 years before today", () => {
+    expect(maxAdultBirthIso(new Date(2026, 7, 21))).toBe("2008-08-21");
   });
 });

@@ -1,43 +1,54 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import { SimulacaoList } from "@/features/originacao/components/SimulacaoList";
 import { useOriginacao } from "@/features/originacao/originacao-context";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
+import type { SimulationSnapshot } from "@/features/originacao/types";
+import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
 
 export function SimulacaoPage() {
   const {
-    dadosIniciais,
-    consumeDadosIniciais,
-    simulacoes,
-    addSimulacao,
+    eligibilityPrefill,
+    clearEligibilityPrefill,
+    simulations,
     startProposal,
   } = useOriginacao();
-  const [mode, setMode] = useState<"list" | "form">(
-    dadosIniciais ? "form" : "list",
-  );
-  const [formKey, setFormKey] = useState(0);
-  const [formPrefill, setFormPrefill] = useState(dadosIniciais);
+  const permissionsQuery = useQuoteActivityPermissions();
+  const [blankFormKey, setBlankFormKey] = useState<number | null>(null);
+  const [editing, setEditing] = useState<SimulationSnapshot | null>(null);
 
-  useEffect(() => {
-    if (dadosIniciais) consumeDadosIniciais();
-  }, [dadosIniciais, consumeDadosIniciais]);
+  const fromEligibility = eligibilityPrefill != null;
+  const showForm = fromEligibility || blankFormKey != null || editing != null;
+  const formKey = editing
+    ? `edit-${editing.id}`
+    : fromEligibility
+      ? "prefill"
+      : String(blankFormKey);
+
+  function closeForm() {
+    clearEligibilityPrefill();
+    setBlankFormKey(null);
+    setEditing(null);
+  }
 
   function handleNewSimulation() {
-    setFormPrefill(null);
-    setFormKey((key) => key + 1);
-    setMode("form");
+    clearEligibilityPrefill();
+    setEditing(null);
+    setBlankFormKey((key) => (key ?? 0) + 1);
   }
 
-  function handleCompleted(snapshot: SimulacaoSnapshot) {
-    addSimulacao(snapshot);
-    setMode("list");
+  function handleEdit(snapshot: SimulationSnapshot) {
+    clearEligibilityPrefill();
+    setBlankFormKey(null);
+    setEditing(snapshot);
   }
 
-  if (mode === "list") {
+  if (!showForm) {
     return (
       <SimulacaoList
-        simulations={simulacoes}
+        hasUnfilteredSimulations={simulations.length > 0}
+        canCreateQuote={permissionsQuery.data?.canCreateQuote !== false}
         onNewSimulation={handleNewSimulation}
+        onEdit={handleEdit}
         onStartProposal={startProposal}
       />
     );
@@ -46,10 +57,13 @@ export function SimulacaoPage() {
   return (
     <SimulacaoForm
       key={formKey}
-      prefill={formPrefill}
-      hasList={simulacoes.length > 0}
-      onViewList={() => setMode("list")}
-      onCompleted={handleCompleted}
+      prefill={eligibilityPrefill}
+      editing={editing}
+      hasList={
+        simulations.length > 0 || blankFormKey != null || editing != null
+      }
+      onViewList={closeForm}
+      onCompleted={closeForm}
     />
   );
 }

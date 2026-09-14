@@ -1,94 +1,185 @@
-import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { formatCpf } from "@/lib/format/tax-id";
-import { fmtBRL } from "@/lib/utils";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
+import { InputField } from "@/components/ui/input-field";
+import { OriginacaoEmptyState } from "@/features/originacao/components/OriginacaoEmptyState";
+import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
+import { SimulacaoListItem } from "@/features/originacao/components/SimulacaoListItem";
+import {
+  CREATE_QUOTE_BLOCKED_MESSAGE,
+  EMPTY_FILTERS,
+  EMPTY_PLUS_ICON,
+  EMPTY_SEARCH_ICON,
+  LIST_LOADING_ICON,
+  NEW_SIMULATION_ICON,
+  SEARCH_FIELD_ICON,
+} from "@/features/originacao/constants/simulacao-list";
+import { isSimulationConverted } from "@/features/originacao/data/simulacao";
+import {
+  SIMULATIONS_SEARCH_DEBOUNCE_MS,
+  buildSimulationsListQuery,
+  isSimulationsFilterActive,
+} from "@/features/originacao/data/simulations-list-query";
+import type { SimulationSnapshot } from "@/features/originacao/types";
+import {
+  originationKeys,
+  originationService,
+} from "@/services/origination/origination.service";
 
 interface SimulacaoListProps {
-  simulations: SimulacaoSnapshot[];
+  hasUnfilteredSimulations: boolean;
+  canCreateQuote?: boolean;
   onNewSimulation: () => void;
-  onStartProposal: (snapshot: SimulacaoSnapshot) => void;
+  onEdit: (snapshot: SimulationSnapshot) => void;
+  onStartProposal: (snapshot: SimulationSnapshot) => void | Promise<void>;
 }
 
 export function SimulacaoList({
-  simulations,
+  hasUnfilteredSimulations,
+  canCreateQuote = true,
   onNewSimulation,
+  onEdit,
   onStartProposal,
 }: SimulacaoListProps) {
+  const [searchInput, setSearchInput] = useState("");
+  const [filters, setFilters] = useState(() => buildSimulationsListQuery(""));
+  const [startingId, setStartingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setFilters(buildSimulationsListQuery(searchInput));
+    }, SIMULATIONS_SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  const listQuery = useQuery({
+    queryKey: originationKeys.simulations(filters),
+    queryFn: () => originationService.listSimulations(filters),
+    placeholderData: keepPreviousData,
+  });
+
+  const simulations = listQuery.data ?? [];
+  const filterActive = isSimulationsFilterActive(filters);
+  const showFilters = hasUnfilteredSimulations || filterActive;
+  const isLoading = listQuery.isPending && !listQuery.data;
+  const isError = listQuery.isError;
+  const noUnfiltered = !hasUnfilteredSimulations && !filterActive;
+  const noMatch = filterActive && simulations.length === 0;
+
+  function clearFilters() {
+    setSearchInput("");
+    setFilters(EMPTY_FILTERS);
+  }
+
+  async function handleStartProposal(item: SimulationSnapshot) {
+    if (!canCreateQuote || isSimulationConverted(item) || startingId != null) {
+      return;
+    }
+    setStartingId(item.id);
+    try {
+      await onStartProposal(item);
+    } finally {
+      setStartingId(null);
+    }
+  }
+
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <div className="mb-6 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-            Simulações
-          </h2>
-          <p className="mt-1 text-sm text-[#6B7080]">
-            Simulações realizadas para clientes nesta sessão.
-          </p>
-        </div>
+    <OriginacaoPageFrame
+      title="Simulações"
+      description="Simulações salvas deste parceiro."
+      actions={
         <Button
           variant="yellow"
-          className="h-10 shrink-0 gap-1.5 rounded-2xl px-4"
+          size="pillSm"
+          className="shrink-0 gap-1.5"
           onClick={onNewSimulation}
         >
-          <Plus size={15} />
+          {NEW_SIMULATION_ICON}
           Nova simulação
         </Button>
-      </div>
-
-      {simulations.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F5F6FA]">
-            <Plus size={22} className="text-[#9DA3B4]" />
-          </div>
-          <p className="mb-1 font-semibold text-[#1A1D2E]">
-            Nenhuma simulação ainda
-          </p>
-          <p className="text-sm text-[#9DA3B4]">
-            Clique em &quot;Nova simulação&quot; para começar.
-          </p>
+      }
+    >
+      {showFilters ? (
+        <div className="mb-4 flex flex-col gap-3">
+          <InputField
+            label="Nome ou CPF"
+            icon={SEARCH_FIELD_ICON}
+            placeholder="Buscar por nome ou CPF"
+            value={searchInput}
+            onChange={setSearchInput}
+          />
+          {isSimulationsFilterActive(buildSimulationsListQuery(searchInput)) ? (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="self-start text-sm font-semibold text-brand-navy"
+            >
+              Limpar filtros
+            </button>
+          ) : null}
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3">
-        {[...simulations].reverse().map((item) => (
-          <div
-            key={item.id}
-            className="flex flex-col gap-3 rounded-2xl border border-[#E2E4EC] bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span className="inline-block rounded-full bg-[#FDF3E0] px-2 py-0.5 text-[11px] font-semibold text-[#854F0B]">
-                {item.produto}
-              </span>
-              <span className="shrink-0 text-xs text-[#9DA3B4]">
-                {item.criadaEm}
-              </span>
-            </div>
-            <div>
-              <p className="font-fraunces text-base font-bold text-[#1A1D2E]">
-                {item.nome}
-              </p>
-              <p className="font-fraunces text-lg font-bold text-[#1A1D2E]">
-                {fmtBRL(item.valor)}
-              </p>
-              <p className="text-sm text-[#6B7080]">
-                {item.parcelas}x de {fmtBRL(item.parcelaCalc)} · vencimento dia{" "}
-                {String(item.vencimento).padStart(2, "0")}
-              </p>
-              <p className="mt-1 text-xs text-[#9DA3B4]">
-                CPF {formatCpf(item.cpf)}
-              </p>
-            </div>
+      {canCreateQuote ? null : (
+        <p className="mb-4 rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
+          {CREATE_QUOTE_BLOCKED_MESSAGE}
+        </p>
+      )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
+          {LIST_LOADING_ICON}
+          Carregando simulações…
+        </div>
+      ) : null}
+
+      {!isLoading && isError ? (
+        <OriginacaoEmptyState
+          icon={EMPTY_PLUS_ICON}
+          title="Não foi possível carregar"
+          description="Tente novamente em instantes."
+          action={
             <Button
               variant="outline"
-              className="h-10 rounded-2xl"
-              onClick={() => onStartProposal(item)}
+              size="pillSm"
+              onClick={() => listQuery.refetch()}
             >
-              Iniciar proposta
+              Tentar novamente
             </Button>
-          </div>
-        ))}
-      </div>
-    </div>
+          }
+        />
+      ) : null}
+
+      {!isLoading && !isError && noUnfiltered ? (
+        <OriginacaoEmptyState
+          icon={EMPTY_PLUS_ICON}
+          title="Nenhuma simulação ainda"
+          description='Clique em "Nova simulação" para começar.'
+        />
+      ) : null}
+
+      {!isLoading && !isError && noMatch ? (
+        <OriginacaoEmptyState
+          icon={EMPTY_SEARCH_ICON}
+          title="Nenhuma simulação encontrada"
+          description="Tente outro nome ou CPF, ou limpe os filtros."
+        />
+      ) : null}
+
+      {!isLoading && !isError && simulations.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          {simulations.map((item) => (
+            <SimulacaoListItem
+              key={item.id}
+              item={item}
+              canCreateQuote={canCreateQuote}
+              startingId={startingId}
+              onEdit={onEdit}
+              onStartProposal={handleStartProposal}
+            />
+          ))}
+        </div>
+      ) : null}
+    </OriginacaoPageFrame>
   );
 }

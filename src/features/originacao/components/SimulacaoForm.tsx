@@ -1,149 +1,217 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
-  CalendarDays,
   CreditCard,
-  Eye,
-  EyeOff,
+  Loader2,
   Mail,
   Phone,
-  RefreshCw,
   User,
 } from "lucide-react";
-import { addDays, startOfDay } from "date-fns";
+import { startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { ChipField } from "@/components/ui/chip-field";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { FieldLabel } from "@/components/ui/field-hint";
 import { Form, FormField } from "@/components/ui/form";
-import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/ui/select-field";
-import { toSelectOptions } from "@/components/ui/select-option";
+import { FormDate, FormInput } from "@/components/ui/rhf-fields";
+import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
+import { SimulationDueDateField } from "@/features/originacao/components/simulacao/SimulationDueDateField";
+import { SimulationInstallmentPreview } from "@/features/originacao/components/simulacao/SimulationInstallmentPreview";
+import { SimulationProductField } from "@/features/originacao/components/simulacao/SimulationProductField";
 import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
   AMOUNT_MIN,
   AMOUNT_STEP,
-  FIRST_INSTALLMENT_MAX_DAYS,
-  INSTALLMENT_OPTIONS,
-  isAllowedDueDate,
-  PRODUCT_RATE,
-  PRODUCTS,
-  type SimulationProduct,
+  installmentOptionsForProduct,
+  simulationFormDefaultsFromSnapshot,
+  toIsoDate,
 } from "@/features/originacao/data/simulacao";
+import { useCreateSimulation } from "@/features/originacao/hooks/useCreateSimulation";
+import { useSimulationPreview } from "@/features/originacao/hooks/useSimulationPreview";
+import { useUpdateSimulation } from "@/features/originacao/hooks/useUpdateSimulation";
 import {
-  simulationSchema,
+  createSimulationSchema,
   type SimulationFormValues,
 } from "@/features/originacao/schemas/simulation-form";
 import type {
-  DadosElegibilidade,
-  SimulacaoSnapshot,
+  EligibilityPrefill,
+  SimulationSnapshot,
 } from "@/features/originacao/types";
-import { formatPhone } from "@/lib/format/phone";
+import { useToast } from "@/contexts/toast/toast-context";
+import { useProducts } from "@/hooks/useProducts";
+import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
+import { getApiErrorMessage } from "@/lib/api/errors";
+import { formatPhone, digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
-import { calcInstallment, fmtBRL } from "@/lib/utils";
+import { fmtBRL } from "@/lib/utils";
+import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
+import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 
 interface SimulacaoFormProps {
-  prefill: DadosElegibilidade | null;
+  prefill: EligibilityPrefill | null;
+  editing: SimulationSnapshot | null;
   hasList: boolean;
   onViewList: () => void;
-  onCompleted: (snapshot: SimulacaoSnapshot) => void;
+  onCompleted: () => void;
 }
+
+const MAX_BIRTH_ISO = maxAdultBirthIso();
+const SIMULATE_BLOCKED_MESSAGE =
+  "Você possui ações de cobrança pendentes que impedem a simulação de proposta.";
 
 export function SimulacaoForm({
   prefill,
+  editing,
   hasList,
   onViewList,
   onCompleted,
 }: SimulacaoFormProps) {
-  const [changingProduct, setChangingProduct] = useState(false);
-  const [draftDueDate, setDraftDueDate] = useState<Date | undefined>(undefined);
-  const [dueDateDialogOpen, setDueDateDialogOpen] = useState(false);
-  const [showRate, setShowRate] = useState(false);
+  const { showToast } = useToast();
+  const productsQuery = useProducts();
+  const permissionsQuery = useQuoteActivityPermissions();
+  const createSimulation = useCreateSimulation();
+  const updateSimulation = useUpdateSimulation();
+  const products = useMemo(
+    () =>
+      (productsQuery.data ?? []).filter((product) => product.enabled !== false),
+    [productsQuery.data],
+  );
+  const canSimulateQuote = permissionsQuery.data?.canSimulateQuote === true;
+  const simulateBlocked = permissionsQuery.data?.canSimulateQuote === false;
 
-  const form = useForm<SimulationFormValues>({
-    resolver: zodResolver(simulationSchema),
-    mode: "onChange",
-    defaultValues: {
-      nome: prefill?.nome ?? "",
-      cpf: formatCpf(prefill?.cpf ?? ""),
-      nascimento: prefill?.nascimento ?? "",
-      email: "",
-      celular: "",
-      product: "Pessoal",
-      amount: AMOUNT_DEFAULT,
-    } as SimulationFormValues,
+  const [today] = useState(() => startOfDay(new Date()));
+  const constraintsRef = useRef({
+    installmentOptions: installmentOptionsForProduct(null),
+    today,
   });
 
-  const product = form.watch("product");
+  const form = useForm<SimulationFormValues>({
+    resolver: (values, context, options) =>
+      zodResolver(createSimulationSchema(constraintsRef.current))(
+        values,
+        context,
+        options,
+      ),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+    defaultValues: editing
+      ? simulationFormDefaultsFromSnapshot(editing)
+      : {
+          name: prefill?.name ?? "",
+          cpf: formatCpf(prefill?.cpf ?? ""),
+          birthDate: prefill?.birthDate ?? "",
+          email: "",
+          phone: "",
+          product: "",
+          amount: AMOUNT_DEFAULT,
+        },
+  });
+
+  const productId = form.watch("product");
   const amount = form.watch("amount");
   const installments = form.watch("installments");
   const dueDate = form.watch("dueDate");
+  const suggestedProductId = products[0]?.id;
+  const selectedProduct = products.find((product) => product.id === productId);
+  const installmentOptions = useMemo(
+    () => installmentOptionsForProduct(selectedProduct),
+    [
+      selectedProduct?.minInstallmentCount,
+      selectedProduct?.maxInstallmentCount,
+    ],
+  );
+  constraintsRef.current = { installmentOptions, today };
 
-  const today = startOfDay(new Date());
-  const dueDateLimit = addDays(today, FIRST_INSTALLMENT_MAX_DAYS);
-  const dueDay = dueDate?.getDate() ?? null;
-  const rate = PRODUCT_RATE[product];
-  const installmentAmount = installments
-    ? calcInstallment(amount, installments, rate)
-    : 0;
+  // Default sugerido só se o campo ainda estiver vazio (edição / Trocar não passam por aqui).
+  useEffect(() => {
+    if (!suggestedProductId || form.getValues("product")) return;
+    form.setValue("product", suggestedProductId, { shouldValidate: false });
+  }, [form, suggestedProductId]);
 
-  function openDueDateDialog() {
-    setDraftDueDate(dueDate);
-    setDueDateDialogOpen(true);
-  }
-
-  function confirmDueDate() {
-    if (!draftDueDate) return;
-    form.setValue("dueDate", draftDueDate, {
-      shouldValidate: true,
-      shouldDirty: true,
+  useEffect(() => {
+    if (installments == null) return;
+    if (installmentOptions.includes(installments)) return;
+    if (editing && productsQuery.isLoading) return;
+    form.setValue("installments", undefined as unknown as number, {
+      shouldValidate: false,
     });
-    setDueDateDialogOpen(false);
+  }, [
+    editing,
+    form,
+    installmentOptions,
+    installments,
+    productsQuery.isLoading,
+  ]);
+
+  const previewPayload =
+    !productId || installments == null || !dueDate
+      ? null
+      : {
+          productId,
+          amount,
+          installments,
+          firstInstallmentDate: toIsoDate(dueDate),
+        };
+  const previewQuery = useSimulationPreview(previewPayload, {
+    enabled: canSimulateQuote,
+  });
+
+  async function onContinue(values: SimulationFormValues) {
+    if (!canSimulateQuote) {
+      showToast(SIMULATE_BLOCKED_MESSAGE, { variant: "destructive" });
+      return;
+    }
+
+    try {
+      const payload = {
+        name: values.name,
+        document: values.cpf.replace(/\D/g, ""),
+        birthDate: values.birthDate,
+        email: values.email,
+        telephone: digitsOnlyPhone(values.phone),
+        productId: values.product,
+        amount: values.amount,
+        installments: values.installments,
+        firstInstallmentDate: toIsoDate(values.dueDate),
+      };
+
+      if (editing) {
+        await updateSimulation.mutateAsync({ id: editing.id, payload });
+      } else {
+        await createSimulation.mutateAsync(payload);
+      }
+      onCompleted();
+    } catch (err) {
+      showToast(
+        getApiErrorMessage(err, "Não foi possível salvar a simulação."),
+        { variant: "destructive" },
+      );
+    }
   }
 
-  function onContinue(values: SimulationFormValues) {
-    onCompleted({
-      id: crypto.randomUUID(),
-      criadaEm: new Date().toLocaleString("pt-BR"),
-      nome: values.nome,
-      nascimento: values.nascimento,
-      email: values.email,
-      celular: values.celular,
-      produto: values.product,
-      taxa: PRODUCT_RATE[values.product],
-      cpf: values.cpf,
-      valor: values.amount,
-      parcelas: values.installments,
-      vencimento: values.dueDate.getDate(),
-      parcelaCalc: calcInstallment(
-        values.amount,
-        values.installments,
-        PRODUCT_RATE[values.product],
-      ),
-    });
-  }
+  const submitting =
+    form.formState.isSubmitting ||
+    createSimulation.isPending ||
+    updateSimulation.isPending;
+  const submitDisabled =
+    submitting ||
+    !canSimulateQuote ||
+    permissionsQuery.isPending ||
+    productsQuery.isLoading ||
+    products.length === 0;
 
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <div className="mb-6">
-        <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-          Simulação
-        </h2>
-        <p className="mt-1 text-sm text-[#6B7080]">
-          Simule uma cotação de crédito para o cliente.
-        </p>
-        {hasList ? (
+    <OriginacaoPageFrame
+      title={editing ? "Editar simulação" : "Simulação"}
+      description={
+        editing
+          ? "Corrija os dados do cliente ou da cotação."
+          : "Simule uma cotação de crédito para o cliente."
+      }
+      intro={
+        hasList ? (
           <button
             type="button"
             onClick={onViewList}
@@ -152,294 +220,149 @@ export function SimulacaoForm({
             <ArrowLeft size={14} />
             Ver lista de simulações
           </button>
-        ) : null}
-      </div>
+        ) : null
+      }
+      card
+    >
+      <Form {...form}>
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={form.handleSubmit(onContinue, scrollToFirstError)}
+          noValidate
+        >
+          {simulateBlocked ? (
+            <p className="rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
+              {SIMULATE_BLOCKED_MESSAGE}
+            </p>
+          ) : null}
 
-      <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <Form {...form}>
-          <form
-            className="flex flex-col gap-5"
-            onSubmit={form.handleSubmit(onContinue)}
-            noValidate
-          >
-            <FormField
-              control={form.control}
-              name="nome"
-              render={({ field, fieldState }) => (
-                <InputField
-                  label="Nome completo"
+          <FormInput<SimulationFormValues>
+            name="name"
+            label="Nome completo"
+            icon={<User size={16} />}
+            placeholder="Nome do cliente"
+            required
+          />
+          <FormInput<SimulationFormValues>
+            name="cpf"
+            label="CPF"
+            transform={formatCpf}
+            icon={<CreditCard size={16} />}
+            placeholder="000.000.000-00"
+            inputMode="numeric"
+            maxLength={14}
+            required
+          />
+          <FormDate<SimulationFormValues>
+            name="birthDate"
+            label="Data de nascimento"
+            max={MAX_BIRTH_ISO}
+            captionLayout="dropdown"
+            required
+          />
+          <FormInput<SimulationFormValues>
+            name="email"
+            label="E-mail"
+            icon={<Mail size={16} />}
+            placeholder="cliente@email.com"
+            type="email"
+            required
+          />
+          <FormInput<SimulationFormValues>
+            name="phone"
+            label="Celular"
+            transform={formatPhone}
+            icon={<Phone size={16} />}
+            placeholder="(11) 99999-0000"
+            inputMode="tel"
+            maxLength={15}
+            required
+          />
+
+          <SimulationProductField
+            products={products}
+            productsLoading={productsQuery.isLoading}
+            suggestedProductId={suggestedProductId}
+          />
+
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel required>Quanto o cliente precisa?</FieldLabel>
+                <p className="font-display text-3xl font-bold text-brand-navy">
+                  {fmtBRL(field.value)}
+                </p>
+                <input
+                  type="range"
+                  min={AMOUNT_MIN}
+                  max={AMOUNT_MAX}
+                  step={AMOUNT_STEP}
                   value={field.value}
-                  onChange={field.onChange}
-                  icon={<User size={16} />}
-                  placeholder="Nome do cliente"
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="cpf"
-              render={({ field, fieldState }) => (
-                <InputField
-                  label="CPF"
-                  value={field.value}
-                  onChange={(value) => field.onChange(formatCpf(value))}
-                  icon={<CreditCard size={16} />}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
-                  maxLength={14}
-                  error={
-                    field.value.replace(/\D/g, "").length === 11
-                      ? fieldState.error?.message
-                      : undefined
+                  onChange={(event) =>
+                    field.onChange(Number(event.target.value))
                   }
+                  className="w-full accent-brand-navy"
                 />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="nascimento"
-              render={({ field, fieldState }) => (
-                <InputField
-                  label="Data de nascimento"
-                  value={field.value}
-                  onChange={field.onChange}
-                  icon={<CalendarDays size={16} />}
-                  type="date"
-                  error={field.value ? fieldState.error?.message : undefined}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field, fieldState }) => (
-                <InputField
-                  label="E-mail"
-                  value={field.value}
-                  onChange={field.onChange}
-                  icon={<Mail size={16} />}
-                  placeholder="cliente@email.com"
-                  type="email"
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="celular"
-              render={({ field, fieldState }) => (
-                <InputField
-                  label="Celular"
-                  value={field.value}
-                  onChange={(value) => field.onChange(formatPhone(value))}
-                  icon={<Phone size={16} />}
-                  placeholder="(11) 99999-0000"
-                  inputMode="tel"
-                  maxLength={15}
-                  error={
-                    field.value.replace(/\D/g, "").length >= 10
-                      ? fieldState.error?.message
-                      : undefined
-                  }
-                />
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="product"
-              render={({ field }) => (
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-medium text-[#1A1D2E]">
-                    Produto
-                  </Label>
-                  {!changingProduct ? (
-                    <div className="flex items-start justify-between gap-3 rounded-2xl bg-[#F5F6FA] px-4 py-3">
-                      <div>
-                        <span className="mb-1 inline-block rounded-full bg-[#FDF3E0] px-2 py-0.5 text-[11px] font-semibold text-[#854F0B]">
-                          Sugerido
-                        </span>
-                        <p className="font-semibold text-[#1A1D2E]">
-                          {field.value}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setShowRate((value) => !value)}
-                          className="flex items-center gap-1 text-xs text-[#6B7080]"
-                        >
-                          {showRate ? <EyeOff size={12} /> : <Eye size={12} />}
-                          {showRate
-                            ? `Taxa de ${rate.toFixed(2).replace(".", ",")}% ao mês · definida pelo produto`
-                            : "Mostrar taxa"}
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setChangingProduct(true)}
-                        className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand-navy"
-                      >
-                        <RefreshCw size={13} />
-                        Trocar
-                      </button>
-                    </div>
-                  ) : (
-                    <SelectField
-                      value={field.value}
-                      onChange={(value) => {
-                        field.onChange(value as SimulationProduct);
-                        setChangingProduct(false);
-                      }}
-                      options={toSelectOptions(PRODUCTS)}
-                    />
-                  )}
-                </div>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="amount"
-              render={({ field }) => (
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-sm font-medium text-[#1A1D2E]">
-                    Quanto o cliente precisa?
-                  </Label>
-                  <p className="font-fraunces text-3xl font-bold text-brand-navy">
-                    {fmtBRL(field.value)}
-                  </p>
-                  <input
-                    type="range"
-                    min={AMOUNT_MIN}
-                    max={AMOUNT_MAX}
-                    step={AMOUNT_STEP}
-                    value={field.value}
-                    onChange={(event) =>
-                      field.onChange(Number(event.target.value))
-                    }
-                    className="w-full accent-brand-navy"
-                  />
-                  <div className="flex justify-between text-xs text-[#9DA3B4]">
-                    <span>R$ 500</span>
-                    <span>R$ 30.000</span>
-                  </div>
-                </div>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="installments"
-              render={({ field }) => (
-                <ChipField
-                  label="Em quantas parcelas?"
-                  value={field.value != null ? String(field.value) : ""}
-                  onChange={(value) => field.onChange(Number(value))}
-                  options={INSTALLMENT_OPTIONS.map((n) => ({
-                    value: String(n),
-                    label: `${n}x`,
-                  }))}
-                  chipsClassName="grid grid-cols-6 gap-2"
-                />
-              )}
-            />
-
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-sm font-medium text-[#1A1D2E]">
-                Melhor dia de vencimento
-              </Label>
-              <p className="text-xs text-[#9DA3B4]">
-                Vencimento sempre no dia 5, 10, 15 ou 20, dentro de uma janela
-                de até {FIRST_INSTALLMENT_MAX_DAYS} dias (D+
-                {FIRST_INSTALLMENT_MAX_DAYS}) a partir de hoje.
-              </p>
-              <button
-                type="button"
-                onClick={openDueDateDialog}
-                className="flex items-center gap-2 rounded-2xl bg-[#F5F6FA] px-4 py-3 text-left transition-colors hover:bg-[#EFF0F5]"
-              >
-                <CalendarDays size={16} className="shrink-0 text-[#6B7080]" />
-                <span
-                  className={
-                    dueDate ? "font-semibold text-[#1A1D2E]" : "text-[#9DA3B4]"
-                  }
-                >
-                  {dueDate
-                    ? dueDate.toLocaleDateString("pt-BR", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : "Selecionar data"}
-                </span>
-              </button>
-            </div>
-
-            {installments && dueDay !== null ? (
-              <div className="rounded-2xl bg-[#F5F6FA] px-4 py-3">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-[#6B7080]">Parcela</span>
-                  <span className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-                    {fmtBRL(installmentAmount)}/mês
-                  </span>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>R$ 500</span>
+                  <span>R$ 30.000</span>
                 </div>
               </div>
-            ) : null}
+            )}
+          />
 
-            <Button
-              type="submit"
-              variant="yellow"
-              className="mt-0 h-11 w-full rounded-2xl"
-              disabled={!form.formState.isValid}
-            >
-              Continuar
-            </Button>
-          </form>
-        </Form>
-      </section>
+          <FormField
+            control={form.control}
+            name="installments"
+            render={({ field, fieldState }) => (
+              <ChipField
+                name={field.name}
+                label="Em quantas parcelas?"
+                value={field.value != null ? String(field.value) : ""}
+                onChange={(value) => field.onChange(Number(value))}
+                options={installmentOptions.map((n) => ({
+                  value: String(n),
+                  label: `${n}x`,
+                }))}
+                chipsClassName="grid grid-cols-6 gap-2"
+                required
+                error={fieldState.error?.message}
+              />
+            )}
+          />
 
-      <Dialog open={dueDateDialogOpen} onOpenChange={setDueDateDialogOpen}>
-        <DialogContent className="max-w-[340px]">
-          <DialogHeader>
-            <DialogTitle>Selecionar o dia de vencimento</DialogTitle>
-            <DialogDescription>
-              Sempre no dia 5, 10, 15 ou 20, dentro de uma janela de até{" "}
-              {FIRST_INSTALLMENT_MAX_DAYS} dias a partir de hoje.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={draftDueDate}
-              onSelect={setDraftDueDate}
-              disabled={[
-                { before: today },
-                { after: dueDateLimit },
-                (date) => !isAllowedDueDate(date),
-              ]}
-              className="rounded-lg border"
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 rounded-xl"
-              onClick={() => setDueDateDialogOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              className="h-10 rounded-xl font-semibold"
-              disabled={!draftDueDate}
-              onClick={confirmDueDate}
-            >
-              Confirmar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          <SimulationDueDateField today={today} />
+
+          <SimulationInstallmentPreview
+            visible={installments != null && dueDate != null}
+            canSimulate={canSimulateQuote}
+            hasPayload={previewPayload != null}
+            isError={previewQuery.isError}
+            amount={previewQuery.data?.installmentAmount}
+          />
+
+          <Button
+            type="submit"
+            variant="yellow"
+            size="pill"
+            className="w-full"
+            disabled={submitDisabled}
+          >
+            {submitting ? (
+              <>
+                <Loader2 size={15} className="animate-spin" />
+                {editing ? "Salvando…" : "Simulando…"}
+              </>
+            ) : editing ? (
+              "Salvar"
+            ) : (
+              "Continuar"
+            )}
+          </Button>
+        </form>
+      </Form>
+    </OriginacaoPageFrame>
   );
 }

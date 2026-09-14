@@ -29,12 +29,13 @@ export function AppShell() {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  const [hideBottomNav, setHideBottomNav] = useState(false);
 
   const activeTab = pathToNavTab(location.pathname);
   const navItems = getNavItemsForPermissions(user?.permissions);
 
   const handleNavigate = (tab: NavTab) => {
-    const item = NAV_ITEMS.find((nav) => nav.key === tab);
+    const item = navItems.find((nav) => nav.key === tab);
     if (item) {
       navigate(item.path);
     }
@@ -52,7 +53,13 @@ export function AppShell() {
   return (
     <>
       <ScrollRestoration />
-      <div className="flex min-h-screen bg-background font-sans md:flex">
+      <div
+        className={
+          hideBottomNav
+            ? "flex h-dvh overflow-hidden bg-background font-sans md:flex"
+            : "flex min-h-dvh bg-background font-sans md:flex"
+        }
+      >
         <AppSidebar
           activeTab={activeTab}
           items={navItems}
@@ -60,15 +67,22 @@ export function AppShell() {
           onRequestLogout={handleRequestLogout}
         />
 
-        <div className="flex w-full min-w-0 flex-1 flex-col md:ml-56">
-          <Outlet context={{ onMobileLogout: handleRequestLogout }} />
+        <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col md:ml-56">
+          <Outlet
+            context={{
+              onMobileLogout: handleRequestLogout,
+              setHideBottomNav,
+            }}
+          />
         </div>
 
-        <BottomNav
-          activeTab={activeTab}
-          items={navItems}
-          onNavigate={handleNavigate}
-        />
+        {hideBottomNav ? null : (
+          <BottomNav
+            activeTab={activeTab}
+            items={navItems}
+            onNavigate={handleNavigate}
+          />
+        )}
 
         <ConfirmDialog
           open={confirmLogoutOpen}

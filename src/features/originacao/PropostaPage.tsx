@@ -1,25 +1,42 @@
+import { useEffect, useState } from "react";
+import { isAxiosError } from "axios";
 import { useForm } from "react-hook-form";
-import {
-  ArrowLeft,
-  CheckCircle2,
-  ExternalLink,
-  FileText,
-  MessageSquare,
-} from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useOutletContext } from "react-router-dom";
+import type { AppShellOutletContext } from "@/components/layout/shell-context";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { OriginacaoProgress } from "@/features/originacao/components/OriginacaoProgress";
+import { useToast } from "@/contexts/toast/toast-context";
+import { OriginacaoTaskHeader } from "@/features/originacao/components/OriginacaoTaskHeader";
+import { OriginacaoTaskLayout } from "@/features/originacao/components/OriginacaoTaskLayout";
 import { ActivityIncomeSection } from "@/features/originacao/components/proposta/ActivityIncomeSection";
 import { AddressSection } from "@/features/originacao/components/proposta/AddressSection";
 import { DocumentsSection } from "@/features/originacao/components/proposta/DocumentsSection";
 import { FinancialSection } from "@/features/originacao/components/proposta/FinancialSection";
 import { GuarantorSection } from "@/features/originacao/components/proposta/GuarantorSection";
 import { PartnerOpinionSection } from "@/features/originacao/components/proposta/PartnerOpinionSection";
+import { ProposalList } from "@/features/originacao/components/proposta/ProposalList";
+import { ProposalSuccess } from "@/features/originacao/components/proposta/ProposalSuccess";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
+import { useSaveQuoteAddress } from "@/features/originacao/hooks/useSaveQuoteAddress";
+import { useSaveQuoteFinancial } from "@/features/originacao/hooks/useSaveQuoteFinancial";
+import { useSaveQuoteGuarantor } from "@/features/originacao/hooks/useSaveQuoteGuarantor";
+import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
+import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQuotePartnerOpinion";
+import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
+import {
+  useCompleteQuoteDocumentation,
+  useSubmitQuoteDraft,
+} from "@/features/originacao/hooks/useQuoteDocumentation";
 import { useOriginacao } from "@/features/originacao/originacao-context";
+import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
   PROPOSAL_STEPS,
+  type ProposalFormData,
+  type ProposalSnapshot,
+} from "@/features/originacao/data/proposal";
+import { getApiErrorMessage } from "@/lib/api/errors";
+import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
+import {
   isActivityIncomeValid,
   isAddressValid,
   isDocumentsValid,
@@ -27,211 +44,20 @@ import {
   isGuarantorValid,
   isPartnerOpinionValid,
   isRegistrationValid,
-  type ProposalFormData,
-  type ProposalSnapshot,
-} from "@/features/originacao/data/proposal";
-import { formatCpf } from "@/lib/format/tax-id";
+} from "@/features/originacao/schemas/proposal-form";
+import { getProposalStepFieldErrors } from "@/features/originacao/utils/proposal-step-errors";
+import {
+  scrollTaskToTop,
+  scrollToField,
+} from "@/features/originacao/utils/scroll-to-first-error";
 import { fmtBRL } from "@/lib/utils";
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
-
-function StepHeader({ current }: { current: number }) {
-  return (
-    <div className="mb-4 rounded-2xl border border-[#E2E4EC] bg-white p-4 shadow-sm">
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="text-xs font-bold text-brand-navy">
-          Passo {current + 1} de {PROPOSAL_STEPS.length}
-        </span>
-        <span className="text-xs font-medium text-[#6B7080]">
-          {PROPOSAL_STEPS[current]}
-        </span>
-      </div>
-      <OriginacaoProgress
-        value={((current + 1) / PROPOSAL_STEPS.length) * 100}
-      />
-    </div>
-  );
-}
-
-function SimulationSummary({ simulation }: { simulation: SimulacaoSnapshot }) {
-  return (
-    <div className="mb-4 rounded-2xl bg-[#F5F6FA] px-4 py-3">
-      <p className="text-xs text-[#6B7080]">Baseada na simulação</p>
-      <p className="font-semibold text-[#1A1D2E]">
-        {fmtBRL(simulation.valor)} em {simulation.parcelas}x de{" "}
-        {fmtBRL(simulation.parcelaCalc)}
-      </p>
-      <p className="text-xs text-[#6B7080]">
-        {simulation.produto} · CPF {formatCpf(simulation.cpf)}
-      </p>
-    </div>
-  );
-}
-
-function ProposalList({
-  proposals,
-  onOpen,
-}: {
-  proposals: ProposalSnapshot[];
-  onOpen: (id: string) => void;
-}) {
-  return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <div className="mb-6">
-        <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-          Propostas
-        </h2>
-        <p className="mt-1 text-sm text-[#6B7080]">
-          Propostas criadas nesta sessão — rascunhos podem ser retomados a
-          qualquer momento.
-        </p>
-      </div>
-
-      {proposals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F5F6FA]">
-            <FileText size={22} className="text-[#9DA3B4]" />
-          </div>
-          <p className="mb-1 font-semibold text-[#1A1D2E]">
-            Nenhuma proposta ainda
-          </p>
-          <p className="text-sm text-[#9DA3B4]">
-            Inicie uma proposta a partir de uma simulação concluída.
-          </p>
-        </div>
-      ) : null}
-
-      <div className="flex flex-col gap-3">
-        {[...proposals].reverse().map((proposal) => (
-          <div
-            key={proposal.id}
-            className="flex flex-col gap-3 rounded-2xl border border-[#E2E4EC] bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <span
-                className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                  proposal.status === "draft"
-                    ? "bg-[#FDF3E0] text-[#854F0B]"
-                    : "bg-[#E6F7F1] text-[#0F6E56]"
-                }`}
-              >
-                {proposal.status === "draft" ? "Rascunho" : "Concluída"}
-              </span>
-              <span className="shrink-0 text-xs text-[#9DA3B4]">
-                {proposal.updatedAt}
-              </span>
-            </div>
-            <div>
-              <p className="font-fraunces text-base font-bold text-[#1A1D2E]">
-                {proposal.simulation.nome}
-              </p>
-              <p className="font-fraunces text-lg font-bold text-[#1A1D2E]">
-                {fmtBRL(proposal.simulation.valor)}
-              </p>
-              <p className="text-sm text-[#6B7080]">
-                {proposal.simulation.parcelas}x de{" "}
-                {fmtBRL(proposal.simulation.parcelaCalc)}
-              </p>
-              <p className="mt-1 text-xs text-[#9DA3B4]">
-                CPF {formatCpf(proposal.simulation.cpf)}
-              </p>
-            </div>
-            {proposal.status === "draft" ? (
-              <>
-                <OriginacaoProgress
-                  value={((proposal.step + 1) / PROPOSAL_STEPS.length) * 100}
-                />
-                <p className="text-xs text-[#9DA3B4]">
-                  Passo {proposal.step + 1} de {PROPOSAL_STEPS.length} ·{" "}
-                  {PROPOSAL_STEPS[proposal.step]}
-                </p>
-                <Button
-                  variant="outline"
-                  className="h-10 rounded-2xl"
-                  onClick={() => onOpen(proposal.id)}
-                >
-                  Continuar preenchimento
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="ghost"
-                className="h-10 rounded-2xl"
-                onClick={() => onOpen(proposal.id)}
-              >
-                Ver proposta
-              </Button>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProposalSuccess({
-  proposal,
-  onBackToList,
-}: {
-  proposal: ProposalSnapshot;
-  onBackToList: () => void;
-}) {
-  const { simulation } = proposal;
-
-  return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <button
-        type="button"
-        onClick={onBackToList}
-        className="mb-4 flex items-center gap-1 text-sm font-semibold text-brand-navy"
-      >
-        <ArrowLeft size={14} />
-        Ver todas as propostas
-      </button>
-
-      <SimulationSummary simulation={simulation} />
-
-      <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-3">
-          <Alert variant="success">
-            <CheckCircle2 size={22} />
-            <div>
-              <AlertTitle>Proposta criada</AlertTitle>
-              <AlertDescription>
-                O cliente deve acessar o Portal do Cliente para revisar os
-                dados, dar os consentimentos e concluir a aprovação.
-              </AlertDescription>
-            </div>
-          </Alert>
-
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] py-3.5 font-semibold text-white transition-colors hover:bg-[#1ebe5a]"
-            onClick={() =>
-              alert("Abrirá o WhatsApp com o link do Portal do Cliente.")
-            }
-          >
-            <MessageSquare size={18} />
-            Enviar link pelo WhatsApp
-            <ExternalLink size={14} className="opacity-70" />
-          </button>
-
-          <Button
-            variant="ghost"
-            className="h-11 rounded-2xl"
-            onClick={onBackToList}
-          >
-            Ver todas as propostas
-          </Button>
-        </div>
-      </section>
-    </div>
-  );
-}
 
 export function PropostaPage() {
+  const { onMobileLogout } = useOutletContext<AppShellOutletContext>();
   const {
     proposals,
     openProposalId,
+    openingProposalId,
     openProposal,
     closeProposal,
     updateProposal,
@@ -241,12 +67,26 @@ export function PropostaPage() {
     ? (proposals.find((item) => item.id === openProposalId) ?? null)
     : null;
 
+  if (!openProposalId) {
+    return <ProposalList onOpen={openProposal} openingId={openingProposalId} />;
+  }
+
   if (!proposal) {
-    return <ProposalList proposals={proposals} onOpen={openProposal} />;
+    return (
+      <div className="flex flex-1 items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
+        Carregando proposta…
+      </div>
+    );
   }
 
   if (proposal.status === "completed") {
-    return <ProposalSuccess proposal={proposal} onBackToList={closeProposal} />;
+    return (
+      <ProposalSuccess
+        proposal={proposal}
+        onBackToList={closeProposal}
+        onLogout={onMobileLogout}
+      />
+    );
   }
 
   return (
@@ -255,6 +95,7 @@ export function PropostaPage() {
       proposal={proposal}
       onUpdate={updateProposal}
       onClose={closeProposal}
+      onLogout={onMobileLogout}
     />
   );
 }
@@ -263,39 +104,207 @@ function ProposalWizard({
   proposal,
   onUpdate,
   onClose,
+  onLogout,
 }: {
   proposal: ProposalSnapshot;
   onUpdate: (proposal: ProposalSnapshot) => void;
   onClose: () => void;
+  onLogout?: () => void;
 }) {
   const form = useForm<ProposalFormData>({
     defaultValues: proposal.data,
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
+  const { showToast } = useToast();
+  const { mutateAsync: saveRegistration, isPending: savingRegistration } =
+    useSaveQuoteRegistration();
+  const { mutateAsync: saveIncome, isPending: savingIncome } =
+    useSaveQuoteIncome();
+  const { mutateAsync: saveAddress, isPending: savingAddress } =
+    useSaveQuoteAddress();
+  const { mutateAsync: savePartnerOpinion, isPending: savingPartnerOpinion } =
+    useSaveQuotePartnerOpinion();
+  const { mutateAsync: saveGuarantor, isPending: savingGuarantor } =
+    useSaveQuoteGuarantor();
+  const { mutateAsync: saveFinancial, isPending: savingFinancial } =
+    useSaveQuoteFinancial();
+  const {
+    mutateAsync: completeDocumentation,
+    isPending: completingDocumentation,
+  } = useCompleteQuoteDocumentation();
+  const { mutateAsync: submitDraft, isPending: submittingDraft } =
+    useSubmitQuoteDraft();
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const savingStep =
+    savingRegistration ||
+    savingIncome ||
+    savingAddress ||
+    savingPartnerOpinion ||
+    savingGuarantor ||
+    savingFinancial ||
+    completingDocumentation ||
+    submittingDraft;
 
   const data = form.watch();
   const { simulation, step } = proposal;
-  const stepValid = [
-    isRegistrationValid(data.registration),
-    isActivityIncomeValid(data.activityIncome),
-    isAddressValid(data.address),
-    isPartnerOpinionValid(data.partnerOpinion),
-    isGuarantorValid(data.guarantor),
-    isFinancialValid(),
-    isDocumentsValid(data.documents),
-  ];
+
+  function computeStepValid(values: ProposalFormData) {
+    const incomeProofRequired =
+      values.activityIncome.availableProof !== AvailableIncomeProof.NONE;
+    return [
+      isRegistrationValid(values.registration),
+      isActivityIncomeValid(values.activityIncome),
+      isAddressValid(values.address),
+      isPartnerOpinionValid(values.partnerOpinion),
+      isGuarantorValid(values.guarantor),
+      isFinancialValid(),
+      isDocumentsValid(values.documents, incomeProofRequired),
+    ];
+  }
+
+  useEffect(() => {
+    if (!submitAttempted) return;
+    const errors = getProposalStepFieldErrors(step, form.getValues());
+    form.clearErrors();
+    for (const item of errors) {
+      form.setError(item.name, { type: "manual", message: item.message });
+    }
+    // Revalida o passo atual depois do primeiro Avançar.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- form methods are stable
+  }, [step, submitAttempted, data]);
+
+  useEffect(() => {
+    scrollTaskToTop();
+  }, [step]);
 
   function persist(patch: Partial<ProposalSnapshot> = {}) {
+    const values = form.getValues();
     onUpdate({
       ...proposal,
-      data: form.getValues(),
-      stepValid,
+      data: values,
+      stepValid: computeStepValid(values),
       updatedAt: new Date().toLocaleString("pt-BR"),
       ...patch,
     });
   }
 
-  function handleNext() {
-    if (!stepValid[step]) return;
+  function applyStepErrors() {
+    const errors = getProposalStepFieldErrors(step, form.getValues());
+    form.clearErrors();
+    for (const item of errors) {
+      form.setError(item.name, { type: "manual", message: item.message });
+    }
+    return errors;
+  }
+
+  async function handleNext() {
+    const errors = applyStepErrors();
+    setSubmitAttempted(true);
+    if (errors.length > 0) {
+      scrollToField(errors[0].name);
+      return;
+    }
+    if (step === 0) {
+      try {
+        await saveRegistration({
+          quoteId: proposal.id,
+          registration: form.getValues().registration,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o cadastro."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 1) {
+      try {
+        await saveIncome({
+          quoteId: proposal.id,
+          activityIncome: form.getValues().activityIncome,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar atividade e renda."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 2) {
+      try {
+        await saveAddress({
+          quoteId: proposal.id,
+          address: form.getValues().address,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o endereço."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 3) {
+      try {
+        await savePartnerOpinion({
+          quoteId: proposal.id,
+          partnerOpinion: form.getValues().partnerOpinion,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o parecer."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 4) {
+      try {
+        await saveGuarantor({
+          quoteId: proposal.id,
+          guarantor: form.getValues().guarantor,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o avalista."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 5) {
+      try {
+        await saveFinancial({
+          quoteId: proposal.id,
+          financial: form.getValues().financial,
+        });
+      } catch (err) {
+        const message = isAxiosError(err)
+          ? getApiErrorMessage(err, "Não foi possível salvar o financeiro.")
+          : err instanceof Error
+            ? err.message
+            : "Não foi possível salvar o financeiro.";
+        showToast(message, { variant: "destructive" });
+        return;
+      }
+    }
+    if (step === 6) {
+      try {
+        await completeDocumentation(proposal.id);
+        await submitDraft(proposal.id);
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível concluir a proposta."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    setSubmitAttempted(false);
+    form.clearErrors();
     if (step === PROPOSAL_STEPS.length - 1) {
       persist({ status: "completed" });
     } else {
@@ -304,6 +313,8 @@ function ProposalWizard({
   }
 
   function handleBack() {
+    setSubmitAttempted(false);
+    form.clearErrors();
     persist({ step: Math.max(0, step - 1) });
   }
 
@@ -313,84 +324,74 @@ function ProposalWizard({
   }
 
   return (
-    <div className="flex-1 px-5 pt-5 pb-24 md:max-w-xl md:px-8 md:pb-8">
-      <div className="mb-4">
-        <h2 className="font-fraunces text-xl font-bold text-[#1A1D2E]">
-          Proposta
-        </h2>
-        <p className="mt-1 text-sm text-[#6B7080]">
-          Preenchimento completo: cadastro, atividade e renda, endereço, parecer
-          do parceiro, avalista, financeiro e documentação.
-        </p>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleClose}
-        className="mb-4 flex items-center gap-1 text-sm font-semibold text-brand-navy"
-      >
-        <ArrowLeft size={14} />
-        Salvar rascunho e ver todas as propostas
-      </button>
-
-      <SimulationSummary simulation={simulation} />
-      <StepHeader current={step} />
-
-      <section className="rounded-2xl border border-[#E2E4EC] bg-white p-5 shadow-sm">
-        <Form {...form}>
-          <div className={step === 0 ? "" : "hidden"}>
+    <OriginacaoTaskLayout
+      header={
+        <OriginacaoTaskHeader
+          title={`${PROPOSAL_STEPS[step]} · ${step + 1}/${PROPOSAL_STEPS.length}`}
+          subtitle={`${fmtBRL(simulation.amount)} · ${simulation.installments}x · ${simulation.productName}`}
+          progress={((step + 1) / PROPOSAL_STEPS.length) * 100}
+          backLabel="Salvar rascunho e ver todas as propostas"
+          onBack={handleClose}
+          onLogout={onLogout}
+        />
+      }
+    >
+      <Form {...form}>
+        <form
+          className="flex flex-col"
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleNext();
+          }}
+          noValidate
+        >
+          {step === 0 ? (
             <RegistrationSection
-              product={simulation.produto}
-              rate={simulation.taxa}
-              cpf={simulation.cpf}
-              name={simulation.nome}
-              birthDate={simulation.nascimento}
+              product={simulation.productName}
+              rate={productRatePercent({
+                maxInterestRate: simulation.interestRate,
+              })}
+              cpf={simulation.document}
+              name={simulation.name}
+              birthDate={simulation.birthDate}
               email={simulation.email}
-              phone={simulation.celular}
+              phone={simulation.telephone}
             />
-          </div>
-          <div className={step === 1 ? "" : "hidden"}>
-            <ActivityIncomeSection />
-          </div>
-          <div className={step === 2 ? "" : "hidden"}>
-            <AddressSection />
-          </div>
-          <div className={step === 3 ? "" : "hidden"}>
-            <PartnerOpinionSection />
-          </div>
-          <div className={step === 4 ? "" : "hidden"}>
-            <GuarantorSection />
-          </div>
-          <div className={step === 5 ? "" : "hidden"}>
-            <FinancialSection />
-          </div>
-          <div className={step === 6 ? "" : "hidden"}>
-            <DocumentsSection />
-          </div>
-        </Form>
-
-        <div className="mt-5 flex gap-2">
-          {step > 0 ? (
-            <Button
-              variant="outline"
-              className="h-11 rounded-2xl px-6"
-              onClick={handleBack}
-            >
-              Voltar
-            </Button>
           ) : null}
-          <Button
-            variant="yellow"
-            className="h-11 flex-1 rounded-2xl"
-            disabled={!stepValid[step]}
-            onClick={handleNext}
-          >
-            {step === PROPOSAL_STEPS.length - 1
-              ? "Concluir proposta"
-              : "Avançar"}
-          </Button>
-        </div>
-      </section>
-    </div>
+          {step === 1 ? <ActivityIncomeSection /> : null}
+          {step === 2 ? <AddressSection /> : null}
+          {step === 3 ? <PartnerOpinionSection /> : null}
+          {step === 4 ? <GuarantorSection /> : null}
+          {step === 5 ? <FinancialSection /> : null}
+          {step === 6 ? <DocumentsSection quoteId={proposal.id} /> : null}
+
+          <div className="mt-6 flex gap-2">
+            {step > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="pill"
+                className="shrink-0 px-6"
+                onClick={handleBack}
+                disabled={savingStep}
+              >
+                Voltar
+              </Button>
+            ) : null}
+            <Button
+              type="submit"
+              variant="yellow"
+              size="pill"
+              className="min-w-0 flex-1"
+              disabled={savingStep}
+            >
+              {step === PROPOSAL_STEPS.length - 1
+                ? "Concluir proposta"
+                : "Avançar"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </OriginacaoTaskLayout>
   );
 }

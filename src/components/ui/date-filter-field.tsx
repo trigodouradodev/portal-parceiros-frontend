@@ -10,15 +10,31 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import {
+  FieldErrorMessage,
+  FieldLabel,
+  fieldAnchorProps,
+} from "@/components/ui/field-hint";
+import {
+  fieldControlClassName,
+  fieldIconClassName,
+} from "@/components/ui/field-control";
 import { formatDate, parseCalendarDate } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 
 interface DateFilterFieldProps {
+  name?: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  required?: boolean;
+  error?: string;
+  disabled?: boolean;
+  min?: string;
+  max?: string;
+  captionLayout?: "label" | "dropdown";
+  isDateDisabled?: (date: Date) => boolean;
 }
 
 /**
@@ -28,16 +44,35 @@ interface DateFilterFieldProps {
  * nativo do navegador. Introduzido na AUREA-346 (filtros da Carteira).
  */
 export function DateFilterField({
+  name,
   label,
   value,
   onChange,
   className,
+  required,
+  error,
+  disabled,
+  min,
+  max,
+  captionLayout = "label",
+  isDateDisabled,
 }: DateFilterFieldProps) {
   const [open, setOpen] = useState(false);
   const selected = value ? (parseCalendarDate(value) ?? undefined) : undefined;
   const [draft, setDraft] = useState<Date | undefined>(selected);
+  const minDate = min ? (parseCalendarDate(min) ?? undefined) : undefined;
+  const maxDate = max ? (parseCalendarDate(max) ?? undefined) : undefined;
+  const endMonth = maxDate
+    ? new Date(maxDate.getFullYear(), maxDate.getMonth())
+    : undefined;
+  const startMonth = minDate
+    ? new Date(minDate.getFullYear(), minDate.getMonth())
+    : captionLayout === "dropdown"
+      ? new Date((maxDate ?? new Date()).getFullYear() - 120, 0)
+      : undefined;
 
   function handleOpenChange(next: boolean) {
+    if (disabled) return;
     if (next) setDraft(selected);
     setOpen(next);
   }
@@ -53,23 +88,33 @@ export function DateFilterField({
   }
 
   return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>
+    <div
+      className={cn("flex flex-col gap-1.5", className)}
+      {...fieldAnchorProps(name, error)}
+    >
+      <FieldLabel required={required}>{label}</FieldLabel>
       <button
         type="button"
+        disabled={disabled}
         onClick={() => handleOpenChange(true)}
-        className="flex items-center gap-3 rounded-2xl border-2 border-transparent bg-[#F5F6FA] px-4 py-3 text-left transition-colors focus-within:border-brand-navy"
+        aria-invalid={error ? true : undefined}
+        className={fieldControlClassName({ error: Boolean(error), disabled })}
       >
-        <CalendarIcon size={16} className="shrink-0 text-[#9DA3B4]" />
+        <CalendarIcon size={16} className={fieldIconClassName} />
         <span
           className={cn(
             "flex-1 text-sm",
-            value ? "text-[#1A1D2E]" : "text-[#C8CBD8]",
+            disabled
+              ? "text-muted-foreground"
+              : value
+                ? "text-foreground"
+                : "text-muted-foreground/70",
           )}
         >
           {value ? formatDate(value) : "dd/mm/aaaa"}
         </span>
       </button>
+      <FieldErrorMessage error={error} />
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-[340px]">
@@ -81,6 +126,14 @@ export function DateFilterField({
               mode="single"
               selected={draft}
               onSelect={setDraft}
+              captionLayout={captionLayout}
+              startMonth={startMonth}
+              endMonth={endMonth}
+              disabled={[
+                ...(minDate ? [{ before: minDate }] : []),
+                ...(maxDate ? [{ after: maxDate }] : []),
+                ...(isDateDisabled ? [isDateDisabled] : []),
+              ]}
               className="rounded-lg border"
             />
           </div>
@@ -88,16 +141,12 @@ export function DateFilterField({
             <Button
               type="button"
               variant="outline"
-              className="h-10 rounded-xl"
+              size="pillSm"
               onClick={handleClear}
             >
               Limpar
             </Button>
-            <Button
-              type="button"
-              className="h-10 rounded-xl bg-brand-navy font-semibold text-white"
-              onClick={handleConfirm}
-            >
+            <Button type="button" size="pillSm" onClick={handleConfirm}>
               Aplicar
             </Button>
           </DialogFooter>

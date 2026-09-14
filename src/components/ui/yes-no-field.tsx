@@ -1,16 +1,30 @@
 import { ChipButton } from "@/components/ui/chip-button";
-import { Label } from "@/components/ui/label";
+import {
+  FieldErrorMessage,
+  FieldLabel,
+  fieldAnchorProps,
+} from "@/components/ui/field-hint";
 
 interface YesNoFieldProps {
+  name?: string;
   label: string;
   value: boolean | null;
   onChange: (value: boolean) => void;
+  required?: boolean;
+  error?: string;
 }
 
-export function YesNoField({ label, value, onChange }: YesNoFieldProps) {
+export function YesNoField({
+  name,
+  label,
+  value,
+  onChange,
+  required,
+  error,
+}: YesNoFieldProps) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>
+    <div className="flex flex-col gap-1.5" {...fieldAnchorProps(name, error)}>
+      <FieldLabel required={required}>{label}</FieldLabel>
       <div className="flex gap-2">
         <ChipButton active={value === true} onClick={() => onChange(true)}>
           Sim
@@ -19,6 +33,7 @@ export function YesNoField({ label, value, onChange }: YesNoFieldProps) {
           Não
         </ChipButton>
       </div>
+      <FieldErrorMessage error={error} />
     </div>
   );
 }

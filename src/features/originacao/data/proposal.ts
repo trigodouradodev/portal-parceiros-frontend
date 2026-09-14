@@ -1,7 +1,35 @@
-import type { SimulacaoSnapshot } from "@/features/originacao/types";
-import { calcAge, isAdultAge } from "@/features/originacao/utils/calc-age";
-import { isCompleteCep } from "@/features/originacao/utils/format-cep";
-import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
+import type { SelectOption } from "@/components/ui/select-option";
+import type { SimulationSnapshot } from "@/features/originacao/types";
+import {
+  CreditPurpose,
+  CustomerRelationshipOrigin,
+  EconomicActivityCategory,
+  GovernmentProgram,
+  LoanInstitution,
+  MaritalStatus,
+  PartnerAssessment,
+} from "@/services/quotes/quotes.enums";
+import {
+  ACTIVITY_CATEGORY_OPTIONS as QUOTE_ACTIVITY_CATEGORY_OPTIONS,
+  ACTIVITY_TIME_OPTIONS as QUOTE_ACTIVITY_TIME_OPTIONS,
+  CREDIT_PURPOSE_OPTIONS as QUOTE_CREDIT_PURPOSE_OPTIONS,
+  CREDITOR_INSTITUTION_OPTIONS as QUOTE_CREDITOR_INSTITUTION_OPTIONS,
+  EXPENSE_CATEGORY_OPTIONS as QUOTE_EXPENSE_CATEGORY_OPTIONS,
+  GENDER_OPTIONS as QUOTE_GENDER_OPTIONS,
+  GOVERNMENT_PROGRAM_OPTIONS as QUOTE_GOVERNMENT_PROGRAM_OPTIONS,
+  HOW_KNOWS_CLIENT_OPTIONS as QUOTE_HOW_KNOWS_CLIENT_OPTIONS,
+  DOCUMENTATION_INCOME_PROOF_OPTIONS as QUOTE_DOCUMENTATION_INCOME_PROOF_OPTIONS,
+  INCOME_PROOF_OPTIONS as QUOTE_INCOME_PROOF_OPTIONS,
+  INCOME_SOURCE_OPTIONS as QUOTE_INCOME_SOURCE_OPTIONS,
+  KINSHIP_OPTIONS as QUOTE_KINSHIP_OPTIONS,
+  LOAN_CATEGORY_OPTIONS as QUOTE_LOAN_CATEGORY_OPTIONS,
+  LOAN_FREQUENCY_OPTIONS as QUOTE_LOAN_FREQUENCY_OPTIONS,
+  MARITAL_STATUS_OPTIONS as QUOTE_MARITAL_STATUS_OPTIONS,
+  OVERALL_RATING_OPTIONS as QUOTE_OVERALL_RATING_OPTIONS,
+  PROPERTY_STATUS_OPTIONS as QUOTE_PROPERTY_STATUS_OPTIONS,
+  RELATIONSHIP_TIME_OPTIONS as QUOTE_RELATIONSHIP_TIME_OPTIONS,
+  RESIDENCE_TIME_OPTIONS as QUOTE_RESIDENCE_TIME_OPTIONS,
+} from "@/services/quotes/quotes.labels";
 
 export const PROPOSAL_STEPS = [
   "Cadastro",
@@ -43,42 +71,42 @@ export const UF_LIST = [
   "TO",
 ] as const;
 
-export const ACTIVITY_CATEGORY_OPTIONS = [
-  "Aposentado/Pensionista",
-  "Servidor Público",
-  "Empregado CLT",
-  "Empresário (CNPJ ativo)",
-  "Autônomo/Informal (MEI)",
-  "Sem ocupação remunerada/Desempregado",
-  "Outros",
-];
+/** Options com `value` = código estável do backend e `label` em PT. */
+export const ACTIVITY_CATEGORY_OPTIONS: SelectOption[] =
+  QUOTE_ACTIVITY_CATEGORY_OPTIONS;
+export const CREDIT_PURPOSE_OPTIONS: SelectOption[] =
+  QUOTE_CREDIT_PURPOSE_OPTIONS;
+export const RESIDENCE_TIME_OPTIONS: SelectOption[] =
+  QUOTE_RESIDENCE_TIME_OPTIONS;
+export const PROPERTY_STATUS_OPTIONS: SelectOption[] =
+  QUOTE_PROPERTY_STATUS_OPTIONS;
+export const GOVERNMENT_PROGRAM_OPTIONS: SelectOption[] =
+  QUOTE_GOVERNMENT_PROGRAM_OPTIONS;
+export const GENDER_OPTIONS: SelectOption[] = QUOTE_GENDER_OPTIONS;
+export const MARITAL_STATUS_OPTIONS: SelectOption[] =
+  QUOTE_MARITAL_STATUS_OPTIONS;
+export const ACTIVITY_TIME_OPTIONS: SelectOption[] =
+  QUOTE_ACTIVITY_TIME_OPTIONS;
+export const INCOME_SOURCE_OPTIONS: SelectOption[] =
+  QUOTE_INCOME_SOURCE_OPTIONS;
+export const INCOME_PROOF_OPTIONS: SelectOption[] = QUOTE_INCOME_PROOF_OPTIONS;
+export const RELATIONSHIP_TIME_OPTIONS: SelectOption[] =
+  QUOTE_RELATIONSHIP_TIME_OPTIONS;
+export const HOW_KNOWS_CLIENT_OPTIONS: SelectOption[] =
+  QUOTE_HOW_KNOWS_CLIENT_OPTIONS;
+export const OVERALL_RATING_OPTIONS: SelectOption[] =
+  QUOTE_OVERALL_RATING_OPTIONS;
+export const EXPENSE_CATEGORY_OPTIONS: SelectOption[] =
+  QUOTE_EXPENSE_CATEGORY_OPTIONS;
+export const LOAN_FREQUENCY_OPTIONS: SelectOption[] =
+  QUOTE_LOAN_FREQUENCY_OPTIONS;
+export const CREDITOR_INSTITUTION_OPTIONS: SelectOption[] =
+  QUOTE_CREDITOR_INSTITUTION_OPTIONS;
+export const LOAN_CATEGORY_OPTIONS: SelectOption[] =
+  QUOTE_LOAN_CATEGORY_OPTIONS;
+export const KINSHIP_OPTIONS: SelectOption[] = QUOTE_KINSHIP_OPTIONS;
 
-export const OCCUPATION_OPTIONS = [
-  "Comerciante",
-  "Autônomo",
-  "Motorista",
-  "Vendedor(a)",
-  "Cabeleireiro(a)",
-  "Costureiro(a)",
-  "Pedreiro(a)",
-  "Cozinheiro(a)",
-  "Diarista",
-  "Outros",
-];
-
-export const CREDIT_PURPOSE_OPTIONS = [
-  "Fluxo de caixa do negócio",
-  "Compra de mercadoria/estoque",
-  "Equipamento/veículo de trabalho",
-  "Reforma ou construção",
-  "Abertura de novo negócio",
-  "Quitação/troca de dívida",
-  "Despesa pessoal",
-  "Saúde",
-  "Educação",
-  "Outro",
-];
-
+/** Credor de dívida do passo Cadastro — campo só de UI (não vai no PATCH registration). */
 export const DEBT_CREDITOR_OPTIONS = [
   "Banco",
   "Cartão de crédito",
@@ -86,161 +114,21 @@ export const DEBT_CREDITOR_OPTIONS = [
   "Caixinha",
 ];
 
-export const RESIDENCE_TIME_OPTIONS = [
-  "Menos de 6 meses",
-  "6 meses a 2 anos",
-  "2 a 5 anos",
-  "Mais de 5 anos",
-];
+export const INCOME_DOCUMENT_TYPE_OPTIONS: SelectOption[] =
+  QUOTE_DOCUMENTATION_INCOME_PROOF_OPTIONS;
 
-export const PROPERTY_STATUS_OPTIONS = [
-  "Próprio quitado",
-  "Próprio financiado",
-  "Alugado",
-  "Cedido",
-];
-
-export const GOVERNMENT_PROGRAM_OPTIONS = [
-  "Nenhum",
-  "Bolsa Família",
-  "BPC",
-  "Outro",
-];
-
-export const GENDER_OPTIONS = ["Masculino", "Feminino", "Não informado"];
-
-export const MARITAL_STATUS_OPTIONS = [
-  "Solteiro(a)",
-  "Casado(a)",
-  "União estável",
-  "Divorciado(a)",
-  "Viúvo(a)",
-];
-
-export const ACTIVITY_TIME_OPTIONS = [
-  "Menos de 6 meses",
-  "6 meses a 1 ano",
-  "1 a 3 anos",
-  "3 a 5 anos",
-  "Mais de 5 anos",
-];
-
-export const INCOME_SOURCE_OPTIONS = [
-  "Salário",
-  "Negócio próprio",
-  "Benefício",
-  "Aluguel",
-  "Renda mista",
-];
-
-export const INCOME_PROOF_OPTIONS = [
-  "Holerite",
-  "Extrato bancário",
-  "DAS-MEI",
-  "Benefício INSS",
-  "Nenhum",
-];
-
-export const RELATIONSHIP_TIME_OPTIONS = [
-  "Conheci agora",
-  "Menos de 1 ano",
-  "1 a 3 anos",
-  "Mais de 3 anos",
-];
-
-export const HOW_KNOWS_CLIENT_OPTIONS = [
-  "Cliente antigo (já teve contrato)",
-  "Indicação de cliente Áurea",
-  "Indicação de terceiro (não cliente)",
-  "Prospecção presencial",
-  "Cliente me procurou espontaneamente",
-  "Redes sociais ou WhatsApp",
-  "Parente ou amigo do consultor",
-  "Outro",
-];
-
-export const OVERALL_RATING_OPTIONS = [
-  "Recomendo e confio fortemente",
-  "Recomendo",
-  "Tenho dúvidas",
-  "Não recomendo",
-];
-
-export const EXPENSE_CATEGORY_OPTIONS = [
-  "Aluguel/Moradia",
-  "Escola/Creche",
-  "Remédios/Saúde",
-  "Despesas da casa",
-  "Lazer",
-  "Caixa financeiro/consórcio",
-  "Cartão de crédito",
-  "Outros",
-];
-
-export const LOAN_FREQUENCY_OPTIONS = [
-  "Mensal",
-  "Quinzenal",
-  "Semanal",
-  "Diária",
-];
-
-export const CREDITOR_INSTITUTION_OPTIONS = [
-  "Itaú",
-  "Santander",
-  "CrediAmigo",
-  "Caixa",
-  "Nubank",
-  "Outros",
-  "Agiota",
-];
-
-export const LOAN_CATEGORY_OPTIONS = [
-  "Cartão de crédito",
-  "Cheque especial",
-  "Caixa financeira/consórcio",
-  "Agiota",
-  "Outros",
-];
-
-export const KINSHIP_OPTIONS = [
-  "Pai/Mãe",
-  "Cônjuge",
-  "Irmão/Irmã",
-  "Filho(a)",
-  "Outro parente",
-  "Sem parentesco",
-];
-
-export const INCOME_DOCUMENT_TYPE_OPTIONS = [
-  "Extrato bancário",
-  "Holerite",
-  "Benefício INSS",
-  "MEI / DAS",
-];
-
-export const DEBT_PURPOSE = "Quitação/troca de dívida";
-export const OTHER_OPTION = "Outros";
-export const HOW_KNOWS_OTHER = "Outro";
-export const AUREA_REFERRAL_OPTION = "Indicação de cliente Áurea";
-export const DOUBTS_RATING = "Tenho dúvidas";
-export const AGIOTA_CREDITOR = "Agiota";
-export const MARRIED_STATUSES = ["Casado(a)", "União estável"] as const;
-
-export const CLIENT_MOCK_ADDRESS = {
-  zipCode: "01001-000",
-  street: "Rua das Flores",
-  neighborhood: "Centro",
-  city: "São Paulo",
-  state: "SP",
-} as const;
-
-export const GUARANTOR_MOCK_ADDRESS = {
-  zipCode: "01310-100",
-  street: "Avenida Paulista",
-  neighborhood: "Bela Vista",
-  city: "São Paulo",
-  state: "SP",
-} as const;
+export const DEBT_PURPOSE = CreditPurpose.DEBT_PAYOFF_OR_REFINANCING;
+export const OTHER_OPTION = EconomicActivityCategory.OTHER;
+export const NONE_PROGRAM = GovernmentProgram.NONE;
+export const HOW_KNOWS_OTHER = CustomerRelationshipOrigin.OTHER;
+export const AUREA_REFERRAL_OPTION =
+  CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL;
+export const DOUBTS_RATING = PartnerAssessment.HAVE_DOUBTS;
+export const AGIOTA_CREDITOR = LoanInstitution.LOAN_SHARK;
+export const MARRIED_STATUSES = [
+  MaritalStatus.MARRIED,
+  MaritalStatus.STABLE_UNION,
+] as const;
 
 export interface RegistrationData {
   isRenewal: boolean | null;
@@ -273,7 +161,7 @@ export interface ActivityIncomeData {
   availableProof: string;
 }
 
-export interface AddressData {
+export interface AddressValue {
   zipCode: string;
   street: string;
   number: string;
@@ -281,7 +169,18 @@ export interface AddressData {
   neighborhood: string;
   city: string;
   state: string;
+}
+
+export interface AddressGeolocation {
+  latitude: number;
+  longitude: number;
+  precision: string;
+}
+
+export interface AddressData extends AddressValue {
   landmark: string;
+  /** Preenchido só após captura via geolocalização; opcional no PATCH. */
+  geolocation?: AddressGeolocation | null;
 }
 
 export interface PartnerOpinionData {
@@ -295,19 +194,12 @@ export interface PartnerOpinionData {
   notes: string;
 }
 
-export interface GuarantorData {
+export interface GuarantorData extends AddressValue {
   name: string;
   cpf: string;
   birthDate: string;
   email: string;
   phone: string;
-  zipCode: string;
-  street: string;
-  number: string;
-  complement: string;
-  neighborhood: string;
-  city: string;
-  state: string;
   kinship: string;
 }
 
@@ -333,12 +225,18 @@ export interface FinancialData {
   nextId: number;
 }
 
+export interface DocumentAttachmentItem {
+  id: string;
+  filename: string;
+  incomeProofType?: string;
+}
+
 export interface DocumentsData {
-  identification: string[];
-  proofOfResidence: string[];
-  activityPhotos: string[];
+  identification: DocumentAttachmentItem[];
+  proofOfResidence: DocumentAttachmentItem[];
+  activityPhotos: DocumentAttachmentItem[];
   incomeProofTypes: string[];
-  incomeProofs: string[];
+  incomeProofs: DocumentAttachmentItem[];
 }
 
 export interface ProposalFormData {
@@ -358,11 +256,23 @@ export interface ProposalSnapshot {
   createdAt: string;
   updatedAt: string;
   status: ProposalStatus;
-  simulation: SimulacaoSnapshot;
+  /** Indica se o usuário autenticado pode editar (API `canEdit`). */
+  canEdit: boolean;
+  simulation: SimulationSnapshot;
   step: number;
   stepValid: boolean[];
   data: ProposalFormData;
 }
+
+const EMPTY_ADDRESS: AddressValue = {
+  zipCode: "",
+  street: "",
+  number: "",
+  complement: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+};
 
 export function createEmptyProposalForm(): ProposalFormData {
   return {
@@ -396,14 +306,9 @@ export function createEmptyProposalForm(): ProposalFormData {
       availableProof: "",
     },
     address: {
-      zipCode: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
+      ...EMPTY_ADDRESS,
       landmark: "",
+      geolocation: null,
     },
     partnerOpinion: {
       relationshipTime: "",
@@ -421,13 +326,7 @@ export function createEmptyProposalForm(): ProposalFormData {
       birthDate: "",
       email: "",
       phone: "",
-      zipCode: "",
-      street: "",
-      number: "",
-      complement: "",
-      neighborhood: "",
-      city: "",
-      state: "",
+      ...EMPTY_ADDRESS,
       kinship: "",
     },
     financial: { expenses: [], loans: [], nextId: 1 },
@@ -441,21 +340,17 @@ export function createEmptyProposalForm(): ProposalFormData {
   };
 }
 
-export function toggleItem(list: string[], item: string): string[] {
-  return list.includes(item)
-    ? list.filter((entry) => entry !== item)
-    : [...list, item];
-}
-
 export function createProposalFromSimulation(
-  simulation: SimulacaoSnapshot,
+  simulation: SimulationSnapshot,
+  quote: { id: string; createdAt: string },
 ): ProposalSnapshot {
-  const now = new Date().toLocaleString("pt-BR");
+  const createdAt = new Date(quote.createdAt).toLocaleString("pt-BR");
   return {
-    id: crypto.randomUUID(),
-    createdAt: now,
-    updatedAt: now,
+    id: quote.id,
+    createdAt,
+    updatedAt: createdAt,
     status: "draft",
+    canEdit: true,
     simulation,
     step: 0,
     stepValid: Array(PROPOSAL_STEPS.length).fill(false),
@@ -465,77 +360,4 @@ export function createProposalFromSimulation(
 
 export function hasSpouse(maritalStatus: string): boolean {
   return (MARRIED_STATUSES as readonly string[]).includes(maritalStatus);
-}
-
-export function isRegistrationValid(data: RegistrationData): boolean {
-  return (
-    data.isRenewal !== null &&
-    data.gender !== "" &&
-    data.activityCategories.length > 0 &&
-    data.creditPurpose !== null &&
-    isOptionalCpfValid(data.spouseCpf)
-  );
-}
-
-export function isActivityIncomeValid(data: ActivityIncomeData): boolean {
-  return (
-    data.activityTime !== "" &&
-    data.monthlyIncome.trim() !== "" &&
-    data.incomeSource !== "" &&
-    data.availableProof !== ""
-  );
-}
-
-export function isAddressValid(data: AddressData): boolean {
-  return (
-    isCompleteCep(data.zipCode) &&
-    data.street.trim() !== "" &&
-    data.number.trim() !== "" &&
-    data.neighborhood.trim() !== "" &&
-    data.city.trim() !== "" &&
-    data.state !== ""
-  );
-}
-
-export function isPartnerOpinionValid(data: PartnerOpinionData): boolean {
-  return (
-    data.relationshipTime !== "" &&
-    data.howKnows !== "" &&
-    data.overallRating !== "" &&
-    data.informalDebtSigns !== null &&
-    data.financialUrgencySigns !== null &&
-    data.notes.trim() !== "" &&
-    isOptionalCpfValid(data.referrerCpf)
-  );
-}
-
-export function isGuarantorValid(data: GuarantorData): boolean {
-  const age = calcAge(data.birthDate);
-  return (
-    data.name.trim() !== "" &&
-    isValidCpf(data.cpf) &&
-    isAdultAge(age) &&
-    data.email.trim() !== "" &&
-    data.phone.trim() !== "" &&
-    isCompleteCep(data.zipCode) &&
-    data.number.trim() !== "" &&
-    data.neighborhood.trim() !== "" &&
-    data.city.trim() !== "" &&
-    data.state !== "" &&
-    data.kinship !== ""
-  );
-}
-
-export function isFinancialValid(): boolean {
-  return true;
-}
-
-export function isDocumentsValid(data: DocumentsData): boolean {
-  return (
-    data.identification.length > 0 &&
-    data.proofOfResidence.length > 0 &&
-    data.activityPhotos.length > 0 &&
-    data.incomeProofTypes.length > 0 &&
-    data.incomeProofs.length > 0
-  );
 }

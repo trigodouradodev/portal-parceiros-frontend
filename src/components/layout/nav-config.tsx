@@ -1,6 +1,4 @@
-import { Briefcase, Home, User } from "lucide-react";
-// import { BarChart2 } from "lucide-react";
-// import { UserCheck } from "lucide-react";
+import { Briefcase, Home, User, UserCheck } from "lucide-react";
 
 export type NavTab =
   | "home"
@@ -22,20 +20,14 @@ export const NAV_ITEMS: {
     label: "Carteira",
     path: "/carteira",
   },
-  // {
-  //   key: "originacao",
-  //   icon: <UserCheck size={20} />,
-  //   label: "Originação",
-  //   path: "/originacao",
-  // },
+  {
+    key: "originacao",
+    icon: <UserCheck size={20} />,
+    label: "Originação",
+    path: "/originacao",
+  },
   // O módulo de desempenho está temporariamente fora da navegação enquanto
   // passa por revisão técnica da área de produto.
-  // {
-  //   key: "desempenho",
-  //   icon: <BarChart2 size={20} />,
-  //   label: "Desempenho",
-  //   path: "/performance",
-  // },
   {
     key: "perfil",
     icon: <User size={20} />,

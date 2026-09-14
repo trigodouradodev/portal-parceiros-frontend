@@ -1,20 +1,32 @@
 import { useRef, type ChangeEvent } from "react";
 import { CheckCircle2, Paperclip, X } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import {
+  FieldErrorMessage,
+  FieldHint,
+  FieldLabel,
+  fieldAnchorProps,
+} from "@/components/ui/field-hint";
+import { cn } from "@/lib/utils";
 
 interface FileUploadFieldProps {
+  name?: string;
   label: string;
   note?: string;
   value?: string[];
   onChange?: (fileNames: string[]) => void;
+  required?: boolean;
+  error?: string;
 }
 
 /** Controlado — guarda só os nomes dos arquivos (mock, sem upload real). */
 export function FileUploadField({
+  name,
   label,
   note,
   value,
   onChange,
+  required,
+  error,
 }: FileUploadFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const files = value ?? [];
@@ -31,8 +43,8 @@ export function FileUploadField({
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <Label className="text-sm font-medium text-[#1A1D2E]">{label}</Label>
+    <div className="flex flex-col gap-1.5" {...fieldAnchorProps(name, error)}>
+      <FieldLabel required={required}>{label}</FieldLabel>
       <input
         ref={fileRef}
         type="file"
@@ -40,20 +52,20 @@ export function FileUploadField({
         className="hidden"
         onChange={handleChange}
       />
-      {files.map((name, i) => (
+      {files.map((fileName, i) => (
         <div
-          key={`${name}-${i}`}
-          className="flex items-center justify-between gap-2 rounded-2xl bg-[#E6F7F1] px-4 py-3 text-sm font-medium text-[#0F6E56]"
+          key={`${fileName}-${i}`}
+          className="flex items-center justify-between gap-2 rounded-2xl bg-success-bg px-4 py-3 text-sm font-medium text-success"
         >
           <span className="flex items-center gap-2 truncate">
             <CheckCircle2 size={16} className="shrink-0" />
-            <span className="truncate">{name}</span>
+            <span className="truncate">{fileName}</span>
           </span>
           <button
             type="button"
             onClick={() => handleRemove(i)}
-            className="shrink-0 text-[#0F6E56] hover:text-[#0A4C3D]"
-            aria-label={`Remover ${name}`}
+            className="shrink-0 text-success hover:text-success/80"
+            aria-label={`Remover ${fileName}`}
           >
             <X size={15} />
           </button>
@@ -62,14 +74,20 @@ export function FileUploadField({
       <button
         type="button"
         onClick={() => fileRef.current?.click()}
-        className="flex h-11 items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#C8CBD8] text-sm font-semibold text-[#6B7080] hover:bg-[#F5F6FA]"
+        className={cn(
+          "flex h-11 items-center justify-center gap-2 rounded-2xl border-2 border-dashed text-sm font-semibold hover:bg-muted",
+          error
+            ? "border-destructive text-destructive"
+            : "border-border text-muted-foreground",
+        )}
       >
         <Paperclip size={15} />
         {files.length === 0
           ? `Anexar ${label.toLowerCase()}`
           : "Anexar mais um arquivo"}
       </button>
-      {note ? <p className="text-xs text-[#9DA3B4]">{note}</p> : null}
+      {note ? <FieldHint>{note}</FieldHint> : null}
+      <FieldErrorMessage error={error} />
     </div>
   );
 }
