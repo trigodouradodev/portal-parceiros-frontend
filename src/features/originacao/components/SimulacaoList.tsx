@@ -31,7 +31,9 @@ interface SimulacaoListProps {
   canCreateQuote?: boolean;
   onNewSimulation: () => void;
   onEdit: (snapshot: SimulationSnapshot) => void;
-  onStartProposal: (snapshot: SimulationSnapshot) => void | Promise<void>;
+  onStartProposal: (
+    snapshot: SimulationSnapshot,
+  ) => void | Promise<boolean | void>;
 }
 
 export function SimulacaoList({

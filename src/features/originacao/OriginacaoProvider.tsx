@@ -76,7 +76,7 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
       if (existing) {
         setOpenProposalId(existing.id);
         setActiveTab("proposal");
-        return;
+        return true;
       }
 
       try {
@@ -89,11 +89,13 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
         setOpenProposalId(proposal.id);
         setActiveTab("proposal");
         void queryClient.invalidateQueries({ queryKey: quotesKeys.listRoot() });
+        return true;
       } catch (err) {
         showToast(
           getApiErrorMessage(err, "Não foi possível iniciar a proposta."),
           { variant: "destructive" },
         );
+        return false;
       }
     },
     [createQuoteDraft, proposals, queryClient, showToast],

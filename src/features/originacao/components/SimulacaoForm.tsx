@@ -19,12 +19,14 @@ import { OriginacaoPageFrame } from "@/features/originacao/components/Originacao
 import { SimulationDueDateField } from "@/features/originacao/components/simulacao/SimulationDueDateField";
 import { SimulationInstallmentPreview } from "@/features/originacao/components/simulacao/SimulationInstallmentPreview";
 import { SimulationProductField } from "@/features/originacao/components/simulacao/SimulationProductField";
+import { CREATE_QUOTE_BLOCKED_MESSAGE } from "@/features/originacao/constants/simulacao-list";
 import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
   AMOUNT_MIN,
   AMOUNT_STEP,
   installmentOptionsForProduct,
+  isSimulationConverted,
   simulationFormDefaultsFromSnapshot,
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
@@ -55,7 +57,10 @@ interface SimulacaoFormProps {
   hasList: boolean;
   onViewList: () => void;
   onCompleted: () => void;
+  onStartProposal: (snapshot: SimulationSnapshot) => void | Promise<void>;
 }
+
+type SubmitIntent = "save" | "proposal";
 
 const MAX_BIRTH_ISO = maxAdultBirthIso();
 const SIMULATE_BLOCKED_MESSAGE =
@@ -67,6 +72,7 @@ export function SimulacaoForm({
   hasList,
   onViewList,
   onCompleted,
+  onStartProposal,
 }: SimulacaoFormProps) {
   const { showToast } = useToast();
   const productsQuery = useProducts();
@@ -80,6 +86,11 @@ export function SimulacaoForm({
   );
   const canSimulateQuote = permissionsQuery.data?.canSimulateQuote === true;
   const simulateBlocked = permissionsQuery.data?.canSimulateQuote === false;
+  const canCreateQuote = permissionsQuery.data?.canCreateQuote === true;
+  const createQuoteBlocked = permissionsQuery.data?.canCreateQuote === false;
+  const converted = editing != null && isSimulationConverted(editing);
+  const canStartProposal = canCreateQuote && !converted;
+  const submitIntentRef = useRef<SubmitIntent>("save");
 
   const [today] = useState(() => startOfDay(new Date()));
   const constraintsRef = useRef({
@@ -164,6 +175,14 @@ export function SimulacaoForm({
       return;
     }
 
+    const intent = submitIntentRef.current;
+    if (intent === "proposal" && !canStartProposal) {
+      if (createQuoteBlocked) {
+        showToast(CREATE_QUOTE_BLOCKED_MESSAGE, { variant: "destructive" });
+      }
+      return;
+    }
+
     try {
       const payload = {
         name: values.name,
@@ -177,11 +196,15 @@ export function SimulacaoForm({
         firstInstallmentDate: toIsoDate(values.dueDate),
       };
 
-      if (editing) {
-        await updateSimulation.mutateAsync({ id: editing.id, payload });
-      } else {
-        await createSimulation.mutateAsync(payload);
+      const snapshot = editing
+        ? await updateSimulation.mutateAsync({ id: editing.id, payload })
+        : await createSimulation.mutateAsync(payload);
+
+      if (intent === "proposal") {
+        await onStartProposal(snapshot);
+        return;
       }
+
       onCompleted();
     } catch (err) {
       showToast(
@@ -343,24 +366,54 @@ export function SimulacaoForm({
             amount={previewQuery.data?.installmentAmount}
           />
 
-          <Button
-            type="submit"
-            variant="yellow"
-            size="pill"
-            className="w-full"
-            disabled={submitDisabled}
-          >
-            {submitting ? (
-              <>
-                <Loader2 size={15} className="animate-spin" />
-                {editing ? "Salvando…" : "Simulando…"}
-              </>
-            ) : editing ? (
-              "Salvar"
-            ) : (
-              "Continuar"
+          {createQuoteBlocked && !simulateBlocked && !converted ? (
+            <p className="rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
+              {CREATE_QUOTE_BLOCKED_MESSAGE}
+            </p>
+          ) : null}
+
+          <div className="flex flex-col gap-2">
+            <Button
+              type="submit"
+              variant="outline"
+              size="pill"
+              className="w-full"
+              disabled={submitDisabled}
+              onClick={() => {
+                submitIntentRef.current = "save";
+              }}
+            >
+              {submitting && submitIntentRef.current === "save" ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  Salvando…
+                </>
+              ) : (
+                "Salvar simulação"
+              )}
+            </Button>
+            {converted ? null : (
+              <Button
+                type="submit"
+                variant="yellow"
+                size="pill"
+                className="w-full"
+                disabled={submitDisabled || !canStartProposal}
+                onClick={() => {
+                  submitIntentRef.current = "proposal";
+                }}
+              >
+                {submitting && submitIntentRef.current === "proposal" ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" />
+                    Iniciando…
+                  </>
+                ) : (
+                  "Iniciar proposta"
+                )}
+              </Button>
             )}
-          </Button>
+          </div>
         </form>
       </Form>
     </OriginacaoPageFrame>
