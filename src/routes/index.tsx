@@ -14,7 +14,7 @@ import {
   PortfolioInstallmentDetailPage,
 } from "@/features/contract-detail";
 import { OriginacaoPage } from "@/features/originacao";
-import { PerformancePage } from "@/features/performance";
+// import { PerformancePage } from "@/features/performance";
 import { ProfilePage } from "@/features/profile";
 import { RegisterChargeActionPage } from "@/features/register-action/charge";
 import { RegisterPreventiveActionPage } from "@/features/register-action/preventive";
@@ -56,7 +56,7 @@ export const router = createBrowserRouter([
             element: <ActivityInstallmentDetailPage />,
           },
           { path: "/originacao", element: <OriginacaoPage /> },
-          { path: "/performance", element: <PerformancePage /> },
+          // { path: "/performance", element: <PerformancePage /> },
           { path: "/profile", element: <ProfilePage /> },
           { path: "*", element: <NotFound /> },
         ],
