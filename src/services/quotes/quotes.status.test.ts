@@ -33,11 +33,21 @@ describe("quote status presentation", () => {
     expect(getQuoteStatusPresentation(QuoteStatus.KYC_ANALYSIS).tone).toBe(
       "muted",
     );
-    expect(getQuoteStatusPresentation("pending").tone).toBe("warning");
-    expect(getQuoteStatusPresentation("em_analise").tone).toBe("info");
-    expect(getQuoteStatusPresentation("approved").tone).toBe("success");
-    expect(getQuoteStatusPresentation("rejected").tone).toBe("destructive");
-    expect(getQuoteStatusPresentation("failed").tone).toBe("destructive");
+    expect(getQuoteStatusPresentation(QuoteStatus.PENDING).tone).toBe(
+      "warning",
+    );
+    expect(getQuoteStatusPresentation(QuoteStatus.IN_ANALYSIS).tone).toBe(
+      "info",
+    );
+    expect(getQuoteStatusPresentation(QuoteStatus.APPROVED).tone).toBe(
+      "success",
+    );
+    expect(getQuoteStatusPresentation(QuoteStatus.REJECTED).tone).toBe(
+      "destructive",
+    );
+    expect(getQuoteStatusPresentation(QuoteStatus.FAILED).tone).toBe(
+      "destructive",
+    );
   });
 
   it("opens the backoffice after client review", () => {
@@ -48,7 +58,15 @@ describe("quote status presentation", () => {
     expect(getQuoteStatusPresentation(QuoteStatus.KYC_ANALYSIS).label).toBe(
       "Validação automática",
     );
-    expect(getQuoteListAction("pending")).toBe("open_backoffice");
-    expect(getQuoteListAction("approved")).toBe("open_backoffice");
+    expect(getQuoteListAction(QuoteStatus.PENDING)).toBe("open_backoffice");
+    expect(getQuoteListAction(QuoteStatus.APPROVED)).toBe("open_backoffice");
+  });
+
+  it("maps every QuoteStatus through the enum", () => {
+    for (const status of Object.values(QuoteStatus)) {
+      const info = getQuoteStatusPresentation(status);
+      expect(info.label, status).toBeTruthy();
+      expect(info.label, status).not.toBe(status);
+    }
   });
 });

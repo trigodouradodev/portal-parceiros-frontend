@@ -8,6 +8,7 @@ import {
   LoanInstitution,
   MaritalStatus,
   PartnerAssessment,
+  QuoteStatus,
 } from "@/services/quotes/quotes.enums";
 import {
   ACTIVITY_CATEGORY_OPTIONS as QUOTE_ACTIVITY_CATEGORY_OPTIONS,
@@ -254,7 +255,7 @@ export interface ProposalSnapshot {
   createdAt: string;
   updatedAt: string;
   /** Status da API (`draft`, `client_review`, `kyc_analysis`, …). */
-  status: string;
+  status: QuoteStatus;
   /** Indica se o usuário autenticado pode editar (API `canEdit`). */
   canEdit: boolean;
   simulation: SimulationSnapshot;
@@ -348,7 +349,7 @@ export function createProposalFromSimulation(
     id: quote.id,
     createdAt,
     updatedAt: createdAt,
-    status: "draft",
+    status: QuoteStatus.DRAFT,
     canEdit: true,
     simulation,
     step: 0,

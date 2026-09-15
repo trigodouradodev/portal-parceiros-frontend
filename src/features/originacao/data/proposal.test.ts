@@ -29,6 +29,7 @@ import {
   PartnerAssessment,
   ResidenceDuration,
   GovernmentProgram,
+  QuoteStatus,
 } from "@/services/quotes/quotes.enums";
 
 const simulation: SimulationSnapshot = {
@@ -56,7 +57,7 @@ describe("createProposalFromSimulation", () => {
       createdAt: "2026-09-02T12:00:00.000Z",
     });
     expect(proposal.id).toBe("quote-1");
-    expect(proposal.status).toBe("draft");
+    expect(proposal.status).toBe(QuoteStatus.DRAFT);
     expect(proposal.canEdit).toBe(true);
     expect(proposal.step).toBe(0);
     expect(proposal.stepValid).toEqual(

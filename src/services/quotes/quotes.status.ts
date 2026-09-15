@@ -1,4 +1,4 @@
-import { QuoteStatus } from "./quotes.enums";
+import { isQuoteStatus, QuoteStatus } from "./quotes.enums";
 
 export type QuoteStatusTone =
   | "muted"
@@ -13,7 +13,7 @@ export type QuoteListAction =
   | "open_backoffice";
 
 const QUOTE_STATUS_PRESENTATION: Record<
-  string,
+  QuoteStatus,
   { label: string; tone: QuoteStatusTone }
 > = {
   [QuoteStatus.DRAFT]: { label: "Rascunho", tone: "muted" },
@@ -25,24 +25,31 @@ const QUOTE_STATUS_PRESENTATION: Record<
     label: "Validação automática",
     tone: "muted",
   },
-  pending: { label: "Pendente de análise", tone: "warning" },
-  em_analise: { label: "Em análise", tone: "info" },
-  pending_correction: { label: "Pendente com o parceiro", tone: "warning" },
-  pre_approved: { label: "Processando aprovação", tone: "muted" },
-  approved: { label: "Aprovada", tone: "success" },
-  auto_rejected: {
+  [QuoteStatus.PENDING]: { label: "Pendente de análise", tone: "warning" },
+  [QuoteStatus.IN_ANALYSIS]: { label: "Em análise", tone: "info" },
+  [QuoteStatus.PENDING_CORRECTION]: {
+    label: "Pendente com o parceiro",
+    tone: "warning",
+  },
+  [QuoteStatus.PRE_APPROVED]: {
+    label: "Processando aprovação",
+    tone: "muted",
+  },
+  [QuoteStatus.APPROVED]: { label: "Aprovada", tone: "success" },
+  [QuoteStatus.AUTO_REJECTED]: {
     label: "Reprovada automaticamente",
     tone: "destructive",
   },
-  rejected: { label: "Rejeitada", tone: "destructive" },
-  failed: { label: "Falhou", tone: "destructive" },
+  [QuoteStatus.REJECTED]: { label: "Rejeitada", tone: "destructive" },
+  [QuoteStatus.FAILED]: { label: "Falhou", tone: "destructive" },
 };
 
 export function getQuoteStatusPresentation(status: string): {
   label: string;
   tone: QuoteStatusTone;
 } {
-  return QUOTE_STATUS_PRESENTATION[status] ?? { label: status, tone: "muted" };
+  if (isQuoteStatus(status)) return QUOTE_STATUS_PRESENTATION[status];
+  return { label: status, tone: "muted" };
 }
 
 export function isQuoteDraft(status: string): boolean {

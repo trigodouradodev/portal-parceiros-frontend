@@ -124,7 +124,7 @@ describe("mapQuoteDetailToProposal", () => {
   it("hydrates proposal snapshot and form fields from detail", () => {
     const proposal = mapQuoteDetailToProposal(baseDetail());
     expect(proposal.id).toBe("quote-1");
-    expect(proposal.status).toBe("draft");
+    expect(proposal.status).toBe(QuoteStatus.DRAFT);
     expect(proposal.canEdit).toBe(true);
     expect(proposal.step).toBe(2);
     expect(proposal.simulation.name).toBe("Maria Silva");

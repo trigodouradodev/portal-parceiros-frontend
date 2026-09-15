@@ -1,11 +1,28 @@
-/** Códigos estáveis alinhados a portal-parceiros-backend/src/quotes/enums. */
-
+/**
+ * Ciclo de vida da quote na tabela compartilhada com o backoffice.
+ * O portal só escreve `draft` e `client_review`; os demais chegam na listagem
+ * depois da revisão do cliente.
+ */
 export const QuoteStatus = {
   DRAFT: "draft",
   CLIENT_REVIEW: "client_review",
   KYC_ANALYSIS: "kyc_analysis",
+  PENDING: "pending",
+  IN_ANALYSIS: "em_analise",
+  PENDING_CORRECTION: "pending_correction",
+  PRE_APPROVED: "pre_approved",
+  APPROVED: "approved",
+  AUTO_REJECTED: "auto_rejected",
+  REJECTED: "rejected",
+  FAILED: "failed",
 } as const;
 export type QuoteStatus = (typeof QuoteStatus)[keyof typeof QuoteStatus];
+
+const QUOTE_STATUS_VALUES = new Set<string>(Object.values(QuoteStatus));
+
+export function isQuoteStatus(status: string): status is QuoteStatus {
+  return QUOTE_STATUS_VALUES.has(status);
+}
 
 export const QuoteDraftStep = {
   REGISTRATION: "registration",
