@@ -1,5 +1,8 @@
 import type { SelectOption } from "@/components/ui/select-option";
+import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
 import type { SimulationSnapshot } from "@/features/originacao/types";
+import { digitsOnlyPhone } from "@/lib/format/phone";
+import { formatCpf } from "@/lib/format/tax-id";
 import {
   CreditPurpose,
   CustomerRelationshipOrigin,
@@ -133,6 +136,11 @@ export const MARRIED_STATUSES = [
 
 export interface RegistrationData {
   isRenewal: boolean | null;
+  name: string;
+  cpf: string;
+  birthDate: string;
+  email: string;
+  phone: string;
   gender: string;
   rg: string;
   occupation: string;
@@ -278,6 +286,11 @@ export function createEmptyProposalForm(): ProposalFormData {
   return {
     registration: {
       isRenewal: null,
+      name: "",
+      cpf: "",
+      birthDate: "",
+      email: "",
+      phone: "",
       gender: "",
       rg: "",
       occupation: "",
@@ -340,11 +353,38 @@ export function createEmptyProposalForm(): ProposalFormData {
   };
 }
 
+export function registrationIdentityFromSimulation(
+  simulation: SimulationSnapshot,
+): Pick<RegistrationData, "name" | "cpf" | "birthDate" | "email" | "phone"> {
+  return {
+    name: simulation.name,
+    cpf: formatCpf(simulation.document),
+    birthDate: simulation.birthDate,
+    email: simulation.email,
+    phone: formatPartyTelephone(simulation.telephone),
+  };
+}
+
+export function applyRegistrationIdentityToSimulation(
+  simulation: SimulationSnapshot,
+  registration: RegistrationData,
+): SimulationSnapshot {
+  return {
+    ...simulation,
+    name: registration.name.trim(),
+    document: registration.cpf.replace(/\D/g, ""),
+    birthDate: registration.birthDate.trim(),
+    email: registration.email.trim(),
+    telephone: digitsOnlyPhone(registration.phone),
+  };
+}
+
 export function createProposalFromSimulation(
   simulation: SimulationSnapshot,
   quote: { id: string; createdAt: string },
 ): ProposalSnapshot {
   const createdAt = new Date(quote.createdAt).toLocaleString("pt-BR");
+  const data = createEmptyProposalForm();
   return {
     id: quote.id,
     createdAt,
@@ -354,7 +394,13 @@ export function createProposalFromSimulation(
     simulation,
     step: 0,
     stepValid: Array(PROPOSAL_STEPS.length).fill(false),
-    data: createEmptyProposalForm(),
+    data: {
+      ...data,
+      registration: {
+        ...data.registration,
+        ...registrationIdentityFromSimulation(simulation),
+      },
+    },
   };
 }
 

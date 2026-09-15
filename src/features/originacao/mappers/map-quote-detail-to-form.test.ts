@@ -130,6 +130,11 @@ describe("mapQuoteDetailToProposal", () => {
     expect(proposal.step).toBe(2);
     expect(proposal.simulation.name).toBe("Maria Silva");
     expect(proposal.simulation.amount).toBe(1500);
+    expect(proposal.data.registration.name).toBe("Maria Silva");
+    expect(proposal.data.registration.cpf).toBe("529.982.247-25");
+    expect(proposal.data.registration.birthDate).toBe("1990-01-15");
+    expect(proposal.data.registration.email).toBe("maria@example.com");
+    expect(proposal.data.registration.phone).toBe("(11) 99999-0000");
     expect(proposal.data.registration.occupation).toBe("Vendedora");
     expect(proposal.data.activityIncome.monthlyIncome).toMatch(/2\.500/);
     expect(proposal.data.address.street).toBe("Av Paulista");
@@ -240,6 +245,8 @@ describe("mergeRenewalPrefillIntoForm", () => {
 
     const result = mergeRenewalPrefillIntoForm(current, source);
 
+    expect(result.registration.name).toBe("Maria Silva");
+    expect(result.registration.cpf).toBe("529.982.247-25");
     expect(result.registration.occupation).toBe("Profissão anterior");
     expect(result.registration.debtDescription).toBe("Dívida digitada agora");
     expect(result.registration.debtCreditor).toBe("Outro credor");

@@ -33,6 +33,7 @@ import { useOriginacao } from "@/features/originacao/originacao-context";
 import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
   PROPOSAL_STEPS,
+  applyRegistrationIdentityToSimulation,
   type ProposalFormData,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
@@ -264,6 +265,10 @@ function ProposalWizard({
     onUpdate({
       ...proposal,
       data: values,
+      simulation: applyRegistrationIdentityToSimulation(
+        proposal.simulation,
+        values.registration,
+      ),
       stepValid: computeStepValid(values),
       updatedAt: new Date().toLocaleString("pt-BR"),
       ...patch,
@@ -432,11 +437,6 @@ function ProposalWizard({
               rate={productRatePercent({
                 maxInterestRate: simulation.interestRate,
               })}
-              cpf={simulation.document}
-              name={simulation.name}
-              birthDate={simulation.birthDate}
-              email={simulation.email}
-              phone={simulation.telephone}
               onRenewalChange={handleRenewalChange}
             />
           ) : null}

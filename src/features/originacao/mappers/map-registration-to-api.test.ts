@@ -27,6 +27,11 @@ function completeRegistration(
   return {
     ...createEmptyProposalForm().registration,
     isRenewal: true,
+    name: "Maria Silva",
+    cpf: "111.444.777-35",
+    birthDate: "1990-01-01",
+    email: "maria@email.com",
+    phone: "(88) 99702-6551",
     gender: Gender.FEMALE,
     rg: "12.345.678-9",
     occupation: "Vendedora",
@@ -46,6 +51,11 @@ function completeRegistration(
 describe("mapRegistrationToApi", () => {
   it("maps form codes to the registration PATCH payload", () => {
     expect(mapRegistrationToApi(completeRegistration())).toEqual({
+      name: "Maria Silva",
+      document: "11144477735",
+      birthDate: "1990-01-01",
+      email: "maria@email.com",
+      telephone: "88997026551",
       isRenegotiation: true,
       gender: "female",
       secondaryDocument: "12.345.678-9",
@@ -76,6 +86,11 @@ describe("mapRegistrationToApi", () => {
         }),
       ),
     ).toEqual({
+      name: "Maria Silva",
+      document: "11144477735",
+      birthDate: "1990-01-01",
+      email: "maria@email.com",
+      telephone: "88997026551",
       isRenegotiation: false,
       gender: "female",
       secondaryDocument: "12.345.678-9",
