@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/contexts/toast/toast-context";
 import { OriginacaoTaskHeader } from "@/features/originacao/components/OriginacaoTaskHeader";
@@ -23,6 +24,7 @@ import { useSaveQuoteGuarantor } from "@/features/originacao/hooks/useSaveQuoteG
 import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteIncome";
 import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQuotePartnerOpinion";
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
+import { useApplyRenewalPrefill } from "@/features/originacao/hooks/useApplyRenewalPrefill";
 import {
   useCompleteQuoteDocumentation,
   useSubmitQuoteDraft,
@@ -46,6 +48,7 @@ import {
   isRegistrationValid,
 } from "@/features/originacao/schemas/proposal-form";
 import { getProposalStepFieldErrors } from "@/features/originacao/utils/proposal-step-errors";
+import { mergeRenewalPrefillIntoForm } from "@/features/originacao/mappers/map-quote-detail-to-form";
 import {
   scrollTaskToTop,
   scrollToField,
@@ -119,6 +122,10 @@ function ProposalWizard({
   const { showToast } = useToast();
   const { mutateAsync: saveRegistration, isPending: savingRegistration } =
     useSaveQuoteRegistration();
+  const {
+    mutateAsync: applyRenewalPrefill,
+    isPending: applyingRenewalPrefill,
+  } = useApplyRenewalPrefill();
   const { mutateAsync: saveIncome, isPending: savingIncome } =
     useSaveQuoteIncome();
   const { mutateAsync: saveAddress, isPending: savingAddress } =
@@ -136,7 +143,9 @@ function ProposalWizard({
   const { mutateAsync: submitDraft, isPending: submittingDraft } =
     useSubmitQuoteDraft();
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [renewalPrefillOpen, setRenewalPrefillOpen] = useState(false);
   const savingStep =
+    applyingRenewalPrefill ||
     savingRegistration ||
     savingIncome ||
     savingAddress ||
@@ -145,6 +154,48 @@ function ProposalWizard({
     savingFinancial ||
     completingDocumentation ||
     submittingDraft;
+
+  function handleRenewalChange(value: boolean) {
+    if (value) setRenewalPrefillOpen(true);
+  }
+
+  function handleRenewalPrefillCancel() {
+    form.setValue("registration.isRenewal", false, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
+
+  async function handleRenewalPrefill() {
+    try {
+      const result = await applyRenewalPrefill(proposal.id);
+      const nextData = mergeRenewalPrefillIntoForm(
+        form.getValues(),
+        result.quote,
+      );
+      form.reset(nextData);
+      onUpdate({
+        ...proposal,
+        data: nextData,
+        stepValid: computeStepValid(nextData),
+        updatedAt: new Date().toLocaleString("pt-BR"),
+      });
+      showToast(
+        result.applied
+          ? "Dados da última proposta copiados. Confira cada etapa antes de avançar."
+          : "Os dados da renovação já haviam sido copiados.",
+      );
+    } catch (err) {
+      showToast(
+        getApiErrorMessage(
+          err,
+          "Não foi possível copiar os dados da última proposta.",
+        ),
+        { variant: "destructive" },
+      );
+      throw err;
+    }
+  }
 
   const data = form.watch();
   const { simulation, step } = proposal;
@@ -356,6 +407,7 @@ function ProposalWizard({
               birthDate={simulation.birthDate}
               email={simulation.email}
               phone={simulation.telephone}
+              onRenewalChange={handleRenewalChange}
             />
           ) : null}
           {step === 1 ? <ActivityIncomeSection /> : null}
@@ -392,6 +444,18 @@ function ProposalWizard({
           </div>
         </form>
       </Form>
+      <ConfirmDialog
+        open={renewalPrefillOpen}
+        onOpenChange={setRenewalPrefillOpen}
+        title="Continuar com a renovação?"
+        description="Ao continuar, copiaremos automaticamente os dados de Cadastro, Atividade e renda e Endereço da última proposta desembolsada ou quitada deste tomador. Os dados da nova simulação serão mantidos e você poderá conferir os campos antes de avançar."
+        confirmLabel="Continuar"
+        cancelLabel="Cancelar"
+        onConfirm={handleRenewalPrefill}
+        onCancel={handleRenewalPrefillCancel}
+        pending={applyingRenewalPrefill}
+        pendingLabel="Copiando…"
+      />
     </OriginacaoTaskLayout>
   );
 }

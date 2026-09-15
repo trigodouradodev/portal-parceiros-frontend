@@ -409,3 +409,11 @@ export interface QuoteDetail extends QuoteListItem {
   financial: QuoteFinancialDetail;
   documentation: QuoteDocumentationDetail;
 }
+
+export interface QuoteRenewalPrefillResponse {
+  /** True quando a cópia aconteceu nesta requisição. */
+  applied: boolean;
+  sourceContractId: string | null;
+  sourceQuoteId: string | null;
+  quote: QuoteDetail;
+}
