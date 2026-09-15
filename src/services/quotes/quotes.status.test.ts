@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { QuoteStatus } from "@/services/quotes/quotes.enums";
 import {
+  QuoteListAction,
   getQuoteListAction,
   getQuoteStatusPresentation,
   isQuoteClientReview,
   isQuoteInBackoffice,
+  opensQuoteInBackoffice,
 } from "@/services/quotes/quotes.status";
 
 describe("quote status presentation", () => {
@@ -16,8 +18,11 @@ describe("quote status presentation", () => {
     expect(isQuoteClientReview(QuoteStatus.CLIENT_REVIEW)).toBe(true);
     expect(isQuoteInBackoffice(QuoteStatus.CLIENT_REVIEW)).toBe(false);
     expect(getQuoteListAction(QuoteStatus.CLIENT_REVIEW)).toBe(
-      "follow_client_review",
+      QuoteListAction.FOLLOW_CLIENT_REVIEW,
     );
+    expect(
+      opensQuoteInBackoffice(getQuoteListAction(QuoteStatus.CLIENT_REVIEW)),
+    ).toBe(true);
   });
 
   it("keeps drafts in the portal wizard", () => {
@@ -25,7 +30,12 @@ describe("quote status presentation", () => {
       "Rascunho",
     );
     expect(getQuoteStatusPresentation(QuoteStatus.DRAFT).tone).toBe("muted");
-    expect(getQuoteListAction(QuoteStatus.DRAFT)).toBe("continue_draft");
+    expect(getQuoteListAction(QuoteStatus.DRAFT)).toBe(
+      QuoteListAction.CONTINUE_DRAFT,
+    );
+    expect(opensQuoteInBackoffice(getQuoteListAction(QuoteStatus.DRAFT))).toBe(
+      false,
+    );
     expect(isQuoteInBackoffice(QuoteStatus.DRAFT)).toBe(false);
   });
 
@@ -52,14 +62,21 @@ describe("quote status presentation", () => {
 
   it("opens the backoffice after client review", () => {
     expect(getQuoteListAction(QuoteStatus.KYC_ANALYSIS)).toBe(
-      "open_backoffice",
+      QuoteListAction.OPEN_BACKOFFICE,
     );
     expect(isQuoteInBackoffice(QuoteStatus.KYC_ANALYSIS)).toBe(true);
+    expect(
+      opensQuoteInBackoffice(getQuoteListAction(QuoteStatus.KYC_ANALYSIS)),
+    ).toBe(true);
     expect(getQuoteStatusPresentation(QuoteStatus.KYC_ANALYSIS).label).toBe(
       "Validação automática",
     );
-    expect(getQuoteListAction(QuoteStatus.PENDING)).toBe("open_backoffice");
-    expect(getQuoteListAction(QuoteStatus.APPROVED)).toBe("open_backoffice");
+    expect(getQuoteListAction(QuoteStatus.PENDING)).toBe(
+      QuoteListAction.OPEN_BACKOFFICE,
+    );
+    expect(getQuoteListAction(QuoteStatus.APPROVED)).toBe(
+      QuoteListAction.OPEN_BACKOFFICE,
+    );
   });
 
   it("maps every QuoteStatus through the enum", () => {
