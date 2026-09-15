@@ -13,6 +13,7 @@ import type {
   QuoteIncomeSnapshot,
   QuotePartnerOpinionSnapshot,
   QuoteRegistrationSnapshot,
+  QuoteRenewalPrefillResponse,
   QuotesPage,
   QuoteStatusResponse,
   SaveQuoteAddressPayload,
@@ -73,6 +74,16 @@ export const quotesService = {
     const { data } = await api.post<QuoteDraftSnapshot>(
       "/quotes/draft",
       payload,
+    );
+    return data;
+  },
+
+  /** POST /quotes/draft/:quoteId/renewal-prefill */
+  async applyRenewalPrefill(
+    quoteId: string,
+  ): Promise<QuoteRenewalPrefillResponse> {
+    const { data } = await api.post<QuoteRenewalPrefillResponse>(
+      `/quotes/draft/${quoteId}/renewal-prefill`,
     );
     return data;
   },

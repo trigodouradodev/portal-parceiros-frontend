@@ -215,6 +215,33 @@ export function mapQuoteDetailToForm(detail: QuoteDetail): ProposalFormData {
   };
 }
 
+/**
+ * Aplica somente os três blocos permitidos no prefill. Campos de dívida do
+ * cadastro e a geolocalização atual não fazem parte da cópia; os passos 4 a 7
+ * permanecem exatamente como estavam no formulário.
+ */
+export function mergeRenewalPrefillIntoForm(
+  current: ProposalFormData,
+  detail: QuoteDetail,
+): ProposalFormData {
+  const registration = mapRegistration(detail.registration);
+  const address = mapAddress(detail.address);
+
+  return {
+    ...current,
+    registration: {
+      ...registration,
+      debtDescription: current.registration.debtDescription,
+      debtCreditor: current.registration.debtCreditor,
+    },
+    activityIncome: mapIncome(detail.income),
+    address: {
+      ...address,
+      geolocation: current.address.geolocation,
+    },
+  };
+}
+
 export function mapQuoteDetailToProposal(
   detail: QuoteDetail,
 ): ProposalSnapshot {

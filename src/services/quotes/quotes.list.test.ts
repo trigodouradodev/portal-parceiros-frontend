@@ -1,15 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { quotesService } from "@/services/quotes/quotes.service";
 
-const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 
 vi.mock("@/lib/api/axios", () => ({
-  api: { get },
-  default: { get },
+  api: { get, post },
+  default: { get, post },
 }));
 
 beforeEach(() => {
   get.mockReset();
+  post.mockReset();
 });
 
 afterEach(() => {
@@ -45,5 +46,15 @@ describe("quotesService list/detail", () => {
 
     await expect(quotesService.getById("quote-1")).resolves.toEqual(detail);
     expect(get).toHaveBeenCalledWith("/quotes/quote-1");
+  });
+
+  it("requests the one-shot renewal prefill", async () => {
+    const response = { applied: true, quote: { id: "quote-1" } };
+    post.mockResolvedValue({ data: response });
+
+    await expect(quotesService.applyRenewalPrefill("quote-1")).resolves.toEqual(
+      response,
+    );
+    expect(post).toHaveBeenCalledWith("/quotes/draft/quote-1/renewal-prefill");
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   mapQuoteDetailToProposal,
+  mergeRenewalPrefillIntoForm,
   nextWizardStepIndex,
 } from "@/features/originacao/mappers/map-quote-detail-to-form";
 import {
@@ -175,5 +176,79 @@ describe("mapQuoteDetailToProposal", () => {
     );
 
     expect(proposal.data.guarantor.phone).toBe("(71) 98888-7777");
+  });
+});
+
+describe("mergeRenewalPrefillIntoForm", () => {
+  it("altera somente cadastro, renda e endereço sem copiar geolocalização", () => {
+    const current = mapQuoteDetailToProposal(baseDetail()).data;
+    current.registration.debtDescription = "Dívida digitada agora";
+    current.registration.debtCreditor = "Outro credor";
+    current.address.geolocation = {
+      latitude: -23.5,
+      longitude: -46.6,
+      precision: "12m",
+    };
+    current.partnerOpinion.notes = "Parecer atual";
+    current.guarantor.name = "Avalista atual";
+    current.financial.nextId = 99;
+    current.documents.identification = [
+      { id: "current-document", filename: "atual.pdf" },
+    ];
+
+    const source = baseDetail({
+      registration: {
+        ...baseDetail().registration,
+        isRenegotiation: true,
+        profession: "Profissão anterior",
+      },
+      income: {
+        ...baseDetail().income,
+        declaredMonthlyIncome: 7000,
+      },
+      address: {
+        ...baseDetail().address,
+        streetName: "Endereço selecionado pelo backend",
+        geolocation: {
+          latitude: -1,
+          longitude: -2,
+          precision: "1m",
+        },
+      },
+      partnerOpinion: {
+        ...baseDetail().partnerOpinion,
+        opinion: "Parecer da proposta anterior",
+      },
+      guarantor: {
+        name: "Avalista anterior",
+        document: "52998224725",
+        birthDate: "1980-01-01",
+        email: "avalista@example.com",
+        telephone: "11999999999",
+        address: {
+          zipCode: "01001000",
+          streetName: "Rua",
+          streetNumber: "1",
+          streetComplement: "",
+          streetDistrict: "Centro",
+          city: "São Paulo",
+          state: "SP",
+        },
+        relationship: GuarantorRelationship.SIBLING,
+      },
+    });
+
+    const result = mergeRenewalPrefillIntoForm(current, source);
+
+    expect(result.registration.occupation).toBe("Profissão anterior");
+    expect(result.registration.debtDescription).toBe("Dívida digitada agora");
+    expect(result.registration.debtCreditor).toBe("Outro credor");
+    expect(result.activityIncome.monthlyIncome).toMatch(/7\.000/);
+    expect(result.address.street).toBe("Endereço selecionado pelo backend");
+    expect(result.address.geolocation).toEqual(current.address.geolocation);
+    expect(result.partnerOpinion).toEqual(current.partnerOpinion);
+    expect(result.guarantor).toEqual(current.guarantor);
+    expect(result.financial).toEqual(current.financial);
+    expect(result.documents).toEqual(current.documents);
   });
 });

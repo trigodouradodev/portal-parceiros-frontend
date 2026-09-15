@@ -44,6 +44,7 @@ interface RegistrationSectionProps {
   birthDate: string;
   email: string;
   phone: string;
+  onRenewalChange?: (value: boolean) => void;
 }
 
 export function RegistrationSection({
@@ -54,6 +55,7 @@ export function RegistrationSection({
   birthDate,
   email,
   phone,
+  onRenewalChange,
 }: RegistrationSectionProps) {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
   const [showRate, setShowRate] = useState(false);
@@ -76,6 +78,7 @@ export function RegistrationSection({
         name="registration.isRenewal"
         label="É uma renovação de contrato?"
         required
+        onChange={onRenewalChange}
       />
 
       <div className="rounded-2xl bg-muted px-4 py-3">
