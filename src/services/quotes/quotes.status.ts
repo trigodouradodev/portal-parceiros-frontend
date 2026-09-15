@@ -7,10 +7,14 @@ export type QuoteStatusTone =
   | "success"
   | "destructive";
 
+export const QuoteListAction = {
+  CONTINUE_DRAFT: "continue_draft",
+  FOLLOW_CLIENT_REVIEW: "follow_client_review",
+  OPEN_BACKOFFICE: "open_backoffice",
+} as const;
+
 export type QuoteListAction =
-  | "continue_draft"
-  | "follow_client_review"
-  | "open_backoffice";
+  (typeof QuoteListAction)[keyof typeof QuoteListAction];
 
 const QUOTE_STATUS_PRESENTATION: Record<
   QuoteStatus,
@@ -66,7 +70,14 @@ export function isQuoteInBackoffice(status: string): boolean {
 }
 
 export function getQuoteListAction(status: string): QuoteListAction {
-  if (isQuoteDraft(status)) return "continue_draft";
-  if (isQuoteClientReview(status)) return "follow_client_review";
-  return "open_backoffice";
+  if (isQuoteDraft(status)) return QuoteListAction.CONTINUE_DRAFT;
+  if (isQuoteClientReview(status)) return QuoteListAction.FOLLOW_CLIENT_REVIEW;
+  return QuoteListAction.OPEN_BACKOFFICE;
+}
+
+export function opensQuoteInBackoffice(action: QuoteListAction): boolean {
+  return (
+    action === QuoteListAction.OPEN_BACKOFFICE ||
+    action === QuoteListAction.FOLLOW_CLIENT_REVIEW
+  );
 }

@@ -90,6 +90,32 @@ describe("ProposalList", () => {
     ).toBeInTheDocument();
   });
 
+  it("opens the backoffice when following a proposal in client review", async () => {
+    const onOpen = vi.fn();
+    list.mockResolvedValue(
+      pageOf([
+        item({
+          id: "quote-review",
+          status: QuoteStatus.CLIENT_REVIEW,
+          canEdit: false,
+        }),
+      ]),
+    );
+
+    renderList(<ProposalList onOpen={onOpen} />);
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Acompanhar proposta" }),
+    );
+
+    expect(window.open).toHaveBeenCalledWith(
+      "https://backoffice.example.com/credit-analysis/quotes/quote-review",
+      "_blank",
+      "noopener,noreferrer",
+    );
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
   it("opens the backoffice when the proposal has left client review", async () => {
     const onOpen = vi.fn();
     list.mockResolvedValue(
