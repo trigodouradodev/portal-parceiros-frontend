@@ -249,13 +249,12 @@ export interface ProposalFormData {
   documents: DocumentsData;
 }
 
-export type ProposalStatus = "draft" | "completed";
-
 export interface ProposalSnapshot {
   id: string;
   createdAt: string;
   updatedAt: string;
-  status: ProposalStatus;
+  /** Status da API (`draft`, `client_review`, `kyc_analysis`, …). */
+  status: string;
   /** Indica se o usuário autenticado pode editar (API `canEdit`). */
   canEdit: boolean;
   simulation: SimulationSnapshot;

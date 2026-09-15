@@ -1,5 +1,10 @@
 /** Monta uma URL do Backoffice a partir da base configurada no ambiente. */
-export function getBackofficeUrl(path: "/quotes" | "/quotes/create/register") {
+export function getBackofficeUrl(
+  path:
+    | "/quotes"
+    | "/quotes/create/register"
+    | `/credit-analysis/quotes/${string}`,
+) {
   const backofficeBaseUrl = import.meta.env.VITE_BACKOFFICE_URL;
 
   if (!backofficeBaseUrl) {
@@ -9,4 +14,10 @@ export function getBackofficeUrl(path: "/quotes" | "/quotes/create/register") {
   }
 
   return new URL(path, backofficeBaseUrl).toString();
+}
+
+export function getBackofficeQuoteUrl(quoteId: string): string {
+  return getBackofficeUrl(
+    `/credit-analysis/quotes/${encodeURIComponent(quoteId)}`,
+  );
 }

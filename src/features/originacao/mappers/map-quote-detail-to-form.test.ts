@@ -137,6 +137,20 @@ describe("mapQuoteDetailToProposal", () => {
     ]);
   });
 
+  it("keeps client_review instead of collapsing to completed", () => {
+    const proposal = mapQuoteDetailToProposal(
+      baseDetail({ status: QuoteStatus.CLIENT_REVIEW, canEdit: false }),
+    );
+    expect(proposal.status).toBe(QuoteStatus.CLIENT_REVIEW);
+  });
+
+  it("keeps kyc_analysis for backoffice viewing", () => {
+    const proposal = mapQuoteDetailToProposal(
+      baseDetail({ status: QuoteStatus.KYC_ANALYSIS, canEdit: false }),
+    );
+    expect(proposal.status).toBe(QuoteStatus.KYC_ANALYSIS);
+  });
+
   it("strips DDI 55 from guarantor telephone before masking (AUREA-478)", () => {
     const proposal = mapQuoteDetailToProposal(
       baseDetail({

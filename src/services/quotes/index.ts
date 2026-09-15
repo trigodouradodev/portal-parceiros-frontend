@@ -1,5 +1,6 @@
 export * from "./quotes.enums";
 export * from "./quotes.labels";
+export * from "./quotes.status";
 export * from "./quotes.types";
 export { quotesKeys, quotesService } from "./quotes.service";
 export {
