@@ -20,7 +20,7 @@ export interface OriginacaoContextValue {
   proposals: ProposalSnapshot[];
   openProposalId: string | null;
   openingProposalId: string | null;
-  startProposal: (simulation: SimulationSnapshot) => Promise<void>;
+  startProposal: (simulation: SimulationSnapshot) => Promise<boolean>;
   openProposal: (id: string) => Promise<void>;
   closeProposal: () => void;
   updateProposal: (proposal: ProposalSnapshot) => void;

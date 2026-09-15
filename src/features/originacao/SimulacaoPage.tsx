@@ -42,6 +42,16 @@ export function SimulacaoPage() {
     setEditing(snapshot);
   }
 
+  async function handleStartProposalFromForm(simulation: SimulationSnapshot) {
+    const started = await startProposal(simulation);
+    if (started) {
+      closeForm();
+      return;
+    }
+    // Keep the persisted row so a retry PATCHes instead of creating another simulation.
+    handleEdit(simulation);
+  }
+
   if (!showForm) {
     return (
       <SimulacaoList
@@ -64,6 +74,7 @@ export function SimulacaoPage() {
       }
       onViewList={closeForm}
       onCompleted={closeForm}
+      onStartProposal={handleStartProposalFromForm}
     />
   );
 }

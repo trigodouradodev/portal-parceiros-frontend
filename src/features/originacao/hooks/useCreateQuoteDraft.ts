@@ -9,7 +9,7 @@ function markSimulationConverted(
   prev: SimulationSnapshot[] | undefined,
   simulationId: string,
 ): SimulationSnapshot[] | undefined {
-  if (!prev) return prev;
+  if (!Array.isArray(prev)) return prev;
   return prev.map((item) =>
     item.id === simulationId
       ? { ...item, status: SimulationStatus.CONVERTED }

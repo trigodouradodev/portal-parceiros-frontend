@@ -14,7 +14,7 @@ export const originationKeys = {
   simulations: (query: ListSimulationsQuery = {}) =>
     [...originationKeys.simulationsRoot(), query] as const,
   preview: (payload: PreviewSimulationPayload) =>
-    [...originationKeys.simulationsRoot(), "preview", payload] as const,
+    [...originationKeys.all, "preview", payload] as const,
 };
 
 export const originationService = {
