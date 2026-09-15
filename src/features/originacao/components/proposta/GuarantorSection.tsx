@@ -29,13 +29,6 @@ export function GuarantorSection() {
 
   return (
     <div className="flex flex-col gap-5">
-      <FormInput<ProposalFormData>
-        name="guarantor.name"
-        label="Nome do avalista"
-        icon={<User size={16} />}
-        placeholder="Nome completo"
-        required
-      />
       <div className="flex flex-col gap-1.5">
         <FormInput<ProposalFormData>
           name="guarantor.cpf"
@@ -59,6 +52,13 @@ export function GuarantorSection() {
           </FieldStatusMessage>
         ) : null}
       </div>
+      <FormInput<ProposalFormData>
+        name="guarantor.name"
+        label="Nome do avalista"
+        icon={<User size={16} />}
+        placeholder="Nome completo"
+        required
+      />
       <FormDate<ProposalFormData>
         name="guarantor.birthDate"
         label="Data de nascimento"

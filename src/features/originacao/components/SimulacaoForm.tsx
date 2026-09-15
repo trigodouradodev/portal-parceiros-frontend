@@ -12,7 +12,7 @@ import {
 import { startOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ChipField } from "@/components/ui/chip-field";
-import { FieldLabel } from "@/components/ui/field-hint";
+import { FieldLabel, FieldStatusMessage } from "@/components/ui/field-hint";
 import { Form, FormField } from "@/components/ui/form";
 import { FormDate, FormInput } from "@/components/ui/rhf-fields";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
@@ -31,6 +31,7 @@ import {
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
 import { useCreateSimulation } from "@/features/originacao/hooks/useCreateSimulation";
+import { useSimulationPartyAutoFill } from "@/features/originacao/hooks/useSimulationPartyAutoFill";
 import { useSimulationPreview } from "@/features/originacao/hooks/useSimulationPreview";
 import { useUpdateSimulation } from "@/features/originacao/hooks/useUpdateSimulation";
 import {
@@ -47,6 +48,7 @@ import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { formatPhone, digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
+import { isValidCpf } from "@/lib/validation/cpf";
 import { fmtBRL } from "@/lib/utils";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
@@ -119,6 +121,21 @@ export function SimulacaoForm({
           amount: AMOUNT_DEFAULT,
         },
   });
+  const {
+    status: partyLookupStatus,
+    onCpfComplete,
+    onCpfIncomplete,
+  } = useSimulationPartyAutoFill(form.setValue, {
+    lookupOnMountCpf: editing ? undefined : prefill?.cpf,
+  });
+
+  function handleCpfChange(formatted: string) {
+    if (isValidCpf(formatted)) {
+      onCpfComplete(formatted.replace(/\D/g, ""));
+    } else {
+      onCpfIncomplete();
+    }
+  }
 
   const productId = form.watch("product");
   const amount = form.watch("amount");
@@ -259,21 +276,34 @@ export function SimulacaoForm({
             </p>
           ) : null}
 
+          <div className="flex flex-col gap-1.5">
+            <FormInput<SimulationFormValues>
+              name="cpf"
+              label="CPF"
+              transform={formatCpf}
+              onValueChange={handleCpfChange}
+              icon={<CreditCard size={16} />}
+              placeholder="000.000.000-00"
+              inputMode="numeric"
+              maxLength={14}
+              required
+            />
+            {partyLookupStatus === "searching" ? (
+              <FieldStatusMessage tone="pending">
+                Buscando cadastro…
+              </FieldStatusMessage>
+            ) : null}
+            {partyLookupStatus === "found" ? (
+              <FieldStatusMessage tone="success">
+                Cadastro encontrado e preenchido automaticamente
+              </FieldStatusMessage>
+            ) : null}
+          </div>
           <FormInput<SimulationFormValues>
             name="name"
             label="Nome completo"
             icon={<User size={16} />}
             placeholder="Nome do cliente"
-            required
-          />
-          <FormInput<SimulationFormValues>
-            name="cpf"
-            label="CPF"
-            transform={formatCpf}
-            icon={<CreditCard size={16} />}
-            placeholder="000.000.000-00"
-            inputMode="numeric"
-            maxLength={14}
             required
           />
           <FormDate<SimulationFormValues>
