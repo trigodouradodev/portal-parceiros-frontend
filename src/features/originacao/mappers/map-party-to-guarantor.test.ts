@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatPartyTelephone,
   mapPartyToGuarantorFill,
+  mapPartyToIdentityFill,
 } from "@/features/originacao/mappers/map-party-to-guarantor";
 import type { PartyFormData } from "@/services/parties/parties.types";
 
@@ -25,6 +26,28 @@ describe("formatPartyTelephone", () => {
   it("strips DDI 55 before masking", () => {
     expect(formatPartyTelephone("+5511987654321")).toBe("(11) 98765-4321");
     expect(formatPartyTelephone("11987654321")).toBe("(11) 98765-4321");
+  });
+});
+
+describe("mapPartyToIdentityFill", () => {
+  it("maps name, email and phone without address or CPF", () => {
+    expect(mapPartyToIdentityFill(party)).toEqual({
+      name: "Maria Souza",
+      email: "maria@email.com",
+      phone: "(11) 98765-4321",
+    });
+  });
+
+  it("omits empty optional contact fields", () => {
+    expect(
+      mapPartyToIdentityFill({
+        name: "Maria Souza",
+        document: "52998224725",
+        email: null,
+        telephone: null,
+        address: null,
+      }),
+    ).toEqual({ name: "Maria Souza" });
   });
 });
 

@@ -17,9 +17,13 @@ import {
   isQuotesFilterActive,
 } from "@/features/originacao/data/quotes-list-query";
 import { nextWizardStepIndex } from "@/features/originacao/mappers/map-quote-detail-to-form";
-import { QuoteStatus } from "@/services/quotes/quotes.enums";
+import { getBackofficeQuoteUrl } from "@/lib/backoffice";
 import { quotesKeys, quotesService } from "@/services/quotes/quotes.service";
 import type { QuoteListItem } from "@/services/quotes/quotes.types";
+import {
+  getQuoteListAction,
+  getQuoteStatusPresentation,
+} from "@/services/quotes/quotes.status";
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return "";
@@ -31,7 +35,7 @@ function formatTimestamp(iso: string | null): string {
 interface ProposalListItemCardProps {
   item: QuoteListItem;
   openingId: string | null;
-  onOpen: (id: string) => void;
+  onOpen: (item: QuoteListItem) => void;
 }
 
 function ProposalListItemCard({
@@ -39,24 +43,21 @@ function ProposalListItemCard({
   openingId,
   onOpen,
 }: ProposalListItemCardProps) {
-  const isDraft = item.status === QuoteStatus.DRAFT;
+  const action = getQuoteListAction(item.status);
+  const { label, tone } = getQuoteStatusPresentation(item.status);
   const step = nextWizardStepIndex(item.completedSteps);
   const busy = openingId === item.id;
 
   return (
     <OriginacaoSnapshotCard
-      badge={
-        <OriginacaoToneBadge tone={isDraft ? "warning" : "success"}>
-          {isDraft ? "Rascunho" : "Concluída"}
-        </OriginacaoToneBadge>
-      }
+      badge={<OriginacaoToneBadge tone={tone}>{label}</OriginacaoToneBadge>}
       timestamp={formatTimestamp(item.updatedAt)}
       name={item.name}
       amount={item.financeAmount}
       subtitle={item.productName}
       cpf={item.document}
     >
-      {isDraft && item.canEdit ? (
+      {action === "continue_draft" && item.canEdit ? (
         <>
           <OriginacaoProgress
             value={((step + 1) / PROPOSAL_STEPS.length) * 100}
@@ -68,7 +69,7 @@ function ProposalListItemCard({
             variant="outline"
             size="pillSm"
             disabled={openingId != null}
-            onClick={() => onOpen(item.id)}
+            onClick={() => onOpen(item)}
           >
             {busy ? <Loader2 size={15} className="animate-spin" /> : null}
             Continuar preenchimento
@@ -79,10 +80,12 @@ function ProposalListItemCard({
           variant="ghost"
           size="pillSm"
           disabled={openingId != null}
-          onClick={() => onOpen(item.id)}
+          onClick={() => onOpen(item)}
         >
           {busy ? <Loader2 size={15} className="animate-spin" /> : null}
-          Ver proposta
+          {action === "follow_client_review"
+            ? "Acompanhar proposta"
+            : "Ver proposta"}
         </Button>
       )}
     </OriginacaoSnapshotCard>
@@ -124,15 +127,23 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
     setFilters(buildQuotesListQuery(""));
   }
 
-  async function handleOpen(id: string) {
+  async function handleOpen(item: QuoteListItem) {
     if (openingId != null) return;
-    await onOpen(id);
+    if (getQuoteListAction(item.status) === "open_backoffice") {
+      window.open(
+        getBackofficeQuoteUrl(item.id),
+        "_blank",
+        "noopener,noreferrer",
+      );
+      return;
+    }
+    await onOpen(item.id);
   }
 
   return (
     <OriginacaoPageFrame
       title="Propostas"
-      description="Rascunhos e propostas do portal — continue o preenchimento a qualquer momento."
+      description="Rascunhos, revisão do cliente e propostas enviadas à análise."
     >
       <div className="mb-4 flex flex-col gap-3">
         <InputField

@@ -24,7 +24,7 @@ import type {
 } from "./quotes.enums";
 
 /** Aliases usados pelo fluxo AUREA-429 (registration). */
-export type QuoteDraftStatus = typeof QuoteStatus.DRAFT | "draft";
+export type QuoteDraftStatus = typeof QuoteStatus.DRAFT;
 export type QuoteGender = Gender;
 export type QuoteEconomicActivityCategory = EconomicActivityCategory;
 export type QuoteMaritalStatus = MaritalStatus;
@@ -261,7 +261,7 @@ export interface QuoteConsultantSummary {
 export interface QuoteListItem {
   id: string;
   simulationId: string | null;
-  status: string;
+  status: QuoteStatus;
   name: string;
   document: string;
   productId: string;
@@ -291,7 +291,7 @@ export interface ListQuotesQuery {
   page?: number;
   limit?: number;
   search?: string;
-  status?: string;
+  status?: QuoteStatus;
 }
 
 export interface QuoteRegistrationDetail {

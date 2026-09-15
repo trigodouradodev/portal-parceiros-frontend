@@ -2,20 +2,33 @@ import type { ReactNode } from "react";
 import { formatCpf } from "@/lib/format/tax-id";
 import { cn, fmtBRL } from "@/lib/utils";
 
+export type OriginacaoTone =
+  | "muted"
+  | "warning"
+  | "info"
+  | "success"
+  | "destructive";
+
+const TONE_CLASS: Record<OriginacaoTone, string> = {
+  muted: "bg-muted text-muted-foreground",
+  warning: "bg-warning-bg text-warning",
+  info: "bg-brand-navy/5 text-brand-navy",
+  success: "bg-success-bg text-success",
+  destructive: "bg-destructive-bg text-destructive",
+};
+
 export function OriginacaoToneBadge({
   tone,
   children,
 }: {
-  tone: "warning" | "success";
+  tone: OriginacaoTone;
   children: ReactNode;
 }) {
   return (
     <span
       className={cn(
         "inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold",
-        tone === "warning"
-          ? "bg-warning-bg text-warning"
-          : "bg-success-bg text-success",
+        TONE_CLASS[tone],
       )}
     >
       {children}

@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { QuoteAttachmentType } from "@/services/quotes/quotes.enums";
+import {
+  QuoteAttachmentType,
+  QuoteStatus,
+} from "@/services/quotes/quotes.enums";
 import { quotesService } from "@/services/quotes/quotes.service";
 
 const { post, get, deleteFn, patch, put } = vi.hoisted(() => ({
@@ -67,7 +70,7 @@ describe("quotesService documentation", () => {
     patch.mockResolvedValue({
       data: {
         id: "quote-1",
-        status: "draft",
+        status: QuoteStatus.DRAFT,
         step: "documentation",
         completedAt: "2026-09-03T12:00:00.000Z",
         updatedAt: "2026-09-03T12:00:00.000Z",
@@ -86,14 +89,14 @@ describe("quotesService documentation", () => {
     put.mockResolvedValue({
       data: {
         id: "quote-1",
-        status: "client_review",
+        status: QuoteStatus.CLIENT_REVIEW,
         updatedAt: "2026-09-03T12:00:00.000Z",
       },
     });
 
     await expect(quotesService.submitDraft("quote-1")).resolves.toEqual({
       id: "quote-1",
-      status: "client_review",
+      status: QuoteStatus.CLIENT_REVIEW,
       updatedAt: "2026-09-03T12:00:00.000Z",
     });
     expect(put).toHaveBeenCalledWith("/quotes/draft/quote-1/submit");
