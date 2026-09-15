@@ -36,12 +36,8 @@ export function ConfirmDialog({
   pendingLabel = "Aguarde…",
 }: ConfirmDialogProps) {
   const handleConfirm = async () => {
-    try {
-      await onConfirm();
-      onOpenChange(false);
-    } catch {
-      // O chamador apresenta o erro e o diálogo permanece aberto para retry.
-    }
+    await onConfirm();
+    onOpenChange(false);
   };
 
   const handleCancel = () => {
@@ -49,15 +45,14 @@ export function ConfirmDialog({
     onOpenChange(false);
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (pending) return;
+    if (!nextOpen) onCancel?.();
+    onOpenChange(nextOpen);
+  };
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (pending) return;
-        if (!nextOpen) onCancel?.();
-        onOpenChange(nextOpen);
-      }}
-    >
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

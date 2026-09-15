@@ -185,15 +185,11 @@ function ProposalWizard({
           ? "Dados da última proposta copiados. Confira cada etapa antes de avançar."
           : "Os dados da renovação já haviam sido copiados.",
       );
-    } catch (err) {
+    } catch {
       showToast(
-        getApiErrorMessage(
-          err,
-          "Não foi possível copiar os dados da última proposta.",
-        ),
+        "Não foi possível copiar os dados da última proposta. Preencha os campos manualmente.",
         { variant: "destructive" },
       );
-      throw err;
     }
   }
 
