@@ -21,8 +21,10 @@ import { getBackofficeQuoteUrl } from "@/lib/backoffice";
 import { quotesKeys, quotesService } from "@/services/quotes/quotes.service";
 import type { QuoteListItem } from "@/services/quotes/quotes.types";
 import {
+  QuoteListAction,
   getQuoteListAction,
   getQuoteStatusPresentation,
+  opensQuoteInBackoffice,
 } from "@/services/quotes/quotes.status";
 
 function formatTimestamp(iso: string | null): string {
@@ -57,7 +59,7 @@ function ProposalListItemCard({
       subtitle={item.productName}
       cpf={item.document}
     >
-      {action === "continue_draft" && item.canEdit ? (
+      {action === QuoteListAction.CONTINUE_DRAFT && item.canEdit ? (
         <>
           <OriginacaoProgress
             value={((step + 1) / PROPOSAL_STEPS.length) * 100}
@@ -83,7 +85,7 @@ function ProposalListItemCard({
           onClick={() => onOpen(item)}
         >
           {busy ? <Loader2 size={15} className="animate-spin" /> : null}
-          {action === "follow_client_review"
+          {action === QuoteListAction.FOLLOW_CLIENT_REVIEW
             ? "Acompanhar proposta"
             : "Ver proposta"}
         </Button>
@@ -129,7 +131,7 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
 
   async function handleOpen(item: QuoteListItem) {
     if (openingId != null) return;
-    if (getQuoteListAction(item.status) === "open_backoffice") {
+    if (opensQuoteInBackoffice(getQuoteListAction(item.status))) {
       window.open(
         getBackofficeQuoteUrl(item.id),
         "_blank",
