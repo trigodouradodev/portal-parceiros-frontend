@@ -35,7 +35,12 @@ import {
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
 import { getApiErrorMessage } from "@/lib/api/errors";
-import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
+import { getBackofficeQuoteUrl } from "@/lib/backoffice";
+import {
+  AvailableIncomeProof,
+  QuoteStatus,
+} from "@/services/quotes/quotes.enums";
+import { isQuoteInBackoffice } from "@/services/quotes/quotes.status";
 import {
   isActivityIncomeValid,
   isAddressValid,
@@ -79,13 +84,19 @@ export function PropostaPage() {
     );
   }
 
-  if (proposal.status === "completed") {
+  if (proposal.status === QuoteStatus.CLIENT_REVIEW) {
     return (
       <ProposalSuccess
         proposal={proposal}
         onBackToList={closeProposal}
         onLogout={onMobileLogout}
       />
+    );
+  }
+
+  if (isQuoteInBackoffice(proposal.status)) {
+    return (
+      <OpenBackofficeQuote quoteId={proposal.id} onClose={closeProposal} />
     );
   }
 
@@ -97,6 +108,29 @@ export function PropostaPage() {
       onClose={closeProposal}
       onLogout={onMobileLogout}
     />
+  );
+}
+
+function OpenBackofficeQuote({
+  quoteId,
+  onClose,
+}: {
+  quoteId: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    window.open(
+      getBackofficeQuoteUrl(quoteId),
+      "_blank",
+      "noopener,noreferrer",
+    );
+    onClose();
+  }, [quoteId, onClose]);
+
+  return (
+    <div className="flex flex-1 items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
+      Abrindo proposta no backoffice…
+    </div>
   );
 }
 
@@ -297,7 +331,7 @@ function ProposalWizard({
         await submitDraft(proposal.id);
       } catch (err) {
         showToast(
-          getApiErrorMessage(err, "Não foi possível concluir a proposta."),
+          getApiErrorMessage(err, "Não foi possível enviar a proposta."),
           { variant: "destructive" },
         );
         return;
@@ -306,7 +340,7 @@ function ProposalWizard({
     setSubmitAttempted(false);
     form.clearErrors();
     if (step === PROPOSAL_STEPS.length - 1) {
-      persist({ status: "completed" });
+      persist({ status: QuoteStatus.CLIENT_REVIEW });
     } else {
       persist({ step: step + 1 });
     }

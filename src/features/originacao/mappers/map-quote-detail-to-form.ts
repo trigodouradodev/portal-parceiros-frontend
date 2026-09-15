@@ -18,7 +18,7 @@ import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to
 import { fmtBRL } from "@/lib/format/money";
 import { formatCpf } from "@/lib/format/tax-id";
 import { SimulationStatus } from "@/services/origination/origination.types";
-import { QuoteDraftStep, QuoteStatus } from "@/services/quotes/quotes.enums";
+import { QuoteDraftStep } from "@/services/quotes/quotes.enums";
 import type {
   QuoteAttachmentListItem,
   QuoteDetail,
@@ -219,12 +219,11 @@ export function mapQuoteDetailToProposal(
   detail: QuoteDetail,
 ): ProposalSnapshot {
   const step = nextWizardStepIndex(detail.completedSteps);
-  const isDraft = detail.status === QuoteStatus.DRAFT;
   return {
     id: detail.id,
     createdAt: formatTimestamp(detail.createdAt),
     updatedAt: formatTimestamp(detail.updatedAt),
-    status: isDraft ? "draft" : "completed",
+    status: detail.status,
     canEdit: detail.canEdit,
     simulation: {
       id: detail.simulationId ?? detail.id,

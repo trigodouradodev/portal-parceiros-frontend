@@ -124,7 +124,7 @@ describe("mapQuoteDetailToProposal", () => {
   it("hydrates proposal snapshot and form fields from detail", () => {
     const proposal = mapQuoteDetailToProposal(baseDetail());
     expect(proposal.id).toBe("quote-1");
-    expect(proposal.status).toBe("draft");
+    expect(proposal.status).toBe(QuoteStatus.DRAFT);
     expect(proposal.canEdit).toBe(true);
     expect(proposal.step).toBe(2);
     expect(proposal.simulation.name).toBe("Maria Silva");
@@ -135,6 +135,20 @@ describe("mapQuoteDetailToProposal", () => {
     expect(proposal.data.documents.identification).toEqual([
       { id: "att-1", filename: "rg.pdf" },
     ]);
+  });
+
+  it("keeps client_review instead of collapsing to completed", () => {
+    const proposal = mapQuoteDetailToProposal(
+      baseDetail({ status: QuoteStatus.CLIENT_REVIEW, canEdit: false }),
+    );
+    expect(proposal.status).toBe(QuoteStatus.CLIENT_REVIEW);
+  });
+
+  it("keeps kyc_analysis for backoffice viewing", () => {
+    const proposal = mapQuoteDetailToProposal(
+      baseDetail({ status: QuoteStatus.KYC_ANALYSIS, canEdit: false }),
+    );
+    expect(proposal.status).toBe(QuoteStatus.KYC_ANALYSIS);
   });
 
   it("strips DDI 55 from guarantor telephone before masking (AUREA-478)", () => {

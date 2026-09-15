@@ -29,7 +29,7 @@ export function ProposalSuccess({
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto">
       <OriginacaoTaskHeader
-        title="Proposta criada"
+        title="Revisão do cliente"
         subtitle={`${fmtBRL(simulation.amount)} · ${simulation.installments}x · ${simulation.productName}`}
         backLabel="Ver todas as propostas"
         onBack={onBackToList}
@@ -42,10 +42,11 @@ export function ProposalSuccess({
             <Alert variant="success">
               <CheckCircle2 size={22} />
               <div>
-                <AlertTitle>Proposta criada</AlertTitle>
+                <AlertTitle>Aguardando o cliente</AlertTitle>
                 <AlertDescription>
-                  O cliente deve acessar o Portal do Cliente para revisar os
-                  dados, dar os consentimentos e concluir a aprovação.
+                  A proposta ainda não foi concluída. O cliente deve acessar o
+                  Portal do Cliente para revisar os dados, dar os consentimentos
+                  e concluir a aprovação.
                 </AlertDescription>
               </div>
             </Alert>
