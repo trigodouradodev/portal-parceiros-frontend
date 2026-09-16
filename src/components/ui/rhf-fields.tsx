@@ -53,12 +53,15 @@ export function FormInput<T extends FieldValues>({
 
 export function FormSelect<T extends FieldValues>({
   name,
+  onValueChange,
   ...props
 }: Omit<
   ComponentProps<typeof SelectDialogField>,
   "value" | "onChange" | "error" | "name"
 > &
-  BoundName<T>) {
+  BoundName<T> & {
+    onValueChange?: (value: string) => void;
+  }) {
   const { control } = useFormContext<T>();
 
   return (
@@ -70,7 +73,10 @@ export function FormSelect<T extends FieldValues>({
           {...props}
           name={field.name}
           value={field.value ?? ""}
-          onChange={field.onChange}
+          onChange={(value) => {
+            field.onChange(value);
+            onValueChange?.(value);
+          }}
           error={fieldState.error?.message}
         />
       )}

@@ -91,7 +91,7 @@ export function FinancialSection() {
           placeholder="Selecione o tipo"
           options={PAYMENT_PIX_OPTIONS}
           required
-          onValueChange={(value) => {
+          onValueChange={(value: string) => {
             if (value === paymentPixType) return;
             setValue("financial.paymentPixCode", "", {
               shouldDirty: true,
