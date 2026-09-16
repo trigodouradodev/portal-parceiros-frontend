@@ -8,7 +8,7 @@ import { OriginacaoPageFrame } from "@/features/originacao/components/Originacao
 import { OriginacaoProgress } from "@/features/originacao/components/OriginacaoProgress";
 import {
   OriginacaoSnapshotCard,
-  OriginacaoToneBadge,
+  QuoteStatusBadge,
 } from "@/features/originacao/components/OriginacaoSnapshotCard";
 import { PROPOSAL_STEPS } from "@/features/originacao/data/proposal";
 import {
@@ -23,7 +23,6 @@ import type { QuoteListItem } from "@/services/quotes/quotes.types";
 import {
   QuoteListAction,
   getQuoteListAction,
-  getQuoteStatusPresentation,
   opensQuoteInBackoffice,
 } from "@/services/quotes/quotes.status";
 
@@ -46,13 +45,12 @@ function ProposalListItemCard({
   onOpen,
 }: ProposalListItemCardProps) {
   const action = getQuoteListAction(item.status);
-  const { label, tone } = getQuoteStatusPresentation(item.status);
   const step = nextWizardStepIndex(item.completedSteps);
   const busy = openingId === item.id;
 
   return (
     <OriginacaoSnapshotCard
-      badge={<OriginacaoToneBadge tone={tone}>{label}</OriginacaoToneBadge>}
+      badge={<QuoteStatusBadge status={item.status} />}
       timestamp={formatTimestamp(item.updatedAt)}
       name={item.name}
       amount={item.financeAmount}

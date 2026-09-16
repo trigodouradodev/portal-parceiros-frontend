@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { formatCpf } from "@/lib/format/tax-id";
 import { cn, fmtBRL } from "@/lib/utils";
+import { getQuoteStatusPresentation } from "@/services/quotes/quotes.status";
 
 export type OriginacaoTone =
   | "muted"
@@ -32,6 +33,20 @@ export function OriginacaoToneBadge({
       )}
     >
       {children}
+    </span>
+  );
+}
+
+export function QuoteStatusBadge({ status }: { status: string }) {
+  const { label, badgeClassName } = getQuoteStatusPresentation(status);
+  return (
+    <span
+      className={cn(
+        "inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold",
+        badgeClassName,
+      )}
+    >
+      {label}
     </span>
   );
 }

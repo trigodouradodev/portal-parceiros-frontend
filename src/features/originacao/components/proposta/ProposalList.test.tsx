@@ -140,4 +140,40 @@ describe("ProposalList", () => {
     );
     expect(onOpen).not.toHaveBeenCalled();
   });
+
+  it("applies backoffice-aligned colors on the status badge", async () => {
+    list.mockResolvedValue(
+      pageOf([
+        item({ id: "draft", status: QuoteStatus.DRAFT }),
+        item({
+          id: "analysis",
+          status: QuoteStatus.IN_ANALYSIS,
+          canEdit: false,
+        }),
+        item({
+          id: "approved",
+          status: QuoteStatus.APPROVED,
+          canEdit: false,
+        }),
+        item({
+          id: "rejected",
+          status: QuoteStatus.REJECTED,
+          canEdit: false,
+        }),
+      ]),
+    );
+
+    renderList(<ProposalList onOpen={vi.fn()} />);
+
+    expect(await screen.findByText("Rascunho")).toHaveClass(
+      "bg-brand-yellow",
+      "text-brand-navy",
+    );
+    expect(screen.getByText("Em análise")).toHaveClass(
+      "bg-brand-navy",
+      "text-white",
+    );
+    expect(screen.getByText("Aprovada")).toHaveClass("bg-success-bg");
+    expect(screen.getByText("Rejeitada")).toHaveClass("bg-destructive");
+  });
 });
