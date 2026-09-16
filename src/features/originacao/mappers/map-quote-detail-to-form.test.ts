@@ -12,6 +12,7 @@ import {
   GuarantorRelationship,
   HousingStatus,
   MaritalStatus,
+  PaymentPixType,
   QuoteDraftStep,
   QuoteStatus,
   ResidenceDuration,
@@ -91,7 +92,12 @@ function baseDetail(overrides: Partial<QuoteDetail> = {}): QuoteDetail {
       opinion: null,
     },
     guarantor: null,
-    financial: { expenses: [], loans: [] },
+    financial: {
+      expenses: [],
+      loans: [],
+      paymentPixType: "",
+      paymentPixCode: "",
+    },
     documentation: {
       identificationDocuments: [
         {
@@ -138,9 +144,28 @@ describe("mapQuoteDetailToProposal", () => {
     expect(proposal.data.registration.occupation).toBe("Vendedora");
     expect(proposal.data.activityIncome.monthlyIncome).toMatch(/2\.500/);
     expect(proposal.data.address.street).toBe("Av Paulista");
+    expect(proposal.data.financial.paymentPixType).toBe("");
+    expect(proposal.data.financial.paymentPixCode).toBe("");
     expect(proposal.data.documents.identification).toEqual([
       { id: "att-1", filename: "rg.pdf" },
     ]);
+  });
+
+  it("masks stored PIX keys for the financial form", () => {
+    const proposal = mapQuoteDetailToProposal(
+      baseDetail({
+        financial: {
+          expenses: [],
+          loans: [],
+          paymentPixType: PaymentPixType.TELEPHONE,
+          paymentPixCode: "+5511991234567",
+        },
+      }),
+    );
+    expect(proposal.data.financial.paymentPixType).toBe(
+      PaymentPixType.TELEPHONE,
+    );
+    expect(proposal.data.financial.paymentPixCode).toBe("(11) 99123-4567");
   });
 
   it("keeps client_review instead of collapsing to completed", () => {

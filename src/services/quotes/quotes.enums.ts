@@ -235,3 +235,13 @@ export const LoanCategory = {
   OTHER: "other",
 } as const;
 export type LoanCategory = (typeof LoanCategory)[keyof typeof LoanCategory];
+
+/** Contrato compartilhado com o backoffice (`quotes.payment_pix_type`). */
+export const PaymentPixType = {
+  CPF: "CPF",
+  TELEPHONE: "TELEPHONE",
+  EMAIL: "EMAIL",
+  RANDOM_KEY: "RANDOM_KEY",
+} as const;
+export type PaymentPixType =
+  (typeof PaymentPixType)[keyof typeof PaymentPixType];

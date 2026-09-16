@@ -15,6 +15,28 @@ import type { ComponentProps } from "react";
 
 type BoundName<T extends FieldValues> = { name: FieldPath<T> };
 
+function handleBoundInputChange(
+  fieldOnChange: (value: string) => void,
+  transform?: (value: string) => string,
+  onValueChange?: (value: string) => void,
+) {
+  return (value: string) => {
+    const next = transform ? transform(value) : value;
+    fieldOnChange(next);
+    onValueChange?.(next);
+  };
+}
+
+function handleBoundSelectChange(
+  fieldOnChange: (value: string) => void,
+  onValueChange?: (value: string) => void,
+) {
+  return (value: string) => {
+    fieldOnChange(value);
+    onValueChange?.(value);
+  };
+}
+
 export function FormInput<T extends FieldValues>({
   name,
   transform,
@@ -39,11 +61,11 @@ export function FormInput<T extends FieldValues>({
           {...props}
           name={field.name}
           value={field.value ?? ""}
-          onChange={(value) => {
-            const next = transform ? transform(value) : value;
-            field.onChange(next);
-            onValueChange?.(next);
-          }}
+          onChange={handleBoundInputChange(
+            field.onChange,
+            transform,
+            onValueChange,
+          )}
           error={fieldState.error?.message}
         />
       )}
@@ -53,12 +75,15 @@ export function FormInput<T extends FieldValues>({
 
 export function FormSelect<T extends FieldValues>({
   name,
+  onValueChange,
   ...props
 }: Omit<
   ComponentProps<typeof SelectDialogField>,
   "value" | "onChange" | "error" | "name"
 > &
-  BoundName<T>) {
+  BoundName<T> & {
+    onValueChange?: (value: string) => void;
+  }) {
   const { control } = useFormContext<T>();
 
   return (
@@ -70,7 +95,7 @@ export function FormSelect<T extends FieldValues>({
           {...props}
           name={field.name}
           value={field.value ?? ""}
-          onChange={field.onChange}
+          onChange={handleBoundSelectChange(field.onChange, onValueChange)}
           error={fieldState.error?.message}
         />
       )}

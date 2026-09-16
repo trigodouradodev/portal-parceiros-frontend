@@ -27,6 +27,7 @@ import {
   INCOME_SOURCE_OPTIONS as QUOTE_INCOME_SOURCE_OPTIONS,
   KINSHIP_OPTIONS as QUOTE_KINSHIP_OPTIONS,
   LOAN_CATEGORY_OPTIONS as QUOTE_LOAN_CATEGORY_OPTIONS,
+  PAYMENT_PIX_OPTIONS as QUOTE_PAYMENT_PIX_OPTIONS,
   LOAN_FREQUENCY_OPTIONS as QUOTE_LOAN_FREQUENCY_OPTIONS,
   MARITAL_STATUS_OPTIONS as QUOTE_MARITAL_STATUS_OPTIONS,
   OVERALL_RATING_OPTIONS as QUOTE_OVERALL_RATING_OPTIONS,
@@ -108,6 +109,7 @@ export const CREDITOR_INSTITUTION_OPTIONS: SelectOption[] =
   QUOTE_CREDITOR_INSTITUTION_OPTIONS;
 export const LOAN_CATEGORY_OPTIONS: SelectOption[] =
   QUOTE_LOAN_CATEGORY_OPTIONS;
+export const PAYMENT_PIX_OPTIONS: SelectOption[] = QUOTE_PAYMENT_PIX_OPTIONS;
 export const KINSHIP_OPTIONS: SelectOption[] = QUOTE_KINSHIP_OPTIONS;
 
 /** Credor de dívida do passo Cadastro — campo só de UI (não vai no PATCH registration). */
@@ -232,6 +234,8 @@ export interface FinancialData {
   expenses: ExpenseItem[];
   loans: LoanItem[];
   nextId: number;
+  paymentPixType: string;
+  paymentPixCode: string;
 }
 
 export interface DocumentAttachmentItem {
@@ -342,7 +346,13 @@ export function createEmptyProposalForm(): ProposalFormData {
       ...EMPTY_ADDRESS,
       kinship: "",
     },
-    financial: { expenses: [], loans: [], nextId: 1 },
+    financial: {
+      expenses: [],
+      loans: [],
+      nextId: 1,
+      paymentPixType: "",
+      paymentPixCode: "",
+    },
     documents: {
       identification: [],
       proofOfResidence: [],

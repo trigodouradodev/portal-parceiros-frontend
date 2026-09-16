@@ -18,6 +18,7 @@ import {
   LoanInstitution,
   MaritalStatus,
   PartnerAssessment,
+  PaymentPixType,
   ResidenceDuration,
 } from "./quotes.enums";
 
@@ -198,6 +199,13 @@ export const LOAN_CATEGORY_OPTIONS = options([
   [LoanCategory.SAVINGS_GROUP_OR_CONSORTIUM, "Caixa financeira/consórcio"],
   [LoanCategory.LOAN_SHARK, "Agiota"],
   [LoanCategory.OTHER, "Outros"],
+]);
+
+export const PAYMENT_PIX_OPTIONS = options([
+  [PaymentPixType.CPF, "CPF"],
+  [PaymentPixType.TELEPHONE, "Celular"],
+  [PaymentPixType.EMAIL, "Email"],
+  [PaymentPixType.RANDOM_KEY, "Chave Aleatória"],
 ]);
 
 /** Tipos de comprovante no upload de documentação (passo Documentos). */

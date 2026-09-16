@@ -240,7 +240,7 @@ function ProposalWizard({
       isAddressValid(values.address),
       isPartnerOpinionValid(values.partnerOpinion),
       isGuarantorValid(values.guarantor),
-      isFinancialValid(),
+      isFinancialValid(values.financial),
       isDocumentsValid(values.documents, incomeProofRequired),
     ];
   }

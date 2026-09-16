@@ -93,9 +93,14 @@ describe("getProposalStepFieldErrors", () => {
     expect(getProposalStepFieldErrors(3, data)).toEqual([]);
   });
 
-  it("keeps the financial step without blocking errors", () => {
-    expect(getProposalStepFieldErrors(5, createEmptyProposalForm())).toEqual(
-      [],
-    );
+  it("requires PIX fields on the financial step", () => {
+    const empty = createEmptyProposalForm();
+    expect(
+      getProposalStepFieldErrors(5, empty).map((item) => item.name),
+    ).toEqual(["financial.paymentPixType", "financial.paymentPixCode"]);
+
+    empty.financial.paymentPixType = "CPF";
+    empty.financial.paymentPixCode = "529.982.247-25";
+    expect(getProposalStepFieldErrors(5, empty)).toEqual([]);
   });
 });
