@@ -6,6 +6,7 @@ import {
   LoanCategory,
   LoanFrequency,
   LoanInstitution,
+  PaymentPixType,
 } from "@/services/quotes/quotes.enums";
 
 describe("mapFinancialToApi", () => {
@@ -49,6 +50,8 @@ describe("mapFinancialToApi", () => {
           description: "Capital de giro",
         },
       ],
+      paymentPixType: "",
+      paymentPixCode: "",
     });
   });
 
@@ -57,6 +60,8 @@ describe("mapFinancialToApi", () => {
     expect(
       mapFinancialToApi({
         ...form,
+        paymentPixType: PaymentPixType.CPF,
+        paymentPixCode: "529.982.247-25",
         expenses: [{ id: 1, category: "", amount: "", description: "" }],
         loans: [
           {
@@ -69,7 +74,12 @@ describe("mapFinancialToApi", () => {
           },
         ],
       }),
-    ).toEqual({ expenses: [], loans: [] });
+    ).toEqual({
+      expenses: [],
+      loans: [],
+      paymentPixType: PaymentPixType.CPF,
+      paymentPixCode: "529.982.247-25",
+    });
   });
 
   it("requires description for Other expense", () => {

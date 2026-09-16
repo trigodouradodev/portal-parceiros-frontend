@@ -12,9 +12,13 @@ import {
   EXPENSE_CATEGORY_OPTIONS,
   LOAN_CATEGORY_OPTIONS,
   LOAN_FREQUENCY_OPTIONS,
+  PAYMENT_PIX_OPTIONS,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
+import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
 import { formatMoneyBrl } from "@/lib/format/money";
+import { formatCpf } from "@/lib/format/tax-id";
+import { PaymentPixType } from "@/services/quotes/quotes.enums";
 
 const EMPTY_EXPENSE = {
   category: "",
@@ -30,9 +34,23 @@ const EMPTY_LOAN = {
   description: "",
 };
 
+const PIX_PLACEHOLDERS: Record<string, string> = {
+  [PaymentPixType.CPF]: "000.000.000-00",
+  [PaymentPixType.TELEPHONE]: "(11) 98888-7777",
+  [PaymentPixType.EMAIL]: "um@email.com",
+  [PaymentPixType.RANDOM_KEY]: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+};
+
+function formatPixInput(type: string, value: string): string {
+  if (type === PaymentPixType.CPF) return formatCpf(value);
+  if (type === PaymentPixType.TELEPHONE) return formatPartyTelephone(value);
+  return value;
+}
+
 export function FinancialSection() {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
   const nextId = watch("financial.nextId");
+  const paymentPixType = watch("financial.paymentPixType");
   const {
     fields: expenses,
     append: appendExpense,
@@ -66,6 +84,48 @@ export function FinancialSection() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+        <FormSelect<ProposalFormData>
+          name="financial.paymentPixType"
+          label="Tipo de chave Pix"
+          placeholder="Selecione o tipo"
+          options={PAYMENT_PIX_OPTIONS}
+          required
+          onValueChange={(value) => {
+            if (value === paymentPixType) return;
+            setValue("financial.paymentPixCode", "", {
+              shouldDirty: true,
+              shouldValidate: true,
+            });
+          }}
+        />
+        <FormInput<ProposalFormData>
+          name="financial.paymentPixCode"
+          label="Chave Pix"
+          required
+          placeholder={PIX_PLACEHOLDERS[paymentPixType] ?? "Chave PIX"}
+          transform={(value) => formatPixInput(paymentPixType, value)}
+          type={paymentPixType === PaymentPixType.EMAIL ? "email" : "text"}
+          inputMode={
+            paymentPixType === PaymentPixType.CPF ||
+            paymentPixType === PaymentPixType.TELEPHONE
+              ? "numeric"
+              : paymentPixType === PaymentPixType.EMAIL
+                ? "email"
+                : "text"
+          }
+          maxLength={
+            paymentPixType === PaymentPixType.CPF
+              ? 14
+              : paymentPixType === PaymentPixType.TELEPHONE
+                ? 15
+                : paymentPixType === PaymentPixType.RANDOM_KEY
+                  ? 36
+                  : undefined
+          }
+        />
+      </div>
+
       <RepeatableGroup
         title="Despesas pessoais"
         addLabel="Adicionar despesa"

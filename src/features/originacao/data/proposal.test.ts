@@ -27,6 +27,7 @@ import {
   IncomeSource,
   MaritalStatus,
   PartnerAssessment,
+  PaymentPixType,
   ResidenceDuration,
   GovernmentProgram,
   QuoteStatus,
@@ -283,8 +284,23 @@ describe("proposal validators", () => {
     expect(isGuarantorValid(adult)).toBe(true);
   });
 
-  it("keeps financial step always valid", () => {
-    expect(isFinancialValid()).toBe(true);
+  it("requires PIX type and a valid PIX key", () => {
+    const empty = createEmptyProposalForm().financial;
+    expect(isFinancialValid(empty)).toBe(false);
+    expect(
+      isFinancialValid({
+        ...empty,
+        paymentPixType: PaymentPixType.CPF,
+        paymentPixCode: "529.982.247-25",
+      }),
+    ).toBe(true);
+    expect(
+      isFinancialValid({
+        ...empty,
+        paymentPixType: PaymentPixType.CPF,
+        paymentPixCode: "111.111.111-11",
+      }),
+    ).toBe(false);
   });
 
   it("requires all document groups", () => {

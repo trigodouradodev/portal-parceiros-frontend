@@ -8,6 +8,7 @@ import {
   type ActivityIncomeData,
   type AddressData,
   type DocumentsData,
+  type FinancialData,
   type GuarantorData,
   type PartnerOpinionData,
   type ProposalFormData,
@@ -21,6 +22,7 @@ import { isCompleteCep } from "@/features/originacao/utils/format-cep";
 import { parseMoneyBrl } from "@/lib/format/money";
 import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
 import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
+import { addPaymentPixFormatIssues } from "@/features/originacao/schemas/pix-key-validation";
 
 export const REQUIRED_FIELD_MESSAGE = "Campo obrigatório";
 export const POSITIVE_MONEY_MESSAGE = "Informe um valor maior que zero";
@@ -242,6 +244,18 @@ export const guarantorSchema: z.ZodType<GuarantorData> = z.object({
   kinship: requiredString,
 });
 
+export const financialSchema: z.ZodType<FinancialData> = z
+  .object({
+    expenses: z.array(z.any()),
+    loans: z.array(z.any()),
+    nextId: z.number(),
+    paymentPixType: requiredString,
+    paymentPixCode: requiredString,
+  })
+  .superRefine((data, ctx) => {
+    addPaymentPixFormatIssues(data, ctx, ["paymentPixCode"]);
+  });
+
 export const documentsSchema: z.ZodType<DocumentsData> = z.object({
   identification: z
     .array(
@@ -308,11 +322,11 @@ const STEP_SCHEMAS = [
   addressSchema,
   partnerOpinionSchema,
   guarantorSchema,
-  null,
+  financialSchema,
   null,
 ] as const;
 
-type StepKey = Exclude<keyof ProposalFormData, "financial">;
+type StepKey = keyof ProposalFormData;
 
 const STEP_KEYS: Array<StepKey | null> = [
   "registration",
@@ -320,7 +334,7 @@ const STEP_KEYS: Array<StepKey | null> = [
   "address",
   "partnerOpinion",
   "guarantor",
-  null,
+  "financial",
   "documents",
 ];
 
@@ -363,8 +377,8 @@ export function isGuarantorValid(data: GuarantorData): boolean {
   return guarantorSchema.safeParse(data).success;
 }
 
-export function isFinancialValid(): boolean {
-  return true;
+export function isFinancialValid(data: FinancialData): boolean {
+  return financialSchema.safeParse(data).success;
 }
 
 export function isDocumentsValid(

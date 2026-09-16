@@ -20,6 +20,7 @@ import {
   LoanInstitution,
   MaritalStatus,
   PartnerAssessment,
+  PaymentPixType,
   type ActivityDuration,
   type AvailableIncomeProof,
   type CustomerRelationshipDuration,
@@ -276,7 +277,12 @@ export function mapFinancialToPayload(
   const loans = data.loans
     .filter((item) => !isBlankLoan(item))
     .map((item, index) => mapLoanItem(item, index));
-  return { expenses, loans };
+  return {
+    expenses,
+    loans,
+    paymentPixType: data.paymentPixType as PaymentPixType,
+    paymentPixCode: data.paymentPixCode.trim(),
+  };
 }
 
 /** Prefill de endereço do draft → campos do formulário */

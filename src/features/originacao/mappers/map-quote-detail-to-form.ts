@@ -18,7 +18,7 @@ import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to
 import { fmtBRL } from "@/lib/format/money";
 import { formatCpf } from "@/lib/format/tax-id";
 import { SimulationStatus } from "@/services/origination/origination.types";
-import { QuoteDraftStep } from "@/services/quotes/quotes.enums";
+import { PaymentPixType, QuoteDraftStep } from "@/services/quotes/quotes.enums";
 import type {
   QuoteAttachmentListItem,
   QuoteDetail,
@@ -156,6 +156,13 @@ function mapGuarantor(detail: QuoteGuarantorDetail | null): GuarantorData {
   };
 }
 
+function formatPixCodeForForm(type: string, code: string): string {
+  if (!code.trim()) return "";
+  if (type === PaymentPixType.CPF) return formatCpf(code);
+  if (type === PaymentPixType.TELEPHONE) return formatPartyTelephone(code);
+  return code;
+}
+
 function mapFinancial(detail: QuoteFinancialDetail): FinancialData {
   const expenses: ExpenseItem[] = detail.expenses.map((item, index) => ({
     id: index + 1,
@@ -175,6 +182,11 @@ function mapFinancial(detail: QuoteFinancialDetail): FinancialData {
     expenses,
     loans,
     nextId: expenses.length + loans.length + 1,
+    paymentPixType: detail.paymentPixType ?? "",
+    paymentPixCode: formatPixCodeForForm(
+      detail.paymentPixType ?? "",
+      detail.paymentPixCode ?? "",
+    ),
   };
 }
 
