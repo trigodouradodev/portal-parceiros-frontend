@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   PIX_RANDOM_KEY_UUID_REGEX,
   addPaymentPixFormatIssues,
+  normalizePaymentPixCode,
 } from "@/features/originacao/schemas/pix-key-validation";
 import { PaymentPixType } from "@/services/quotes/quotes.enums";
 
@@ -81,5 +82,44 @@ describe("addPaymentPixFormatIssues", () => {
         "4ca519ef-0ccc-4c41-b58b-c88f1f47d8ab",
       ),
     ).toEqual([]);
+  });
+
+  it("rejects a non-UUID random key", () => {
+    expect(collectPixIssues(PaymentPixType.RANDOM_KEY, "abc123")).toContain(
+      "Chave PIX aleatória inválida. Informe um UUID no formato xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.",
+    );
+  });
+});
+
+describe("normalizePaymentPixCode", () => {
+  it("strips CPF mask to 11 digits", () => {
+    expect(normalizePaymentPixCode(PaymentPixType.CPF, "529.982.247-25")).toBe(
+      "52998224725",
+    );
+  });
+
+  it("persists telephone as +55 and local mobile digits", () => {
+    expect(
+      normalizePaymentPixCode(PaymentPixType.TELEPHONE, "(11) 99123-4567"),
+    ).toBe("+5511991234567");
+    expect(
+      normalizePaymentPixCode(PaymentPixType.TELEPHONE, "+5511991234567"),
+    ).toBe("+5511991234567");
+  });
+
+  it("lowercases email and random UUID keys", () => {
+    expect(
+      normalizePaymentPixCode(PaymentPixType.EMAIL, "Cliente@Exemplo.com"),
+    ).toBe("cliente@exemplo.com");
+    expect(
+      normalizePaymentPixCode(
+        PaymentPixType.RANDOM_KEY,
+        "4CA519EF-0CCC-4C41-B58B-C88F1F47D8AB",
+      ),
+    ).toBe("4ca519ef-0ccc-4c41-b58b-c88f1f47d8ab");
+  });
+
+  it("returns empty when the key is blank", () => {
+    expect(normalizePaymentPixCode(PaymentPixType.CPF, "   ")).toBe("");
   });
 });

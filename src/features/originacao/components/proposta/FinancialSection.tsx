@@ -1,3 +1,4 @@
+import { useMemo, type HTMLAttributes } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { AlertTriangle, Wallet } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
@@ -47,6 +48,33 @@ function formatPixInput(type: string, value: string): string {
   return value;
 }
 
+function pixCodeInputMode(
+  type: string,
+): HTMLAttributes<HTMLInputElement>["inputMode"] {
+  if (type === PaymentPixType.CPF || type === PaymentPixType.TELEPHONE) {
+    return "numeric";
+  }
+  if (type === PaymentPixType.EMAIL) return "email";
+  return "text";
+}
+
+function pixCodeMaxLength(type: string): number | undefined {
+  if (type === PaymentPixType.CPF) return 14;
+  if (type === PaymentPixType.TELEPHONE) return 15;
+  if (type === PaymentPixType.RANDOM_KEY) return 36;
+  return undefined;
+}
+
+function pixCodeFieldProps(type: string) {
+  return {
+    placeholder: PIX_PLACEHOLDERS[type] ?? "Chave PIX",
+    transform: (value: string) => formatPixInput(type, value),
+    type: type === PaymentPixType.EMAIL ? "email" : "text",
+    inputMode: pixCodeInputMode(type),
+    maxLength: pixCodeMaxLength(type),
+  };
+}
+
 export function FinancialSection() {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
   const nextId = watch("financial.nextId");
@@ -71,6 +99,10 @@ export function FinancialSection() {
   });
 
   const hasAgiota = loans.some((loan) => loan.institution === AGIOTA_CREDITOR);
+  const pixCodeProps = useMemo(
+    () => pixCodeFieldProps(paymentPixType),
+    [paymentPixType],
+  );
 
   function addExpense() {
     appendExpense({ id: nextId, ...EMPTY_EXPENSE });
@@ -82,6 +114,14 @@ export function FinancialSection() {
     setValue("financial.nextId", nextId + 1, { shouldDirty: true });
   }
 
+  function handlePixTypeChange(value: string) {
+    if (value === paymentPixType) return;
+    setValue("financial.paymentPixCode", "", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
@@ -91,38 +131,13 @@ export function FinancialSection() {
           placeholder="Selecione o tipo"
           options={PAYMENT_PIX_OPTIONS}
           required
-          onValueChange={(value: string) => {
-            if (value === paymentPixType) return;
-            setValue("financial.paymentPixCode", "", {
-              shouldDirty: true,
-              shouldValidate: true,
-            });
-          }}
+          onValueChange={handlePixTypeChange}
         />
         <FormInput<ProposalFormData>
           name="financial.paymentPixCode"
           label="Chave Pix"
           required
-          placeholder={PIX_PLACEHOLDERS[paymentPixType] ?? "Chave PIX"}
-          transform={(value) => formatPixInput(paymentPixType, value)}
-          type={paymentPixType === PaymentPixType.EMAIL ? "email" : "text"}
-          inputMode={
-            paymentPixType === PaymentPixType.CPF ||
-            paymentPixType === PaymentPixType.TELEPHONE
-              ? "numeric"
-              : paymentPixType === PaymentPixType.EMAIL
-                ? "email"
-                : "text"
-          }
-          maxLength={
-            paymentPixType === PaymentPixType.CPF
-              ? 14
-              : paymentPixType === PaymentPixType.TELEPHONE
-                ? 15
-                : paymentPixType === PaymentPixType.RANDOM_KEY
-                  ? 36
-                  : undefined
-          }
+          {...pixCodeProps}
         />
       </div>
 

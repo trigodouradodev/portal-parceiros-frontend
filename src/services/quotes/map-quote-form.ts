@@ -8,6 +8,7 @@ import type {
   PartnerOpinionData,
   RegistrationData,
 } from "@/features/originacao/data/proposal";
+import { normalizePaymentPixCode } from "@/features/originacao/schemas/pix-key-validation";
 import { parseMoneyBrl } from "@/lib/format/money";
 import { roundGeoCoordinate } from "@/services/locations/geo-coords";
 import {
@@ -281,7 +282,10 @@ export function mapFinancialToPayload(
     expenses,
     loans,
     paymentPixType: data.paymentPixType as PaymentPixType,
-    paymentPixCode: data.paymentPixCode.trim(),
+    paymentPixCode: normalizePaymentPixCode(
+      data.paymentPixType,
+      data.paymentPixCode,
+    ),
   };
 }
 

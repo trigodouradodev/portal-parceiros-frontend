@@ -21,6 +21,25 @@ function localPhoneDigits(value: string): string {
   return digits;
 }
 
+export function normalizePaymentPixCode(type: string, code: string): string {
+  const trimmed = code.trim();
+  if (!trimmed) return "";
+
+  switch (type) {
+    case PaymentPixType.CPF:
+      return trimmed.replace(/\D/g, "");
+    case PaymentPixType.TELEPHONE: {
+      const local = localPhoneDigits(trimmed);
+      return local ? `+55${local}` : "";
+    }
+    case PaymentPixType.EMAIL:
+    case PaymentPixType.RANDOM_KEY:
+      return trimmed.toLowerCase();
+    default:
+      return trimmed;
+  }
+}
+
 export function addPaymentPixFormatIssues(
   data: PaymentPixFields,
   ctx: RefinementCtx,
