@@ -8,7 +8,9 @@ import type {
   PartnerOpinionData,
   RegistrationData,
 } from "@/features/originacao/data/proposal";
+import { normalizePaymentPixCode } from "@/features/originacao/schemas/pix-key-validation";
 import { parseMoneyBrl } from "@/lib/format/money";
+import { digitsOnlyPhone } from "@/lib/format/phone";
 import { roundGeoCoordinate } from "@/services/locations/geo-coords";
 import {
   CreditPurpose,
@@ -20,6 +22,7 @@ import {
   LoanInstitution,
   MaritalStatus,
   PartnerAssessment,
+  PaymentPixType,
   type ActivityDuration,
   type AvailableIncomeProof,
   type CustomerRelationshipDuration,
@@ -65,6 +68,11 @@ export function mapRegistrationToPayload(
   const categories =
     data.activityCategories as SaveQuoteRegistrationPayload["economicActivityCategories"];
   const payload: SaveQuoteRegistrationPayload = {
+    name: data.name.trim(),
+    document: data.cpf.replace(/\D/g, ""),
+    birthDate: data.birthDate.trim(),
+    email: data.email.trim(),
+    telephone: digitsOnlyPhone(data.phone),
     isRenegotiation: Boolean(data.isRenewal),
     gender: data.gender as Gender,
     secondaryDocument: data.rg.trim(),
@@ -276,7 +284,15 @@ export function mapFinancialToPayload(
   const loans = data.loans
     .filter((item) => !isBlankLoan(item))
     .map((item, index) => mapLoanItem(item, index));
-  return { expenses, loans };
+  return {
+    expenses,
+    loans,
+    paymentPixType: data.paymentPixType as PaymentPixType,
+    paymentPixCode: normalizePaymentPixCode(
+      data.paymentPixType,
+      data.paymentPixCode,
+    ),
+  };
 }
 
 /** Prefill de endereço do draft → campos do formulário */

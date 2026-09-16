@@ -17,6 +17,7 @@ import type {
   LoanInstitution,
   MaritalStatus,
   PartnerAssessment,
+  PaymentPixType,
   QuoteAttachmentType,
   QuoteDraftStep,
   QuoteStatus,
@@ -71,6 +72,11 @@ export interface QuoteDraftSnapshot {
 }
 
 export interface SaveQuoteRegistrationPayload {
+  name: string;
+  document: string;
+  birthDate: string;
+  email: string;
+  telephone: string;
   isRenegotiation: boolean;
   gender: Gender;
   secondaryDocument: string;
@@ -205,6 +211,8 @@ export interface QuoteLoanPayload {
 export interface SaveQuoteFinancialPayload {
   expenses: QuoteExpensePayload[];
   loans: QuoteLoanPayload[];
+  paymentPixType: PaymentPixType;
+  paymentPixCode: string;
 }
 
 export interface QuoteFinancialSnapshot extends SaveQuoteFinancialPayload {
@@ -371,6 +379,8 @@ export interface QuoteGuarantorDetail {
 export interface QuoteFinancialDetail {
   expenses: QuoteExpensePayload[];
   loans: QuoteLoanPayload[];
+  paymentPixType: PaymentPixType | string;
+  paymentPixCode: string;
 }
 
 export interface QuoteAttachmentListItem {

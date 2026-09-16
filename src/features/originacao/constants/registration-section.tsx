@@ -20,8 +20,6 @@ import {
   RESIDENCE_TIME_OPTIONS,
 } from "@/features/originacao/data/proposal";
 
-export const noop = () => {};
-
 export const USER_ICON = <User size={16} />;
 export const CREDIT_CARD_ICON = <CreditCard size={16} />;
 export const ID_CARD_ICON = <IdCard size={16} />;

@@ -9,14 +9,19 @@ import { MaritalStatus } from "@/services/quotes/quotes.enums";
 describe("getProposalStepFieldErrors", () => {
   it("lists registration required fields in visual order", () => {
     const empty = createEmptyProposalForm();
-    expect(
-      getProposalStepFieldErrors(0, empty).map((item) => item.name),
-    ).toEqual([
+    expect([
+      ...new Set(getProposalStepFieldErrors(0, empty).map((item) => item.name)),
+    ]).toEqual([
       "registration.isRenewal",
+      "registration.name",
+      "registration.birthDate",
       "registration.gender",
+      "registration.cpf",
       "registration.rg",
       "registration.activityCategories",
       "registration.occupation",
+      "registration.email",
+      "registration.phone",
       "registration.maritalStatus",
       "registration.childrenCount",
       "registration.householdSize",
@@ -88,9 +93,14 @@ describe("getProposalStepFieldErrors", () => {
     expect(getProposalStepFieldErrors(3, data)).toEqual([]);
   });
 
-  it("keeps the financial step without blocking errors", () => {
-    expect(getProposalStepFieldErrors(5, createEmptyProposalForm())).toEqual(
-      [],
-    );
+  it("requires PIX fields on the financial step", () => {
+    const empty = createEmptyProposalForm();
+    expect(
+      getProposalStepFieldErrors(5, empty).map((item) => item.name),
+    ).toEqual(["financial.paymentPixType", "financial.paymentPixCode"]);
+
+    empty.financial.paymentPixType = "CPF";
+    empty.financial.paymentPixCode = "529.982.247-25";
+    expect(getProposalStepFieldErrors(5, empty)).toEqual([]);
   });
 });

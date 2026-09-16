@@ -1,5 +1,8 @@
 import type { SelectOption } from "@/components/ui/select-option";
+import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
 import type { SimulationSnapshot } from "@/features/originacao/types";
+import { digitsOnlyPhone } from "@/lib/format/phone";
+import { formatCpf } from "@/lib/format/tax-id";
 import {
   CreditPurpose,
   CustomerRelationshipOrigin,
@@ -24,6 +27,7 @@ import {
   INCOME_SOURCE_OPTIONS as QUOTE_INCOME_SOURCE_OPTIONS,
   KINSHIP_OPTIONS as QUOTE_KINSHIP_OPTIONS,
   LOAN_CATEGORY_OPTIONS as QUOTE_LOAN_CATEGORY_OPTIONS,
+  PAYMENT_PIX_OPTIONS as QUOTE_PAYMENT_PIX_OPTIONS,
   LOAN_FREQUENCY_OPTIONS as QUOTE_LOAN_FREQUENCY_OPTIONS,
   MARITAL_STATUS_OPTIONS as QUOTE_MARITAL_STATUS_OPTIONS,
   OVERALL_RATING_OPTIONS as QUOTE_OVERALL_RATING_OPTIONS,
@@ -105,6 +109,7 @@ export const CREDITOR_INSTITUTION_OPTIONS: SelectOption[] =
   QUOTE_CREDITOR_INSTITUTION_OPTIONS;
 export const LOAN_CATEGORY_OPTIONS: SelectOption[] =
   QUOTE_LOAN_CATEGORY_OPTIONS;
+export const PAYMENT_PIX_OPTIONS: SelectOption[] = QUOTE_PAYMENT_PIX_OPTIONS;
 export const KINSHIP_OPTIONS: SelectOption[] = QUOTE_KINSHIP_OPTIONS;
 
 /** Credor de dívida do passo Cadastro — campo só de UI (não vai no PATCH registration). */
@@ -133,6 +138,11 @@ export const MARRIED_STATUSES = [
 
 export interface RegistrationData {
   isRenewal: boolean | null;
+  name: string;
+  cpf: string;
+  birthDate: string;
+  email: string;
+  phone: string;
   gender: string;
   rg: string;
   occupation: string;
@@ -224,6 +234,8 @@ export interface FinancialData {
   expenses: ExpenseItem[];
   loans: LoanItem[];
   nextId: number;
+  paymentPixType: string;
+  paymentPixCode: string;
 }
 
 export interface DocumentAttachmentItem {
@@ -278,6 +290,11 @@ export function createEmptyProposalForm(): ProposalFormData {
   return {
     registration: {
       isRenewal: null,
+      name: "",
+      cpf: "",
+      birthDate: "",
+      email: "",
+      phone: "",
       gender: "",
       rg: "",
       occupation: "",
@@ -329,7 +346,13 @@ export function createEmptyProposalForm(): ProposalFormData {
       ...EMPTY_ADDRESS,
       kinship: "",
     },
-    financial: { expenses: [], loans: [], nextId: 1 },
+    financial: {
+      expenses: [],
+      loans: [],
+      nextId: 1,
+      paymentPixType: "",
+      paymentPixCode: "",
+    },
     documents: {
       identification: [],
       proofOfResidence: [],
@@ -340,11 +363,38 @@ export function createEmptyProposalForm(): ProposalFormData {
   };
 }
 
+export function registrationIdentityFromSimulation(
+  simulation: SimulationSnapshot,
+): Pick<RegistrationData, "name" | "cpf" | "birthDate" | "email" | "phone"> {
+  return {
+    name: simulation.name,
+    cpf: formatCpf(simulation.document),
+    birthDate: simulation.birthDate,
+    email: simulation.email,
+    phone: formatPartyTelephone(simulation.telephone),
+  };
+}
+
+export function applyRegistrationIdentityToSimulation(
+  simulation: SimulationSnapshot,
+  registration: RegistrationData,
+): SimulationSnapshot {
+  return {
+    ...simulation,
+    name: registration.name.trim(),
+    document: registration.cpf.replace(/\D/g, ""),
+    birthDate: registration.birthDate.trim(),
+    email: registration.email.trim(),
+    telephone: digitsOnlyPhone(registration.phone),
+  };
+}
+
 export function createProposalFromSimulation(
   simulation: SimulationSnapshot,
   quote: { id: string; createdAt: string },
 ): ProposalSnapshot {
   const createdAt = new Date(quote.createdAt).toLocaleString("pt-BR");
+  const data = createEmptyProposalForm();
   return {
     id: quote.id,
     createdAt,
@@ -354,7 +404,13 @@ export function createProposalFromSimulation(
     simulation,
     step: 0,
     stepValid: Array(PROPOSAL_STEPS.length).fill(false),
-    data: createEmptyProposalForm(),
+    data: {
+      ...data,
+      registration: {
+        ...data.registration,
+        ...registrationIdentityFromSimulation(simulation),
+      },
+    },
   };
 }
 

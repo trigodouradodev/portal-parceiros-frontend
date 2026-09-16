@@ -6,6 +6,7 @@ import {
   LoanCategory,
   LoanFrequency,
   LoanInstitution,
+  PaymentPixType,
 } from "@/services/quotes/quotes.enums";
 
 describe("mapFinancialToApi", () => {
@@ -49,6 +50,8 @@ describe("mapFinancialToApi", () => {
           description: "Capital de giro",
         },
       ],
+      paymentPixType: "",
+      paymentPixCode: "",
     });
   });
 
@@ -57,6 +60,8 @@ describe("mapFinancialToApi", () => {
     expect(
       mapFinancialToApi({
         ...form,
+        paymentPixType: PaymentPixType.CPF,
+        paymentPixCode: "529.982.247-25",
         expenses: [{ id: 1, category: "", amount: "", description: "" }],
         loans: [
           {
@@ -69,7 +74,12 @@ describe("mapFinancialToApi", () => {
           },
         ],
       }),
-    ).toEqual({ expenses: [], loans: [] });
+    ).toEqual({
+      expenses: [],
+      loans: [],
+      paymentPixType: PaymentPixType.CPF,
+      paymentPixCode: "52998224725",
+    });
   });
 
   it("requires description for Other expense", () => {
@@ -106,5 +116,33 @@ describe("mapFinancialToApi", () => {
         ],
       }),
     ).toThrow(/descrição do empréstimo 1/i);
+  });
+
+  it("normalizes PIX keys to the persisted contract", () => {
+    const form = createEmptyProposalForm().financial;
+
+    expect(
+      mapFinancialToApi({
+        ...form,
+        paymentPixType: PaymentPixType.TELEPHONE,
+        paymentPixCode: "(11) 99123-4567",
+      }).paymentPixCode,
+    ).toBe("+5511991234567");
+
+    expect(
+      mapFinancialToApi({
+        ...form,
+        paymentPixType: PaymentPixType.EMAIL,
+        paymentPixCode: "Cliente@Exemplo.com",
+      }).paymentPixCode,
+    ).toBe("cliente@exemplo.com");
+
+    expect(
+      mapFinancialToApi({
+        ...form,
+        paymentPixType: PaymentPixType.RANDOM_KEY,
+        paymentPixCode: "4CA519EF-0CCC-4C41-B58B-C88F1F47D8AB",
+      }).paymentPixCode,
+    ).toBe("4ca519ef-0ccc-4c41-b58b-c88f1f47d8ab");
   });
 });

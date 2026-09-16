@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   PROPOSAL_STEPS,
+  applyRegistrationIdentityToSimulation,
   createEmptyProposalForm,
   createProposalFromSimulation,
   hasSpouse,
@@ -27,6 +28,7 @@ import {
   IncomeSource,
   MaritalStatus,
   PartnerAssessment,
+  PaymentPixType,
   ResidenceDuration,
   GovernmentProgram,
   QuoteStatus,
@@ -64,8 +66,32 @@ describe("createProposalFromSimulation", () => {
       Array(PROPOSAL_STEPS.length).fill(false),
     );
     expect(proposal.simulation).toEqual(simulation);
-    expect(proposal.data).toEqual(createEmptyProposalForm());
+    expect(proposal.data.registration.name).toBe("Maria Silva");
+    expect(proposal.data.registration.cpf).toBe("111.444.777-35");
+    expect(proposal.data.registration.birthDate).toBe("1990-01-01");
+    expect(proposal.data.registration.email).toBe("maria@email.com");
+    expect(proposal.data.registration.phone).toBe("(88) 99702-6551");
     expect(PROPOSAL_STEPS).toHaveLength(7);
+  });
+
+  it("writes edited identity back onto the simulation snapshot", () => {
+    expect(
+      applyRegistrationIdentityToSimulation(simulation, {
+        ...createEmptyProposalForm().registration,
+        name: "Maria Souza",
+        cpf: "529.982.247-25",
+        birthDate: "1988-03-15",
+        email: "souza@email.com",
+        phone: "(11) 98888-7777",
+      }),
+    ).toEqual({
+      ...simulation,
+      name: "Maria Souza",
+      document: "52998224725",
+      birthDate: "1988-03-15",
+      email: "souza@email.com",
+      telephone: "11988887777",
+    });
   });
 });
 
@@ -73,6 +99,11 @@ describe("proposal validators", () => {
   const validRegistration = {
     ...createEmptyProposalForm().registration,
     isRenewal: false,
+    name: "Maria Silva",
+    cpf: "111.444.777-35",
+    birthDate: "1990-01-01",
+    email: "maria@email.com",
+    phone: "(88) 99702-6551",
     gender: Gender.FEMALE,
     rg: "1234567",
     occupation: "Vendedora",
@@ -95,6 +126,14 @@ describe("proposal validators", () => {
       isRegistrationValid({
         ...validRegistration,
         occupation: "",
+      }),
+    ).toBe(false);
+    expect(
+      isRegistrationValid({
+        ...validRegistration,
+        name: "",
+        email: "invalido",
+        phone: "11",
       }),
     ).toBe(false);
     expect(
@@ -283,8 +322,23 @@ describe("proposal validators", () => {
     expect(isGuarantorValid(adult)).toBe(true);
   });
 
-  it("keeps financial step always valid", () => {
-    expect(isFinancialValid()).toBe(true);
+  it("requires PIX type and a valid PIX key", () => {
+    const empty = createEmptyProposalForm().financial;
+    expect(isFinancialValid(empty)).toBe(false);
+    expect(
+      isFinancialValid({
+        ...empty,
+        paymentPixType: PaymentPixType.CPF,
+        paymentPixCode: "529.982.247-25",
+      }),
+    ).toBe(true);
+    expect(
+      isFinancialValid({
+        ...empty,
+        paymentPixType: PaymentPixType.CPF,
+        paymentPixCode: "111.111.111-11",
+      }),
+    ).toBe(false);
   });
 
   it("requires all document groups", () => {

@@ -8,19 +8,23 @@ import {
   type ActivityIncomeData,
   type AddressData,
   type DocumentsData,
+  type FinancialData,
   type GuarantorData,
   type PartnerOpinionData,
   type ProposalFormData,
   type RegistrationData,
 } from "@/features/originacao/data/proposal";
 import {
+  CLIENT_BIRTH_DATE_MESSAGE,
   GUARANTOR_BIRTH_DATE_MESSAGE,
   birthDateSchema,
 } from "@/features/originacao/schemas/birth-date";
 import { isCompleteCep } from "@/features/originacao/utils/format-cep";
 import { parseMoneyBrl } from "@/lib/format/money";
+import { digitsOnlyPhone } from "@/lib/format/phone";
 import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
 import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
+import { addPaymentPixFormatIssues } from "@/features/originacao/schemas/pix-key-validation";
 
 export const REQUIRED_FIELD_MESSAGE = "Campo obrigatório";
 export const POSITIVE_MONEY_MESSAGE = "Informe um valor maior que zero";
@@ -98,11 +102,25 @@ function registrationSchemaFor(data: RegistrationData) {
   return z
     .object({
       isRenewal: requiredYesNo,
+      name: z.string().trim().min(3, "Informe o nome completo"),
+      birthDate: birthDateSchema(CLIENT_BIRTH_DATE_MESSAGE),
       gender: requiredString,
+      cpf: cpfSchema(true),
       rg: requiredString,
       activityCategories: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
       activityCategoryOther: z.string(),
       occupation: z.string().trim().min(2, REQUIRED_FIELD_MESSAGE),
+      email: z
+        .string()
+        .trim()
+        .min(1, "Informe o e-mail")
+        .email("Informe um e-mail válido"),
+      phone: z
+        .string()
+        .refine(
+          (value) => digitsOnlyPhone(value).length >= 10,
+          "Informe um celular válido",
+        ),
       maritalStatus: requiredString,
       spouseCpf: cpfSchema(hasSpouse(data.maritalStatus)),
       childrenCount: countString(0),
@@ -242,6 +260,18 @@ export const guarantorSchema: z.ZodType<GuarantorData> = z.object({
   kinship: requiredString,
 });
 
+export const financialSchema: z.ZodType<FinancialData> = z
+  .object({
+    expenses: z.array(z.any()),
+    loans: z.array(z.any()),
+    nextId: z.number(),
+    paymentPixType: requiredString,
+    paymentPixCode: requiredString,
+  })
+  .superRefine((data, ctx) => {
+    addPaymentPixFormatIssues(data, ctx, ["paymentPixCode"]);
+  });
+
 export const documentsSchema: z.ZodType<DocumentsData> = z.object({
   identification: z
     .array(
@@ -308,11 +338,11 @@ const STEP_SCHEMAS = [
   addressSchema,
   partnerOpinionSchema,
   guarantorSchema,
-  null,
+  financialSchema,
   null,
 ] as const;
 
-type StepKey = Exclude<keyof ProposalFormData, "financial">;
+type StepKey = keyof ProposalFormData;
 
 const STEP_KEYS: Array<StepKey | null> = [
   "registration",
@@ -320,7 +350,7 @@ const STEP_KEYS: Array<StepKey | null> = [
   "address",
   "partnerOpinion",
   "guarantor",
-  null,
+  "financial",
   "documents",
 ];
 
@@ -363,8 +393,8 @@ export function isGuarantorValid(data: GuarantorData): boolean {
   return guarantorSchema.safeParse(data).success;
 }
 
-export function isFinancialValid(): boolean {
-  return true;
+export function isFinancialValid(data: FinancialData): boolean {
+  return financialSchema.safeParse(data).success;
 }
 
 export function isDocumentsValid(

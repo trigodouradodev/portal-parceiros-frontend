@@ -7,6 +7,19 @@ export type QuoteStatusTone =
   | "success"
   | "destructive";
 
+/**
+ * Cores da listagem de cotações do backoffice (`statusMap` → Badge variant):
+ * secondary → ouro, warning → âmbar, default → navy, success → verde,
+ * destructive → vermelho sólido.
+ */
+export const QUOTE_STATUS_TONE_CLASS: Record<QuoteStatusTone, string> = {
+  muted: "bg-brand-yellow text-brand-navy",
+  warning: "bg-warning-bg text-warning",
+  info: "bg-brand-navy text-white",
+  success: "bg-success-bg text-success",
+  destructive: "bg-destructive text-destructive-foreground",
+};
+
 export const QuoteListAction = {
   CONTINUE_DRAFT: "continue_draft",
   FOLLOW_CLIENT_REVIEW: "follow_client_review",
@@ -51,9 +64,12 @@ const QUOTE_STATUS_PRESENTATION: Record<
 export function getQuoteStatusPresentation(status: string): {
   label: string;
   tone: QuoteStatusTone;
+  badgeClassName: string;
 } {
-  if (isQuoteStatus(status)) return QUOTE_STATUS_PRESENTATION[status];
-  return { label: status, tone: "muted" };
+  const info = isQuoteStatus(status)
+    ? QUOTE_STATUS_PRESENTATION[status]
+    : { label: status, tone: "muted" as const };
+  return { ...info, badgeClassName: QUOTE_STATUS_TONE_CLASS[info.tone] };
 }
 
 export function isQuoteDraft(status: string): boolean {

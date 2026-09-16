@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { ChipField } from "@/components/ui/chip-field";
-import { DateFilterField } from "@/components/ui/date-filter-field";
 import { FormField } from "@/components/ui/form";
-import { InputField } from "@/components/ui/input-field";
-import { FormInput, FormSelect, FormYesNo } from "@/components/ui/rhf-fields";
+import {
+  FormDate,
+  FormInput,
+  FormSelect,
+  FormYesNo,
+} from "@/components/ui/rhf-fields";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
@@ -23,7 +26,6 @@ import {
   PROPERTY_STATUS_SELECT_OPTIONS,
   RESIDENCE_TIME_SELECT_OPTIONS,
   USER_ICON,
-  noop,
 } from "@/features/originacao/constants/registration-section";
 import {
   DEBT_PURPOSE,
@@ -32,29 +34,23 @@ import {
   hasSpouse,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
+import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatCount } from "@/features/originacao/utils/format-count";
 import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
+import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
+
+const MAX_BIRTH_ISO = maxAdultBirthIso();
 
 interface RegistrationSectionProps {
   product: string;
   rate: number;
-  cpf: string;
-  name: string;
-  birthDate: string;
-  email: string;
-  phone: string;
   onRenewalChange?: (value: boolean) => void;
 }
 
 export function RegistrationSection({
   product,
   rate,
-  cpf,
-  name,
-  birthDate,
-  email,
-  phone,
   onRenewalChange,
 }: RegistrationSectionProps) {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
@@ -101,18 +97,19 @@ export function RegistrationSection({
         </p>
       </div>
 
-      <InputField
+      <FormInput<ProposalFormData>
+        name="registration.name"
         label="Nome completo"
-        value={name}
-        onChange={noop}
         icon={USER_ICON}
-        disabled
+        placeholder="Nome do cliente"
+        required
       />
-      <DateFilterField
+      <FormDate<ProposalFormData>
+        name="registration.birthDate"
         label="Data de nascimento"
-        value={birthDate}
-        onChange={noop}
-        disabled
+        max={MAX_BIRTH_ISO}
+        captionLayout="dropdown"
+        required
       />
 
       <FormSelect<ProposalFormData>
@@ -122,12 +119,15 @@ export function RegistrationSection({
         required
       />
 
-      <InputField
+      <FormInput<ProposalFormData>
+        name="registration.cpf"
         label="CPF"
-        value={formatCpf(cpf)}
-        onChange={noop}
+        transform={formatCpf}
         icon={CREDIT_CARD_ICON}
-        disabled
+        placeholder="000.000.000-00"
+        inputMode="numeric"
+        maxLength={14}
+        required
       />
       <FormInput<ProposalFormData>
         name="registration.rg"
@@ -170,19 +170,23 @@ export function RegistrationSection({
         required
       />
 
-      <InputField
+      <FormInput<ProposalFormData>
+        name="registration.email"
         label="E-mail"
-        value={email}
-        onChange={noop}
         icon={MAIL_ICON}
-        disabled
+        placeholder="cliente@email.com"
+        type="email"
+        required
       />
-      <InputField
+      <FormInput<ProposalFormData>
+        name="registration.phone"
         label="Celular"
-        value={phone}
-        onChange={noop}
+        transform={formatPhone}
         icon={PHONE_ICON}
-        disabled
+        placeholder="(11) 99999-0000"
+        inputMode="tel"
+        maxLength={15}
+        required
       />
 
       <FormSection title="Composição familiar">

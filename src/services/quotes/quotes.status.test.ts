@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { QuoteStatus } from "@/services/quotes/quotes.enums";
 import {
   QuoteListAction,
+  QUOTE_STATUS_TONE_CLASS,
   getQuoteListAction,
   getQuoteStatusPresentation,
   isQuoteClientReview,
@@ -57,6 +58,39 @@ describe("quote status presentation", () => {
     );
     expect(getQuoteStatusPresentation(QuoteStatus.FAILED).tone).toBe(
       "destructive",
+    );
+  });
+
+  it("uses the same badge palette as the backoffice quote list", () => {
+    expect(getQuoteStatusPresentation(QuoteStatus.DRAFT).badgeClassName).toBe(
+      QUOTE_STATUS_TONE_CLASS.muted,
+    );
+    expect(
+      getQuoteStatusPresentation(QuoteStatus.KYC_ANALYSIS).badgeClassName,
+    ).toBe(QUOTE_STATUS_TONE_CLASS.muted);
+    expect(
+      getQuoteStatusPresentation(QuoteStatus.PRE_APPROVED).badgeClassName,
+    ).toBe(QUOTE_STATUS_TONE_CLASS.muted);
+    expect(
+      getQuoteStatusPresentation(QuoteStatus.CLIENT_REVIEW).badgeClassName,
+    ).toBe(QUOTE_STATUS_TONE_CLASS.warning);
+    expect(getQuoteStatusPresentation(QuoteStatus.PENDING).badgeClassName).toBe(
+      QUOTE_STATUS_TONE_CLASS.warning,
+    );
+    expect(
+      getQuoteStatusPresentation(QuoteStatus.IN_ANALYSIS).badgeClassName,
+    ).toBe(QUOTE_STATUS_TONE_CLASS.info);
+    expect(
+      getQuoteStatusPresentation(QuoteStatus.APPROVED).badgeClassName,
+    ).toBe(QUOTE_STATUS_TONE_CLASS.success);
+    expect(
+      getQuoteStatusPresentation(QuoteStatus.REJECTED).badgeClassName,
+    ).toBe(QUOTE_STATUS_TONE_CLASS.destructive);
+
+    expect(QUOTE_STATUS_TONE_CLASS.muted).toContain("bg-brand-yellow");
+    expect(QUOTE_STATUS_TONE_CLASS.info).toContain("bg-brand-navy");
+    expect(QUOTE_STATUS_TONE_CLASS.destructive).toBe(
+      "bg-destructive text-destructive-foreground",
     );
   });
 
