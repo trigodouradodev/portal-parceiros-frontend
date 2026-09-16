@@ -63,27 +63,38 @@ function countOrEmpty(value: number | null | undefined): string {
 }
 
 function mapRegistration(
-  detail: QuoteDetail["registration"],
+  registration: QuoteDetail["registration"],
+  identity: Pick<
+    QuoteDetail,
+    "name" | "document" | "birthDate" | "email" | "telephone"
+  >,
 ): RegistrationData {
   const empty = createEmptyProposalForm().registration;
   return {
     ...empty,
-    isRenewal: detail.isRenegotiation,
-    gender: detail.gender ?? "",
-    rg: detail.secondaryDocument ?? "",
-    occupation: detail.profession ?? "",
-    activityCategories: detail.economicActivityCategories ?? [],
-    activityCategoryOther: detail.economicActivityOther ?? "",
-    maritalStatus: detail.maritalStatus ?? "",
-    spouseCpf: detail.spouseDocument ? formatCpf(detail.spouseDocument) : "",
-    childrenCount: countOrEmpty(detail.childrenCount),
-    householdSize: countOrEmpty(detail.householdMembers),
-    propertyStatus: detail.housingStatus ?? "",
-    residenceTime: detail.residenceDuration ?? "",
-    governmentPrograms: detail.governmentPrograms ?? [],
-    hasVehicle: detail.ownsVehicle,
-    vehicleFinanced: detail.vehicleFinanced,
-    creditPurpose: detail.creditPurpose,
+    name: identity.name ?? "",
+    cpf: identity.document ? formatCpf(identity.document) : "",
+    birthDate: identity.birthDate ?? "",
+    email: identity.email ?? "",
+    phone: identity.telephone ? formatPartyTelephone(identity.telephone) : "",
+    isRenewal: registration.isRenegotiation,
+    gender: registration.gender ?? "",
+    rg: registration.secondaryDocument ?? "",
+    occupation: registration.profession ?? "",
+    activityCategories: registration.economicActivityCategories ?? [],
+    activityCategoryOther: registration.economicActivityOther ?? "",
+    maritalStatus: registration.maritalStatus ?? "",
+    spouseCpf: registration.spouseDocument
+      ? formatCpf(registration.spouseDocument)
+      : "",
+    childrenCount: countOrEmpty(registration.childrenCount),
+    householdSize: countOrEmpty(registration.householdMembers),
+    propertyStatus: registration.housingStatus ?? "",
+    residenceTime: registration.residenceDuration ?? "",
+    governmentPrograms: registration.governmentPrograms ?? [],
+    hasVehicle: registration.ownsVehicle,
+    vehicleFinanced: registration.vehicleFinanced,
+    creditPurpose: registration.creditPurpose,
   };
 }
 
@@ -205,7 +216,7 @@ function mapDocuments(detail: QuoteDocumentationDetail): DocumentsData {
 
 export function mapQuoteDetailToForm(detail: QuoteDetail): ProposalFormData {
   return {
-    registration: mapRegistration(detail.registration),
+    registration: mapRegistration(detail.registration, detail),
     activityIncome: mapIncome(detail.income),
     address: mapAddress(detail.address),
     partnerOpinion: mapPartnerOpinion(detail.partnerOpinion),
@@ -224,13 +235,18 @@ export function mergeRenewalPrefillIntoForm(
   current: ProposalFormData,
   detail: QuoteDetail,
 ): ProposalFormData {
-  const registration = mapRegistration(detail.registration);
+  const registration = mapRegistration(detail.registration, detail);
   const address = mapAddress(detail.address);
 
   return {
     ...current,
     registration: {
       ...registration,
+      name: current.registration.name,
+      cpf: current.registration.cpf,
+      birthDate: current.registration.birthDate,
+      email: current.registration.email,
+      phone: current.registration.phone,
       debtDescription: current.registration.debtDescription,
       debtCreditor: current.registration.debtCreditor,
     },

@@ -9,14 +9,19 @@ import { MaritalStatus } from "@/services/quotes/quotes.enums";
 describe("getProposalStepFieldErrors", () => {
   it("lists registration required fields in visual order", () => {
     const empty = createEmptyProposalForm();
-    expect(
-      getProposalStepFieldErrors(0, empty).map((item) => item.name),
-    ).toEqual([
+    expect([
+      ...new Set(getProposalStepFieldErrors(0, empty).map((item) => item.name)),
+    ]).toEqual([
       "registration.isRenewal",
+      "registration.name",
+      "registration.birthDate",
       "registration.gender",
+      "registration.cpf",
       "registration.rg",
       "registration.activityCategories",
       "registration.occupation",
+      "registration.email",
+      "registration.phone",
       "registration.maritalStatus",
       "registration.childrenCount",
       "registration.householdSize",

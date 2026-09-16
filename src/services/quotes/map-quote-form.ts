@@ -9,6 +9,7 @@ import type {
   RegistrationData,
 } from "@/features/originacao/data/proposal";
 import { parseMoneyBrl } from "@/lib/format/money";
+import { digitsOnlyPhone } from "@/lib/format/phone";
 import { roundGeoCoordinate } from "@/services/locations/geo-coords";
 import {
   CreditPurpose,
@@ -65,6 +66,11 @@ export function mapRegistrationToPayload(
   const categories =
     data.activityCategories as SaveQuoteRegistrationPayload["economicActivityCategories"];
   const payload: SaveQuoteRegistrationPayload = {
+    name: data.name.trim(),
+    document: data.cpf.replace(/\D/g, ""),
+    birthDate: data.birthDate.trim(),
+    email: data.email.trim(),
+    telephone: digitsOnlyPhone(data.phone),
     isRenegotiation: Boolean(data.isRenewal),
     gender: data.gender as Gender,
     secondaryDocument: data.rg.trim(),

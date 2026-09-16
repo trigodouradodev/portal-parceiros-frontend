@@ -32,6 +32,11 @@ describe("mapRegistrationToPayload", () => {
     const payload = mapRegistrationToPayload({
       ...form,
       isRenewal: true,
+      name: "Maria Silva",
+      cpf: "111.444.777-35",
+      birthDate: "1990-01-01",
+      email: "maria@email.com",
+      phone: "(88) 99702-6551",
       gender: Gender.FEMALE,
       rg: "123456789",
       occupation: "Vendedora",
@@ -47,6 +52,11 @@ describe("mapRegistrationToPayload", () => {
     });
 
     expect(payload).toEqual({
+      name: "Maria Silva",
+      document: "11144477735",
+      birthDate: "1990-01-01",
+      email: "maria@email.com",
+      telephone: "88997026551",
       isRenegotiation: true,
       gender: Gender.FEMALE,
       secondaryDocument: "123456789",

@@ -71,6 +71,11 @@ export interface QuoteDraftSnapshot {
 }
 
 export interface SaveQuoteRegistrationPayload {
+  name: string;
+  document: string;
+  birthDate: string;
+  email: string;
+  telephone: string;
   isRenegotiation: boolean;
   gender: Gender;
   secondaryDocument: string;

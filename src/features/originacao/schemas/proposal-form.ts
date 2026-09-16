@@ -14,11 +14,13 @@ import {
   type RegistrationData,
 } from "@/features/originacao/data/proposal";
 import {
+  CLIENT_BIRTH_DATE_MESSAGE,
   GUARANTOR_BIRTH_DATE_MESSAGE,
   birthDateSchema,
 } from "@/features/originacao/schemas/birth-date";
 import { isCompleteCep } from "@/features/originacao/utils/format-cep";
 import { parseMoneyBrl } from "@/lib/format/money";
+import { digitsOnlyPhone } from "@/lib/format/phone";
 import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
 import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
 
@@ -98,11 +100,25 @@ function registrationSchemaFor(data: RegistrationData) {
   return z
     .object({
       isRenewal: requiredYesNo,
+      name: z.string().trim().min(3, "Informe o nome completo"),
+      birthDate: birthDateSchema(CLIENT_BIRTH_DATE_MESSAGE),
       gender: requiredString,
+      cpf: cpfSchema(true),
       rg: requiredString,
       activityCategories: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
       activityCategoryOther: z.string(),
       occupation: z.string().trim().min(2, REQUIRED_FIELD_MESSAGE),
+      email: z
+        .string()
+        .trim()
+        .min(1, "Informe o e-mail")
+        .email("Informe um e-mail válido"),
+      phone: z
+        .string()
+        .refine(
+          (value) => digitsOnlyPhone(value).length >= 10,
+          "Informe um celular válido",
+        ),
       maritalStatus: requiredString,
       spouseCpf: cpfSchema(hasSpouse(data.maritalStatus)),
       childrenCount: countString(0),
