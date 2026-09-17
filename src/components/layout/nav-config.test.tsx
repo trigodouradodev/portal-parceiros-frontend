@@ -19,4 +19,15 @@ describe("getNavItemsForPermissions", () => {
 
     expect(items.map((item) => item.key)).toContain("carteira");
   });
+
+  it("shows Originação only with the rollout permission", () => {
+    expect(
+      getNavItemsForPermissions(["QUOTE_NEW_ORIGINATION_FLOW"]).map(
+        (item) => item.key,
+      ),
+    ).toContain("originacao");
+    expect(getNavItemsForPermissions([]).map((item) => item.key)).not.toContain(
+      "originacao",
+    );
+  });
 });

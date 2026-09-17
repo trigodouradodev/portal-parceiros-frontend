@@ -45,6 +45,8 @@ import { formatDate } from "@/lib/format/date";
 import { useDragScroll } from "@/hooks/useDragScroll";
 import { QuoteActivityPermissionsAlert } from "@/features/dashboard/components/QuoteActivityPermissionsAlert";
 import { buildContractListPath } from "@/features/carteira/utils/contract-list-route";
+import { useAuth } from "@/contexts/auth/auth-context";
+import { hasPermission, PORTAL_PERMISSIONS } from "@/lib/permissions";
 
 const QUEUE_HIGHLIGHT_MS = 5000;
 const MY_ACTIVITIES_VALUE = "my-activities";
@@ -67,6 +69,7 @@ interface ShellContext {
 }
 
 export function DashboardPage() {
+  const { user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,7 +79,13 @@ export function DashboardPage() {
   const { onMobileLogout } = useOutletContext<ShellContext>();
 
   const { data: dashboardData, isLoading: isLoadingDashboard } = useDashboard();
-  const { data: quoteActivityPermissions } = useQuoteActivityPermissions();
+  const hasNewOriginationFlow = hasPermission(
+    user?.permissions,
+    PORTAL_PERMISSIONS.QUOTE_NEW_ORIGINATION_FLOW,
+  );
+  const { data: quoteActivityPermissions } = useQuoteActivityPermissions({
+    enabled: !hasNewOriginationFlow,
+  });
   const [selectedAssigneeId, setSelectedAssigneeId] =
     useState(MY_ACTIVITIES_VALUE);
   const selectedAssignedToId =
@@ -490,7 +499,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {quoteActivityPermissions && (
+      {!hasNewOriginationFlow && quoteActivityPermissions && (
         <div className="px-5 pt-5 md:px-8">
           <QuoteActivityPermissionsAlert {...quoteActivityPermissions} />
         </div>

@@ -1,4 +1,5 @@
 import { Briefcase, Home, User, UserCheck } from "lucide-react";
+import { hasPermission, PORTAL_PERMISSIONS } from "@/lib/permissions";
 
 export type NavTab =
   | "home"
@@ -37,7 +38,18 @@ export const NAV_ITEMS: {
 ];
 
 export function getNavItemsForPermissions(permissions?: readonly string[]) {
-  if (!permissions?.includes("ROLE_COLLECTION_AGENT")) return NAV_ITEMS;
+  const isCollectionAgent = hasPermission(
+    permissions,
+    PORTAL_PERMISSIONS.ROLE_COLLECTION_AGENT,
+  );
+  const hasNewOriginationFlow = hasPermission(
+    permissions,
+    PORTAL_PERMISSIONS.QUOTE_NEW_ORIGINATION_FLOW,
+  );
 
-  return NAV_ITEMS.filter((item) => item.key !== "carteira");
+  return NAV_ITEMS.filter((item) => {
+    if (item.key === "carteira" && isCollectionAgent) return false;
+    if (item.key === "originacao" && !hasNewOriginationFlow) return false;
+    return true;
+  });
 }
