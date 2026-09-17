@@ -128,6 +128,7 @@ export function RegistrationSection({
         inputMode="numeric"
         maxLength={14}
         required
+        disabled
       />
       <FormInput<ProposalFormData>
         name="registration.rg"
