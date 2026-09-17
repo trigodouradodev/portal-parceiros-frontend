@@ -10,7 +10,7 @@ export const quoteActivityPermissionsKeys = {
   all: ["quote-activity-permissions"] as const,
 };
 
-export function useQuoteActivityPermissions() {
+export function useQuoteActivityPermissions(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: quoteActivityPermissionsKeys.all,
     queryFn: async (): Promise<QuoteActivityPermissions> => {
@@ -21,5 +21,6 @@ export function useQuoteActivityPermissions() {
       };
     },
     staleTime: 30 * 1000,
+    enabled: options?.enabled ?? true,
   });
 }
