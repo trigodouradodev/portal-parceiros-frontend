@@ -103,13 +103,18 @@ export interface QuoteRegistrationSnapshot extends SaveQuoteRegistrationPayload 
   updatedAt: string;
 }
 
+export interface QuoteAdditionalIncomePayload {
+  source: IncomeSource;
+  amount: number;
+}
+
 export interface SaveQuoteIncomePayload {
   businessDocument?: string;
   activityDuration: ActivityDuration;
   declaredMonthlyIncome: number;
   incomeSource: IncomeSource;
   hasMultipleIncomeSources: boolean;
-  secondaryIncome?: number;
+  additionalIncomes: QuoteAdditionalIncomePayload[];
   availableIncomeProof: AvailableIncomeProof;
 }
 
@@ -327,7 +332,7 @@ export interface QuoteIncomeDetail {
   declaredMonthlyIncome: number;
   incomeSource: IncomeSource | null;
   hasMultipleIncomeSources: boolean | null;
-  secondaryIncome: number | null;
+  additionalIncomes: QuoteAdditionalIncomePayload[];
   availableIncomeProof: AvailableIncomeProof | null;
 }
 

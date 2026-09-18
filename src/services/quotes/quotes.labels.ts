@@ -103,6 +103,7 @@ export const INCOME_SOURCE_OPTIONS = options([
   [IncomeSource.BENEFIT, "Benefício"],
   [IncomeSource.RENT, "Aluguel"],
   [IncomeSource.MIXED_INCOME, "Renda mista"],
+  [IncomeSource.OTHER, "Outro"],
 ]);
 
 export const INCOME_PROOF_OPTIONS = options([

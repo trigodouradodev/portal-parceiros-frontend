@@ -184,18 +184,25 @@ export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z
     monthlyIncome: positiveMoneyString(),
     incomeSource: requiredString,
     hasMultipleSources: z.boolean().nullable(),
-    secondaryIncome: z.string(),
+    additionalIncomes: z.array(
+      z.object({
+        id: z.number(),
+        source: requiredString,
+        amount: positiveMoneyString(),
+      }),
+    ),
+    nextAdditionalIncomeId: z.number(),
     availableProof: requiredString,
   })
   .superRefine((data, ctx) => {
     if (
       data.hasMultipleSources === true &&
-      data.secondaryIncome.trim() === ""
+      data.additionalIncomes.length === 0
     ) {
       ctx.addIssue({
         code: "custom",
-        path: ["secondaryIncome"],
-        message: REQUIRED_FIELD_MESSAGE,
+        path: ["additionalIncomes"],
+        message: "Adicione ao menos uma renda adicional",
       });
     }
   });
