@@ -194,13 +194,20 @@ export interface RegistrationData {
   debtCreditor: string;
 }
 
+export interface AdditionalIncomeItem {
+  id: number;
+  source: string;
+  amount: string;
+}
+
 export interface ActivityIncomeData {
   cnpj: string;
   activityTime: string;
   monthlyIncome: string;
   incomeSource: string;
   hasMultipleSources: boolean | null;
-  secondaryIncome: string;
+  additionalIncomes: AdditionalIncomeItem[];
+  nextAdditionalIncomeId: number;
   availableProof: string;
 }
 
@@ -351,7 +358,8 @@ export function createEmptyProposalForm(): ProposalFormData {
       monthlyIncome: "",
       incomeSource: "",
       hasMultipleSources: null,
-      secondaryIncome: "",
+      additionalIncomes: [],
+      nextAdditionalIncomeId: 1,
       availableProof: "",
     },
     address: {

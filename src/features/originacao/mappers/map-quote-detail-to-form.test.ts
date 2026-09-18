@@ -67,7 +67,7 @@ function baseDetail(overrides: Partial<QuoteDetail> = {}): QuoteDetail {
       declaredMonthlyIncome: 2500,
       incomeSource: null,
       hasMultipleIncomeSources: false,
-      secondaryIncome: null,
+      additionalIncomes: [],
       availableIncomeProof: null,
     },
     address: {

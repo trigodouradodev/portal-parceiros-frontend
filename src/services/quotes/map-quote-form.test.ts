@@ -115,7 +115,18 @@ describe("mapIncomeToPayload", () => {
       monthlyIncome: formatMoneyBrl("350000"),
       incomeSource: IncomeSource.SALARY,
       hasMultipleSources: true,
-      secondaryIncome: formatMoneyBrl("80000"),
+      additionalIncomes: [
+        {
+          id: 1,
+          source: IncomeSource.RENT,
+          amount: formatMoneyBrl("80000"),
+        },
+        {
+          id: 2,
+          source: IncomeSource.OTHER,
+          amount: formatMoneyBrl("25000"),
+        },
+      ],
       availableProof: AvailableIncomeProof.PAYSLIP,
     });
 
@@ -124,7 +135,10 @@ describe("mapIncomeToPayload", () => {
       declaredMonthlyIncome: 3500,
       incomeSource: IncomeSource.SALARY,
       hasMultipleIncomeSources: true,
-      secondaryIncome: 800,
+      additionalIncomes: [
+        { source: IncomeSource.RENT, amount: 800 },
+        { source: IncomeSource.OTHER, amount: 250 },
+      ],
       availableIncomeProof: AvailableIncomeProof.PAYSLIP,
     });
   });
@@ -141,7 +155,7 @@ describe("mapIncomeToPayload", () => {
     });
 
     expect(payload.businessDocument).toBeUndefined();
-    expect(payload.secondaryIncome).toBeUndefined();
+    expect(payload.additionalIncomes).toEqual([]);
     expect(payload.declaredMonthlyIncome).toBe(1000);
   });
 });

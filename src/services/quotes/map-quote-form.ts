@@ -114,12 +114,14 @@ export function mapIncomeToPayload(
     declaredMonthlyIncome: parseMoneyBrl(data.monthlyIncome),
     incomeSource: data.incomeSource as IncomeSource,
     hasMultipleIncomeSources: hasMultiple,
+    additionalIncomes: hasMultiple
+      ? data.additionalIncomes.map((item) => ({
+          source: item.source as IncomeSource,
+          amount: parseMoneyBrl(item.amount),
+        }))
+      : [],
     availableIncomeProof: data.availableProof as AvailableIncomeProof,
   };
-
-  if (hasMultiple) {
-    payload.secondaryIncome = parseMoneyBrl(data.secondaryIncome);
-  }
 
   return payload;
 }

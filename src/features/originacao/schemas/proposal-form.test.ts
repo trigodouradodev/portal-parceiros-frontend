@@ -46,4 +46,31 @@ describe("activityIncomeSchema monthlyIncome (AUREA-482)", () => {
     const result = activityIncomeSchema.safeParse(baseIncome());
     expect(result.success).toBe(true);
   });
+
+  it("requires at least one additional income when multiple sources is yes", () => {
+    const result = activityIncomeSchema.safeParse(
+      baseIncome({ hasMultipleSources: true, additionalIncomes: [] }),
+    );
+    expect(result.success).toBe(false);
+  });
+
+  it("validates source and positive amount for every additional income", () => {
+    expect(
+      activityIncomeSchema.safeParse(
+        baseIncome({
+          hasMultipleSources: true,
+          additionalIncomes: [{ id: 1, source: "rent", amount: "R$ 800,00" }],
+        }),
+      ).success,
+    ).toBe(true);
+
+    expect(
+      activityIncomeSchema.safeParse(
+        baseIncome({
+          hasMultipleSources: true,
+          additionalIncomes: [{ id: 1, source: "", amount: "R$ 0,00" }],
+        }),
+      ).success,
+    ).toBe(false);
+  });
 });
