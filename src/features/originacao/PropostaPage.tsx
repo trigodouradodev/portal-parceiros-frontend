@@ -238,7 +238,8 @@ function ProposalWizard({
       isRegistrationValid(values.registration),
       isActivityIncomeValid(values.activityIncome),
       isAddressValid(values.address),
-      isPartnerOpinionValid(values.partnerOpinion),
+      isPartnerOpinionValid(values.partnerOpinion) &&
+        values.activityIncome.activityTime.trim() !== "",
       isGuarantorValid(values.guarantor),
       isFinancialValid(values.financial),
       isDocumentsValid(values.documents, incomeProofRequired),
@@ -335,9 +336,14 @@ function ProposalWizard({
     }
     if (step === 3) {
       try {
+        const values = form.getValues();
+        await saveIncome({
+          quoteId: proposal.id,
+          activityIncome: values.activityIncome,
+        });
         await savePartnerOpinion({
           quoteId: proposal.id,
-          partnerOpinion: form.getValues().partnerOpinion,
+          partnerOpinion: values.partnerOpinion,
         });
       } catch (err) {
         showToast(

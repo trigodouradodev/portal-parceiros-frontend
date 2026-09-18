@@ -1,5 +1,9 @@
 import {
+  CHILDREN_COUNT_MAX,
+  HOUSEHOLD_SIZE_MAX,
+  HOUSEHOLD_SIZE_MIN,
   PROPOSAL_STEPS,
+  clampCountSelect,
   createEmptyProposalForm,
   type ActivityIncomeData,
   type AddressData,
@@ -18,7 +22,11 @@ import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to
 import { fmtBRL } from "@/lib/format/money";
 import { formatCpf } from "@/lib/format/tax-id";
 import { SimulationStatus } from "@/services/origination/origination.types";
-import { PaymentPixType, QuoteDraftStep } from "@/services/quotes/quotes.enums";
+import {
+  GovernmentProgram,
+  PaymentPixType,
+  QuoteDraftStep,
+} from "@/services/quotes/quotes.enums";
 import type {
   QuoteAttachmentListItem,
   QuoteDetail,
@@ -57,11 +65,6 @@ function moneyOrEmpty(value: number | null | undefined): string {
   return fmtBRL(value);
 }
 
-function countOrEmpty(value: number | null | undefined): string {
-  if (value == null) return "";
-  return String(value);
-}
-
 function mapRegistration(
   registration: QuoteDetail["registration"],
   identity: Pick<
@@ -87,11 +90,19 @@ function mapRegistration(
     spouseCpf: registration.spouseDocument
       ? formatCpf(registration.spouseDocument)
       : "",
-    childrenCount: countOrEmpty(registration.childrenCount),
-    householdSize: countOrEmpty(registration.householdMembers),
+    childrenCount: clampCountSelect(
+      registration.childrenCount,
+      0,
+      CHILDREN_COUNT_MAX,
+    ),
+    householdSize: clampCountSelect(
+      registration.householdMembers,
+      HOUSEHOLD_SIZE_MIN,
+      HOUSEHOLD_SIZE_MAX,
+    ),
     propertyStatus: registration.housingStatus ?? "",
     residenceTime: registration.residenceDuration ?? "",
-    governmentPrograms: registration.governmentPrograms ?? [],
+    governmentPrograms: [GovernmentProgram.NONE],
     hasVehicle: registration.ownsVehicle,
     vehicleFinanced: registration.vehicleFinanced,
     creditPurpose: registration.creditPurpose,
@@ -100,7 +111,7 @@ function mapRegistration(
 
 function mapIncome(detail: QuoteDetail["income"]): ActivityIncomeData {
   return {
-    cnpj: detail.businessDocument ?? "",
+    cnpj: "",
     activityTime: detail.activityDuration ?? "",
     monthlyIncome: moneyOrEmpty(detail.declaredMonthlyIncome),
     incomeSource: detail.incomeSource ?? "",
