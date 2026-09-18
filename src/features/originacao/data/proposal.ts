@@ -112,6 +112,38 @@ export const LOAN_CATEGORY_OPTIONS: SelectOption[] =
 export const PAYMENT_PIX_OPTIONS: SelectOption[] = QUOTE_PAYMENT_PIX_OPTIONS;
 export const KINSHIP_OPTIONS: SelectOption[] = QUOTE_KINSHIP_OPTIONS;
 
+export const CHILDREN_COUNT_MAX = 5;
+export const HOUSEHOLD_SIZE_MIN = 1;
+export const HOUSEHOLD_SIZE_MAX = 6;
+
+/** Select AUREA-512: o último valor representa "N ou mais". */
+export const CHILDREN_COUNT_OPTIONS: SelectOption[] = [
+  { value: "0", label: "0" },
+  { value: "1", label: "1" },
+  { value: "2", label: "2" },
+  { value: "3", label: "3" },
+  { value: "4", label: "4" },
+  { value: "5", label: "5 ou mais" },
+];
+
+export const HOUSEHOLD_SIZE_OPTIONS: SelectOption[] = [
+  { value: "1", label: "1" },
+  { value: "2", label: "2" },
+  { value: "3", label: "3" },
+  { value: "4", label: "4" },
+  { value: "5", label: "5" },
+  { value: "6", label: "6 ou mais" },
+];
+
+export function clampCountSelect(
+  value: number | null | undefined,
+  min: number,
+  max: number,
+): string {
+  if (value == null || Number.isNaN(value)) return "";
+  return String(Math.min(max, Math.max(min, Math.trunc(value))));
+}
+
 /** Credor de dívida do passo Cadastro — campo só de UI (não vai no PATCH registration). */
 export const DEBT_CREDITOR_OPTIONS = [
   "Banco",
@@ -313,7 +345,7 @@ export function createEmptyProposalForm(): ProposalFormData {
       householdSize: "",
       propertyStatus: "",
       residenceTime: "",
-      governmentPrograms: [],
+      governmentPrograms: [GovernmentProgram.NONE],
       hasVehicle: null,
       vehicleFinanced: null,
       creditPurpose: null,

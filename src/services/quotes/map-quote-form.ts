@@ -13,6 +13,7 @@ import { parseMoneyBrl } from "@/lib/format/money";
 import { digitsOnlyPhone } from "@/lib/format/phone";
 import { roundGeoCoordinate } from "@/services/locations/geo-coords";
 import {
+  ActivityDuration,
   CreditPurpose,
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
@@ -23,7 +24,6 @@ import {
   MaritalStatus,
   PartnerAssessment,
   PaymentPixType,
-  type ActivityDuration,
   type AvailableIncomeProof,
   type CustomerRelationshipDuration,
   type Gender,
@@ -83,8 +83,7 @@ export function mapRegistrationToPayload(
     householdMembers: Math.max(1, parseCount(data.householdSize)),
     housingStatus: data.propertyStatus as HousingStatus,
     residenceDuration: data.residenceTime as ResidenceDuration,
-    governmentPrograms:
-      data.governmentPrograms as SaveQuoteRegistrationPayload["governmentPrograms"],
+    governmentPrograms: [GovernmentProgram.NONE],
     ownsVehicle: Boolean(data.hasVehicle),
     creditPurpose: data.creditPurpose as CreditPurpose,
   };
@@ -110,7 +109,8 @@ export function mapIncomeToPayload(
 ): SaveQuoteIncomePayload {
   const hasMultiple = Boolean(data.hasMultipleSources);
   const payload: SaveQuoteIncomePayload = {
-    activityDuration: data.activityTime as ActivityDuration,
+    activityDuration: (data.activityTime.trim() ||
+      ActivityDuration.LESS_THAN_6_MONTHS) as ActivityDuration,
     declaredMonthlyIncome: parseMoneyBrl(data.monthlyIncome),
     incomeSource: data.incomeSource as IncomeSource,
     hasMultipleIncomeSources: hasMultiple,
@@ -122,11 +122,6 @@ export function mapIncomeToPayload(
       : [],
     availableIncomeProof: data.availableProof as AvailableIncomeProof,
   };
-
-  const businessDocument = optionalTrimmed(data.cnpj);
-  if (businessDocument) {
-    payload.businessDocument = businessDocument;
-  }
 
   return payload;
 }
@@ -165,7 +160,7 @@ export function mapPartnerOpinionToPayload(
   const payload: SaveQuotePartnerOpinionPayload = {
     relationshipDuration: data.relationshipTime as CustomerRelationshipDuration,
     relationshipOrigin: data.howKnows as CustomerRelationshipOrigin,
-    assessment: data.overallRating as PartnerAssessment,
+    assessment: PartnerAssessment.RECOMMEND,
     hasInformalDebtSigns: Boolean(data.informalDebtSigns),
     hasFinancialUrgencySigns: Boolean(data.financialUrgencySigns),
     opinion: data.notes.trim(),

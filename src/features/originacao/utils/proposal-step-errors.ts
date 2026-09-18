@@ -31,10 +31,19 @@ export function getProposalStepFieldErrors(
     ] as const
   )[step];
 
-  return parsed.error.issues.map((issue) => ({
-    name: [prefix, ...issue.path.map(String)]
-      .filter(Boolean)
-      .join(".") as FieldPath<ProposalFormData>,
-    message: issue.message,
-  }));
+  return parsed.error.issues.map((issue) => {
+    const path = issue.path.map(String);
+    if (path[0] === "activityIncome") {
+      return {
+        name: path.join(".") as FieldPath<ProposalFormData>,
+        message: issue.message,
+      };
+    }
+    return {
+      name: [prefix, ...path]
+        .filter(Boolean)
+        .join(".") as FieldPath<ProposalFormData>,
+      message: issue.message,
+    };
+  });
 }

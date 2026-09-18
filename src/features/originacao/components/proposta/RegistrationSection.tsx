@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { ChipField } from "@/components/ui/chip-field";
 import { FormField } from "@/components/ui/form";
 import {
   FormDate,
@@ -12,13 +11,14 @@ import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
   ACTIVITY_CATEGORY_SELECT_OPTIONS,
+  CHILDREN_COUNT_SELECT_OPTIONS,
   CREDIT_CARD_ICON,
   CREDIT_PURPOSE_SELECT_OPTIONS,
   DEBT_CREDITOR_SELECT_OPTIONS,
   EYE_ICON,
   EYE_OFF_ICON,
   GENDER_SELECT_OPTIONS,
-  GOVERNMENT_PROGRAM_SELECT_OPTIONS,
+  HOUSEHOLD_SIZE_SELECT_OPTIONS,
   ID_CARD_ICON,
   MAIL_ICON,
   MARITAL_STATUS_SELECT_OPTIONS,
@@ -29,13 +29,11 @@ import {
 } from "@/features/originacao/constants/registration-section";
 import {
   DEBT_PURPOSE,
-  NONE_PROGRAM,
   OTHER_OPTION,
   hasSpouse,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
-import { formatCount } from "@/features/originacao/utils/format-count";
 import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
@@ -212,22 +210,16 @@ export function RegistrationSection({
         ) : null}
 
         <div className="grid min-w-0 grid-cols-2 gap-3">
-          <FormInput<ProposalFormData>
+          <FormSelect<ProposalFormData>
             name="registration.childrenCount"
             label="Filhos menores de 18"
-            transform={formatCount}
-            icon={USER_ICON}
-            inputMode="numeric"
-            maxLength={2}
+            options={CHILDREN_COUNT_SELECT_OPTIONS}
             required
           />
-          <FormInput<ProposalFormData>
+          <FormSelect<ProposalFormData>
             name="registration.householdSize"
             label="Pessoas na casa"
-            transform={formatCount}
-            icon={USER_ICON}
-            inputMode="numeric"
-            maxLength={2}
+            options={HOUSEHOLD_SIZE_SELECT_OPTIONS}
             required
           />
         </div>
@@ -244,32 +236,6 @@ export function RegistrationSection({
           label="Tempo de residência"
           options={RESIDENCE_TIME_SELECT_OPTIONS}
           required
-        />
-
-        <FormField
-          control={control}
-          name="registration.governmentPrograms"
-          render={({ field, fieldState }) => (
-            <ChipField
-              name={field.name}
-              label="Vínculo a programas de governo"
-              multiple
-              value={field.value}
-              onChange={(value) => {
-                if (
-                  value.includes(NONE_PROGRAM) &&
-                  !field.value.includes(NONE_PROGRAM)
-                ) {
-                  field.onChange([NONE_PROGRAM]);
-                  return;
-                }
-                field.onChange(value.filter((item) => item !== NONE_PROGRAM));
-              }}
-              options={GOVERNMENT_PROGRAM_SELECT_OPTIONS}
-              required
-              error={fieldState.error?.message}
-            />
-          )}
         />
 
         <FormYesNo<ProposalFormData>

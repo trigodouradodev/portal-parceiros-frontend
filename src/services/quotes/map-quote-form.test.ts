@@ -106,7 +106,7 @@ describe("mapRegistrationToPayload", () => {
 });
 
 describe("mapIncomeToPayload", () => {
-  it("parses BRL masks and optional CNPJ", () => {
+  it("parses BRL masks and never sends CNPJ", () => {
     const form = createEmptyProposalForm().activityIncome;
     const payload = mapIncomeToPayload({
       ...form,
@@ -131,7 +131,6 @@ describe("mapIncomeToPayload", () => {
     });
 
     expect(payload).toEqual({
-      businessDocument: "11.222.333/0001-81",
       activityDuration: ActivityDuration.ONE_TO_3_YEARS,
       declaredMonthlyIncome: 3500,
       incomeSource: IncomeSource.SALARY,
