@@ -120,6 +120,7 @@ export const IncomeSource = {
   BENEFIT: "benefit",
   RENT: "rent",
   MIXED_INCOME: "mixed_income",
+  OTHER: "other",
 } as const;
 export type IncomeSource = (typeof IncomeSource)[keyof typeof IncomeSource];
 

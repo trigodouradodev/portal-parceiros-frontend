@@ -67,7 +67,7 @@ function baseDetail(overrides: Partial<QuoteDetail> = {}): QuoteDetail {
       declaredMonthlyIncome: 2500,
       incomeSource: null,
       hasMultipleIncomeSources: false,
-      secondaryIncome: null,
+      additionalIncomes: [],
       availableIncomeProof: null,
     },
     address: {
@@ -142,6 +142,8 @@ describe("mapQuoteDetailToProposal", () => {
     expect(proposal.data.registration.email).toBe("maria@example.com");
     expect(proposal.data.registration.phone).toBe("(11) 99999-0000");
     expect(proposal.data.registration.occupation).toBe("Vendedora");
+    expect(proposal.data.registration.childrenCount).toBe("0");
+    expect(proposal.data.registration.householdSize).toBe("2");
     expect(proposal.data.activityIncome.monthlyIncome).toMatch(/2\.500/);
     expect(proposal.data.address.street).toBe("Av Paulista");
     expect(proposal.data.financial.paymentPixType).toBe("");
@@ -206,6 +208,20 @@ describe("mapQuoteDetailToProposal", () => {
     );
 
     expect(proposal.data.guarantor.phone).toBe("(71) 98888-7777");
+  });
+
+  it("clamps children and household counts to the select options", () => {
+    const proposal = mapQuoteDetailToProposal(
+      baseDetail({
+        registration: {
+          ...baseDetail().registration,
+          childrenCount: 9,
+          householdMembers: 12,
+        },
+      }),
+    );
+    expect(proposal.data.registration.childrenCount).toBe("5");
+    expect(proposal.data.registration.householdSize).toBe("6");
   });
 });
 

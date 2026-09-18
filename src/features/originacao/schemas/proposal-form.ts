@@ -127,7 +127,7 @@ function registrationSchemaFor(data: RegistrationData) {
       householdSize: countString(1),
       propertyStatus: requiredString,
       residenceTime: requiredString,
-      governmentPrograms: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
+      governmentPrograms: z.array(z.string()),
       hasVehicle: requiredYesNo,
       vehicleFinanced: z.boolean().nullable(),
       creditPurpose: z
@@ -180,22 +180,29 @@ function registrationSchemaFor(data: RegistrationData) {
 export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z
   .object({
     cnpj: z.string(),
-    activityTime: requiredString,
+    activityTime: z.string(),
     monthlyIncome: positiveMoneyString(),
     incomeSource: requiredString,
     hasMultipleSources: z.boolean().nullable(),
-    secondaryIncome: z.string(),
+    additionalIncomes: z.array(
+      z.object({
+        id: z.number(),
+        source: requiredString,
+        amount: positiveMoneyString(),
+      }),
+    ),
+    nextAdditionalIncomeId: z.number(),
     availableProof: requiredString,
   })
   .superRefine((data, ctx) => {
     if (
       data.hasMultipleSources === true &&
-      data.secondaryIncome.trim() === ""
+      data.additionalIncomes.length === 0
     ) {
       ctx.addIssue({
         code: "custom",
-        path: ["secondaryIncome"],
-        message: REQUIRED_FIELD_MESSAGE,
+        path: ["additionalIncomes"],
+        message: "Adicione ao menos uma renda adicional",
       });
     }
   });
@@ -218,7 +225,7 @@ export const partnerOpinionSchema: z.ZodType<PartnerOpinionData> = z
     howKnows: requiredString,
     howKnowsOther: z.string(),
     referrerCpf: z.string().refine(isOptionalCpfValid, "CPF inválido"),
-    overallRating: requiredString,
+    overallRating: z.string(),
     informalDebtSigns: requiredYesNo,
     financialUrgencySigns: requiredYesNo,
     notes: requiredString,
@@ -359,6 +366,24 @@ export function parseProposalStep(step: number, data: ProposalFormData) {
     return registrationSchemaFor(data.registration).safeParse(
       data.registration,
     );
+  }
+  if (step === 3) {
+    const parsed = partnerOpinionSchema.safeParse(data.partnerOpinion);
+    if (!parsed.success) return parsed;
+    if (data.activityIncome.activityTime.trim() === "") {
+      return {
+        success: false as const,
+        error: {
+          issues: [
+            {
+              path: ["activityIncome", "activityTime"],
+              message: REQUIRED_FIELD_MESSAGE,
+            },
+          ],
+        },
+      };
+    }
+    return parsed;
   }
   if (step === 6) {
     const incomeProofRequired =

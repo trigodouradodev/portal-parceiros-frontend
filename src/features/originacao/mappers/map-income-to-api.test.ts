@@ -19,21 +19,34 @@ describe("mapIncomeToApi", () => {
         monthlyIncome: formatMoneyBrl("350000"),
         incomeSource: IncomeSource.SALARY,
         hasMultipleSources: true,
-        secondaryIncome: formatMoneyBrl("80000"),
+        additionalIncomes: [
+          {
+            id: 1,
+            source: IncomeSource.RENT,
+            amount: formatMoneyBrl("80000"),
+          },
+          {
+            id: 2,
+            source: IncomeSource.OTHER,
+            amount: formatMoneyBrl("25000"),
+          },
+        ],
         availableProof: AvailableIncomeProof.PAYSLIP,
       }),
     ).toEqual({
-      businessDocument: "11.222.333/0001-81",
       activityDuration: ActivityDuration.ONE_TO_3_YEARS,
       declaredMonthlyIncome: 3500,
       incomeSource: IncomeSource.SALARY,
       hasMultipleIncomeSources: true,
-      secondaryIncome: 800,
+      additionalIncomes: [
+        { source: IncomeSource.RENT, amount: 800 },
+        { source: IncomeSource.OTHER, amount: 250 },
+      ],
       availableIncomeProof: AvailableIncomeProof.PAYSLIP,
     });
   });
 
-  it("omits CNPJ and secondary income when not applicable", () => {
+  it("never sends CNPJ and omits secondary income when not applicable", () => {
     const form = createEmptyProposalForm().activityIncome;
     const payload = mapIncomeToApi({
       ...form,
@@ -44,9 +57,20 @@ describe("mapIncomeToApi", () => {
       availableProof: AvailableIncomeProof.NONE,
     });
 
-    expect(payload.businessDocument).toBeUndefined();
-    expect(payload.secondaryIncome).toBeUndefined();
+    expect(payload).not.toHaveProperty("businessDocument");
+    expect(payload.additionalIncomes).toEqual([]);
     expect(payload.hasMultipleIncomeSources).toBe(false);
     expect(payload.declaredMonthlyIncome).toBe(1000);
+  });
+
+  it("uses a provisional activity duration when the parecer field is still empty", () => {
+    const form = createEmptyProposalForm().activityIncome;
+    const payload = mapIncomeToApi({
+      ...form,
+      monthlyIncome: formatMoneyBrl("100000"),
+      incomeSource: IncomeSource.SALARY,
+      availableProof: AvailableIncomeProof.PAYSLIP,
+    });
+    expect(payload.activityDuration).toBe(ActivityDuration.LESS_THAN_6_MONTHS);
   });
 });

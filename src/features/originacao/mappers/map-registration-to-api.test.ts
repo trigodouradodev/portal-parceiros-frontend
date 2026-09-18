@@ -3,7 +3,6 @@ import {
   ACTIVITY_CATEGORY_OPTIONS,
   CREDIT_PURPOSE_OPTIONS,
   GENDER_OPTIONS,
-  GOVERNMENT_PROGRAM_OPTIONS,
   MARITAL_STATUS_OPTIONS,
   PROPERTY_STATUS_OPTIONS,
   RESIDENCE_TIME_OPTIONS,
@@ -171,13 +170,13 @@ describe("mapRegistrationToApi", () => {
         ).residenceDuration,
       ).toBe(option.value);
     }
-    for (const option of GOVERNMENT_PROGRAM_OPTIONS) {
-      expect(
-        mapRegistrationToApi(
-          completeRegistration({ governmentPrograms: [option.value] }),
-        ).governmentPrograms[0],
-      ).toBe(option.value);
-    }
+    expect(
+      mapRegistrationToApi(
+        completeRegistration({
+          governmentPrograms: [GovernmentProgram.BOLSA_FAMILIA],
+        }),
+      ).governmentPrograms,
+    ).toEqual(["none"]);
     for (const option of CREDIT_PURPOSE_OPTIONS) {
       expect(
         mapRegistrationToApi(

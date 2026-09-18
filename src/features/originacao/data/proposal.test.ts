@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  clampCountSelect,
   PROPOSAL_STEPS,
   applyRegistrationIdentityToSimulation,
   createEmptyProposalForm,
@@ -17,7 +18,6 @@ import {
 } from "@/features/originacao/schemas/proposal-form";
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import {
-  ActivityDuration,
   AvailableIncomeProof,
   CreditPurpose,
   CustomerRelationshipOrigin,
@@ -27,7 +27,6 @@ import {
   HousingStatus,
   IncomeSource,
   MaritalStatus,
-  PartnerAssessment,
   PaymentPixType,
   ResidenceDuration,
   GovernmentProgram,
@@ -203,6 +202,14 @@ describe("proposal validators", () => {
     ).toBe(false);
   });
 
+  it("clamps household and children counts to the select range", () => {
+    expect(clampCountSelect(null, 0, 5)).toBe("");
+    expect(clampCountSelect(0, 0, 5)).toBe("0");
+    expect(clampCountSelect(8, 0, 5)).toBe("5");
+    expect(clampCountSelect(0, 1, 6)).toBe("1");
+    expect(clampCountSelect(10, 1, 6)).toBe("6");
+  });
+
   it("treats married statuses as having a spouse", () => {
     expect(hasSpouse(MaritalStatus.MARRIED)).toBe(true);
     expect(hasSpouse(MaritalStatus.STABLE_UNION)).toBe(true);
@@ -215,7 +222,6 @@ describe("proposal validators", () => {
     expect(
       isActivityIncomeValid({
         ...empty,
-        activityTime: ActivityDuration.ONE_TO_3_YEARS,
         monthlyIncome: "3000",
         incomeSource: IncomeSource.SALARY,
         availableProof: AvailableIncomeProof.PAYSLIP,
@@ -224,7 +230,6 @@ describe("proposal validators", () => {
     expect(
       isActivityIncomeValid({
         ...empty,
-        activityTime: ActivityDuration.ONE_TO_3_YEARS,
         monthlyIncome: "3000",
         incomeSource: IncomeSource.SALARY,
         availableProof: AvailableIncomeProof.PAYSLIP,
@@ -268,7 +273,6 @@ describe("proposal validators", () => {
       ...empty,
       relationshipTime: "1_to_3_years",
       howKnows: CustomerRelationshipOrigin.IN_PERSON_PROSPECTING,
-      overallRating: PartnerAssessment.RECOMMEND,
       informalDebtSigns: false,
       financialUrgencySigns: false,
       notes: "Cliente conhecido da praça.",

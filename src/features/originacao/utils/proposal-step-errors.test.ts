@@ -27,7 +27,6 @@ describe("getProposalStepFieldErrors", () => {
       "registration.householdSize",
       "registration.propertyStatus",
       "registration.residenceTime",
-      "registration.governmentPrograms",
       "registration.hasVehicle",
       "registration.creditPurpose",
     ]);
@@ -57,7 +56,6 @@ describe("getProposalStepFieldErrors", () => {
     const data = createEmptyProposalForm();
     data.activityIncome = {
       ...data.activityIncome,
-      activityTime: "1 a 3 anos",
       monthlyIncome: "3000",
       incomeSource: "Salário",
       availableProof: "Holerite",
@@ -90,6 +88,13 @@ describe("getProposalStepFieldErrors", () => {
     ).toBe("CPF inválido");
 
     data.partnerOpinion.referrerCpf = "529.982.247-25";
+    expect(
+      getProposalStepFieldErrors(3, data).find(
+        (item) => item.name === "activityIncome.activityTime",
+      )?.message,
+    ).toBe(REQUIRED_FIELD_MESSAGE);
+
+    data.activityIncome.activityTime = "1_to_3_years";
     expect(getProposalStepFieldErrors(3, data)).toEqual([]);
   });
 

@@ -49,6 +49,7 @@ describe("mapPartnerOpinionToApi", () => {
     expect(payload.relationshipOriginOther).toBe("Feira do bairro");
     expect(payload.referrerDocument).toBeUndefined();
     expect(payload.opinion).toBe("Precisa de análise.");
+    expect(payload.assessment).toBe(PartnerAssessment.RECOMMEND);
   });
 
   it("omits empty referrerDocument on Áurea referral", () => {

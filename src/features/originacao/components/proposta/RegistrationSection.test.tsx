@@ -38,6 +38,11 @@ function fieldInput(name: string) {
   return root?.querySelector("input") ?? null;
 }
 
+function fieldTrigger(name: string) {
+  const root = document.getElementById(`field-${name}`);
+  return root?.querySelector("button") ?? null;
+}
+
 describe("RegistrationSection", () => {
   it("locks only the borrower CPF", () => {
     renderRegistration();
@@ -46,5 +51,16 @@ describe("RegistrationSection", () => {
     expect(fieldInput("registration.cpf")).toHaveValue("111.444.777-35");
     expect(fieldInput("registration.name")).toBeEnabled();
     expect(fieldInput("registration.spouseCpf")).toBeEnabled();
+  });
+
+  it("uses selects for household counts and hides government programs", () => {
+    renderRegistration();
+
+    expect(fieldTrigger("registration.childrenCount")).toBeTruthy();
+    expect(fieldTrigger("registration.householdSize")).toBeTruthy();
+    expect(fieldInput("registration.childrenCount")).toBeNull();
+    expect(
+      document.getElementById("field-registration.governmentPrograms"),
+    ).toBeNull();
   });
 });
