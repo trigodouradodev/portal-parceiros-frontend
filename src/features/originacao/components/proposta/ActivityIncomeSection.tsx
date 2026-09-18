@@ -1,4 +1,4 @@
-import { useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 import { Building2, Wallet } from "lucide-react";
 import { FormInput, FormSelect, FormYesNo } from "@/components/ui/rhf-fields";
 import {
@@ -9,14 +9,46 @@ import {
 } from "@/features/originacao/data/proposal";
 import { formatMoneyBrl } from "@/lib/format/money";
 import { formatCnpj } from "@/lib/format/tax-id";
+import {
+  RemovableCard,
+  RepeatableGroup,
+} from "@/features/originacao/components/proposta/RepeatableGroup";
 
 export function ActivityIncomeSection() {
-  const { setValue, watch } = useFormContext<ProposalFormData>();
+  const { control, setValue, watch } = useFormContext<ProposalFormData>();
   const hasMultipleSources = watch("activityIncome.hasMultipleSources");
+  const nextAdditionalIncomeId = watch("activityIncome.nextAdditionalIncomeId");
+  const {
+    fields: additionalIncomes,
+    append: appendAdditionalIncome,
+    remove: removeAdditionalIncome,
+    replace: replaceAdditionalIncomes,
+  } = useFieldArray({
+    control,
+    name: "activityIncome.additionalIncomes",
+    keyName: "fieldId",
+  });
+
+  function addAdditionalIncome() {
+    appendAdditionalIncome({
+      id: nextAdditionalIncomeId,
+      source: "",
+      amount: "",
+    });
+    setValue(
+      "activityIncome.nextAdditionalIncomeId",
+      nextAdditionalIncomeId + 1,
+      { shouldDirty: true },
+    );
+  }
 
   function handleMultipleSourcesChange(value: boolean) {
     if (!value) {
-      setValue("activityIncome.secondaryIncome", "", { shouldDirty: true });
+      replaceAdditionalIncomes([]);
+      return;
+    }
+    if (additionalIncomes.length === 0) {
+      addAdditionalIncome();
     }
   }
 
@@ -63,15 +95,39 @@ export function ActivityIncomeSection() {
       />
 
       {hasMultipleSources ? (
-        <FormInput<ProposalFormData>
-          name="activityIncome.secondaryIncome"
-          label="Renda secundária"
-          transform={formatMoneyBrl}
-          icon={<Wallet size={16} />}
-          placeholder="R$ 0,00"
-          inputMode="numeric"
-          required
-        />
+        <RepeatableGroup
+          title="Renda adicional"
+          addLabel="Adicionar outra renda"
+          emptyLabel="Nenhuma renda adicional adicionada."
+          isEmpty={additionalIncomes.length === 0}
+          onAdd={addAdditionalIncome}
+        >
+          {additionalIncomes.map((income, index) => (
+            <RemovableCard
+              key={income.fieldId}
+              removeLabel="Remover renda adicional"
+              onRemove={() => removeAdditionalIncome(index)}
+              header={
+                <FormSelect<ProposalFormData>
+                  name={`activityIncome.additionalIncomes.${index}.source`}
+                  label="Fonte da renda"
+                  options={INCOME_SOURCE_OPTIONS}
+                  required
+                />
+              }
+            >
+              <FormInput<ProposalFormData>
+                name={`activityIncome.additionalIncomes.${index}.amount`}
+                label="Valor"
+                transform={formatMoneyBrl}
+                icon={<Wallet size={16} />}
+                placeholder="R$ 0,00"
+                inputMode="numeric"
+                required
+              />
+            </RemovableCard>
+          ))}
+        </RepeatableGroup>
       ) : null}
 
       <FormSelect<ProposalFormData>
