@@ -18,7 +18,6 @@ import {
 } from "@/features/originacao/schemas/proposal-form";
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import {
-  AvailableIncomeProof,
   CreditPurpose,
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
@@ -106,6 +105,7 @@ describe("proposal validators", () => {
     gender: Gender.FEMALE,
     rg: "1234567",
     occupation: "Vendedora",
+    businessActivityBranch: "administrative_office",
     activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
     maritalStatus: MaritalStatus.SINGLE,
     childrenCount: "0",
@@ -121,12 +121,6 @@ describe("proposal validators", () => {
     const empty = createEmptyProposalForm().registration;
     expect(isRegistrationValid(empty)).toBe(false);
     expect(isRegistrationValid(validRegistration)).toBe(true);
-    expect(
-      isRegistrationValid({
-        ...validRegistration,
-        occupation: "",
-      }),
-    ).toBe(false);
     expect(
       isRegistrationValid({
         ...validRegistration,
@@ -222,17 +216,17 @@ describe("proposal validators", () => {
     expect(
       isActivityIncomeValid({
         ...empty,
+        activityTime: "1_to_3_years",
         monthlyIncome: "3000",
         incomeSource: IncomeSource.SALARY,
-        availableProof: AvailableIncomeProof.PAYSLIP,
       }),
     ).toBe(true);
     expect(
       isActivityIncomeValid({
         ...empty,
+        activityTime: "1_to_3_years",
         monthlyIncome: "3000",
         incomeSource: IncomeSource.SALARY,
-        availableProof: AvailableIncomeProof.PAYSLIP,
         hasMultipleSources: true,
       }),
     ).toBe(false);
@@ -345,7 +339,7 @@ describe("proposal validators", () => {
     ).toBe(false);
   });
 
-  it("requires all document groups", () => {
+  it("requires all document groups, including comprovante de renda (sempre obrigatório)", () => {
     const empty = createEmptyProposalForm().documents;
     expect(isDocumentsValid(empty)).toBe(false);
     expect(
@@ -358,16 +352,13 @@ describe("proposal validators", () => {
       }),
     ).toBe(true);
     expect(
-      isDocumentsValid(
-        {
-          identification: [{ id: "1", filename: "rg.pdf" }],
-          proofOfResidence: [{ id: "2", filename: "conta.pdf" }],
-          activityPhotos: [{ id: "3", filename: "fachada.jpg" }],
-          incomeProofTypes: [],
-          incomeProofs: [],
-        },
-        false,
-      ),
-    ).toBe(true);
+      isDocumentsValid({
+        identification: [{ id: "1", filename: "rg.pdf" }],
+        proofOfResidence: [{ id: "2", filename: "conta.pdf" }],
+        activityPhotos: [{ id: "3", filename: "fachada.jpg" }],
+        incomeProofTypes: [],
+        incomeProofs: [],
+      }),
+    ).toBe(false);
   });
 });

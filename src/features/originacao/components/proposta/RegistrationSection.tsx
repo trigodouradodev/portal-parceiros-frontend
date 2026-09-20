@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { FormField } from "@/components/ui/form";
 import {
   FormDate,
   FormInput,
   FormSelect,
   FormYesNo,
 } from "@/components/ui/rhf-fields";
-import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
-  ACTIVITY_CATEGORY_SELECT_OPTIONS,
   CHILDREN_COUNT_SELECT_OPTIONS,
   CREDIT_CARD_ICON,
   CREDIT_PURPOSE_SELECT_OPTIONS,
@@ -29,7 +26,6 @@ import {
 } from "@/features/originacao/constants/registration-section";
 import {
   DEBT_PURPOSE,
-  OTHER_OPTION,
   hasSpouse,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
@@ -51,11 +47,10 @@ export function RegistrationSection({
   rate,
   onRenewalChange,
 }: RegistrationSectionProps) {
-  const { control, setValue, watch } = useFormContext<ProposalFormData>();
+  const { setValue, watch } = useFormContext<ProposalFormData>();
   const [showRate, setShowRate] = useState(false);
   const maritalStatus = watch("registration.maritalStatus");
   const creditPurpose = watch("registration.creditPurpose");
-  const activityCategories = watch("registration.activityCategories");
   const hasVehicle = watch("registration.hasVehicle");
   const spouseRequired = hasSpouse(maritalStatus);
   const debtRequired = creditPurpose === DEBT_PURPOSE;
@@ -134,38 +129,6 @@ export function RegistrationSection({
         icon={ID_CARD_ICON}
         placeholder="Número do RG"
         maxLength={15}
-        required
-      />
-
-      <FormField
-        control={control}
-        name="registration.activityCategories"
-        render={({ field, fieldState }) => (
-          <SelectDialogField
-            name={field.name}
-            label="Atividade econômica"
-            value={field.value[0] ?? ""}
-            onChange={(value) => field.onChange(value ? [value] : [])}
-            options={ACTIVITY_CATEGORY_SELECT_OPTIONS}
-            required
-            error={fieldState.error?.message}
-          />
-        )}
-      />
-      {activityCategories.includes(OTHER_OPTION) ? (
-        <FormInput<ProposalFormData>
-          name="registration.activityCategoryOther"
-          label="Qual?"
-          placeholder="Descreva a ocupação"
-          required
-        />
-      ) : null}
-
-      <FormInput<ProposalFormData>
-        name="registration.occupation"
-        label="Profissão"
-        icon={USER_ICON}
-        placeholder="Informe a profissão"
         required
       />
 

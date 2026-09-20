@@ -6,7 +6,6 @@ import {
   FormYesNo,
 } from "@/components/ui/rhf-fields";
 import {
-  ACTIVITY_TIME_OPTIONS,
   AUREA_REFERRAL_OPTION,
   HOW_KNOWS_CLIENT_OPTIONS,
   HOW_KNOWS_OTHER,
@@ -53,13 +52,6 @@ export function PartnerOpinionSection() {
           required
         />
       ) : null}
-
-      <FormSelect<ProposalFormData>
-        name="activityIncome.activityTime"
-        label="Tempo na atividade"
-        options={ACTIVITY_TIME_OPTIONS}
-        required
-      />
 
       <FormYesNo<ProposalFormData>
         name="partnerOpinion.informalDebtSigns"

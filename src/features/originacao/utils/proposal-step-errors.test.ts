@@ -18,8 +18,6 @@ describe("getProposalStepFieldErrors", () => {
       "registration.gender",
       "registration.cpf",
       "registration.rg",
-      "registration.activityCategories",
-      "registration.occupation",
       "registration.email",
       "registration.phone",
       "registration.maritalStatus",
@@ -56,10 +54,14 @@ describe("getProposalStepFieldErrors", () => {
     const data = createEmptyProposalForm();
     data.activityIncome = {
       ...data.activityIncome,
+      activityTime: "1_to_3_years",
       monthlyIncome: "3000",
       incomeSource: "Salário",
-      availableProof: "Holerite",
     };
+    data.registration.activityCategories = ["clt_employee"];
+    data.registration.occupation = "Vendedora";
+    data.registration.businessActivityBranch = "food";
+    data.registration.businessActivitySubcategory = "restaurant_or_snack_bar";
     expect(getProposalStepFieldErrors(1, data)).toEqual([]);
   });
 
@@ -88,14 +90,49 @@ describe("getProposalStepFieldErrors", () => {
     ).toBe("CPF inválido");
 
     data.partnerOpinion.referrerCpf = "529.982.247-25";
+    expect(getProposalStepFieldErrors(3, data)).toEqual([]);
+  });
+
+  it("requires atividade econômica, profissão e ramo de atividade (dados do Cadastro) no step Atividade e Renda", () => {
+    const data = createEmptyProposalForm();
+    data.activityIncome = {
+      ...data.activityIncome,
+      activityTime: "1_to_3_years",
+      monthlyIncome: "3000",
+      incomeSource: "salary",
+    };
     expect(
-      getProposalStepFieldErrors(3, data).find(
-        (item) => item.name === "activityIncome.activityTime",
+      getProposalStepFieldErrors(1, data).map((item) => item.name),
+    ).toEqual([
+      "registration.activityCategories",
+      "registration.occupation",
+      "registration.businessActivityBranch",
+    ]);
+
+    data.registration.activityCategories = ["other"];
+    expect(
+      getProposalStepFieldErrors(1, data).find(
+        (item) => item.name === "registration.activityCategoryOther",
       )?.message,
     ).toBe(REQUIRED_FIELD_MESSAGE);
 
-    data.activityIncome.activityTime = "1_to_3_years";
-    expect(getProposalStepFieldErrors(3, data)).toEqual([]);
+    data.registration.activityCategoryOther = "Artesanato";
+    data.registration.occupation = "Comerciante";
+    expect(
+      getProposalStepFieldErrors(1, data).find(
+        (item) => item.name === "registration.businessActivityBranch",
+      )?.message,
+    ).toBe(REQUIRED_FIELD_MESSAGE);
+
+    data.registration.businessActivityBranch = "retail_commerce";
+    expect(
+      getProposalStepFieldErrors(1, data).find(
+        (item) => item.name === "registration.businessActivitySubcategory",
+      )?.message,
+    ).toBe(REQUIRED_FIELD_MESSAGE);
+
+    data.registration.businessActivitySubcategory = "general_commerce";
+    expect(getProposalStepFieldErrors(1, data)).toEqual([]);
   });
 
   it("requires PIX fields on the financial step", () => {

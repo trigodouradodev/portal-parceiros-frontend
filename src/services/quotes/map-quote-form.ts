@@ -24,7 +24,8 @@ import {
   MaritalStatus,
   PartnerAssessment,
   PaymentPixType,
-  type AvailableIncomeProof,
+  type BusinessActivityBranch,
+  type BusinessActivitySubcategory,
   type CustomerRelationshipDuration,
   type Gender,
   type GuarantorRelationship,
@@ -77,6 +78,10 @@ export function mapRegistrationToPayload(
     gender: data.gender as Gender,
     secondaryDocument: data.rg.trim(),
     profession: data.occupation.trim(),
+    businessActivityBranch:
+      data.businessActivityBranch as BusinessActivityBranch,
+    businessActivitySubcategory:
+      data.businessActivitySubcategory as BusinessActivitySubcategory,
     economicActivityCategories: categories,
     maritalStatus: data.maritalStatus as MaritalStatus,
     childrenCount: parseCount(data.childrenCount),
@@ -120,7 +125,6 @@ export function mapIncomeToPayload(
           amount: parseMoneyBrl(item.amount),
         }))
       : [],
-    availableIncomeProof: data.availableProof as AvailableIncomeProof,
   };
 
   return payload;

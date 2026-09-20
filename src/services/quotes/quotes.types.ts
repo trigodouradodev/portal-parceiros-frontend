@@ -1,6 +1,8 @@
 import type {
   ActivityDuration,
   AvailableIncomeProof,
+  BusinessActivityBranch,
+  BusinessActivitySubcategory,
   CreditPurpose,
   CustomerRelationshipDuration,
   CustomerRelationshipOrigin,
@@ -81,6 +83,8 @@ export interface SaveQuoteRegistrationPayload {
   gender: Gender;
   secondaryDocument: string;
   profession: string;
+  businessActivityBranch: BusinessActivityBranch;
+  businessActivitySubcategory: BusinessActivitySubcategory;
   economicActivityCategories: EconomicActivityCategory[];
   economicActivityOther?: string;
   maritalStatus: MaritalStatus;
@@ -115,7 +119,8 @@ export interface SaveQuoteIncomePayload {
   incomeSource: IncomeSource;
   hasMultipleIncomeSources: boolean;
   additionalIncomes: QuoteAdditionalIncomePayload[];
-  availableIncomeProof: AvailableIncomeProof;
+  /** Legado: comprovante de renda agora é sempre obrigatório na Documentação. */
+  availableIncomeProof?: AvailableIncomeProof;
 }
 
 export interface QuoteIncomeSnapshot extends SaveQuoteIncomePayload {
@@ -312,6 +317,8 @@ export interface QuoteRegistrationDetail {
   gender: Gender | null;
   secondaryDocument: string | null;
   profession: string;
+  businessActivityBranch: BusinessActivityBranch | null;
+  businessActivitySubcategory: BusinessActivitySubcategory | null;
   economicActivityCategories: EconomicActivityCategory[];
   economicActivityOther: string | null;
   maritalStatus: MaritalStatus | null;

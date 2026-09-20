@@ -5,7 +5,6 @@ import {
   REQUIRED_FIELD_MESSAGE,
   activityIncomeSchema,
 } from "@/features/originacao/schemas/proposal-form";
-import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
 
 function baseIncome(
   overrides: Partial<
@@ -18,7 +17,6 @@ function baseIncome(
     monthlyIncome: "R$ 2.600,00",
     incomeSource: "salary",
     hasMultipleSources: false,
-    availableProof: AvailableIncomeProof.PAYSLIP,
     ...overrides,
   };
 }
