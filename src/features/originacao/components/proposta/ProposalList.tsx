@@ -3,6 +3,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { FileText, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import { OriginacaoEmptyState } from "@/features/originacao/components/OriginacaoEmptyState";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import { OriginacaoProgress } from "@/features/originacao/components/OriginacaoProgress";
@@ -12,7 +13,9 @@ import {
 } from "@/features/originacao/components/OriginacaoSnapshotCard";
 import { PROPOSAL_STEPS } from "@/features/originacao/data/proposal";
 import {
+  ALL_QUOTE_STATUSES,
   QUOTES_SEARCH_DEBOUNCE_MS,
+  QUOTE_LIST_STATUS_OPTIONS,
   buildQuotesListQuery,
   isQuotesFilterActive,
 } from "@/features/originacao/data/quotes-list-query";
@@ -103,10 +106,16 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setFilters(buildQuotesListQuery(searchInput, 1));
+      setFilters((prev) =>
+        buildQuotesListQuery(searchInput, 1, prev.status ?? ALL_QUOTE_STATUSES),
+      );
     }, QUOTES_SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
+
+  function handleStatusChange(status: string) {
+    setFilters(buildQuotesListQuery(searchInput, 1, status));
+  }
 
   const listQuery = useQuery({
     queryKey: quotesKeys.list(filters),
@@ -146,13 +155,23 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
       description="Rascunhos, revisão do cliente e propostas enviadas à análise."
     >
       <div className="mb-4 flex flex-col gap-3">
-        <InputField
-          label="Nome ou CPF"
-          icon={<Search size={16} />}
-          placeholder="Buscar por nome ou CPF"
-          value={searchInput}
-          onChange={setSearchInput}
-        />
+        <div className="flex flex-col gap-2.5 md:flex-row md:items-start">
+          <InputField
+            label="Nome ou CPF"
+            icon={<Search size={16} />}
+            placeholder="Buscar por nome ou CPF"
+            value={searchInput}
+            onChange={setSearchInput}
+            className="md:flex-1"
+          />
+          <SelectDialogField
+            label="Status"
+            value={filters.status ?? ALL_QUOTE_STATUSES}
+            onChange={handleStatusChange}
+            options={QUOTE_LIST_STATUS_OPTIONS}
+            className="md:w-56"
+          />
+        </div>
         {filterActive ? (
           <button
             type="button"
