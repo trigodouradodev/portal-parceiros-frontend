@@ -48,7 +48,7 @@ export function SimulacaoPage() {
       closeForm();
       return;
     }
-    // Keep the persisted row so a retry PATCHes instead of creating another simulation.
+    // Keep the persisted row so a retry reuses its simulationId.
     handleEdit(simulation);
   }
 
@@ -73,7 +73,6 @@ export function SimulacaoPage() {
         simulations.length > 0 || blankFormKey != null || editing != null
       }
       onViewList={closeForm}
-      onCompleted={closeForm}
       onStartProposal={handleStartProposalFromForm}
     />
   );

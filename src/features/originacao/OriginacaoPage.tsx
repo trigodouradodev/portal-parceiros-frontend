@@ -4,7 +4,6 @@ import type { AppShellOutletContext } from "@/components/layout/shell-context";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ElegibilidadePage } from "@/features/originacao/ElegibilidadePage";
 import { OriginacaoProvider } from "@/features/originacao/OriginacaoProvider";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { PropostaPage } from "@/features/originacao/PropostaPage";
@@ -44,16 +43,12 @@ function OriginacaoLayout() {
         {focusedProposal ? null : (
           <div className="px-5 pt-5 md:px-8">
             <TabsList className="md:w-[26rem]">
-              <TabsTrigger value="eligibility">Elegibilidade</TabsTrigger>
               <TabsTrigger value="simulation">Simulação</TabsTrigger>
               <TabsTrigger value="proposal">Proposta</TabsTrigger>
             </TabsList>
           </div>
         )}
 
-        <TabsContent value="eligibility" className="mt-0">
-          <ElegibilidadePage />
-        </TabsContent>
         <TabsContent value="simulation" className="mt-0">
           <SimulacaoPage />
         </TabsContent>
