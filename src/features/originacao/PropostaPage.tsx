@@ -26,6 +26,10 @@ import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQ
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
 import { useApplyRenewalPrefill } from "@/features/originacao/hooks/useApplyRenewalPrefill";
 import {
+  EmailDeliverabilityStatus,
+  useEmailDeliverability,
+} from "@/features/originacao/hooks/useEmailDeliverability";
+import {
   useCompleteQuoteDocumentation,
   useSubmitQuoteDraft,
 } from "@/features/originacao/hooks/useQuoteDocumentation";
@@ -178,6 +182,9 @@ function ProposalWizard({
     useSubmitQuoteDraft();
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [renewalPrefillOpen, setRenewalPrefillOpen] = useState(false);
+  const [blockedEmailField, setBlockedEmailField] = useState<
+    "registration.email" | "guarantor.email" | null
+  >(null);
   const savingStep =
     applyingRenewalPrefill ||
     savingRegistration ||
@@ -229,6 +236,10 @@ function ProposalWizard({
 
   const data = form.watch();
   const { simulation, step } = proposal;
+  const emailDeliverability = useEmailDeliverability(data.registration.email);
+  const guarantorEmailDeliverability = useEmailDeliverability(
+    data.guarantor.email,
+  );
 
   function computeStepValid(values: ProposalFormData) {
     const subcategoryValid =
@@ -302,6 +313,25 @@ function ProposalWizard({
       scrollToField(errors[0].name);
       return;
     }
+
+    const blockedField =
+      step === 0 &&
+      emailDeliverability.status === EmailDeliverabilityStatus.BLOCKED
+        ? "registration.email"
+        : step === 4 &&
+            guarantorEmailDeliverability.status ===
+              EmailDeliverabilityStatus.BLOCKED
+          ? "guarantor.email"
+          : null;
+    if (blockedField) {
+      setBlockedEmailField(blockedField);
+      return;
+    }
+
+    await proceedAfterEmailCheck();
+  }
+
+  async function proceedAfterEmailCheck() {
     if (step === 0) {
       try {
         await saveRegistration({
@@ -457,12 +487,17 @@ function ProposalWizard({
                 maxInterestRate: simulation.interestRate,
               })}
               onRenewalChange={handleRenewalChange}
+              emailDeliverabilityStatus={emailDeliverability.status}
             />
           ) : null}
           {step === 1 ? <ActivityIncomeSection /> : null}
           {step === 2 ? <AddressSection /> : null}
           {step === 3 ? <PartnerOpinionSection /> : null}
-          {step === 4 ? <GuarantorSection /> : null}
+          {step === 4 ? (
+            <GuarantorSection
+              emailDeliverabilityStatus={guarantorEmailDeliverability.status}
+            />
+          ) : null}
           {step === 5 ? <FinancialSection /> : null}
           {step === 6 ? <DocumentsSection quoteId={proposal.id} /> : null}
 
@@ -504,6 +539,23 @@ function ProposalWizard({
         onCancel={handleRenewalPrefillCancel}
         pending={applyingRenewalPrefill}
         pendingLabel="Copiando…"
+      />
+      <ConfirmDialog
+        open={blockedEmailField !== null}
+        onOpenChange={(open) => {
+          if (!open) setBlockedEmailField(null);
+        }}
+        title="E-mail pode não ser entregável"
+        description="Este e-mail não passou na verificação de entregabilidade — pode haver um erro de digitação, ou o servidor do destinatário pode estar recusando mensagens. Quer continuar mesmo assim?"
+        confirmLabel="Continuar assim mesmo"
+        cancelLabel="Corrigir e-mail"
+        onConfirm={async () => {
+          setBlockedEmailField(null);
+          await proceedAfterEmailCheck();
+        }}
+        onCancel={() => {
+          if (blockedEmailField) scrollToField(blockedEmailField);
+        }}
       />
     </OriginacaoTaskLayout>
   );
