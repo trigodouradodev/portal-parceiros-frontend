@@ -94,15 +94,6 @@ describe("useCreateQuoteDraft", () => {
       },
     });
     client.setQueryData(originationKeys.simulations(), [simulation]);
-    client.setQueryData(
-      originationKeys.preview({
-        productId: preview.productId,
-        amount: preview.amount,
-        installments: preview.installments,
-        firstInstallmentDate: preview.firstInstallmentDate,
-      }),
-      preview,
-    );
     // Shape that used to live under simulationsRoot and made .map throw.
     client.setQueryData(
       [...originationKeys.simulationsRoot(), "preview", preview],

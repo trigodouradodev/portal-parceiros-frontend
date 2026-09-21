@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { ToastProvider } from "@/contexts/toast/ToastContext";
@@ -36,9 +36,7 @@ vi.mock("@/services/origination/origination.service", async () => {
     ...actual,
     originationService: {
       ...actual.originationService,
-      previewSimulation: vi.fn(),
-      createSimulation: vi.fn(),
-      updateSimulation: vi.fn(),
+      simulate: vi.fn(),
     },
   };
 });
@@ -74,9 +72,7 @@ const PRODUCT_ID = "11111111-1111-4111-8111-111111111111";
 const getProfile = vi.mocked(authService.getProfile);
 const getProducts = vi.mocked(productsService.getProducts);
 const findFormDataByCpf = vi.mocked(partiesService.findFormDataByCpf);
-const createSimulation = vi.mocked(originationService.createSimulation);
-const updateSimulation = vi.mocked(originationService.updateSimulation);
-const previewSimulation = vi.mocked(originationService.previewSimulation);
+const simulate = vi.mocked(originationService.simulate);
 
 function nextAllowedDueIso() {
   const today = new Date();
@@ -128,7 +124,7 @@ function renderForm(ui: ReactElement) {
 async function waitForReady(canCreateQuote = true) {
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "Salvar simulação" }),
+      screen.getByRole("button", { name: "Simular novamente" }),
     ).toBeEnabled();
   });
   if (canCreateQuote) {
@@ -143,9 +139,7 @@ describe("SimulacaoForm", () => {
     getProfile.mockReset();
     getProducts.mockReset();
     findFormDataByCpf.mockReset();
-    createSimulation.mockReset();
-    updateSimulation.mockReset();
-    previewSimulation.mockReset();
+    simulate.mockReset();
 
     getProfile.mockResolvedValue(testUser);
     findFormDataByCpf.mockResolvedValue(null);
@@ -160,43 +154,40 @@ describe("SimulacaoForm", () => {
         enabled: true,
       },
     ]);
-    previewSimulation.mockResolvedValue({
-      productId: PRODUCT_ID,
-      amount: 5000,
-      installments: 10,
-      firstInstallmentDate: nextAllowedDueIso(),
-      interestRate: 0.0339,
-      installmentAmount: 597.88,
-      totalAmountOwed: 5978.8,
+    simulate.mockResolvedValue({
+      eligible: true,
+      simulation: snapshot({ totalAmountOwed: 5978.8 }),
     });
   });
 
-  it("offers save and start proposal after a new simulation", async () => {
+  it("offers simulate without calling the API while the user fills the form", async () => {
     renderForm(
       <SimulacaoForm
         prefill={null}
         editing={null}
         hasList={false}
         onViewList={vi.fn()}
-        onCompleted={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
 
     expect(
-      await screen.findByRole("button", { name: "Salvar simulação" }),
+      await screen.findByRole("button", { name: "Simular" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Iniciar proposta" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: "Iniciar proposta" }),
+    ).not.toBeInTheDocument();
+    expect(simulate).not.toHaveBeenCalled();
   });
 
-  it("saves without starting a proposal", async () => {
+  it("resimulates an existing row using its UUID and shows the saved result", async () => {
     const user = userEvent.setup();
     const editing = snapshot();
     const saved = snapshot({ amount: 5000 });
-    updateSimulation.mockResolvedValue(saved);
-    const onCompleted = vi.fn();
+    simulate.mockResolvedValue({
+      eligible: true,
+      simulation: { ...saved, totalAmountOwed: 5978.8 },
+    });
     const onStartProposal = vi.fn();
 
     renderForm(
@@ -205,34 +196,32 @@ describe("SimulacaoForm", () => {
         editing={editing}
         hasList
         onViewList={vi.fn()}
-        onCompleted={onCompleted}
         onStartProposal={onStartProposal}
       />,
     );
 
     await waitForReady();
-    await user.click(screen.getByRole("button", { name: "Salvar simulação" }));
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
 
     await waitFor(() => {
-      expect(updateSimulation).toHaveBeenCalledWith(
-        editing.id,
+      expect(simulate).toHaveBeenCalledWith(
         expect.objectContaining({
+          simulationId: editing.id,
           name: "Maria Souza",
           document: "52998224725",
           productId: PRODUCT_ID,
         }),
+        expect.anything(),
       );
     });
-    expect(onCompleted).toHaveBeenCalled();
+    expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
+    expect(screen.getByText("R$ 5.978,80")).toBeInTheDocument();
     expect(onStartProposal).not.toHaveBeenCalled();
   });
 
-  it("saves and then starts a proposal from the same form", async () => {
+  it("starts a proposal from the latest persisted simulation", async () => {
     const user = userEvent.setup();
     const editing = snapshot();
-    const saved = snapshot({ amount: 5000 });
-    updateSimulation.mockResolvedValue(saved);
-    const onCompleted = vi.fn();
     const onStartProposal = vi.fn().mockResolvedValue(undefined);
 
     renderForm(
@@ -241,7 +230,6 @@ describe("SimulacaoForm", () => {
         editing={editing}
         hasList
         onViewList={vi.fn()}
-        onCompleted={onCompleted}
         onStartProposal={onStartProposal}
       />,
     );
@@ -249,11 +237,8 @@ describe("SimulacaoForm", () => {
     await waitForReady();
     await user.click(screen.getByRole("button", { name: "Iniciar proposta" }));
 
-    await waitFor(() => {
-      expect(updateSimulation).toHaveBeenCalled();
-    });
-    expect(onStartProposal).toHaveBeenCalledWith(saved);
-    expect(onCompleted).not.toHaveBeenCalled();
+    expect(onStartProposal).toHaveBeenCalledWith(editing);
+    expect(simulate).not.toHaveBeenCalled();
   });
 
   it("disables start proposal when the partner cannot create quotes", async () => {
@@ -265,14 +250,13 @@ describe("SimulacaoForm", () => {
         editing={snapshot()}
         hasList
         onViewList={vi.fn()}
-        onCompleted={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Salvar simulação" }),
+        screen.getByRole("button", { name: "Simular novamente" }),
       ).toBeEnabled();
     });
     expect(
@@ -292,16 +276,66 @@ describe("SimulacaoForm", () => {
         editing={snapshot({ status: "converted" })}
         hasList
         onViewList={vi.fn()}
-        onCompleted={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
 
     await waitFor(() => {
       expect(
-        screen.getByRole("button", { name: "Salvar simulação" }),
-      ).toBeEnabled();
+        screen.getByRole("button", { name: "Simular novamente" }),
+      ).toBeDisabled();
     });
+    expect(
+      screen.queryByRole("button", { name: "Iniciar proposta" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows ineligibility without keeping the previous result actionable", async () => {
+    const user = userEvent.setup();
+    simulate.mockResolvedValueOnce({ eligible: false, simulation: null });
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={snapshot()}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitForReady();
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+
+    expect(await screen.findByText("Cliente não elegível")).toBeInTheDocument();
+    expect(screen.queryByText("Simulação concluída")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Iniciar proposta" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("invalidates the saved result after a form change", async () => {
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={snapshot()}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitForReady();
+    fireEvent.change(screen.getByRole("slider"), {
+      target: { value: "6000" },
+    });
+
+    expect(
+      screen.getByText(
+        "Os dados foram alterados. Simule novamente para atualizar o resultado.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Simulação concluída")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Iniciar proposta" }),
     ).not.toBeInTheDocument();
@@ -314,7 +348,6 @@ describe("SimulacaoForm", () => {
         editing={null}
         hasList={false}
         onViewList={vi.fn()}
-        onCompleted={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
@@ -342,7 +375,6 @@ describe("SimulacaoForm", () => {
         editing={null}
         hasList={false}
         onViewList={vi.fn()}
-        onCompleted={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
@@ -381,7 +413,6 @@ describe("SimulacaoForm", () => {
         editing={null}
         hasList={false}
         onViewList={vi.fn()}
-        onCompleted={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
@@ -413,7 +444,6 @@ describe("SimulacaoForm", () => {
         editing={null}
         hasList={false}
         onViewList={vi.fn()}
-        onCompleted={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );
@@ -439,7 +469,6 @@ describe("SimulacaoForm", () => {
         editing={snapshot()}
         hasList
         onViewList={vi.fn()}
-        onCompleted={vi.fn()}
         onStartProposal={vi.fn()}
       />,
     );

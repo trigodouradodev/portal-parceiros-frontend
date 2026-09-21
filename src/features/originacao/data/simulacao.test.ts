@@ -7,7 +7,6 @@ import {
   isAllowedDueDate,
   isDueDateInWindow,
   isSimulationConverted,
-  previewInstallmentAmount,
   productRatePercent,
   simulationFormDefaultsFromSnapshot,
   toIsoDate,
@@ -24,12 +23,6 @@ describe("isDueDateInWindow", () => {
   it("rejects dates before today and after D+45", () => {
     expect(isDueDateInWindow(new Date(2026, 7, 25), today)).toBe(false);
     expect(isDueDateInWindow(new Date(2026, 9, 11), today)).toBe(false);
-  });
-});
-
-describe("previewInstallmentAmount", () => {
-  it("rounds PRICE to cents like the backend", () => {
-    expect(previewInstallmentAmount(5000, 10, 3.39)).toBe(597.88);
   });
 });
 
