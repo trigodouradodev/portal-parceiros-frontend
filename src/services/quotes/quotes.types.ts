@@ -82,9 +82,6 @@ export interface SaveQuoteRegistrationPayload {
   isRenegotiation: boolean;
   gender: Gender;
   secondaryDocument: string;
-  profession?: string;
-  economicActivityCategories: EconomicActivityCategory[];
-  economicActivityOther?: string;
   maritalStatus: MaritalStatus;
   spouseDocument?: string;
   childrenCount: number;
@@ -111,6 +108,9 @@ export interface QuoteAdditionalIncomePayload {
 }
 
 export interface SaveQuoteIncomePayload {
+  profession?: string;
+  economicActivityCategories: EconomicActivityCategory[];
+  economicActivityOther?: string;
   businessActivityBranch: BusinessActivityBranch;
   businessActivitySubcategory: BusinessActivitySubcategory;
   businessDocument?: string;
