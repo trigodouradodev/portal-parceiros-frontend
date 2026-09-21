@@ -18,12 +18,10 @@ export interface SimulationSnapshot {
   document: string;
   productId: string;
   productName: string;
-  interestRate: number;
   amount: number;
   installments: number;
   firstInstallmentDate: string;
   installmentAmount: number;
-  totalAmountOwed?: number;
   simulationResult?: unknown;
 }
 

@@ -6,6 +6,7 @@ import {
   createEmptyProposalForm,
   createProposalFromSimulation,
   hasSpouse,
+  type ProposalSimulationSnapshot,
 } from "@/features/originacao/data/proposal";
 import {
   isActivityIncomeValid,
@@ -16,7 +17,6 @@ import {
   isPartnerOpinionValid,
   isRegistrationValid,
 } from "@/features/originacao/schemas/proposal-form";
-import type { SimulationSnapshot } from "@/features/originacao/types";
 import {
   CreditPurpose,
   CustomerRelationshipOrigin,
@@ -32,7 +32,7 @@ import {
   QuoteStatus,
 } from "@/services/quotes/quotes.enums";
 
-const simulation: SimulationSnapshot = {
+const simulation: ProposalSimulationSnapshot = {
   id: "sim-1",
   createdAt: "2026-08-13T12:00:00.000Z",
   status: "available",
