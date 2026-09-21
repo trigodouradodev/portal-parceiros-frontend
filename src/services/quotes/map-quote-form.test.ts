@@ -65,9 +65,6 @@ describe("mapRegistrationToPayload", () => {
       gender: Gender.FEMALE,
       secondaryDocument: "123456789",
       profession: "Vendedora",
-      businessActivityBranch: BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
-      businessActivitySubcategory:
-        BusinessActivitySubcategory.ACCOUNTING_OFFICE,
       economicActivityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
       maritalStatus: MaritalStatus.SINGLE,
       childrenCount: 2,
@@ -107,61 +104,48 @@ describe("mapRegistrationToPayload", () => {
     });
 
     expect(payload.economicActivityOther).toBe("Feira livre");
-    expect(payload.businessActivitySubcategory).toBe(
-      BusinessActivitySubcategory.STREET_VENDING,
-    );
     expect(payload.spouseDocument).toBe("52998224725");
     expect(payload.vehicleFinanced).toBe(true);
     expect(payload.householdMembers).toBe(1);
     expect(payload).not.toHaveProperty("debtDescription");
-  });
-
-  it("always includes businessActivitySubcategory, regardless of the branch", () => {
-    const form = createEmptyProposalForm().registration;
-    const payload = mapRegistrationToPayload({
-      ...form,
-      occupation: "Professora",
-      businessActivityBranch: BusinessActivityBranch.EDUCATION,
-      businessActivitySubcategory: BusinessActivitySubcategory.PRIVATE_TUTOR,
-      activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
-      maritalStatus: MaritalStatus.SINGLE,
-      propertyStatus: HousingStatus.RENTED,
-      residenceTime: ResidenceDuration.MORE_THAN_5_YEARS,
-      hasVehicle: false,
-      creditPurpose: CreditPurpose.PERSONAL_EXPENSE,
-    });
-
-    expect(payload.businessActivitySubcategory).toBe(
-      BusinessActivitySubcategory.PRIVATE_TUTOR,
-    );
   });
 });
 
 describe("mapIncomeToPayload", () => {
   it("parses BRL masks and never sends CNPJ", () => {
     const form = createEmptyProposalForm().activityIncome;
-    const payload = mapIncomeToPayload({
-      ...form,
-      cnpj: "11.222.333/0001-81",
-      activityTime: ActivityDuration.ONE_TO_3_YEARS,
-      monthlyIncome: formatMoneyBrl("350000"),
-      incomeSource: IncomeSource.SALARY,
-      hasMultipleSources: true,
-      additionalIncomes: [
-        {
-          id: 1,
-          source: IncomeSource.RENT,
-          amount: formatMoneyBrl("80000"),
-        },
-        {
-          id: 2,
-          source: IncomeSource.OTHER,
-          amount: formatMoneyBrl("25000"),
-        },
-      ],
-    });
+    const registration = {
+      ...createEmptyProposalForm().registration,
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+      businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
+    };
+    const payload = mapIncomeToPayload(
+      {
+        ...form,
+        cnpj: "11.222.333/0001-81",
+        activityTime: ActivityDuration.ONE_TO_3_YEARS,
+        monthlyIncome: formatMoneyBrl("350000"),
+        incomeSource: IncomeSource.SALARY,
+        hasMultipleSources: true,
+        additionalIncomes: [
+          {
+            id: 1,
+            source: IncomeSource.RENT,
+            amount: formatMoneyBrl("80000"),
+          },
+          {
+            id: 2,
+            source: IncomeSource.OTHER,
+            amount: formatMoneyBrl("25000"),
+          },
+        ],
+      },
+      registration,
+    );
 
     expect(payload).toEqual({
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+      businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
       activityDuration: ActivityDuration.ONE_TO_3_YEARS,
       declaredMonthlyIncome: 3500,
       incomeSource: IncomeSource.SALARY,
@@ -175,13 +159,20 @@ describe("mapIncomeToPayload", () => {
 
   it("omits secondary income and CNPJ when empty", () => {
     const form = createEmptyProposalForm().activityIncome;
-    const payload = mapIncomeToPayload({
-      ...form,
-      activityTime: ActivityDuration.LESS_THAN_6_MONTHS,
-      monthlyIncome: formatMoneyBrl("100000"),
-      incomeSource: IncomeSource.OWN_BUSINESS,
-      hasMultipleSources: false,
-    });
+    const payload = mapIncomeToPayload(
+      {
+        ...form,
+        activityTime: ActivityDuration.LESS_THAN_6_MONTHS,
+        monthlyIncome: formatMoneyBrl("100000"),
+        incomeSource: IncomeSource.OWN_BUSINESS,
+        hasMultipleSources: false,
+      },
+      {
+        ...createEmptyProposalForm().registration,
+        businessActivityBranch: BusinessActivityBranch.EDUCATION,
+        businessActivitySubcategory: BusinessActivitySubcategory.PRIVATE_TUTOR,
+      },
+    );
 
     expect(payload.businessDocument).toBeUndefined();
     expect(payload).not.toHaveProperty("availableIncomeProof");

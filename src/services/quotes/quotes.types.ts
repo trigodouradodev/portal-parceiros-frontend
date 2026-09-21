@@ -83,8 +83,6 @@ export interface SaveQuoteRegistrationPayload {
   gender: Gender;
   secondaryDocument: string;
   profession?: string;
-  businessActivityBranch: BusinessActivityBranch;
-  businessActivitySubcategory: BusinessActivitySubcategory;
   economicActivityCategories: EconomicActivityCategory[];
   economicActivityOther?: string;
   maritalStatus: MaritalStatus;
@@ -113,6 +111,8 @@ export interface QuoteAdditionalIncomePayload {
 }
 
 export interface SaveQuoteIncomePayload {
+  businessActivityBranch: BusinessActivityBranch;
+  businessActivitySubcategory: BusinessActivitySubcategory;
   businessDocument?: string;
   activityDuration: ActivityDuration;
   declaredMonthlyIncome: number;
