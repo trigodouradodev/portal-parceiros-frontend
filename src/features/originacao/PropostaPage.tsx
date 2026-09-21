@@ -25,10 +25,7 @@ import { useSaveQuoteIncome } from "@/features/originacao/hooks/useSaveQuoteInco
 import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQuotePartnerOpinion";
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
 import { useApplyRenewalPrefill } from "@/features/originacao/hooks/useApplyRenewalPrefill";
-import {
-  EmailDeliverabilityStatus,
-  useEmailDeliverability,
-} from "@/features/originacao/hooks/useEmailDeliverability";
+import { useEmailDeliverability } from "@/features/originacao/hooks/useEmailDeliverability";
 import {
   useCompleteQuoteDocumentation,
   useSubmitQuoteDraft,
@@ -56,6 +53,7 @@ import {
   isPartnerOpinionValid,
   isRegistrationValid,
 } from "@/features/originacao/schemas/proposal-form";
+import { getBlockedEmailField } from "@/features/originacao/utils/email-confirmation-gate";
 import { getProposalStepFieldErrors } from "@/features/originacao/utils/proposal-step-errors";
 import { mergeRenewalPrefillIntoForm } from "@/features/originacao/mappers/map-quote-detail-to-form";
 import {
@@ -236,9 +234,15 @@ function ProposalWizard({
 
   const data = form.watch();
   const { simulation, step } = proposal;
-  const emailDeliverability = useEmailDeliverability(data.registration.email);
+  // Só consulta a ZeroBounce enquanto o parceiro está de fato no step que
+  // tem o campo de e-mail correspondente — evita gastar cota paga a cada
+  // vez que o wizard remonta (abrir a lista e voltar pra mesma proposta,
+  // por exemplo) enquanto o parceiro está em outro step qualquer.
+  const emailDeliverability = useEmailDeliverability(
+    step === 0 ? data.registration.email : undefined,
+  );
   const guarantorEmailDeliverability = useEmailDeliverability(
-    data.guarantor.email,
+    step === 4 ? data.guarantor.email : undefined,
   );
 
   function computeStepValid(values: ProposalFormData) {
@@ -314,15 +318,11 @@ function ProposalWizard({
       return;
     }
 
-    const blockedField =
-      step === 0 &&
-      emailDeliverability.status === EmailDeliverabilityStatus.BLOCKED
-        ? "registration.email"
-        : step === 4 &&
-            guarantorEmailDeliverability.status ===
-              EmailDeliverabilityStatus.BLOCKED
-          ? "guarantor.email"
-          : null;
+    const blockedField = getBlockedEmailField(
+      step,
+      emailDeliverability.status,
+      guarantorEmailDeliverability.status,
+    );
     if (blockedField) {
       setBlockedEmailField(blockedField);
       return;
