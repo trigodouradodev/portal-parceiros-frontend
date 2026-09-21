@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { screen } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { ProposalList } from "@/features/originacao/components/proposta/ProposalList";
@@ -139,6 +139,76 @@ describe("ProposalList", () => {
       "noopener,noreferrer",
     );
     expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("offers only the statuses that occur in practice, plus Todas", async () => {
+    list.mockResolvedValue(pageOf([item()]));
+    const user = userEvent.setup();
+
+    renderList(<ProposalList onOpen={vi.fn()} />);
+
+    await screen.findByText("Maria Silva");
+    await user.click(screen.getByText("Todas"));
+    const dialog = within(screen.getByRole("dialog"));
+
+    for (const label of [
+      "Todas",
+      "Rascunho",
+      "Revisão do cliente",
+      "Pendente de análise",
+      "Pendente com o parceiro",
+      "Falhou",
+      "Aprovada",
+      "Rejeitada",
+    ]) {
+      expect(dialog.getByText(label)).toBeInTheDocument();
+    }
+    expect(dialog.queryByText("Validação automática")).not.toBeInTheDocument();
+    expect(dialog.queryByText("Processando aprovação")).not.toBeInTheDocument();
+    expect(
+      dialog.queryByText("Reprovada automaticamente"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("requests the API filtering by the selected status", async () => {
+    list.mockResolvedValue(pageOf([item()]));
+    const user = userEvent.setup();
+
+    renderList(<ProposalList onOpen={vi.fn()} />);
+
+    await screen.findByText("Maria Silva");
+    await user.click(screen.getByText("Todas"));
+    await user.click(within(screen.getByRole("dialog")).getByText("Aprovada"));
+
+    await waitFor(() => {
+      expect(list).toHaveBeenLastCalledWith(
+        expect.objectContaining({ status: QuoteStatus.APPROVED, page: 1 }),
+      );
+    });
+    expect(
+      await screen.findByRole("button", { name: "Limpar filtros" }),
+    ).toBeInTheDocument();
+  });
+
+  it("clears the status filter along with the search on Limpar filtros", async () => {
+    list.mockResolvedValue(pageOf([item()]));
+    const user = userEvent.setup();
+
+    renderList(<ProposalList onOpen={vi.fn()} />);
+
+    await screen.findByText("Maria Silva");
+    await user.click(screen.getByText("Todas"));
+    await user.click(within(screen.getByRole("dialog")).getByText("Aprovada"));
+    await user.click(
+      await screen.findByRole("button", { name: "Limpar filtros" }),
+    );
+
+    expect(screen.getByText("Todas")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(list).toHaveBeenLastCalledWith(
+        expect.not.objectContaining({ status: expect.anything() }),
+      );
+    });
   });
 
   it("applies backoffice-aligned colors on the status badge", async () => {
