@@ -64,8 +64,6 @@ describe("mapRegistrationToPayload", () => {
       isRenegotiation: true,
       gender: Gender.FEMALE,
       secondaryDocument: "123456789",
-      profession: "Vendedora",
-      economicActivityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
       maritalStatus: MaritalStatus.SINGLE,
       childrenCount: 2,
       householdMembers: 4,
@@ -103,7 +101,9 @@ describe("mapRegistrationToPayload", () => {
       debtCreditor: "Banco",
     });
 
-    expect(payload.economicActivityOther).toBe("Feira livre");
+    expect(payload).not.toHaveProperty("economicActivityCategories");
+    expect(payload).not.toHaveProperty("economicActivityOther");
+    expect(payload).not.toHaveProperty("profession");
     expect(payload.spouseDocument).toBe("52998224725");
     expect(payload.vehicleFinanced).toBe(true);
     expect(payload.householdMembers).toBe(1);
@@ -116,6 +116,8 @@ describe("mapIncomeToPayload", () => {
     const form = createEmptyProposalForm().activityIncome;
     const registration = {
       ...createEmptyProposalForm().registration,
+      occupation: "Vendedora",
+      activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
       businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
       businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
     };
@@ -144,6 +146,8 @@ describe("mapIncomeToPayload", () => {
     );
 
     expect(payload).toEqual({
+      profession: "Vendedora",
+      economicActivityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
       businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
       businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
       activityDuration: ActivityDuration.ONE_TO_3_YEARS,
@@ -169,6 +173,7 @@ describe("mapIncomeToPayload", () => {
       },
       {
         ...createEmptyProposalForm().registration,
+        activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
         businessActivityBranch: BusinessActivityBranch.EDUCATION,
         businessActivitySubcategory: BusinessActivitySubcategory.PRIVATE_TUTOR,
       },
@@ -178,6 +183,27 @@ describe("mapIncomeToPayload", () => {
     expect(payload).not.toHaveProperty("availableIncomeProof");
     expect(payload.additionalIncomes).toEqual([]);
     expect(payload.declaredMonthlyIncome).toBe(1000);
+  });
+
+  it("includes the description when the economic activity is Other", () => {
+    const payload = mapIncomeToPayload(
+      {
+        ...createEmptyProposalForm().activityIncome,
+        activityTime: ActivityDuration.ONE_TO_3_YEARS,
+        monthlyIncome: formatMoneyBrl("100000"),
+        incomeSource: IncomeSource.OWN_BUSINESS,
+        hasMultipleSources: false,
+      },
+      {
+        ...createEmptyProposalForm().registration,
+        activityCategories: [EconomicActivityCategory.OTHER],
+        activityCategoryOther: "Feira livre",
+        businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+        businessActivitySubcategory: BusinessActivitySubcategory.STREET_VENDING,
+      },
+    );
+
+    expect(payload.economicActivityOther).toBe("Feira livre");
   });
 });
 

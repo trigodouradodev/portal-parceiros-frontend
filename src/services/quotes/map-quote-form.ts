@@ -65,8 +65,6 @@ function isMarriedStatus(status: string): boolean {
 export function mapRegistrationToPayload(
   data: RegistrationData,
 ): SaveQuoteRegistrationPayload {
-  const categories =
-    data.activityCategories as SaveQuoteRegistrationPayload["economicActivityCategories"];
   const payload: SaveQuoteRegistrationPayload = {
     name: data.name.trim(),
     document: data.cpf.replace(/\D/g, ""),
@@ -76,7 +74,6 @@ export function mapRegistrationToPayload(
     isRenegotiation: Boolean(data.isRenewal),
     gender: data.gender as Gender,
     secondaryDocument: data.rg.trim(),
-    economicActivityCategories: categories,
     maritalStatus: data.maritalStatus as MaritalStatus,
     childrenCount: parseCount(data.childrenCount),
     householdMembers: Math.max(1, parseCount(data.householdSize)),
@@ -86,14 +83,6 @@ export function mapRegistrationToPayload(
     ownsVehicle: Boolean(data.hasVehicle),
     creditPurpose: data.creditPurpose as CreditPurpose,
   };
-
-  if (categories.includes(EconomicActivityCategory.OTHER)) {
-    payload.economicActivityOther = data.activityCategoryOther.trim();
-  }
-
-  if (requiresProfession(categories)) {
-    payload.profession = data.occupation.trim();
-  }
 
   if (isMarriedStatus(data.maritalStatus)) {
     payload.spouseDocument = data.spouseCpf.replace(/\D/g, "");
@@ -112,7 +101,10 @@ export function mapIncomeToPayload(
   registration: RegistrationData,
 ): SaveQuoteIncomePayload {
   const hasMultiple = Boolean(data.hasMultipleSources);
+  const categories =
+    registration.activityCategories as SaveQuoteIncomePayload["economicActivityCategories"];
   const payload: SaveQuoteIncomePayload = {
+    economicActivityCategories: categories,
     businessActivityBranch:
       registration.businessActivityBranch as SaveQuoteIncomePayload["businessActivityBranch"],
     businessActivitySubcategory:
@@ -129,6 +121,14 @@ export function mapIncomeToPayload(
         }))
       : [],
   };
+
+  if (categories.includes(EconomicActivityCategory.OTHER)) {
+    payload.economicActivityOther = registration.activityCategoryOther.trim();
+  }
+
+  if (requiresProfession(categories)) {
+    payload.profession = registration.occupation.trim();
+  }
 
   return payload;
 }

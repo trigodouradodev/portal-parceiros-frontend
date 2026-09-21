@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  ACTIVITY_CATEGORY_OPTIONS,
   CREDIT_PURPOSE_OPTIONS,
   GENDER_OPTIONS,
   MARITAL_STATUS_OPTIONS,
@@ -62,8 +61,6 @@ describe("mapRegistrationToApi", () => {
       isRenegotiation: true,
       gender: "female",
       secondaryDocument: "12.345.678-9",
-      profession: "Vendedora",
-      economicActivityCategories: ["clt_employee"],
       maritalStatus: "single",
       childrenCount: 0,
       householdMembers: 3,
@@ -97,8 +94,6 @@ describe("mapRegistrationToApi", () => {
       isRenegotiation: false,
       gender: "female",
       secondaryDocument: "12.345.678-9",
-      economicActivityCategories: ["other"],
-      economicActivityOther: "Feirante",
       maritalStatus: "married",
       spouseDocument: "11144477735",
       childrenCount: 0,
@@ -130,19 +125,6 @@ describe("mapRegistrationToApi", () => {
       expect(
         mapRegistrationToApi(completeRegistration({ gender: option.value }))
           .gender,
-      ).toBe(option.value);
-    }
-    for (const option of ACTIVITY_CATEGORY_OPTIONS) {
-      expect(
-        mapRegistrationToApi(
-          completeRegistration({
-            activityCategories: [option.value],
-            activityCategoryOther:
-              option.value === EconomicActivityCategory.OTHER
-                ? "Artesanato"
-                : "",
-          }),
-        ).economicActivityCategories[0],
       ).toBe(option.value);
     }
     for (const option of MARITAL_STATUS_OPTIONS) {

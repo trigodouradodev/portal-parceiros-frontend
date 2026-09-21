@@ -6,11 +6,14 @@ import {
   ActivityDuration,
   BusinessActivityBranch,
   BusinessActivitySubcategory,
+  EconomicActivityCategory,
   IncomeSource,
 } from "@/services/quotes/quotes.enums";
 
 const registration = {
   ...createEmptyProposalForm().registration,
+  occupation: "Vendedora",
+  activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
   businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
   businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
 };
@@ -43,6 +46,8 @@ describe("mapIncomeToApi", () => {
         registration,
       ),
     ).toEqual({
+      profession: "Vendedora",
+      economicActivityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
       businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
       businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
       activityDuration: ActivityDuration.ONE_TO_3_YEARS,
