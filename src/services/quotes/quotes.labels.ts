@@ -1,7 +1,8 @@
 import type { SelectOption } from "@/components/ui/select-option";
 import {
   ActivityDuration,
-  AvailableIncomeProof,
+  BusinessActivityBranch,
+  BusinessActivitySubcategory,
   CreditPurpose,
   CustomerRelationshipDuration,
   CustomerRelationshipOrigin,
@@ -28,6 +29,21 @@ function options(
   return entries.map(([value, label]) => ({ value, label }));
 }
 
+/** Ordena por label em PT-BR (acento não altera a posição da letra). */
+function alphabetical(list: SelectOption[]): SelectOption[] {
+  return [...list].sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
+}
+
+/** Como `alphabetical`, mas mantém a opção `otherValue` sempre por último. */
+function alphabeticalWithOtherLast(
+  list: SelectOption[],
+  otherValue: string,
+): SelectOption[] {
+  const other = list.filter((option) => option.value === otherValue);
+  const rest = list.filter((option) => option.value !== otherValue);
+  return [...alphabetical(rest), ...other];
+}
+
 export const GENDER_OPTIONS = options([
   [Gender.MALE, "Masculino"],
   [Gender.FEMALE, "Feminino"],
@@ -46,6 +62,293 @@ export const ACTIVITY_CATEGORY_OPTIONS = options([
   [EconomicActivityCategory.UNEMPLOYED, "Sem ocupação remunerada/Desempregado"],
   [EconomicActivityCategory.OTHER, "Outros"],
 ]);
+
+/**
+ * Ramo de atividade (AUREA-XXX) — labels alinhadas com a taxonomia real do
+ * Analytics (`analytics.vw_dim_cliente_ocupacao.subgrupo_ocupacional`),
+ * inclusive a barra espaçada usada lá ("Comércio / Varejo").
+ */
+export const BUSINESS_ACTIVITY_BRANCH_OPTIONS = alphabetical(
+  options([
+    [BusinessActivityBranch.RETAIL_COMMERCE, "Comércio / Varejo"],
+    [BusinessActivityBranch.FOOD, "Alimentação"],
+    [BusinessActivityBranch.AGRICULTURE_RURAL, "Agro / Rural"],
+    [BusinessActivityBranch.CONSTRUCTION, "Construção Civil"],
+    [BusinessActivityBranch.TRANSPORTATION, "Transporte"],
+    [BusinessActivityBranch.HEALTH_AND_CARE, "Saúde e Cuidados"],
+    [BusinessActivityBranch.EDUCATION, "Educação"],
+    [BusinessActivityBranch.BEAUTY_AND_AESTHETICS, "Beleza e Estética"],
+    [BusinessActivityBranch.AUTOMOTIVE, "Automotivo"],
+    [BusinessActivityBranch.INDUSTRY_AND_LOGISTICS, "Indústria / Logística"],
+    [BusinessActivityBranch.DOMESTIC_SERVICES, "Serviços Domésticos"],
+    [BusinessActivityBranch.SECURITY, "Segurança"],
+    [
+      BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
+      "Administrativo / Escritório",
+    ],
+  ]),
+);
+
+const OTHER_SUBCATEGORY_OPTION: readonly [string, string] = [
+  BusinessActivitySubcategory.OTHER,
+  "Outro",
+];
+
+/**
+ * Subcategoria de atividade (AUREA-XXX) — uma lista por `BusinessActivityBranch`,
+ * baseada na CNAE (IBGE/Receita Federal) e na lista de atividades permitidas
+ * para MEI (CGSIM). Cada ramo sempre ganha "Outro" como escape ao final.
+ */
+export const BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH: Record<
+  BusinessActivityBranch,
+  SelectOption[]
+> = {
+  [BusinessActivityBranch.RETAIL_COMMERCE]: alphabeticalWithOtherLast(
+    options([
+      [BusinessActivitySubcategory.CLOTHING_AND_FASHION, "Vestuário e Moda"],
+      [
+        BusinessActivitySubcategory.COSMETICS_AND_PERFUMERY,
+        "Cosméticos e Perfumaria",
+      ],
+      [
+        BusinessActivitySubcategory.FOOD_AND_BEVERAGE_COMMERCE,
+        "Comércio de Alimentos e Bebidas",
+      ],
+      [BusinessActivitySubcategory.STREET_VENDING, "Comércio Ambulante"],
+      [
+        BusinessActivitySubcategory.BEVERAGE_DISTRIBUTOR,
+        "Distribuidora de Bebidas",
+      ],
+      [BusinessActivitySubcategory.GENERAL_COMMERCE, "Comércio Geral"],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.FOOD]: alphabeticalWithOtherLast(
+    options([
+      [
+        BusinessActivitySubcategory.RESTAURANT_OR_SNACK_BAR,
+        "Restaurante/Lanchonete",
+      ],
+      [
+        BusinessActivitySubcategory.BAKERY_OR_CONFECTIONERY,
+        "Padaria/Confeitaria",
+      ],
+      [
+        BusinessActivitySubcategory.HOME_MEALS_OR_CATERING,
+        "Marmitex/Comida por encomenda",
+      ],
+      [
+        BusinessActivitySubcategory.FOOD_TRUCK_OR_STREET_FOOD,
+        "Food truck/Comida ambulante",
+      ],
+      [BusinessActivitySubcategory.EVENTS_CATERING, "Buffet/Eventos"],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.AGRICULTURE_RURAL]: alphabeticalWithOtherLast(
+    options([
+      [BusinessActivitySubcategory.CROP_FARMING, "Agricultura (lavoura)"],
+      [BusinessActivitySubcategory.LIVESTOCK, "Pecuária"],
+      [BusinessActivitySubcategory.POULTRY_OR_SWINE, "Avicultura/Suinocultura"],
+      [BusinessActivitySubcategory.FISHING_OR_AQUACULTURE, "Pesca/Aquicultura"],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.CONSTRUCTION]: alphabeticalWithOtherLast(
+    options([
+      [BusinessActivitySubcategory.BRICKLAYER_OR_LABORER, "Pedreiro/Servente"],
+      [
+        BusinessActivitySubcategory.ELECTRICIAN_OR_PLUMBER,
+        "Eletricista/Encanador",
+      ],
+      [
+        BusinessActivitySubcategory.SMALL_CONTRACTOR,
+        "Pequeno empreiteiro/Reforma",
+      ],
+      [BusinessActivitySubcategory.PAINTER, "Pintor"],
+      [
+        BusinessActivitySubcategory.CARPENTRY_OR_MASONRY_WORK,
+        "Marcenaria/Marmoraria",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.TRANSPORTATION]: alphabeticalWithOtherLast(
+    options([
+      [BusinessActivitySubcategory.APP_DRIVER, "Motorista de aplicativo"],
+      [BusinessActivitySubcategory.TAXI_DRIVER, "Taxista"],
+      [
+        BusinessActivitySubcategory.DELIVERY_OR_MOTORCYCLE_COURIER,
+        "Motoboy/Entregador",
+      ],
+      [BusinessActivitySubcategory.FREIGHT_TRANSPORT, "Transporte de carga"],
+      [
+        BusinessActivitySubcategory.SCHOOL_OR_CHARTER_TRANSPORT,
+        "Transporte escolar/fretamento",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.HEALTH_AND_CARE]: alphabeticalWithOtherLast(
+    options([
+      [
+        BusinessActivitySubcategory.ELDERLY_OR_HOME_CAREGIVER,
+        "Cuidador(a) de idosos/Home care",
+      ],
+      [
+        BusinessActivitySubcategory.NURSING_TECHNICIAN,
+        "Técnico(a) de enfermagem",
+      ],
+      [
+        BusinessActivitySubcategory.THERAPIST_OR_PHYSIOTHERAPIST,
+        "Terapeuta/Fisioterapeuta autônomo",
+      ],
+      [
+        BusinessActivitySubcategory.DOMESTIC_CARE_WORKER,
+        "Doméstica de cuidados",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.EDUCATION]: alphabeticalWithOtherLast(
+    options([
+      [
+        BusinessActivitySubcategory.PRIVATE_TUTOR,
+        "Professor(a) particular/Reforço escolar",
+      ],
+      [
+        BusinessActivitySubcategory.DAYCARE_OR_SMALL_SCHOOL,
+        "Creche/Escolinha própria",
+      ],
+      [
+        BusinessActivitySubcategory.LANGUAGE_OR_VOCATIONAL_COURSE,
+        "Curso livre/Idiomas",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.BEAUTY_AND_AESTHETICS]: alphabeticalWithOtherLast(
+    options([
+      [
+        BusinessActivitySubcategory.HAIR_SALON_OR_BARBERSHOP,
+        "Salão de beleza/Barbearia",
+      ],
+      [BusinessActivitySubcategory.MANICURE_OR_PEDICURE, "Manicure/Pedicure"],
+      [
+        BusinessActivitySubcategory.MOBILE_HAIRDRESSER,
+        "Cabeleireiro(a) em domicílio",
+      ],
+      [
+        BusinessActivitySubcategory.MAKEUP_OR_EYEBROW_DESIGN,
+        "Maquiagem/Design de sobrancelhas",
+      ],
+      [
+        BusinessActivitySubcategory.BODY_AESTHETICS_CLINIC,
+        "Estética corporal/Clínica de estética",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.AUTOMOTIVE]: alphabeticalWithOtherLast(
+    options([
+      [BusinessActivitySubcategory.AUTO_REPAIR_SHOP, "Oficina mecânica"],
+      [BusinessActivitySubcategory.AUTO_PARTS, "Autopeças"],
+      [
+        BusinessActivitySubcategory.CAR_WASH_OR_DETAILING,
+        "Lava-rápido/Estética automotiva",
+      ],
+      [BusinessActivitySubcategory.BODY_SHOP_OR_PAINT, "Funilaria/Pintura"],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.INDUSTRY_AND_LOGISTICS]: alphabeticalWithOtherLast(
+    options([
+      [
+        BusinessActivitySubcategory.SMALL_MANUFACTURING,
+        "Pequena fábrica/Produção própria",
+      ],
+      [
+        BusinessActivitySubcategory.GARMENT_OR_SEWING_PRODUCTION,
+        "Confecção/Costura",
+      ],
+      [
+        BusinessActivitySubcategory.CARPENTRY_OR_METALWORK_PRODUCTION,
+        "Marcenaria/Serralheria",
+      ],
+      [
+        BusinessActivitySubcategory.WAREHOUSING_OR_LOGISTICS,
+        "Armazenagem/Logística",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.DOMESTIC_SERVICES]: alphabeticalWithOtherLast(
+    options([
+      [BusinessActivitySubcategory.DAY_LABORER_CLEANING, "Diarista"],
+      [
+        BusinessActivitySubcategory.LIVE_IN_OR_MONTHLY_HOUSEKEEPER,
+        "Empregada mensalista",
+      ],
+      [BusinessActivitySubcategory.LAUNDRY_OR_IRONING, "Lavanderia/Passadeira"],
+      [
+        BusinessActivitySubcategory.CLEANING_TEAM_OR_COMPANY,
+        "Equipe/Empresa de limpeza",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.SECURITY]: alphabeticalWithOtherLast(
+    options([
+      [
+        BusinessActivitySubcategory.SECURITY_GUARD_EMPLOYEE,
+        "Vigilante/Porteiro",
+      ],
+      [
+        BusinessActivitySubcategory.FREELANCE_SECURITY,
+        "Segurança autônomo/eventos",
+      ],
+      [
+        BusinessActivitySubcategory.SECURITY_COMPANY_OWNER,
+        "Empresa própria de segurança",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+  [BusinessActivityBranch.ADMINISTRATIVE_OFFICE]: alphabeticalWithOtherLast(
+    options([
+      [
+        BusinessActivitySubcategory.FREELANCE_ADMIN_ASSISTANT,
+        "Auxiliar administrativo autônomo",
+      ],
+      [
+        BusinessActivitySubcategory.ACCOUNTING_OFFICE,
+        "Contabilidade/Escritório contábil",
+      ],
+      [
+        BusinessActivitySubcategory.VIRTUAL_ASSISTANT_OR_FREELANCER,
+        "Assistente virtual/Freelancer",
+      ],
+      [
+        BusinessActivitySubcategory.REAL_ESTATE_OR_INSURANCE_BROKER,
+        "Corretor(a) (imóveis/seguros)",
+      ],
+      OTHER_SUBCATEGORY_OPTION,
+    ]),
+    BusinessActivitySubcategory.OTHER,
+  ),
+};
 
 export const CREDIT_PURPOSE_OPTIONS = options([
   [CreditPurpose.BUSINESS_WORKING_CAPITAL, "Fluxo de caixa do negócio"],
@@ -97,21 +400,18 @@ export const ACTIVITY_TIME_OPTIONS = options([
   [ActivityDuration.MORE_THAN_5_YEARS, "Mais de 5 anos"],
 ]);
 
+// IncomeSource.MIXED_INCOME não aparece aqui de propósito: com o campo
+// renomeado para "Fonte principal da renda declarada", uma fonte "mista"
+// não faz sentido como resposta — múltiplas fontes já são capturadas por
+// "Possui múltiplas fontes de renda?" + a lista de rendas adicionais. O
+// valor do enum continua existindo só por compatibilidade com dado legado
+// (zero ocorrências em produção na data desta mudança).
 export const INCOME_SOURCE_OPTIONS = options([
   [IncomeSource.SALARY, "Salário"],
   [IncomeSource.OWN_BUSINESS, "Negócio próprio"],
   [IncomeSource.BENEFIT, "Benefício"],
   [IncomeSource.RENT, "Aluguel"],
-  [IncomeSource.MIXED_INCOME, "Renda mista"],
   [IncomeSource.OTHER, "Outro"],
-]);
-
-export const INCOME_PROOF_OPTIONS = options([
-  [AvailableIncomeProof.PAYSLIP, "Holerite"],
-  [AvailableIncomeProof.BANK_STATEMENT, "Extrato bancário"],
-  [AvailableIncomeProof.DAS_MEI, "DAS-MEI"],
-  [AvailableIncomeProof.INSS_BENEFIT, "Benefício INSS"],
-  [AvailableIncomeProof.NONE, "Nenhum"],
 ]);
 
 export const RELATIONSHIP_TIME_OPTIONS = options([

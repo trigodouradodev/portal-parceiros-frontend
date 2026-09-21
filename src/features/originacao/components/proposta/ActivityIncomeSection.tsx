@@ -1,12 +1,20 @@
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Wallet } from "lucide-react";
+import { FormField } from "@/components/ui/form";
 import { FormInput, FormSelect, FormYesNo } from "@/components/ui/rhf-fields";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import {
-  INCOME_PROOF_OPTIONS,
+  ACTIVITY_CATEGORY_OPTIONS,
+  ACTIVITY_TIME_OPTIONS,
+  BUSINESS_ACTIVITY_BRANCH_OPTIONS,
+  BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH,
   INCOME_SOURCE_OPTIONS,
+  OTHER_OPTION,
+  requiresProfession,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 import { formatMoneyBrl } from "@/lib/format/money";
+import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
   RemovableCard,
   RepeatableGroup,
@@ -16,6 +24,15 @@ export function ActivityIncomeSection() {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
   const hasMultipleSources = watch("activityIncome.hasMultipleSources");
   const nextAdditionalIncomeId = watch("activityIncome.nextAdditionalIncomeId");
+  const activityCategories = watch("registration.activityCategories");
+  const professionRequired = requiresProfession(activityCategories);
+  const businessActivityBranch = watch("registration.businessActivityBranch");
+  const subcategoryOptions =
+    BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[businessActivityBranch] ??
+    [];
+  const branchLabel = BUSINESS_ACTIVITY_BRANCH_OPTIONS.find(
+    (option) => option.value === businessActivityBranch,
+  )?.label;
   const {
     fields: additionalIncomes,
     append: appendAdditionalIncome,
@@ -26,6 +43,22 @@ export function ActivityIncomeSection() {
     name: "activityIncome.additionalIncomes",
     keyName: "fieldId",
   });
+
+  function handleBranchChange(nextBranch: string) {
+    const nextOptions =
+      BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[nextBranch] ?? [];
+    const currentSubcategory = watch(
+      "registration.businessActivitySubcategory",
+    );
+    const stillValid = nextOptions.some(
+      (option) => option.value === currentSubcategory,
+    );
+    if (!stillValid) {
+      setValue("registration.businessActivitySubcategory", "", {
+        shouldValidate: true,
+      });
+    }
+  }
 
   function addAdditionalIncome() {
     appendAdditionalIncome({
@@ -52,9 +85,68 @@ export function ActivityIncomeSection() {
 
   return (
     <div className="flex flex-col gap-5">
+      <FormSection title="Atividade profissional">
+        <FormField
+          control={control}
+          name="registration.activityCategories"
+          render={({ field, fieldState }) => (
+            <SelectDialogField
+              name={field.name}
+              label="Atividade econômica"
+              value={field.value[0] ?? ""}
+              onChange={(value) => field.onChange(value ? [value] : [])}
+              options={ACTIVITY_CATEGORY_OPTIONS}
+              required
+              error={fieldState.error?.message}
+            />
+          )}
+        />
+        {activityCategories.includes(OTHER_OPTION) ? (
+          <FormInput<ProposalFormData>
+            name="registration.activityCategoryOther"
+            label="Qual?"
+            placeholder="Descreva a ocupação"
+            required
+          />
+        ) : null}
+
+        {professionRequired ? (
+          <FormInput<ProposalFormData>
+            name="registration.occupation"
+            label="Profissão"
+            placeholder="Informe a profissão"
+            required
+          />
+        ) : null}
+
+        <FormSelect<ProposalFormData>
+          name="registration.businessActivityBranch"
+          label="Ramo de atividade"
+          options={BUSINESS_ACTIVITY_BRANCH_OPTIONS}
+          onValueChange={handleBranchChange}
+          required
+        />
+        {businessActivityBranch ? (
+          <FormSelect<ProposalFormData>
+            name="registration.businessActivitySubcategory"
+            label={`Subcategoria de ${branchLabel}`}
+            options={subcategoryOptions}
+            required
+          />
+        ) : null}
+
+        <FormSelect<ProposalFormData>
+          name="activityIncome.activityTime"
+          label="Tempo na atividade"
+          options={ACTIVITY_TIME_OPTIONS}
+          required
+        />
+      </FormSection>
+
       <FormInput<ProposalFormData>
         name="activityIncome.monthlyIncome"
         label="Renda mensal declarada"
+        hint="Renda da atividade principal informada nesta tela."
         transform={formatMoneyBrl}
         icon={<Wallet size={16} />}
         placeholder="R$ 0,00"
@@ -64,7 +156,8 @@ export function ActivityIncomeSection() {
 
       <FormSelect<ProposalFormData>
         name="activityIncome.incomeSource"
-        label="Fonte da renda"
+        label="Fonte principal da renda declarada"
+        hint="Refere-se apenas à renda declarada acima — outras fontes são informadas a seguir."
         options={INCOME_SOURCE_OPTIONS}
         required
       />
@@ -72,6 +165,7 @@ export function ActivityIncomeSection() {
       <FormYesNo<ProposalFormData>
         name="activityIncome.hasMultipleSources"
         label="Possui múltiplas fontes de renda?"
+        hint="Considere renda além da atividade principal: aluguel, pensão, outro trabalho, etc."
         onChange={handleMultipleSourcesChange}
       />
 
@@ -110,13 +204,6 @@ export function ActivityIncomeSection() {
           ))}
         </RepeatableGroup>
       ) : null}
-
-      <FormSelect<ProposalFormData>
-        name="activityIncome.availableProof"
-        label="Comprovante disponível?"
-        options={INCOME_PROOF_OPTIONS}
-        required
-      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type { SimulationSnapshot } from "@/features/originacao/types";
 import { digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import {
+  BusinessActivityBranch,
   CreditPurpose,
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
@@ -16,6 +17,7 @@ import {
 import {
   ACTIVITY_CATEGORY_OPTIONS as QUOTE_ACTIVITY_CATEGORY_OPTIONS,
   ACTIVITY_TIME_OPTIONS as QUOTE_ACTIVITY_TIME_OPTIONS,
+  BUSINESS_ACTIVITY_BRANCH_OPTIONS as QUOTE_BUSINESS_ACTIVITY_BRANCH_OPTIONS,
   CREDIT_PURPOSE_OPTIONS as QUOTE_CREDIT_PURPOSE_OPTIONS,
   CREDITOR_INSTITUTION_OPTIONS as QUOTE_CREDITOR_INSTITUTION_OPTIONS,
   EXPENSE_CATEGORY_OPTIONS as QUOTE_EXPENSE_CATEGORY_OPTIONS,
@@ -23,7 +25,6 @@ import {
   GOVERNMENT_PROGRAM_OPTIONS as QUOTE_GOVERNMENT_PROGRAM_OPTIONS,
   HOW_KNOWS_CLIENT_OPTIONS as QUOTE_HOW_KNOWS_CLIENT_OPTIONS,
   DOCUMENTATION_INCOME_PROOF_OPTIONS as QUOTE_DOCUMENTATION_INCOME_PROOF_OPTIONS,
-  INCOME_PROOF_OPTIONS as QUOTE_INCOME_PROOF_OPTIONS,
   INCOME_SOURCE_OPTIONS as QUOTE_INCOME_SOURCE_OPTIONS,
   KINSHIP_OPTIONS as QUOTE_KINSHIP_OPTIONS,
   LOAN_CATEGORY_OPTIONS as QUOTE_LOAN_CATEGORY_OPTIONS,
@@ -34,6 +35,7 @@ import {
   PROPERTY_STATUS_OPTIONS as QUOTE_PROPERTY_STATUS_OPTIONS,
   RELATIONSHIP_TIME_OPTIONS as QUOTE_RELATIONSHIP_TIME_OPTIONS,
   RESIDENCE_TIME_OPTIONS as QUOTE_RESIDENCE_TIME_OPTIONS,
+  BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH as QUOTE_BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH,
 } from "@/services/quotes/quotes.labels";
 
 export const PROPOSAL_STEPS = [
@@ -92,9 +94,14 @@ export const MARITAL_STATUS_OPTIONS: SelectOption[] =
   QUOTE_MARITAL_STATUS_OPTIONS;
 export const ACTIVITY_TIME_OPTIONS: SelectOption[] =
   QUOTE_ACTIVITY_TIME_OPTIONS;
+export const BUSINESS_ACTIVITY_BRANCH_OPTIONS: SelectOption[] =
+  QUOTE_BUSINESS_ACTIVITY_BRANCH_OPTIONS;
+export const BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH: Record<
+  string,
+  SelectOption[]
+> = QUOTE_BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH;
 export const INCOME_SOURCE_OPTIONS: SelectOption[] =
   QUOTE_INCOME_SOURCE_OPTIONS;
-export const INCOME_PROOF_OPTIONS: SelectOption[] = QUOTE_INCOME_PROOF_OPTIONS;
 export const RELATIONSHIP_TIME_OPTIONS: SelectOption[] =
   QUOTE_RELATIONSHIP_TIME_OPTIONS;
 export const HOW_KNOWS_CLIENT_OPTIONS: SelectOption[] =
@@ -157,6 +164,29 @@ export const INCOME_DOCUMENT_TYPE_OPTIONS: SelectOption[] =
 
 export const DEBT_PURPOSE = CreditPurpose.DEBT_PAYOFF_OR_REFINANCING;
 export const OTHER_OPTION = EconomicActivityCategory.OTHER;
+export const RETAIL_COMMERCE_BRANCH = BusinessActivityBranch.RETAIL_COMMERCE;
+
+/**
+ * Categorias em que profissão faz sentido como dado próprio da pessoa —
+ * CLT e Servidor Público porque Ramo de atividade pode ser o setor do
+ * empregador (distinto do cargo da pessoa); Aposentado e Desempregado
+ * porque não têm Ramo de atividade em curso para descrever a ocupação.
+ * Empresário/Autônomo ficam de fora: a Subcategoria já descreve a
+ * atividade de forma estruturada.
+ */
+const PROFESSION_REQUIRED_CATEGORIES: string[] = [
+  EconomicActivityCategory.CLT_EMPLOYEE,
+  EconomicActivityCategory.PUBLIC_SERVANT,
+  EconomicActivityCategory.RETIRED_OR_PENSIONER,
+  EconomicActivityCategory.UNEMPLOYED,
+];
+
+export function requiresProfession(activityCategories: string[]): boolean {
+  if (!Array.isArray(activityCategories)) return false;
+  return activityCategories.some((category) =>
+    PROFESSION_REQUIRED_CATEGORIES.includes(category),
+  );
+}
 export const NONE_PROGRAM = GovernmentProgram.NONE;
 export const HOW_KNOWS_OTHER = CustomerRelationshipOrigin.OTHER;
 export const AUREA_REFERRAL_OPTION =
@@ -178,6 +208,8 @@ export interface RegistrationData {
   gender: string;
   rg: string;
   occupation: string;
+  businessActivityBranch: string;
+  businessActivitySubcategory: string;
   activityCategories: string[];
   activityCategoryOther: string;
   maritalStatus: string;
@@ -208,7 +240,6 @@ export interface ActivityIncomeData {
   hasMultipleSources: boolean | null;
   additionalIncomes: AdditionalIncomeItem[];
   nextAdditionalIncomeId: number;
-  availableProof: string;
 }
 
 export interface AddressValue {
@@ -337,6 +368,8 @@ export function createEmptyProposalForm(): ProposalFormData {
       gender: "",
       rg: "",
       occupation: "",
+      businessActivityBranch: "",
+      businessActivitySubcategory: "",
       activityCategories: [],
       activityCategoryOther: "",
       maritalStatus: "",
@@ -360,7 +393,6 @@ export function createEmptyProposalForm(): ProposalFormData {
       hasMultipleSources: null,
       additionalIncomes: [],
       nextAdditionalIncomeId: 1,
-      availableProof: "",
     },
     address: {
       ...EMPTY_ADDRESS,

@@ -5,6 +5,8 @@ import {
   nextWizardStepIndex,
 } from "@/features/originacao/mappers/map-quote-detail-to-form";
 import {
+  BusinessActivityBranch,
+  BusinessActivitySubcategory,
   CreditPurpose,
   EconomicActivityCategory,
   Gender,
@@ -48,6 +50,9 @@ function baseDetail(overrides: Partial<QuoteDetail> = {}): QuoteDetail {
       gender: Gender.FEMALE,
       secondaryDocument: "1234567",
       profession: "Vendedora",
+      businessActivityBranch: BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
+      businessActivitySubcategory:
+        BusinessActivitySubcategory.ACCOUNTING_OFFICE,
       economicActivityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
       economicActivityOther: null,
       maritalStatus: MaritalStatus.SINGLE,
@@ -142,6 +147,12 @@ describe("mapQuoteDetailToProposal", () => {
     expect(proposal.data.registration.email).toBe("maria@example.com");
     expect(proposal.data.registration.phone).toBe("(11) 99999-0000");
     expect(proposal.data.registration.occupation).toBe("Vendedora");
+    expect(proposal.data.registration.businessActivityBranch).toBe(
+      BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
+    );
+    expect(proposal.data.registration.businessActivitySubcategory).toBe(
+      BusinessActivitySubcategory.ACCOUNTING_OFFICE,
+    );
     expect(proposal.data.registration.childrenCount).toBe("0");
     expect(proposal.data.registration.householdSize).toBe("2");
     expect(proposal.data.activityIncome.monthlyIncome).toMatch(/2\.500/);

@@ -2,11 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createEmptyProposalForm } from "@/features/originacao/data/proposal";
 import { mapIncomeToApi } from "@/features/originacao/mappers/map-income-to-api";
 import { formatMoneyBrl } from "@/lib/format/money";
-import {
-  ActivityDuration,
-  AvailableIncomeProof,
-  IncomeSource,
-} from "@/services/quotes/quotes.enums";
+import { ActivityDuration, IncomeSource } from "@/services/quotes/quotes.enums";
 
 describe("mapIncomeToApi", () => {
   it("maps activity/income form fields to the income PATCH payload", () => {
@@ -31,7 +27,6 @@ describe("mapIncomeToApi", () => {
             amount: formatMoneyBrl("25000"),
           },
         ],
-        availableProof: AvailableIncomeProof.PAYSLIP,
       }),
     ).toEqual({
       activityDuration: ActivityDuration.ONE_TO_3_YEARS,
@@ -42,7 +37,6 @@ describe("mapIncomeToApi", () => {
         { source: IncomeSource.RENT, amount: 800 },
         { source: IncomeSource.OTHER, amount: 250 },
       ],
-      availableIncomeProof: AvailableIncomeProof.PAYSLIP,
     });
   });
 
@@ -54,10 +48,10 @@ describe("mapIncomeToApi", () => {
       monthlyIncome: formatMoneyBrl("100000"),
       incomeSource: IncomeSource.OWN_BUSINESS,
       hasMultipleSources: false,
-      availableProof: AvailableIncomeProof.NONE,
     });
 
     expect(payload).not.toHaveProperty("businessDocument");
+    expect(payload).not.toHaveProperty("availableIncomeProof");
     expect(payload.additionalIncomes).toEqual([]);
     expect(payload.hasMultipleIncomeSources).toBe(false);
     expect(payload.declaredMonthlyIncome).toBe(1000);
@@ -69,7 +63,6 @@ describe("mapIncomeToApi", () => {
       ...form,
       monthlyIncome: formatMoneyBrl("100000"),
       incomeSource: IncomeSource.SALARY,
-      availableProof: AvailableIncomeProof.PAYSLIP,
     });
     expect(payload.activityDuration).toBe(ActivityDuration.LESS_THAN_6_MONTHS);
   });

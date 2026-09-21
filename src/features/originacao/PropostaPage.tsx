@@ -32,17 +32,16 @@ import {
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
+  OTHER_OPTION,
   PROPOSAL_STEPS,
   applyRegistrationIdentityToSimulation,
+  requiresProfession,
   type ProposalFormData,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getBackofficeQuoteUrl } from "@/lib/backoffice";
-import {
-  AvailableIncomeProof,
-  QuoteStatus,
-} from "@/services/quotes/quotes.enums";
+import { QuoteStatus } from "@/services/quotes/quotes.enums";
 import { isQuoteInBackoffice } from "@/services/quotes/quotes.status";
 import {
   isActivityIncomeValid,
@@ -232,17 +231,28 @@ function ProposalWizard({
   const { simulation, step } = proposal;
 
   function computeStepValid(values: ProposalFormData) {
-    const incomeProofRequired =
-      values.activityIncome.availableProof !== AvailableIncomeProof.NONE;
+    const subcategoryValid =
+      values.registration.businessActivityBranch.trim() === "" ||
+      values.registration.businessActivitySubcategory.trim() !== "";
+    const activityCategoryOtherValid =
+      !values.registration.activityCategories.includes(OTHER_OPTION) ||
+      values.registration.activityCategoryOther.trim() !== "";
+    const occupationValid =
+      !requiresProfession(values.registration.activityCategories) ||
+      values.registration.occupation.trim().length >= 2;
     return [
       isRegistrationValid(values.registration),
-      isActivityIncomeValid(values.activityIncome),
+      isActivityIncomeValid(values.activityIncome) &&
+        values.registration.activityCategories.length > 0 &&
+        activityCategoryOtherValid &&
+        occupationValid &&
+        values.registration.businessActivityBranch.trim() !== "" &&
+        subcategoryValid,
       isAddressValid(values.address),
-      isPartnerOpinionValid(values.partnerOpinion) &&
-        values.activityIncome.activityTime.trim() !== "",
+      isPartnerOpinionValid(values.partnerOpinion),
       isGuarantorValid(values.guarantor),
       isFinancialValid(values.financial),
-      isDocumentsValid(values.documents, incomeProofRequired),
+      isDocumentsValid(values.documents),
     ];
   }
 
@@ -308,9 +318,17 @@ function ProposalWizard({
     }
     if (step === 1) {
       try {
+        const values = form.getValues();
+        // Ramo de atividade/Subcategoria são dados do Cadastro, mas são
+        // exigidos e editados aqui — reenviar o registration garante que
+        // a escolha feita neste step seja persistida.
+        await saveRegistration({
+          quoteId: proposal.id,
+          registration: values.registration,
+        });
         await saveIncome({
           quoteId: proposal.id,
-          activityIncome: form.getValues().activityIncome,
+          activityIncome: values.activityIncome,
         });
       } catch (err) {
         showToast(

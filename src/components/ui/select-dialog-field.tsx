@@ -1,15 +1,17 @@
-import { useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, ChevronDown, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { SelectOption } from "@/components/ui/select-option";
 import {
   FieldErrorMessage,
+  FieldHint,
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
@@ -18,6 +20,16 @@ import {
   fieldIconClassName,
 } from "@/components/ui/field-control";
 import { cn } from "@/lib/utils";
+
+/** A partir desse total de opções, o Dialog ganha um campo de busca. */
+const SEARCH_THRESHOLD = 8;
+
+function normalizeForSearch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
 
 interface SelectDialogFieldProps {
   name?: string;
@@ -31,6 +43,7 @@ interface SelectDialogFieldProps {
   selectedLabelClassName?: string;
   required?: boolean;
   error?: string;
+  hint?: string;
   disabled?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -44,6 +57,10 @@ interface SelectDialogFieldProps {
  * em telas estreitas acaba sobrepondo os campos abaixo dele de um jeito confuso.
  * O Dialog já resolve isso em qualquer largura de tela (mesmo padrão do
  * DateFilterField).
+ *
+ * Listas com mais de `SEARCH_THRESHOLD` opções ganham automaticamente um
+ * campo de busca no topo do Dialog, que filtra por label (sem diferenciar
+ * maiúsculas/acentos). Listas curtas continuam sem esse campo extra.
  */
 export function SelectDialogField({
   name,
@@ -57,20 +74,32 @@ export function SelectDialogField({
   selectedLabelClassName,
   required,
   error,
+  hint,
   disabled,
   open: openProp,
   onOpenChange,
   hideTrigger = false,
 }: SelectDialogFieldProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : uncontrolledOpen;
   const selected = options.find((option) => option.value === value);
   const title = dialogTitle ?? label ?? placeholder;
+  const showSearch = options.length > SEARCH_THRESHOLD;
+
+  const filteredOptions = useMemo(() => {
+    if (!showSearch || search.trim() === "") return options;
+    const query = normalizeForSearch(search);
+    return options.filter((option) =>
+      normalizeForSearch(option.label).includes(query),
+    );
+  }, [options, search, showSearch]);
 
   function handleOpenChange(next: boolean) {
     if (disabled && next) return;
     if (!isControlled) setUncontrolledOpen(next);
+    if (!next) setSearch("");
     onOpenChange?.(next);
   }
 
@@ -85,8 +114,23 @@ export function SelectDialogField({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
+        {showSearch ? (
+          <div className="relative">
+            <Search
+              size={16}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar..."
+              autoFocus
+              className="pl-9"
+            />
+          </div>
+        ) : null}
         <div className="-mx-1 flex max-h-[60vh] flex-col gap-1 overflow-y-auto px-1">
-          {options.map((option) => {
+          {filteredOptions.map((option) => {
             const isSelected = option.value === value;
             return (
               <button
@@ -105,6 +149,11 @@ export function SelectDialogField({
               </button>
             );
           })}
+          {showSearch && filteredOptions.length === 0 ? (
+            <p className="px-3 py-2.5 text-sm text-muted-foreground">
+              Nenhum resultado encontrado.
+            </p>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
@@ -144,6 +193,7 @@ export function SelectDialogField({
         <ChevronDown size={16} className={fieldIconClassName} />
       </button>
       <FieldErrorMessage error={error} />
+      {hint && !error ? <FieldHint>{hint}</FieldHint> : null}
       {dialog}
     </div>
   );

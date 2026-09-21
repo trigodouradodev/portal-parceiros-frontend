@@ -5,6 +5,7 @@ import {
   AUREA_REFERRAL_OPTION,
   OTHER_OPTION,
   hasSpouse,
+  requiresProfession,
   type ActivityIncomeData,
   type AddressData,
   type DocumentsData,
@@ -23,7 +24,6 @@ import { isCompleteCep } from "@/features/originacao/utils/format-cep";
 import { parseMoneyBrl } from "@/lib/format/money";
 import { digitsOnlyPhone } from "@/lib/format/phone";
 import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
-import { AvailableIncomeProof } from "@/services/quotes/quotes.enums";
 import { addPaymentPixFormatIssues } from "@/features/originacao/schemas/pix-key-validation";
 
 export const REQUIRED_FIELD_MESSAGE = "Campo obrigatório";
@@ -107,9 +107,11 @@ function registrationSchemaFor(data: RegistrationData) {
       gender: requiredString,
       cpf: cpfSchema(true),
       rg: requiredString,
-      activityCategories: z.array(z.string()).min(1, REQUIRED_FIELD_MESSAGE),
+      activityCategories: z.array(z.string()),
       activityCategoryOther: z.string(),
-      occupation: z.string().trim().min(2, REQUIRED_FIELD_MESSAGE),
+      occupation: z.string(),
+      businessActivityBranch: z.string(),
+      businessActivitySubcategory: z.string(),
       email: z
         .string()
         .trim()
@@ -141,16 +143,6 @@ function registrationSchemaFor(data: RegistrationData) {
       debtCreditor: z.string(),
     })
     .superRefine((form, ctx) => {
-      if (
-        form.activityCategories.includes(OTHER_OPTION) &&
-        form.activityCategoryOther.trim() === ""
-      ) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["activityCategoryOther"],
-          message: REQUIRED_FIELD_MESSAGE,
-        });
-      }
       if (form.hasVehicle === true && form.vehicleFinanced == null) {
         ctx.addIssue({
           code: "custom",
@@ -180,7 +172,7 @@ function registrationSchemaFor(data: RegistrationData) {
 export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z
   .object({
     cnpj: z.string(),
-    activityTime: z.string(),
+    activityTime: requiredString,
     monthlyIncome: positiveMoneyString(),
     incomeSource: requiredString,
     hasMultipleSources: z.boolean().nullable(),
@@ -192,7 +184,6 @@ export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z
       }),
     ),
     nextAdditionalIncomeId: z.number(),
-    availableProof: requiredString,
   })
   .superRefine((data, ctx) => {
     if (
@@ -279,49 +270,45 @@ export const financialSchema: z.ZodType<FinancialData> = z
     addPaymentPixFormatIssues(data, ctx, ["paymentPixCode"]);
   });
 
-export const documentsSchema: z.ZodType<DocumentsData> = z.object({
-  identification: z
-    .array(
+export const documentsSchema: z.ZodType<DocumentsData> = z
+  .object({
+    identification: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          filename: z.string().min(1),
+          incomeProofType: z.string().optional(),
+        }),
+      )
+      .min(1, REQUIRED_FIELD_MESSAGE),
+    proofOfResidence: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          filename: z.string().min(1),
+          incomeProofType: z.string().optional(),
+        }),
+      )
+      .min(1, REQUIRED_FIELD_MESSAGE),
+    activityPhotos: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          filename: z.string().min(1),
+          incomeProofType: z.string().optional(),
+        }),
+      )
+      .min(1, REQUIRED_FIELD_MESSAGE),
+    incomeProofTypes: z.array(z.string()),
+    incomeProofs: z.array(
       z.object({
         id: z.string().min(1),
         filename: z.string().min(1),
         incomeProofType: z.string().optional(),
       }),
-    )
-    .min(1, REQUIRED_FIELD_MESSAGE),
-  proofOfResidence: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        filename: z.string().min(1),
-        incomeProofType: z.string().optional(),
-      }),
-    )
-    .min(1, REQUIRED_FIELD_MESSAGE),
-  activityPhotos: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        filename: z.string().min(1),
-        incomeProofType: z.string().optional(),
-      }),
-    )
-    .min(1, REQUIRED_FIELD_MESSAGE),
-  incomeProofTypes: z.array(z.string()),
-  incomeProofs: z.array(
-    z.object({
-      id: z.string().min(1),
-      filename: z.string().min(1),
-      incomeProofType: z.string().optional(),
-    }),
-  ),
-});
-
-function documentsSchemaFor(
-  incomeProofRequired: boolean,
-): z.ZodType<DocumentsData> {
-  if (!incomeProofRequired) return documentsSchema;
-  return documentsSchema.superRefine((data, ctx) => {
+    ),
+  })
+  .superRefine((data, ctx) => {
     if (data.incomeProofTypes.length === 0) {
       ctx.addIssue({
         code: "custom",
@@ -337,7 +324,6 @@ function documentsSchemaFor(
       });
     }
   });
-}
 
 const STEP_SCHEMAS = [
   null,
@@ -346,7 +332,7 @@ const STEP_SCHEMAS = [
   partnerOpinionSchema,
   guarantorSchema,
   financialSchema,
-  null,
+  documentsSchema,
 ] as const;
 
 type StepKey = keyof ProposalFormData;
@@ -367,28 +353,60 @@ export function parseProposalStep(step: number, data: ProposalFormData) {
       data.registration,
     );
   }
-  if (step === 3) {
-    const parsed = partnerOpinionSchema.safeParse(data.partnerOpinion);
-    if (!parsed.success) return parsed;
-    if (data.activityIncome.activityTime.trim() === "") {
-      return {
-        success: false as const,
-        error: {
-          issues: [
-            {
-              path: ["activityIncome", "activityTime"],
-              message: REQUIRED_FIELD_MESSAGE,
-            },
-          ],
-        },
-      };
+  if (step === 1) {
+    // Atividade econômica, Profissão, Ramo de atividade e Subcategoria são
+    // dados de `registration`, mas são exigidos e editados neste step — as
+    // checagens abaixo seguem a mesma ordem visual da tela.
+    const issues: Array<{ path: string[]; message: string }> = [];
+    if (data.registration.activityCategories.length === 0) {
+      issues.push({
+        path: ["registration", "activityCategories"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    } else if (
+      data.registration.activityCategories.includes(OTHER_OPTION) &&
+      data.registration.activityCategoryOther.trim() === ""
+    ) {
+      issues.push({
+        path: ["registration", "activityCategoryOther"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    }
+    if (
+      requiresProfession(data.registration.activityCategories) &&
+      data.registration.occupation.trim().length < 2
+    ) {
+      issues.push({
+        path: ["registration", "occupation"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    }
+    if (data.registration.businessActivityBranch.trim() === "") {
+      issues.push({
+        path: ["registration", "businessActivityBranch"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    } else if (data.registration.businessActivitySubcategory.trim() === "") {
+      issues.push({
+        path: ["registration", "businessActivitySubcategory"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    }
+
+    const parsed = activityIncomeSchema.safeParse(data.activityIncome);
+    if (!parsed.success) {
+      issues.push(
+        ...parsed.error.issues.map((issue) => ({
+          path: issue.path.map(String),
+          message: issue.message,
+        })),
+      );
+    }
+
+    if (issues.length > 0) {
+      return { success: false as const, error: { issues } };
     }
     return parsed;
-  }
-  if (step === 6) {
-    const incomeProofRequired =
-      data.activityIncome.availableProof !== AvailableIncomeProof.NONE;
-    return documentsSchemaFor(incomeProofRequired).safeParse(data.documents);
   }
   const key = STEP_KEYS[step];
   const schema = STEP_SCHEMAS[step];
@@ -422,9 +440,6 @@ export function isFinancialValid(data: FinancialData): boolean {
   return financialSchema.safeParse(data).success;
 }
 
-export function isDocumentsValid(
-  data: DocumentsData,
-  incomeProofRequired = true,
-): boolean {
-  return documentsSchemaFor(incomeProofRequired).safeParse(data).success;
+export function isDocumentsValid(data: DocumentsData): boolean {
+  return documentsSchema.safeParse(data).success;
 }

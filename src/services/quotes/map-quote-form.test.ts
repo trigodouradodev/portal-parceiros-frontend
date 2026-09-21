@@ -3,7 +3,8 @@ import { createEmptyProposalForm } from "@/features/originacao/data/proposal";
 import { formatMoneyBrl } from "@/lib/format/money";
 import {
   ActivityDuration,
-  AvailableIncomeProof,
+  BusinessActivityBranch,
+  BusinessActivitySubcategory,
   CreditPurpose,
   CustomerRelationshipDuration,
   CustomerRelationshipOrigin,
@@ -40,6 +41,9 @@ describe("mapRegistrationToPayload", () => {
       gender: Gender.FEMALE,
       rg: "123456789",
       occupation: "Vendedora",
+      businessActivityBranch: BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
+      businessActivitySubcategory:
+        BusinessActivitySubcategory.ACCOUNTING_OFFICE,
       activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
       maritalStatus: MaritalStatus.SINGLE,
       childrenCount: "2",
@@ -61,6 +65,9 @@ describe("mapRegistrationToPayload", () => {
       gender: Gender.FEMALE,
       secondaryDocument: "123456789",
       profession: "Vendedora",
+      businessActivityBranch: BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
+      businessActivitySubcategory:
+        BusinessActivitySubcategory.ACCOUNTING_OFFICE,
       economicActivityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
       maritalStatus: MaritalStatus.SINGLE,
       childrenCount: 2,
@@ -81,6 +88,8 @@ describe("mapRegistrationToPayload", () => {
       gender: Gender.MALE,
       rg: "987654321",
       occupation: "Feirante",
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+      businessActivitySubcategory: BusinessActivitySubcategory.STREET_VENDING,
       activityCategories: [EconomicActivityCategory.OTHER],
       activityCategoryOther: "Feira livre",
       maritalStatus: MaritalStatus.MARRIED,
@@ -98,10 +107,33 @@ describe("mapRegistrationToPayload", () => {
     });
 
     expect(payload.economicActivityOther).toBe("Feira livre");
+    expect(payload.businessActivitySubcategory).toBe(
+      BusinessActivitySubcategory.STREET_VENDING,
+    );
     expect(payload.spouseDocument).toBe("52998224725");
     expect(payload.vehicleFinanced).toBe(true);
     expect(payload.householdMembers).toBe(1);
     expect(payload).not.toHaveProperty("debtDescription");
+  });
+
+  it("always includes businessActivitySubcategory, regardless of the branch", () => {
+    const form = createEmptyProposalForm().registration;
+    const payload = mapRegistrationToPayload({
+      ...form,
+      occupation: "Professora",
+      businessActivityBranch: BusinessActivityBranch.EDUCATION,
+      businessActivitySubcategory: BusinessActivitySubcategory.PRIVATE_TUTOR,
+      activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
+      maritalStatus: MaritalStatus.SINGLE,
+      propertyStatus: HousingStatus.RENTED,
+      residenceTime: ResidenceDuration.MORE_THAN_5_YEARS,
+      hasVehicle: false,
+      creditPurpose: CreditPurpose.PERSONAL_EXPENSE,
+    });
+
+    expect(payload.businessActivitySubcategory).toBe(
+      BusinessActivitySubcategory.PRIVATE_TUTOR,
+    );
   });
 });
 
@@ -127,7 +159,6 @@ describe("mapIncomeToPayload", () => {
           amount: formatMoneyBrl("25000"),
         },
       ],
-      availableProof: AvailableIncomeProof.PAYSLIP,
     });
 
     expect(payload).toEqual({
@@ -139,7 +170,6 @@ describe("mapIncomeToPayload", () => {
         { source: IncomeSource.RENT, amount: 800 },
         { source: IncomeSource.OTHER, amount: 250 },
       ],
-      availableIncomeProof: AvailableIncomeProof.PAYSLIP,
     });
   });
 
@@ -151,10 +181,10 @@ describe("mapIncomeToPayload", () => {
       monthlyIncome: formatMoneyBrl("100000"),
       incomeSource: IncomeSource.OWN_BUSINESS,
       hasMultipleSources: false,
-      availableProof: AvailableIncomeProof.NONE,
     });
 
     expect(payload.businessDocument).toBeUndefined();
+    expect(payload).not.toHaveProperty("availableIncomeProof");
     expect(payload.additionalIncomes).toEqual([]);
     expect(payload.declaredMonthlyIncome).toBe(1000);
   });

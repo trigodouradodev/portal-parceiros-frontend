@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   ACTIVITY_CATEGORY_OPTIONS,
+  BUSINESS_ACTIVITY_BRANCH_OPTIONS,
+  BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH,
   CREDIT_PURPOSE_OPTIONS,
   GENDER_OPTIONS,
   MARITAL_STATUS_OPTIONS,
@@ -11,6 +13,8 @@ import {
 } from "@/features/originacao/data/proposal";
 import { mapRegistrationToApi } from "@/features/originacao/mappers/map-registration-to-api";
 import {
+  BusinessActivityBranch,
+  BusinessActivitySubcategory,
   CreditPurpose,
   EconomicActivityCategory,
   Gender,
@@ -34,6 +38,8 @@ function completeRegistration(
     gender: Gender.FEMALE,
     rg: "12.345.678-9",
     occupation: "Vendedora",
+    businessActivityBranch: BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
+    businessActivitySubcategory: BusinessActivitySubcategory.ACCOUNTING_OFFICE,
     activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
     maritalStatus: MaritalStatus.SINGLE,
     childrenCount: "0",
@@ -59,6 +65,8 @@ describe("mapRegistrationToApi", () => {
       gender: "female",
       secondaryDocument: "12.345.678-9",
       profession: "Vendedora",
+      businessActivityBranch: "administrative_office",
+      businessActivitySubcategory: "accounting_office",
       economicActivityCategories: ["clt_employee"],
       maritalStatus: "single",
       childrenCount: 0,
@@ -93,7 +101,8 @@ describe("mapRegistrationToApi", () => {
       isRenegotiation: false,
       gender: "female",
       secondaryDocument: "12.345.678-9",
-      profession: "Vendedora",
+      businessActivityBranch: "administrative_office",
+      businessActivitySubcategory: "accounting_office",
       economicActivityCategories: ["other"],
       economicActivityOther: "Feirante",
       maritalStatus: "married",
@@ -141,6 +150,29 @@ describe("mapRegistrationToApi", () => {
           }),
         ).economicActivityCategories[0],
       ).toBe(option.value);
+    }
+    for (const branchOption of BUSINESS_ACTIVITY_BRANCH_OPTIONS) {
+      const subcategoryOptions =
+        BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[branchOption.value];
+      expect(
+        mapRegistrationToApi(
+          completeRegistration({
+            businessActivityBranch: branchOption.value,
+            businessActivitySubcategory: subcategoryOptions[0].value,
+          }),
+        ).businessActivityBranch,
+      ).toBe(branchOption.value);
+
+      for (const subcategoryOption of subcategoryOptions) {
+        expect(
+          mapRegistrationToApi(
+            completeRegistration({
+              businessActivityBranch: branchOption.value,
+              businessActivitySubcategory: subcategoryOption.value,
+            }),
+          ).businessActivitySubcategory,
+        ).toBe(subcategoryOption.value);
+      }
     }
     for (const option of MARITAL_STATUS_OPTIONS) {
       expect(
