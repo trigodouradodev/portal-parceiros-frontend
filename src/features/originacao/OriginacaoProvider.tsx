@@ -81,10 +81,13 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
 
       try {
         const draft = await createQuoteDraft(simulation.id);
-        const proposal = createProposalFromSimulation(simulation, {
-          id: draft.id,
-          createdAt: draft.createdAt,
-        });
+        const proposal = createProposalFromSimulation(
+          { ...simulation, interestRate: draft.interestRate },
+          {
+            id: draft.id,
+            createdAt: draft.createdAt,
+          },
+        );
         setProposals((prev) => upsertProposal(prev, proposal));
         setOpenProposalId(proposal.id);
         setActiveTab("proposal");

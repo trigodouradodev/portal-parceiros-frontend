@@ -101,7 +101,6 @@ function snapshot(
     document: "52998224725",
     productId: PRODUCT_ID,
     productName: "CRÉDITO PESSOAL",
-    interestRate: 0.0339,
     amount: 5000,
     installments: 10,
     firstInstallmentDate: nextAllowedDueIso(),
@@ -156,7 +155,7 @@ describe("SimulacaoForm", () => {
     ]);
     simulate.mockResolvedValue({
       eligible: true,
-      simulation: snapshot({ totalAmountOwed: 5978.8 }),
+      simulation: snapshot(),
     });
   });
 
@@ -186,7 +185,7 @@ describe("SimulacaoForm", () => {
     const saved = snapshot({ amount: 5000 });
     simulate.mockResolvedValue({
       eligible: true,
-      simulation: { ...saved, totalAmountOwed: 5978.8 },
+      simulation: saved,
     });
     const onStartProposal = vi.fn();
 
@@ -215,7 +214,9 @@ describe("SimulacaoForm", () => {
       );
     });
     expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
-    expect(screen.getByText("R$ 5.978,80")).toBeInTheDocument();
+    expect(screen.getByText("10x de R$ 597,88")).toBeInTheDocument();
+    expect(screen.queryByText("Taxa mensal")).not.toBeInTheDocument();
+    expect(screen.queryByText("Total devido")).not.toBeInTheDocument();
     expect(onStartProposal).not.toHaveBeenCalled();
   });
 
@@ -462,7 +463,7 @@ describe("SimulacaoForm", () => {
     );
   });
 
-  it("does not look up the CPF when editing a saved simulation", async () => {
+  it("locks the CPF and does not look it up when editing a saved simulation", async () => {
     renderForm(
       <SimulacaoForm
         prefill={null}
@@ -474,6 +475,7 @@ describe("SimulacaoForm", () => {
     );
 
     await waitForReady();
+    expect(screen.getByPlaceholderText("000.000.000-00")).toBeDisabled();
     expect(findFormDataByCpf).not.toHaveBeenCalled();
   });
 });

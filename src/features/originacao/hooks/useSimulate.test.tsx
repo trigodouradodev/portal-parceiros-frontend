@@ -30,12 +30,10 @@ const simulation: SimulationSnapshot = {
   document: "52998224725",
   productId: "11111111-1111-4111-8111-111111111111",
   productName: "CRÉDITO PESSOAL",
-  interestRate: 0.0339,
   amount: 5000,
   installments: 10,
   firstInstallmentDate: "2026-10-05",
   installmentAmount: 597.88,
-  totalAmountOwed: 5978.8,
 };
 
 function wrapper(client: QueryClient) {

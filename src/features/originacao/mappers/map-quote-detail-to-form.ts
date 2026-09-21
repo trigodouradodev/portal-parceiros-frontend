@@ -314,9 +314,6 @@ export function mapQuoteDetailToProposal(
       installments: detail.installmentNumbers,
       firstInstallmentDate: detail.firstInstallmentDate,
       installmentAmount: detail.installmentAmount ?? 0,
-      ...(detail.totalAmountOwed != null
-        ? { totalAmountOwed: detail.totalAmountOwed }
-        : {}),
     },
     step,
     stepValid: Array(PROPOSAL_STEPS.length).fill(false),
