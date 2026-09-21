@@ -1,11 +1,9 @@
 import { api } from "@/lib/api/axios";
 import type {
-  CreateSimulationPayload,
   ListSimulationsQuery,
-  PreviewSimulationPayload,
-  SimulationPreview,
+  SimulatePayload,
+  SimulateResult,
   SimulationSnapshot,
-  UpdateSimulationPayload,
 } from "./origination.types";
 
 export const originationKeys = {
@@ -13,8 +11,6 @@ export const originationKeys = {
   simulationsRoot: () => [...originationKeys.all, "simulations"] as const,
   simulations: (query: ListSimulationsQuery = {}) =>
     [...originationKeys.simulationsRoot(), query] as const,
-  preview: (payload: PreviewSimulationPayload) =>
-    [...originationKeys.all, "preview", payload] as const,
 };
 
 export const originationService = {
@@ -31,35 +27,10 @@ export const originationService = {
     return data;
   },
 
-  /** POST /simulations/preview — parcela Celcoin sem persistir */
-  async previewSimulation(
-    payload: PreviewSimulationPayload,
-  ): Promise<SimulationPreview> {
-    const { data } = await api.post<SimulationPreview>(
-      "/simulations/preview",
-      payload,
-    );
-    return data;
-  },
-
-  /** POST /simulations */
-  async createSimulation(
-    payload: CreateSimulationPayload,
-  ): Promise<SimulationSnapshot> {
-    const { data } = await api.post<SimulationSnapshot>(
-      "/simulations",
-      payload,
-    );
-    return data;
-  },
-
-  /** PATCH /simulations/:id */
-  async updateSimulation(
-    id: string,
-    payload: UpdateSimulationPayload,
-  ): Promise<SimulationSnapshot> {
-    const { data } = await api.patch<SimulationSnapshot>(
-      `/simulations/${id}`,
+  /** POST /simulations/simulate — elegibilidade, cálculo e persistência. */
+  async simulate(payload: SimulatePayload): Promise<SimulateResult> {
+    const { data } = await api.post<SimulateResult>(
+      "/simulations/simulate",
       payload,
     );
     return data;

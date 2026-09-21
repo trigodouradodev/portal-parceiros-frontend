@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -8,8 +8,10 @@ import {
   Mail,
   Phone,
   User,
+  XCircle,
 } from "lucide-react";
 import { startOfDay } from "date-fns";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ChipField } from "@/components/ui/chip-field";
 import { FieldLabel, FieldStatusMessage } from "@/components/ui/field-hint";
@@ -17,8 +19,8 @@ import { Form, FormField } from "@/components/ui/form";
 import { FormDate, FormInput } from "@/components/ui/rhf-fields";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import { SimulationDueDateField } from "@/features/originacao/components/simulacao/SimulationDueDateField";
-import { SimulationInstallmentPreview } from "@/features/originacao/components/simulacao/SimulationInstallmentPreview";
 import { SimulationProductField } from "@/features/originacao/components/simulacao/SimulationProductField";
+import { SimulationResultCard } from "@/features/originacao/components/simulacao/SimulationResultCard";
 import { CREATE_QUOTE_BLOCKED_MESSAGE } from "@/features/originacao/constants/simulacao-list";
 import {
   AMOUNT_DEFAULT,
@@ -30,10 +32,8 @@ import {
   simulationFormDefaultsFromSnapshot,
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
-import { useCreateSimulation } from "@/features/originacao/hooks/useCreateSimulation";
+import { useSimulate } from "@/features/originacao/hooks/useSimulate";
 import { useSimulationPartyAutoFill } from "@/features/originacao/hooks/useSimulationPartyAutoFill";
-import { useSimulationPreview } from "@/features/originacao/hooks/useSimulationPreview";
-import { useUpdateSimulation } from "@/features/originacao/hooks/useUpdateSimulation";
 import {
   createSimulationSchema,
   type SimulationFormValues,
@@ -58,29 +58,38 @@ interface SimulacaoFormProps {
   editing: SimulationSnapshot | null;
   hasList: boolean;
   onViewList: () => void;
-  onCompleted: () => void;
   onStartProposal: (snapshot: SimulationSnapshot) => void | Promise<void>;
 }
-
-type SubmitIntent = "save" | "proposal";
 
 const MAX_BIRTH_ISO = maxAdultBirthIso();
 const SIMULATE_BLOCKED_MESSAGE =
   "Você possui ações de cobrança pendentes que impedem a simulação de proposta.";
+
+function simulationAttemptKey(values: Partial<SimulationFormValues>) {
+  return JSON.stringify([
+    values.name,
+    values.cpf,
+    values.birthDate,
+    values.email,
+    values.phone,
+    values.product,
+    values.amount,
+    values.installments,
+    values.dueDate instanceof Date ? toIsoDate(values.dueDate) : values.dueDate,
+  ]);
+}
 
 export function SimulacaoForm({
   prefill,
   editing,
   hasList,
   onViewList,
-  onCompleted,
   onStartProposal,
 }: SimulacaoFormProps) {
   const { showToast } = useToast();
   const productsQuery = useProducts();
   const permissionsQuery = useQuoteActivityPermissions();
-  const createSimulation = useCreateSimulation();
-  const updateSimulation = useUpdateSimulation();
+  const simulate = useSimulate();
   const products = useMemo(
     () =>
       (productsQuery.data ?? []).filter((product) => product.enabled !== false),
@@ -90,9 +99,14 @@ export function SimulacaoForm({
   const simulateBlocked = permissionsQuery.data?.canSimulateQuote === false;
   const canCreateQuote = permissionsQuery.data?.canCreateQuote === true;
   const createQuoteBlocked = permissionsQuery.data?.canCreateQuote === false;
-  const converted = editing != null && isSimulationConverted(editing);
-  const canStartProposal = canCreateQuote && !converted;
-  const submitIntentRef = useRef<SubmitIntent>("save");
+  const [persistedSimulation, setPersistedSimulation] =
+    useState<SimulationSnapshot | null>(editing);
+  const [ineligibleAttemptKey, setIneligibleAttemptKey] = useState<
+    string | null
+  >(null);
+  const [startingProposal, setStartingProposal] = useState(false);
+  const converted =
+    persistedSimulation != null && isSimulationConverted(persistedSimulation);
 
   const [today] = useState(() => startOfDay(new Date()));
   const constraintsRef = useRef({
@@ -121,6 +135,10 @@ export function SimulacaoForm({
           amount: AMOUNT_DEFAULT,
         },
   });
+  const watchedValues = useWatch({ control: form.control });
+  const ineligible =
+    ineligibleAttemptKey != null &&
+    ineligibleAttemptKey === simulationAttemptKey(watchedValues);
   const {
     status: partyLookupStatus,
     onCpfComplete,
@@ -137,20 +155,18 @@ export function SimulacaoForm({
     }
   }
 
-  const productId = form.watch("product");
-  const amount = form.watch("amount");
-  const installments = form.watch("installments");
-  const dueDate = form.watch("dueDate");
+  const productId = watchedValues.product;
+  const installments = watchedValues.installments;
   const suggestedProductId = products[0]?.id;
   const selectedProduct = products.find((product) => product.id === productId);
   const installmentOptions = useMemo(
     () => installmentOptionsForProduct(selectedProduct),
-    [
-      selectedProduct?.minInstallmentCount,
-      selectedProduct?.maxInstallmentCount,
-    ],
+    [selectedProduct],
   );
-  constraintsRef.current = { installmentOptions, today };
+
+  useEffect(() => {
+    constraintsRef.current = { installmentOptions, today };
+  }, [installmentOptions, today]);
 
   // Default sugerido só se o campo ainda estiver vazio (edição / Trocar não passam por aqui).
   useEffect(() => {
@@ -173,35 +189,18 @@ export function SimulacaoForm({
     productsQuery.isLoading,
   ]);
 
-  const previewPayload =
-    !productId || installments == null || !dueDate
-      ? null
-      : {
-          productId,
-          amount,
-          installments,
-          firstInstallmentDate: toIsoDate(dueDate),
-        };
-  const previewQuery = useSimulationPreview(previewPayload, {
-    enabled: canSimulateQuote,
-  });
-
-  async function onContinue(values: SimulationFormValues) {
+  async function onSimulate(values: SimulationFormValues) {
     if (!canSimulateQuote) {
       showToast(SIMULATE_BLOCKED_MESSAGE, { variant: "destructive" });
       return;
     }
 
-    const intent = submitIntentRef.current;
-    if (intent === "proposal" && !canStartProposal) {
-      if (createQuoteBlocked) {
-        showToast(CREATE_QUOTE_BLOCKED_MESSAGE, { variant: "destructive" });
-      }
-      return;
-    }
-
     try {
-      const payload = {
+      setIneligibleAttemptKey(null);
+      const result = await simulate.mutateAsync({
+        ...(persistedSimulation
+          ? { simulationId: persistedSimulation.id }
+          : {}),
         name: values.name,
         document: values.cpf.replace(/\D/g, ""),
         birthDate: values.birthDate,
@@ -211,33 +210,51 @@ export function SimulacaoForm({
         amount: values.amount,
         installments: values.installments,
         firstInstallmentDate: toIsoDate(values.dueDate),
-      };
+      });
 
-      const snapshot = editing
-        ? await updateSimulation.mutateAsync({ id: editing.id, payload })
-        : await createSimulation.mutateAsync(payload);
-
-      if (intent === "proposal") {
-        await onStartProposal(snapshot);
+      if (!result.eligible) {
+        setIneligibleAttemptKey(simulationAttemptKey(values));
         return;
       }
 
-      onCompleted();
+      setPersistedSimulation(result.simulation);
+      form.reset(simulationFormDefaultsFromSnapshot(result.simulation));
     } catch (err) {
       showToast(
-        getApiErrorMessage(err, "Não foi possível salvar a simulação."),
+        getApiErrorMessage(err, "Não foi possível realizar a simulação."),
         { variant: "destructive" },
       );
     }
   }
 
-  const submitting =
-    form.formState.isSubmitting ||
-    createSimulation.isPending ||
-    updateSimulation.isPending;
+  const freshSimulation =
+    persistedSimulation != null && !form.formState.isDirty && !ineligible
+      ? persistedSimulation
+      : null;
+  const canStartProposal =
+    canCreateQuote && freshSimulation != null && !converted;
+
+  async function handleStartProposal() {
+    if (!canStartProposal || !freshSimulation) {
+      if (createQuoteBlocked) {
+        showToast(CREATE_QUOTE_BLOCKED_MESSAGE, { variant: "destructive" });
+      }
+      return;
+    }
+
+    setStartingProposal(true);
+    try {
+      await onStartProposal(freshSimulation);
+    } finally {
+      setStartingProposal(false);
+    }
+  }
+
+  const submitting = form.formState.isSubmitting || simulate.isPending;
   const submitDisabled =
     submitting ||
     !canSimulateQuote ||
+    converted ||
     permissionsQuery.isPending ||
     productsQuery.isLoading ||
     products.length === 0;
@@ -267,7 +284,7 @@ export function SimulacaoForm({
       <Form {...form}>
         <form
           className="flex flex-col gap-5"
-          onSubmit={form.handleSubmit(onContinue, scrollToFirstError)}
+          onSubmit={form.handleSubmit(onSimulate, scrollToFirstError)}
           noValidate
         >
           {simulateBlocked ? (
@@ -388,13 +405,25 @@ export function SimulacaoForm({
 
           <SimulationDueDateField today={today} />
 
-          <SimulationInstallmentPreview
-            visible={installments != null && dueDate != null}
-            canSimulate={canSimulateQuote}
-            hasPayload={previewPayload != null}
-            isError={previewQuery.isError}
-            amount={previewQuery.data?.installmentAmount}
-          />
+          {ineligible ? (
+            <Alert variant="destructive">
+              <XCircle size={22} />
+              <AlertTitle className="font-display text-lg font-bold">
+                Cliente não elegível
+              </AlertTitle>
+            </Alert>
+          ) : null}
+
+          {persistedSimulation && form.formState.isDirty ? (
+            <p className="rounded-2xl bg-warning-bg px-4 py-3 text-sm text-warning-foreground">
+              Os dados foram alterados. Simule novamente para atualizar o
+              resultado.
+            </p>
+          ) : null}
+
+          {freshSimulation ? (
+            <SimulationResultCard simulation={freshSimulation} />
+          ) : null}
 
           {createQuoteBlocked && !simulateBlocked && !converted ? (
             <p className="rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
@@ -405,35 +434,32 @@ export function SimulacaoForm({
           <div className="flex flex-col gap-2">
             <Button
               type="submit"
-              variant="outline"
+              variant={freshSimulation ? "outline" : "yellow"}
               size="pill"
               className="w-full"
               disabled={submitDisabled}
-              onClick={() => {
-                submitIntentRef.current = "save";
-              }}
             >
-              {submitting && submitIntentRef.current === "save" ? (
+              {submitting ? (
                 <>
                   <Loader2 size={15} className="animate-spin" />
-                  Salvando…
+                  Simulando…
                 </>
+              ) : persistedSimulation ? (
+                "Simular novamente"
               ) : (
-                "Salvar simulação"
+                "Simular"
               )}
             </Button>
-            {converted ? null : (
+            {freshSimulation && !converted ? (
               <Button
-                type="submit"
+                type="button"
                 variant="yellow"
                 size="pill"
                 className="w-full"
-                disabled={submitDisabled || !canStartProposal}
-                onClick={() => {
-                  submitIntentRef.current = "proposal";
-                }}
+                disabled={!canStartProposal || startingProposal}
+                onClick={handleStartProposal}
               >
-                {submitting && submitIntentRef.current === "proposal" ? (
+                {startingProposal ? (
                   <>
                     <Loader2 size={15} className="animate-spin" />
                     Iniciando…
@@ -442,7 +468,7 @@ export function SimulacaoForm({
                   "Iniciar proposta"
                 )}
               </Button>
-            )}
+            ) : null}
           </div>
         </form>
       </Form>

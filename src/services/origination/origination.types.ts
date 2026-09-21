@@ -6,7 +6,7 @@ export const SimulationStatus = {
 export type SimulationStatus =
   (typeof SimulationStatus)[keyof typeof SimulationStatus];
 
-/** Snapshot persistido de GET/POST/PATCH /simulations (`name`/`document` no GET). */
+/** Snapshot persistido retornado pela listagem e pelo comando de simulação. */
 export interface SimulationSnapshot {
   id: string;
   createdAt: string;
@@ -27,7 +27,8 @@ export interface SimulationSnapshot {
   simulationResult?: unknown;
 }
 
-export interface CreateSimulationPayload {
+export interface SimulatePayload {
+  simulationId?: string;
   name: string;
   document: string;
   birthDate: string;
@@ -39,26 +40,9 @@ export interface CreateSimulationPayload {
   firstInstallmentDate: string;
 }
 
-export type UpdateSimulationPayload = CreateSimulationPayload;
-
-/** Payload financeiro de POST /simulations/preview (sem persistir). */
-export interface PreviewSimulationPayload {
-  productId: string;
-  amount: number;
-  installments: number;
-  firstInstallmentDate: string;
-}
-
-/** Resposta de POST /simulations/preview (parcela Celcoin). */
-export interface SimulationPreview {
-  productId: string;
-  amount: number;
-  installments: number;
-  firstInstallmentDate: string;
-  interestRate: number;
-  installmentAmount: number;
-  totalAmountOwed: number;
-}
+export type SimulateResult =
+  | { eligible: false; simulation: null }
+  | { eligible: true; simulation: SimulationSnapshot };
 
 export interface ListSimulationsQuery {
   name?: string;

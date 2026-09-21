@@ -38,7 +38,7 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const { mutateAsync: createQuoteDraft } = useCreateQuoteDraft();
-  const [activeTab, setActiveTab] = useState<OriginacaoTab>("eligibility");
+  const [activeTab, setActiveTab] = useState<OriginacaoTab>("simulation");
   const [eligibilityPrefill, setEligibilityPrefillState] =
     useState<EligibilityPrefill | null>(null);
   const [proposals, setProposals] = useState<ProposalSnapshot[]>([]);

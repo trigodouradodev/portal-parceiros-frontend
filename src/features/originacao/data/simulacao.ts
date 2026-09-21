@@ -3,7 +3,6 @@ import type { SimulationSnapshot } from "@/features/originacao/types";
 import { SimulationStatus } from "@/services/origination/origination.types";
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
-import { calcInstallment } from "@/lib/utils";
 
 export const ALLOWED_DUE_DAYS = [5, 10, 15, 20];
 
@@ -39,19 +38,6 @@ export function isDueDateInWindow(
     new Date(today.getFullYear(), today.getMonth(), today.getDate() + maxDays),
   ).getTime();
   return value <= limit;
-}
-
-export function roundMoney(value: number): number {
-  return Math.round(value * 100) / 100;
-}
-
-/** Preview PRICE local (legado). Persistência e UI usam Celcoin via /simulations/preview. */
-export function previewInstallmentAmount(
-  amount: number,
-  installments: number,
-  ratePercent: number,
-): number {
-  return roundMoney(calcInstallment(amount, installments, ratePercent));
 }
 
 /** Local YYYY-MM-DD, without UTC shift. */
