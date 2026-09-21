@@ -332,6 +332,10 @@ export interface ProposalFormData {
   documents: DocumentsData;
 }
 
+export interface ProposalSimulationSnapshot extends SimulationSnapshot {
+  interestRate: number;
+}
+
 export interface ProposalSnapshot {
   id: string;
   createdAt: string;
@@ -340,7 +344,7 @@ export interface ProposalSnapshot {
   status: QuoteStatus;
   /** Indica se o usuário autenticado pode editar (API `canEdit`). */
   canEdit: boolean;
-  simulation: SimulationSnapshot;
+  simulation: ProposalSimulationSnapshot;
   step: number;
   stepValid: boolean[];
   data: ProposalFormData;
@@ -447,10 +451,9 @@ export function registrationIdentityFromSimulation(
   };
 }
 
-export function applyRegistrationIdentityToSimulation(
-  simulation: SimulationSnapshot,
-  registration: RegistrationData,
-): SimulationSnapshot {
+export function applyRegistrationIdentityToSimulation<
+  T extends SimulationSnapshot,
+>(simulation: T, registration: RegistrationData): T {
   return {
     ...simulation,
     name: registration.name.trim(),
@@ -462,7 +465,7 @@ export function applyRegistrationIdentityToSimulation(
 }
 
 export function createProposalFromSimulation(
-  simulation: SimulationSnapshot,
+  simulation: ProposalSimulationSnapshot,
   quote: { id: string; createdAt: string },
 ): ProposalSnapshot {
   const createdAt = new Date(quote.createdAt).toLocaleString("pt-BR");
