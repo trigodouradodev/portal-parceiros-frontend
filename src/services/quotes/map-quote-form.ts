@@ -25,8 +25,6 @@ import {
   MaritalStatus,
   PartnerAssessment,
   PaymentPixType,
-  type BusinessActivityBranch,
-  type BusinessActivitySubcategory,
   type CustomerRelationshipDuration,
   type Gender,
   type GuarantorRelationship,
@@ -78,10 +76,6 @@ export function mapRegistrationToPayload(
     isRenegotiation: Boolean(data.isRenewal),
     gender: data.gender as Gender,
     secondaryDocument: data.rg.trim(),
-    businessActivityBranch:
-      data.businessActivityBranch as BusinessActivityBranch,
-    businessActivitySubcategory:
-      data.businessActivitySubcategory as BusinessActivitySubcategory,
     economicActivityCategories: categories,
     maritalStatus: data.maritalStatus as MaritalStatus,
     childrenCount: parseCount(data.childrenCount),
@@ -115,9 +109,14 @@ export function mapRegistrationToPayload(
 /** Form Atividade e Renda → PATCH .../income */
 export function mapIncomeToPayload(
   data: ActivityIncomeData,
+  registration: RegistrationData,
 ): SaveQuoteIncomePayload {
   const hasMultiple = Boolean(data.hasMultipleSources);
   const payload: SaveQuoteIncomePayload = {
+    businessActivityBranch:
+      registration.businessActivityBranch as SaveQuoteIncomePayload["businessActivityBranch"],
+    businessActivitySubcategory:
+      registration.businessActivitySubcategory as SaveQuoteIncomePayload["businessActivitySubcategory"],
     activityDuration: (data.activityTime.trim() ||
       ActivityDuration.LESS_THAN_6_MONTHS) as ActivityDuration,
     declaredMonthlyIncome: parseMoneyBrl(data.monthlyIncome),

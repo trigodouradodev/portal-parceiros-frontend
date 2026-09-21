@@ -319,16 +319,10 @@ function ProposalWizard({
     if (step === 1) {
       try {
         const values = form.getValues();
-        // Ramo de atividade/Subcategoria são dados do Cadastro, mas são
-        // exigidos e editados aqui — reenviar o registration garante que
-        // a escolha feita neste step seja persistida.
-        await saveRegistration({
-          quoteId: proposal.id,
-          registration: values.registration,
-        });
         await saveIncome({
           quoteId: proposal.id,
           activityIncome: values.activityIncome,
+          registration: values.registration,
         });
       } catch (err) {
         showToast(
@@ -358,6 +352,7 @@ function ProposalWizard({
         await saveIncome({
           quoteId: proposal.id,
           activityIncome: values.activityIncome,
+          registration: values.registration,
         });
         await savePartnerOpinion({
           quoteId: proposal.id,
