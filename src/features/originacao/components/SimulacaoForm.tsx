@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -65,6 +65,20 @@ const MAX_BIRTH_ISO = maxAdultBirthIso();
 const SIMULATE_BLOCKED_MESSAGE =
   "Você possui ações de cobrança pendentes que impedem a simulação de proposta.";
 
+function simulationAttemptKey(values: Partial<SimulationFormValues>) {
+  return JSON.stringify([
+    values.name,
+    values.cpf,
+    values.birthDate,
+    values.email,
+    values.phone,
+    values.product,
+    values.amount,
+    values.installments,
+    values.dueDate instanceof Date ? toIsoDate(values.dueDate) : values.dueDate,
+  ]);
+}
+
 export function SimulacaoForm({
   prefill,
   editing,
@@ -87,7 +101,9 @@ export function SimulacaoForm({
   const createQuoteBlocked = permissionsQuery.data?.canCreateQuote === false;
   const [persistedSimulation, setPersistedSimulation] =
     useState<SimulationSnapshot | null>(editing);
-  const [ineligible, setIneligible] = useState(false);
+  const [ineligibleAttemptKey, setIneligibleAttemptKey] = useState<
+    string | null
+  >(null);
   const [startingProposal, setStartingProposal] = useState(false);
   const converted =
     persistedSimulation != null && isSimulationConverted(persistedSimulation);
@@ -119,6 +135,10 @@ export function SimulacaoForm({
           amount: AMOUNT_DEFAULT,
         },
   });
+  const watchedValues = useWatch({ control: form.control });
+  const ineligible =
+    ineligibleAttemptKey != null &&
+    ineligibleAttemptKey === simulationAttemptKey(watchedValues);
   const {
     status: partyLookupStatus,
     onCpfComplete,
@@ -135,18 +155,18 @@ export function SimulacaoForm({
     }
   }
 
-  const productId = form.watch("product");
-  const installments = form.watch("installments");
+  const productId = watchedValues.product;
+  const installments = watchedValues.installments;
   const suggestedProductId = products[0]?.id;
   const selectedProduct = products.find((product) => product.id === productId);
   const installmentOptions = useMemo(
     () => installmentOptionsForProduct(selectedProduct),
-    [
-      selectedProduct?.minInstallmentCount,
-      selectedProduct?.maxInstallmentCount,
-    ],
+    [selectedProduct],
   );
-  constraintsRef.current = { installmentOptions, today };
+
+  useEffect(() => {
+    constraintsRef.current = { installmentOptions, today };
+  }, [installmentOptions, today]);
 
   // Default sugerido só se o campo ainda estiver vazio (edição / Trocar não passam por aqui).
   useEffect(() => {
@@ -169,11 +189,6 @@ export function SimulacaoForm({
     productsQuery.isLoading,
   ]);
 
-  useEffect(() => {
-    const subscription = form.watch(() => setIneligible(false));
-    return () => subscription.unsubscribe();
-  }, [form]);
-
   async function onSimulate(values: SimulationFormValues) {
     if (!canSimulateQuote) {
       showToast(SIMULATE_BLOCKED_MESSAGE, { variant: "destructive" });
@@ -181,7 +196,7 @@ export function SimulacaoForm({
     }
 
     try {
-      setIneligible(false);
+      setIneligibleAttemptKey(null);
       const result = await simulate.mutateAsync({
         ...(persistedSimulation
           ? { simulationId: persistedSimulation.id }
@@ -198,7 +213,7 @@ export function SimulacaoForm({
       });
 
       if (!result.eligible) {
-        setIneligible(true);
+        setIneligibleAttemptKey(simulationAttemptKey(values));
         return;
       }
 
