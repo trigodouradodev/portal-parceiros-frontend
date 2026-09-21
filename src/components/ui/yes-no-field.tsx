@@ -1,6 +1,7 @@
 import { ChipButton } from "@/components/ui/chip-button";
 import {
   FieldErrorMessage,
+  FieldHint,
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
@@ -12,6 +13,7 @@ interface YesNoFieldProps {
   onChange: (value: boolean) => void;
   required?: boolean;
   error?: string;
+  hint?: string;
 }
 
 export function YesNoField({
@@ -21,6 +23,7 @@ export function YesNoField({
   onChange,
   required,
   error,
+  hint,
 }: YesNoFieldProps) {
   return (
     <div className="flex flex-col gap-1.5" {...fieldAnchorProps(name, error)}>
@@ -34,6 +37,7 @@ export function YesNoField({
         </ChipButton>
       </div>
       <FieldErrorMessage error={error} />
+      {hint && !error ? <FieldHint>{hint}</FieldHint> : null}
     </div>
   );
 }

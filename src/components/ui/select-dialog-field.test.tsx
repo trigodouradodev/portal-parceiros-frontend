@@ -21,7 +21,13 @@ const LONG_OPTIONS: SelectOption[] = [
   { value: "industry_and_logistics", label: "Indústria / Logística" },
 ];
 
-function Harness({ options }: { options: SelectOption[] }) {
+function Harness({
+  options,
+  hint,
+}: {
+  options: SelectOption[];
+  hint?: string;
+}) {
   const [value, setValue] = useState("");
   return (
     <SelectDialogField
@@ -29,6 +35,7 @@ function Harness({ options }: { options: SelectOption[] }) {
       value={value}
       onChange={setValue}
       options={options}
+      hint={hint}
     />
   );
 }
@@ -87,5 +94,18 @@ describe("SelectDialogField", () => {
 
     expect(screen.getByPlaceholderText("Buscar...")).toHaveValue("");
     expect(screen.getByText("Automotivo")).toBeInTheDocument();
+  });
+
+  it("shows the hint below the trigger when there is no error", () => {
+    render(
+      <Harness
+        options={SHORT_OPTIONS}
+        hint="Refere-se apenas à renda declarada acima."
+      />,
+    );
+
+    expect(
+      screen.getByText("Refere-se apenas à renda declarada acima."),
+    ).toBeInTheDocument();
   });
 });

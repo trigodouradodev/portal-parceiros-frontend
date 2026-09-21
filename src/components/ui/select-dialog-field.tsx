@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import type { SelectOption } from "@/components/ui/select-option";
 import {
   FieldErrorMessage,
+  FieldHint,
   FieldLabel,
   fieldAnchorProps,
 } from "@/components/ui/field-hint";
@@ -42,6 +43,7 @@ interface SelectDialogFieldProps {
   selectedLabelClassName?: string;
   required?: boolean;
   error?: string;
+  hint?: string;
   disabled?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -72,6 +74,7 @@ export function SelectDialogField({
   selectedLabelClassName,
   required,
   error,
+  hint,
   disabled,
   open: openProp,
   onOpenChange,
@@ -190,6 +193,7 @@ export function SelectDialogField({
         <ChevronDown size={16} className={fieldIconClassName} />
       </button>
       <FieldErrorMessage error={error} />
+      {hint && !error ? <FieldHint>{hint}</FieldHint> : null}
       {dialog}
     </div>
   );

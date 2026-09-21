@@ -400,12 +400,17 @@ export const ACTIVITY_TIME_OPTIONS = options([
   [ActivityDuration.MORE_THAN_5_YEARS, "Mais de 5 anos"],
 ]);
 
+// IncomeSource.MIXED_INCOME não aparece aqui de propósito: com o campo
+// renomeado para "Fonte principal da renda declarada", uma fonte "mista"
+// não faz sentido como resposta — múltiplas fontes já são capturadas por
+// "Possui múltiplas fontes de renda?" + a lista de rendas adicionais. O
+// valor do enum continua existindo só por compatibilidade com dado legado
+// (zero ocorrências em produção na data desta mudança).
 export const INCOME_SOURCE_OPTIONS = options([
   [IncomeSource.SALARY, "Salário"],
   [IncomeSource.OWN_BUSINESS, "Negócio próprio"],
   [IncomeSource.BENEFIT, "Benefício"],
   [IncomeSource.RENT, "Aluguel"],
-  [IncomeSource.MIXED_INCOME, "Renda mista"],
   [IncomeSource.OTHER, "Outro"],
 ]);
 

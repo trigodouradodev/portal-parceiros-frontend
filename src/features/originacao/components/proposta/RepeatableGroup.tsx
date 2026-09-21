@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { FieldLabel } from "@/components/ui/field-hint";
+import { FieldHint, FieldLabel } from "@/components/ui/field-hint";
 
 interface RepeatableGroupProps {
   title: string;
+  hint?: string;
   addLabel: string;
   emptyLabel: string;
   isEmpty: boolean;
@@ -13,6 +14,7 @@ interface RepeatableGroupProps {
 
 export function RepeatableGroup({
   title,
+  hint,
   addLabel,
   emptyLabel,
   isEmpty,
@@ -21,7 +23,7 @@ export function RepeatableGroup({
 }: RepeatableGroupProps) {
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-1 flex items-center justify-between">
         <FieldLabel>{title}</FieldLabel>
         <button
           type="button"
@@ -32,10 +34,11 @@ export function RepeatableGroup({
           {addLabel}
         </button>
       </div>
+      {hint ? <FieldHint>{hint}</FieldHint> : null}
       {isEmpty ? (
-        <p className="mb-1 text-xs text-muted-foreground">{emptyLabel}</p>
+        <p className="mt-2 mb-1 text-xs text-muted-foreground">{emptyLabel}</p>
       ) : null}
-      <div className="flex flex-col gap-3">{children}</div>
+      <div className="mt-2 flex flex-col gap-3">{children}</div>
     </div>
   );
 }

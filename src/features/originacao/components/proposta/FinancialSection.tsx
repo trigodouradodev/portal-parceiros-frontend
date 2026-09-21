@@ -143,6 +143,7 @@ export function FinancialSection() {
 
       <RepeatableGroup
         title="Despesas pessoais"
+        hint="Despesas fixas mensais relevantes para avaliar a capacidade de pagamento."
         addLabel="Adicionar despesa"
         emptyLabel="Nenhuma despesa adicionada."
         isEmpty={expenses.length === 0}
@@ -183,6 +184,7 @@ export function FinancialSection() {
       <div className="border-t border-border pt-2">
         <RepeatableGroup
           title="Empréstimos"
+          hint="Empréstimos e financiamentos formais em aberto — diferente dos sinais de endividamento informal do Parecer do Parceiro."
           addLabel="Adicionar empréstimo"
           emptyLabel="Nenhum empréstimo adicionado."
           isEmpty={loans.length === 0}

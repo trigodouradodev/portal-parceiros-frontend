@@ -165,6 +165,27 @@ export const INCOME_DOCUMENT_TYPE_OPTIONS: SelectOption[] =
 export const DEBT_PURPOSE = CreditPurpose.DEBT_PAYOFF_OR_REFINANCING;
 export const OTHER_OPTION = EconomicActivityCategory.OTHER;
 export const RETAIL_COMMERCE_BRANCH = BusinessActivityBranch.RETAIL_COMMERCE;
+
+/**
+ * Categorias em que profissão faz sentido como dado próprio da pessoa —
+ * CLT e Servidor Público porque Ramo de atividade pode ser o setor do
+ * empregador (distinto do cargo da pessoa); Aposentado e Desempregado
+ * porque não têm Ramo de atividade em curso para descrever a ocupação.
+ * Empresário/Autônomo ficam de fora: a Subcategoria já descreve a
+ * atividade de forma estruturada.
+ */
+const PROFESSION_REQUIRED_CATEGORIES: string[] = [
+  EconomicActivityCategory.CLT_EMPLOYEE,
+  EconomicActivityCategory.PUBLIC_SERVANT,
+  EconomicActivityCategory.RETIRED_OR_PENSIONER,
+  EconomicActivityCategory.UNEMPLOYED,
+];
+
+export function requiresProfession(activityCategories: string[]): boolean {
+  return activityCategories.some((category) =>
+    PROFESSION_REQUIRED_CATEGORIES.includes(category),
+  );
+}
 export const NONE_PROGRAM = GovernmentProgram.NONE;
 export const HOW_KNOWS_OTHER = CustomerRelationshipOrigin.OTHER;
 export const AUREA_REFERRAL_OPTION =

@@ -82,7 +82,7 @@ export interface SaveQuoteRegistrationPayload {
   isRenegotiation: boolean;
   gender: Gender;
   secondaryDocument: string;
-  profession: string;
+  profession?: string;
   businessActivityBranch: BusinessActivityBranch;
   businessActivitySubcategory: BusinessActivitySubcategory;
   economicActivityCategories: EconomicActivityCategory[];
@@ -316,7 +316,7 @@ export interface QuoteRegistrationDetail {
   isRenegotiation: boolean;
   gender: Gender | null;
   secondaryDocument: string | null;
-  profession: string;
+  profession: string | null;
   businessActivityBranch: BusinessActivityBranch | null;
   businessActivitySubcategory: BusinessActivitySubcategory | null;
   economicActivityCategories: EconomicActivityCategory[];

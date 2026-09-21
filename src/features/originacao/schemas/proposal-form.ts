@@ -5,6 +5,7 @@ import {
   AUREA_REFERRAL_OPTION,
   OTHER_OPTION,
   hasSpouse,
+  requiresProfession,
   type ActivityIncomeData,
   type AddressData,
   type DocumentsData,
@@ -371,7 +372,10 @@ export function parseProposalStep(step: number, data: ProposalFormData) {
         message: REQUIRED_FIELD_MESSAGE,
       });
     }
-    if (data.registration.occupation.trim().length < 2) {
+    if (
+      requiresProfession(data.registration.activityCategories) &&
+      data.registration.occupation.trim().length < 2
+    ) {
       issues.push({
         path: ["registration", "occupation"],
         message: REQUIRED_FIELD_MESSAGE,

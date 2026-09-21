@@ -35,6 +35,7 @@ import {
   OTHER_OPTION,
   PROPOSAL_STEPS,
   applyRegistrationIdentityToSimulation,
+  requiresProfession,
   type ProposalFormData,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
@@ -236,12 +237,15 @@ function ProposalWizard({
     const activityCategoryOtherValid =
       !values.registration.activityCategories.includes(OTHER_OPTION) ||
       values.registration.activityCategoryOther.trim() !== "";
+    const occupationValid =
+      !requiresProfession(values.registration.activityCategories) ||
+      values.registration.occupation.trim().length >= 2;
     return [
       isRegistrationValid(values.registration),
       isActivityIncomeValid(values.activityIncome) &&
         values.registration.activityCategories.length > 0 &&
         activityCategoryOtherValid &&
-        values.registration.occupation.trim().length >= 2 &&
+        occupationValid &&
         values.registration.businessActivityBranch.trim() !== "" &&
         subcategoryValid,
       isAddressValid(values.address),

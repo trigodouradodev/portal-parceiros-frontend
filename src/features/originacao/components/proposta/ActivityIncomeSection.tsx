@@ -10,6 +10,7 @@ import {
   BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH,
   INCOME_SOURCE_OPTIONS,
   OTHER_OPTION,
+  requiresProfession,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 import { formatMoneyBrl } from "@/lib/format/money";
@@ -24,6 +25,7 @@ export function ActivityIncomeSection() {
   const hasMultipleSources = watch("activityIncome.hasMultipleSources");
   const nextAdditionalIncomeId = watch("activityIncome.nextAdditionalIncomeId");
   const activityCategories = watch("registration.activityCategories");
+  const professionRequired = requiresProfession(activityCategories);
   const businessActivityBranch = watch("registration.businessActivityBranch");
   const subcategoryOptions =
     BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[businessActivityBranch] ??
@@ -92,12 +94,14 @@ export function ActivityIncomeSection() {
           />
         ) : null}
 
-        <FormInput<ProposalFormData>
-          name="registration.occupation"
-          label="Profissão"
-          placeholder="Informe a profissão"
-          required
-        />
+        {professionRequired ? (
+          <FormInput<ProposalFormData>
+            name="registration.occupation"
+            label="Profissão"
+            placeholder="Informe a profissão"
+            required
+          />
+        ) : null}
 
         <FormSelect<ProposalFormData>
           name="registration.businessActivityBranch"
@@ -125,6 +129,7 @@ export function ActivityIncomeSection() {
       <FormInput<ProposalFormData>
         name="activityIncome.monthlyIncome"
         label="Renda mensal declarada"
+        hint="Renda da atividade principal informada nesta tela."
         transform={formatMoneyBrl}
         icon={<Wallet size={16} />}
         placeholder="R$ 0,00"
@@ -134,7 +139,8 @@ export function ActivityIncomeSection() {
 
       <FormSelect<ProposalFormData>
         name="activityIncome.incomeSource"
-        label="Fonte da renda"
+        label="Fonte principal da renda declarada"
+        hint="Refere-se apenas à renda declarada acima — outras fontes são informadas a seguir."
         options={INCOME_SOURCE_OPTIONS}
         required
       />
@@ -142,6 +148,7 @@ export function ActivityIncomeSection() {
       <FormYesNo<ProposalFormData>
         name="activityIncome.hasMultipleSources"
         label="Possui múltiplas fontes de renda?"
+        hint="Considere renda além da atividade principal: aluguel, pensão, outro trabalho, etc."
         onChange={handleMultipleSourcesChange}
       />
 

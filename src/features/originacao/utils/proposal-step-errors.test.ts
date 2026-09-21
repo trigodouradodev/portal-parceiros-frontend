@@ -105,9 +105,17 @@ describe("getProposalStepFieldErrors", () => {
       getProposalStepFieldErrors(1, data).map((item) => item.name),
     ).toEqual([
       "registration.activityCategories",
-      "registration.occupation",
       "registration.businessActivityBranch",
     ]);
+
+    // Profissão só é exigida para CLT — nos demais casos, Ramo de
+    // atividade + Subcategoria já descrevem a atividade.
+    data.registration.activityCategories = ["clt_employee"];
+    expect(
+      getProposalStepFieldErrors(1, data).find(
+        (item) => item.name === "registration.occupation",
+      )?.message,
+    ).toBe(REQUIRED_FIELD_MESSAGE);
 
     data.registration.activityCategories = ["other"];
     expect(

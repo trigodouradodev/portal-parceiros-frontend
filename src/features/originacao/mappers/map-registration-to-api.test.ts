@@ -101,7 +101,6 @@ describe("mapRegistrationToApi", () => {
       isRenegotiation: false,
       gender: "female",
       secondaryDocument: "12.345.678-9",
-      profession: "Vendedora",
       businessActivityBranch: "administrative_office",
       businessActivitySubcategory: "accounting_office",
       economicActivityCategories: ["other"],

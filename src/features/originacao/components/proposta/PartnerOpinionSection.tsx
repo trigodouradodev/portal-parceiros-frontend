@@ -56,12 +56,14 @@ export function PartnerOpinionSection() {
       <FormYesNo<ProposalFormData>
         name="partnerOpinion.informalDebtSigns"
         label="Sinais de endividamento informal"
+        hint="Dívidas fora do sistema bancário: empréstimos com agiotas, familiares, fiado com fornecedores, etc."
         required
       />
 
       <FormYesNo<ProposalFormData>
         name="partnerOpinion.financialUrgencySigns"
         label="Sinais de urgência financeira"
+        hint="Indique se a pessoa demonstrou estar numa situação urgente que este valor ajudaria a resolver."
         required
       />
 
