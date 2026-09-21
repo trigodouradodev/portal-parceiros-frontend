@@ -44,6 +44,22 @@ export function ActivityIncomeSection() {
     keyName: "fieldId",
   });
 
+  function handleBranchChange(nextBranch: string) {
+    const nextOptions =
+      BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[nextBranch] ?? [];
+    const currentSubcategory = watch(
+      "registration.businessActivitySubcategory",
+    );
+    const stillValid = nextOptions.some(
+      (option) => option.value === currentSubcategory,
+    );
+    if (!stillValid) {
+      setValue("registration.businessActivitySubcategory", "", {
+        shouldValidate: true,
+      });
+    }
+  }
+
   function addAdditionalIncome() {
     appendAdditionalIncome({
       id: nextAdditionalIncomeId,
@@ -107,6 +123,7 @@ export function ActivityIncomeSection() {
           name="registration.businessActivityBranch"
           label="Ramo de atividade"
           options={BUSINESS_ACTIVITY_BRANCH_OPTIONS}
+          onValueChange={handleBranchChange}
           required
         />
         {businessActivityBranch ? (

@@ -8,6 +8,7 @@ import {
 } from "@/features/originacao/data/proposal";
 import {
   BusinessActivityBranch,
+  BusinessActivitySubcategory,
   EconomicActivityCategory,
 } from "@/services/quotes/quotes.enums";
 
@@ -123,6 +124,38 @@ describe("ActivityIncomeSection", () => {
     expect(
       fieldTrigger("registration.businessActivitySubcategory"),
     ).toBeTruthy();
+  });
+
+  it("resets the subcategory when it no longer belongs to the new ramo de atividade", () => {
+    renderActivityIncome({
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+      businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
+    });
+
+    expect(
+      fieldTrigger("registration.businessActivitySubcategory")?.textContent,
+    ).toContain("Comércio Geral");
+
+    fireEvent.click(fieldTrigger("registration.businessActivityBranch")!);
+    fireEvent.click(screen.getByText("Alimentação"));
+
+    expect(
+      fieldTrigger("registration.businessActivitySubcategory")?.textContent,
+    ).toBe("Selecione");
+  });
+
+  it("keeps the subcategory selected when Outro is still valid for the new branch", () => {
+    renderActivityIncome({
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+      businessActivitySubcategory: BusinessActivitySubcategory.OTHER,
+    });
+
+    fireEvent.click(fieldTrigger("registration.businessActivityBranch")!);
+    fireEvent.click(screen.getByText("Alimentação"));
+
+    expect(
+      fieldTrigger("registration.businessActivitySubcategory")?.textContent,
+    ).toContain("Outro");
   });
 
   it("shows the subcategory for branches other than Comércio / Varejo too", () => {

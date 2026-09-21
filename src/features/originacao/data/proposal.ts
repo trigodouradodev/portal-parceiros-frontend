@@ -182,6 +182,7 @@ const PROFESSION_REQUIRED_CATEGORIES: string[] = [
 ];
 
 export function requiresProfession(activityCategories: string[]): boolean {
+  if (!Array.isArray(activityCategories)) return false;
   return activityCategories.some((category) =>
     PROFESSION_REQUIRED_CATEGORIES.includes(category),
   );
