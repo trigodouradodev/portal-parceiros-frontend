@@ -197,6 +197,99 @@ describe("SimulacaoList", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("filters by status on the client, without refetching the API", async () => {
+    const converted: SimulationSnapshot = {
+      ...snapshot,
+      id: "sim-b",
+      name: "João Pereira",
+      status: "converted",
+    };
+    listSimulations.mockResolvedValue([snapshot, converted]);
+    const user = userEvent.setup();
+
+    renderList(
+      <SimulacaoList
+        hasUnfilteredSimulations
+        onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await screen.findByText("Maria Souza");
+    expect(screen.getByText("João Pereira")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("checkbox", { name: "Criada" }));
+
+    expect(screen.getByText("Maria Souza")).toBeInTheDocument();
+    expect(screen.queryByText("João Pereira")).not.toBeInTheDocument();
+    expect(listSimulations).toHaveBeenCalledTimes(1);
+
+    await user.click(
+      screen.getByRole("checkbox", { name: "Proposta Iniciada" }),
+    );
+
+    expect(screen.getByText("Maria Souza")).toBeInTheDocument();
+    expect(screen.getByText("João Pereira")).toBeInTheDocument();
+  });
+
+  it("shows only proposta-iniciada simulações when that checkbox alone is checked", async () => {
+    const converted: SimulationSnapshot = {
+      ...snapshot,
+      id: "sim-b",
+      name: "João Pereira",
+      status: "converted",
+    };
+    listSimulations.mockResolvedValue([snapshot, converted]);
+    const user = userEvent.setup();
+
+    renderList(
+      <SimulacaoList
+        hasUnfilteredSimulations
+        onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await screen.findByText("Maria Souza");
+    await user.click(
+      screen.getByRole("checkbox", { name: "Proposta Iniciada" }),
+    );
+
+    expect(screen.queryByText("Maria Souza")).not.toBeInTheDocument();
+    expect(screen.getByText("João Pereira")).toBeInTheDocument();
+  });
+
+  it("clears status checkboxes along with the search filter", async () => {
+    const converted: SimulationSnapshot = {
+      ...snapshot,
+      id: "sim-b",
+      name: "João Pereira",
+      status: "converted",
+    };
+    listSimulations.mockResolvedValue([snapshot, converted]);
+    const user = userEvent.setup();
+
+    renderList(
+      <SimulacaoList
+        hasUnfilteredSimulations
+        onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await screen.findByText("Maria Souza");
+    await user.click(screen.getByRole("checkbox", { name: "Criada" }));
+    await user.click(
+      await screen.findByRole("button", { name: "Limpar filtros" }),
+    );
+
+    expect(screen.getByRole("checkbox", { name: "Criada" })).not.toBeChecked();
+    expect(screen.getByText("João Pereira")).toBeInTheDocument();
+  });
+
   it("disables start proposal when the partner cannot create quotes", async () => {
     listSimulations.mockResolvedValue([snapshot]);
 

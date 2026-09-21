@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { toSelectOptions } from "@/components/ui/select-option";
 import {
-  ACTIVITY_CATEGORY_OPTIONS,
   CHILDREN_COUNT_OPTIONS,
   CREDIT_PURPOSE_OPTIONS,
   DEBT_CREDITOR_OPTIONS,
@@ -31,7 +30,6 @@ export const EYE_OFF_ICON = <EyeOff size={13} />;
 
 /** Options já vêm como `{ value, label }` com código estável. */
 export const GENDER_SELECT_OPTIONS = GENDER_OPTIONS;
-export const ACTIVITY_CATEGORY_SELECT_OPTIONS = ACTIVITY_CATEGORY_OPTIONS;
 export const MARITAL_STATUS_SELECT_OPTIONS = MARITAL_STATUS_OPTIONS;
 export const PROPERTY_STATUS_SELECT_OPTIONS = PROPERTY_STATUS_OPTIONS;
 export const RESIDENCE_TIME_SELECT_OPTIONS = RESIDENCE_TIME_OPTIONS;

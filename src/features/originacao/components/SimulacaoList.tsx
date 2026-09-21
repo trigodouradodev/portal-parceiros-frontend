@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { InputField } from "@/components/ui/input-field";
 import { OriginacaoEmptyState } from "@/features/originacao/components/OriginacaoEmptyState";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
@@ -25,6 +26,7 @@ import {
   originationKeys,
   originationService,
 } from "@/services/origination/origination.service";
+import { SimulationStatus } from "@/services/origination/origination.types";
 
 interface SimulacaoListProps {
   hasUnfilteredSimulations: boolean;
@@ -46,6 +48,8 @@ export function SimulacaoList({
   const [searchInput, setSearchInput] = useState("");
   const [filters, setFilters] = useState(() => buildSimulationsListQuery(""));
   const [startingId, setStartingId] = useState<string | null>(null);
+  const [showCreated, setShowCreated] = useState(false);
+  const [showProposalStarted, setShowProposalStarted] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -60,8 +64,24 @@ export function SimulacaoList({
     placeholderData: keepPreviousData,
   });
 
-  const simulations = listQuery.data ?? [];
-  const filterActive = isSimulationsFilterActive(filters);
+  // A API não filtra simulações por status — só nome/CPF. Como a lista não
+  // pagina (vem inteira), filtramos por status no cliente mesmo.
+  const statusFilterActive = showCreated || showProposalStarted;
+  const simulations = useMemo(() => {
+    const all = listQuery.data ?? [];
+    if (!statusFilterActive) return all;
+    return all.filter((item) => {
+      if (showCreated && item.status === SimulationStatus.AVAILABLE) {
+        return true;
+      }
+      if (showProposalStarted && item.status === SimulationStatus.CONVERTED) {
+        return true;
+      }
+      return false;
+    });
+  }, [listQuery.data, statusFilterActive, showCreated, showProposalStarted]);
+
+  const filterActive = isSimulationsFilterActive(filters) || statusFilterActive;
   const showFilters = hasUnfilteredSimulations || filterActive;
   const isLoading = listQuery.isPending && !listQuery.data;
   const isError = listQuery.isError;
@@ -71,6 +91,8 @@ export function SimulacaoList({
   function clearFilters() {
     setSearchInput("");
     setFilters(EMPTY_FILTERS);
+    setShowCreated(false);
+    setShowProposalStarted(false);
   }
 
   async function handleStartProposal(item: SimulationSnapshot) {
@@ -110,7 +132,20 @@ export function SimulacaoList({
             value={searchInput}
             onChange={setSearchInput}
           />
-          {isSimulationsFilterActive(buildSimulationsListQuery(searchInput)) ? (
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <Checkbox
+              label="Criada"
+              checked={showCreated}
+              onCheckedChange={setShowCreated}
+            />
+            <Checkbox
+              label="Proposta Iniciada"
+              checked={showProposalStarted}
+              onCheckedChange={setShowProposalStarted}
+            />
+          </div>
+          {isSimulationsFilterActive(buildSimulationsListQuery(searchInput)) ||
+          statusFilterActive ? (
             <button
               type="button"
               onClick={clearFilters}

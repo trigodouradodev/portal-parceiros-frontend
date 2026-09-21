@@ -1,12 +1,13 @@
-import type {
-  ActivityIncomeData,
-  AddressData,
-  ExpenseItem,
-  FinancialData,
-  GuarantorData,
-  LoanItem,
-  PartnerOpinionData,
-  RegistrationData,
+import {
+  requiresProfession,
+  type ActivityIncomeData,
+  type AddressData,
+  type ExpenseItem,
+  type FinancialData,
+  type GuarantorData,
+  type LoanItem,
+  type PartnerOpinionData,
+  type RegistrationData,
 } from "@/features/originacao/data/proposal";
 import { normalizePaymentPixCode } from "@/features/originacao/schemas/pix-key-validation";
 import { parseMoneyBrl } from "@/lib/format/money";
@@ -24,7 +25,8 @@ import {
   MaritalStatus,
   PartnerAssessment,
   PaymentPixType,
-  type AvailableIncomeProof,
+  type BusinessActivityBranch,
+  type BusinessActivitySubcategory,
   type CustomerRelationshipDuration,
   type Gender,
   type GuarantorRelationship,
@@ -76,7 +78,10 @@ export function mapRegistrationToPayload(
     isRenegotiation: Boolean(data.isRenewal),
     gender: data.gender as Gender,
     secondaryDocument: data.rg.trim(),
-    profession: data.occupation.trim(),
+    businessActivityBranch:
+      data.businessActivityBranch as BusinessActivityBranch,
+    businessActivitySubcategory:
+      data.businessActivitySubcategory as BusinessActivitySubcategory,
     economicActivityCategories: categories,
     maritalStatus: data.maritalStatus as MaritalStatus,
     childrenCount: parseCount(data.childrenCount),
@@ -90,6 +95,10 @@ export function mapRegistrationToPayload(
 
   if (categories.includes(EconomicActivityCategory.OTHER)) {
     payload.economicActivityOther = data.activityCategoryOther.trim();
+  }
+
+  if (requiresProfession(categories)) {
+    payload.profession = data.occupation.trim();
   }
 
   if (isMarriedStatus(data.maritalStatus)) {
@@ -120,7 +129,6 @@ export function mapIncomeToPayload(
           amount: parseMoneyBrl(item.amount),
         }))
       : [],
-    availableIncomeProof: data.availableProof as AvailableIncomeProof,
   };
 
   return payload;

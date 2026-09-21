@@ -10,10 +10,7 @@ import {
 } from "@/features/originacao/data/proposal";
 import { useQuoteAttachments } from "@/features/originacao/hooks/useQuoteDocumentation";
 import { getApiErrorMessage } from "@/lib/api/errors";
-import {
-  AvailableIncomeProof,
-  QuoteAttachmentType,
-} from "@/services/quotes/quotes.enums";
+import { QuoteAttachmentType } from "@/services/quotes/quotes.enums";
 import type { IncomeProofType } from "@/services/quotes/quotes.enums";
 import type {
   QuoteAttachmentSnapshot,
@@ -40,9 +37,7 @@ export function DocumentsSection({ quoteId }: DocumentsSectionProps) {
   const { watch, setValue } = useFormContext<ProposalFormData>();
   const { showToast } = useToast();
   const attachmentsQuery = useQuoteAttachments(quoteId);
-  const availableProof = watch("activityIncome.availableProof");
   const incomeProofTypes = watch("documents.incomeProofTypes");
-  const incomeProofRequired = availableProof !== AvailableIncomeProof.NONE;
   const selectedIncomeProofType =
     (incomeProofTypes[0] as IncomeProofType | undefined) ?? null;
   const loading = attachmentsQuery.isLoading || attachmentsQuery.isFetching;
@@ -134,34 +129,25 @@ export function DocumentsSection({ quoteId }: DocumentsSectionProps) {
         required
         disabled={loading}
       />
-      {incomeProofRequired ? (
-        <>
-          <FormChips<ProposalFormData>
-            name="documents.incomeProofTypes"
-            label="Comprovantes de Renda"
-            description="Selecione o(s) tipo(s). O primeiro selecionado será usado nos próximos anexos."
-            multiple
-            options={INCOME_DOCUMENT_TYPE_OPTIONS}
-            required
-          />
-          <QuoteAttachmentUpload
-            quoteId={quoteId}
-            name="documents.incomeProofs"
-            attachmentType={QuoteAttachmentType.PROOF_OF_INCOME}
-            label="Comprovantes"
-            note="Somente PDF · máx. 10 MB"
-            accept=".pdf,application/pdf"
-            required
-            incomeProofType={selectedIncomeProofType}
-            disabled={loading}
-          />
-        </>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          Comprovante de renda não é obrigatório: no passo Atividade e Renda foi
-          informado que não há comprovante disponível.
-        </p>
-      )}
+      <FormChips<ProposalFormData>
+        name="documents.incomeProofTypes"
+        label="Comprovantes de Renda"
+        description="Selecione o(s) tipo(s). O primeiro selecionado será usado nos próximos anexos."
+        multiple
+        options={INCOME_DOCUMENT_TYPE_OPTIONS}
+        required
+      />
+      <QuoteAttachmentUpload
+        quoteId={quoteId}
+        name="documents.incomeProofs"
+        attachmentType={QuoteAttachmentType.PROOF_OF_INCOME}
+        label="Comprovantes"
+        note="Somente PDF · máx. 10 MB"
+        accept=".pdf,application/pdf"
+        required
+        incomeProofType={selectedIncomeProofType}
+        disabled={loading}
+      />
     </div>
   );
 }

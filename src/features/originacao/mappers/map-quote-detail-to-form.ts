@@ -84,6 +84,8 @@ function mapRegistration(
     gender: registration.gender ?? "",
     rg: registration.secondaryDocument ?? "",
     occupation: registration.profession ?? "",
+    businessActivityBranch: registration.businessActivityBranch ?? "",
+    businessActivitySubcategory: registration.businessActivitySubcategory ?? "",
     activityCategories: registration.economicActivityCategories ?? [],
     activityCategoryOther: registration.economicActivityOther ?? "",
     maritalStatus: registration.maritalStatus ?? "",
@@ -123,7 +125,6 @@ function mapIncome(detail: QuoteDetail["income"]): ActivityIncomeData {
     hasMultipleSources: detail.hasMultipleIncomeSources,
     additionalIncomes,
     nextAdditionalIncomeId: additionalIncomes.length + 1,
-    availableProof: detail.availableIncomeProof ?? "",
   };
 }
 
