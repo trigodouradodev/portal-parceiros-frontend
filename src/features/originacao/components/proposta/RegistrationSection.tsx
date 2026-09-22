@@ -6,7 +6,9 @@ import {
   FormSelect,
   FormYesNo,
 } from "@/components/ui/rhf-fields";
+import { EmailDeliverabilityHint } from "@/features/originacao/components/proposta/EmailDeliverabilityHint";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
+import type { EmailDeliverabilityStatus } from "@/features/originacao/hooks/useEmailDeliverability";
 import {
   CHILDREN_COUNT_SELECT_OPTIONS,
   CREDIT_CARD_ICON,
@@ -40,12 +42,14 @@ interface RegistrationSectionProps {
   product: string;
   rate: number;
   onRenewalChange?: (value: boolean) => void;
+  emailDeliverabilityStatus: EmailDeliverabilityStatus;
 }
 
 export function RegistrationSection({
   product,
   rate,
   onRenewalChange,
+  emailDeliverabilityStatus,
 }: RegistrationSectionProps) {
   const { setValue, watch } = useFormContext<ProposalFormData>();
   const [showRate, setShowRate] = useState(false);
@@ -140,6 +144,7 @@ export function RegistrationSection({
         type="email"
         required
       />
+      <EmailDeliverabilityHint status={emailDeliverabilityStatus} />
       <FormInput<ProposalFormData>
         name="registration.phone"
         label="Celular"
