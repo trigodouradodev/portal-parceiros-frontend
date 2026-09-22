@@ -458,6 +458,19 @@ function ProposalWizard({
     onClose();
   }
 
+  function handleBlockedEmailOpenChange(open: boolean) {
+    if (!open) setBlockedEmailField(null);
+  }
+
+  async function handleBlockedEmailConfirm() {
+    setBlockedEmailField(null);
+    await proceedAfterEmailCheck();
+  }
+
+  function handleBlockedEmailCancel() {
+    if (blockedEmailField) scrollToField(blockedEmailField);
+  }
+
   return (
     <OriginacaoTaskLayout
       header={
@@ -542,20 +555,13 @@ function ProposalWizard({
       />
       <ConfirmDialog
         open={blockedEmailField !== null}
-        onOpenChange={(open) => {
-          if (!open) setBlockedEmailField(null);
-        }}
+        onOpenChange={handleBlockedEmailOpenChange}
         title="E-mail pode não ser entregável"
         description="Este e-mail não passou na verificação de entregabilidade — pode haver um erro de digitação, ou o servidor do destinatário pode estar recusando mensagens. Quer continuar mesmo assim?"
         confirmLabel="Continuar assim mesmo"
         cancelLabel="Corrigir e-mail"
-        onConfirm={async () => {
-          setBlockedEmailField(null);
-          await proceedAfterEmailCheck();
-        }}
-        onCancel={() => {
-          if (blockedEmailField) scrollToField(blockedEmailField);
-        }}
+        onConfirm={handleBlockedEmailConfirm}
+        onCancel={handleBlockedEmailCancel}
       />
     </OriginacaoTaskLayout>
   );
