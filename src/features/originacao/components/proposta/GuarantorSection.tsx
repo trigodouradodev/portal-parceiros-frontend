@@ -2,12 +2,14 @@ import { CreditCard, Mail, Phone, User } from "lucide-react";
 import { FieldStatusMessage } from "@/components/ui/field-hint";
 import { FormDate, FormInput, FormSelect } from "@/components/ui/rhf-fields";
 import { AddressFields } from "@/features/originacao/components/AddressFields";
+import { EmailDeliverabilityHint } from "@/features/originacao/components/proposta/EmailDeliverabilityHint";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
   KINSHIP_OPTIONS,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 import { useGuarantorPartyAutoFill } from "@/features/originacao/hooks/useGuarantorPartyAutoFill";
+import type { EmailDeliverabilityStatus } from "@/features/originacao/hooks/useEmailDeliverability";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
@@ -15,7 +17,13 @@ import { isValidCpf } from "@/lib/validation/cpf";
 
 const MAX_BIRTH_ISO = maxAdultBirthIso();
 
-export function GuarantorSection() {
+interface GuarantorSectionProps {
+  emailDeliverabilityStatus: EmailDeliverabilityStatus;
+}
+
+export function GuarantorSection({
+  emailDeliverabilityStatus,
+}: GuarantorSectionProps) {
   const { status, onCpfComplete, onCpfIncomplete } =
     useGuarantorPartyAutoFill();
 
@@ -74,6 +82,7 @@ export function GuarantorSection() {
         type="email"
         required
       />
+      <EmailDeliverabilityHint status={emailDeliverabilityStatus} />
       <FormInput<ProposalFormData>
         name="guarantor.phone"
         label="Telefone do avalista"

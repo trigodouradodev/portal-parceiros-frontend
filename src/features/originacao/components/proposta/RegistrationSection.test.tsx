@@ -1,14 +1,20 @@
 import { useForm } from "react-hook-form";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { Form } from "@/components/ui/form";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
 import {
   createEmptyProposalForm,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
+import {
+  EmailDeliverabilityStatus,
+  type EmailDeliverabilityStatus as EmailDeliverabilityStatusType,
+} from "@/features/originacao/hooks/useEmailDeliverability";
 import { MaritalStatus } from "@/services/quotes/quotes.enums";
 
-function renderRegistration() {
+function renderRegistration(
+  emailDeliverabilityStatus: EmailDeliverabilityStatusType = EmailDeliverabilityStatus.UNCHECKED,
+) {
   function Harness() {
     const empty = createEmptyProposalForm();
     const form = useForm<ProposalFormData>({
@@ -25,7 +31,11 @@ function renderRegistration() {
 
     return (
       <Form {...form}>
-        <RegistrationSection product="Produto" rate={2.5} />
+        <RegistrationSection
+          product="Produto"
+          rate={2.5}
+          emailDeliverabilityStatus={emailDeliverabilityStatus}
+        />
       </Form>
     );
   }
@@ -62,5 +72,13 @@ describe("RegistrationSection", () => {
     expect(
       document.getElementById("field-registration.governmentPrograms"),
     ).toBeNull();
+  });
+
+  it("forwards the e-mail deliverability status to the hint below the field", () => {
+    renderRegistration(EmailDeliverabilityStatus.CHECKING);
+
+    expect(
+      screen.getByText("Verificando entregabilidade do e-mail…"),
+    ).toBeInTheDocument();
   });
 });
