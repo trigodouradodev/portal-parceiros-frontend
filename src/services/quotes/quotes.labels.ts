@@ -8,6 +8,7 @@ import {
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
   ExpenseCategory,
+  FamilyRelationship,
   Gender,
   GovernmentProgram,
   GuarantorRelationship,
@@ -402,8 +403,8 @@ export const ACTIVITY_TIME_OPTIONS = options([
 
 // IncomeSource.MIXED_INCOME não aparece aqui de propósito: com o campo
 // renomeado para "Fonte principal da renda declarada", uma fonte "mista"
-// não faz sentido como resposta — múltiplas fontes já são capturadas por
-// "Possui múltiplas fontes de renda?" + a lista de rendas adicionais. O
+// não faz sentido como resposta — múltiplas fontes já são capturadas pela
+// lista de rendas secundárias. O
 // valor do enum continua existindo só por compatibilidade com dado legado
 // (zero ocorrências em produção na data desta mudança).
 export const INCOME_SOURCE_OPTIONS = options([
@@ -411,7 +412,21 @@ export const INCOME_SOURCE_OPTIONS = options([
   [IncomeSource.OWN_BUSINESS, "Negócio próprio"],
   [IncomeSource.BENEFIT, "Benefício"],
   [IncomeSource.RENT, "Aluguel"],
+  [IncomeSource.FAMILY_INCOME, "Renda Familiar"],
   [IncomeSource.OTHER, "Outro"],
+]);
+
+export const PRIMARY_INCOME_SOURCE_OPTIONS = INCOME_SOURCE_OPTIONS.filter(
+  (option) => option.value !== IncomeSource.FAMILY_INCOME,
+);
+
+export const FAMILY_RELATIONSHIP_OPTIONS = options([
+  [FamilyRelationship.SPOUSE, "Cônjuge"],
+  [FamilyRelationship.FATHER, "Pai"],
+  [FamilyRelationship.MOTHER, "Mãe"],
+  [FamilyRelationship.CHILD, "Filho(a)"],
+  [FamilyRelationship.SIBLING, "Irmão"],
+  [FamilyRelationship.OTHER_RELATIVE, "Outro parente"],
 ]);
 
 export const RELATIONSHIP_TIME_OPTIONS = options([

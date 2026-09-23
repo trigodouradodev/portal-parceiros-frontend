@@ -8,7 +8,21 @@ import {
   BusinessActivitySubcategory,
   EconomicActivityCategory,
   IncomeSource,
+  IncomeEntryRole,
 } from "@/services/quotes/quotes.enums";
+
+const secondaryIncome = (id: number, source: IncomeSource, amount: string) => ({
+  id,
+  activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
+  activityCategoryOther: "",
+  occupation: "",
+  businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+  businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
+  activityTime: ActivityDuration.ONE_TO_3_YEARS,
+  source,
+  amount,
+  familyRelationship: "",
+});
 
 const registration = {
   ...createEmptyProposalForm().registration,
@@ -25,38 +39,52 @@ describe("mapIncomeToApi", () => {
       mapIncomeToApi(
         {
           ...form,
-          cnpj: "11.222.333/0001-81",
           activityTime: ActivityDuration.ONE_TO_3_YEARS,
           monthlyIncome: formatMoneyBrl("350000"),
           incomeSource: IncomeSource.SALARY,
-          hasMultipleSources: true,
           additionalIncomes: [
-            {
-              id: 1,
-              source: IncomeSource.RENT,
-              amount: formatMoneyBrl("80000"),
-            },
-            {
-              id: 2,
-              source: IncomeSource.OTHER,
-              amount: formatMoneyBrl("25000"),
-            },
+            secondaryIncome(1, IncomeSource.RENT, formatMoneyBrl("80000")),
+            secondaryIncome(2, IncomeSource.OTHER, formatMoneyBrl("25000")),
           ],
         },
         registration,
       ),
     ).toEqual({
-      profession: "Vendedora",
-      economicActivityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
-      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
-      businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
-      activityDuration: ActivityDuration.ONE_TO_3_YEARS,
-      declaredMonthlyIncome: 3500,
-      incomeSource: IncomeSource.SALARY,
-      hasMultipleIncomeSources: true,
-      additionalIncomes: [
-        { source: IncomeSource.RENT, amount: 800 },
-        { source: IncomeSource.OTHER, amount: 250 },
+      incomes: [
+        {
+          id: "primary",
+          role: IncomeEntryRole.PRIMARY,
+          economicActivity: EconomicActivityCategory.CLT_EMPLOYEE,
+          profession: "Vendedora",
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 3500,
+          source: IncomeSource.SALARY,
+        },
+        {
+          id: "secondary-1",
+          role: IncomeEntryRole.SECONDARY,
+          economicActivity: EconomicActivityCategory.BUSINESS_OWNER,
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 800,
+          source: IncomeSource.RENT,
+        },
+        {
+          id: "secondary-2",
+          role: IncomeEntryRole.SECONDARY,
+          economicActivity: EconomicActivityCategory.BUSINESS_OWNER,
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 250,
+          source: IncomeSource.OTHER,
+        },
       ],
     });
   });
@@ -69,16 +97,14 @@ describe("mapIncomeToApi", () => {
         activityTime: ActivityDuration.LESS_THAN_6_MONTHS,
         monthlyIncome: formatMoneyBrl("100000"),
         incomeSource: IncomeSource.OWN_BUSINESS,
-        hasMultipleSources: false,
       },
       registration,
     );
 
     expect(payload).not.toHaveProperty("businessDocument");
     expect(payload).not.toHaveProperty("availableIncomeProof");
-    expect(payload.additionalIncomes).toEqual([]);
-    expect(payload.hasMultipleIncomeSources).toBe(false);
-    expect(payload.declaredMonthlyIncome).toBe(1000);
+    expect(payload.incomes).toHaveLength(1);
+    expect(payload.incomes[0].amount).toBe(1000);
   });
 
   it("uses a provisional activity duration when the parecer field is still empty", () => {
@@ -91,6 +117,8 @@ describe("mapIncomeToApi", () => {
       },
       registration,
     );
-    expect(payload.activityDuration).toBe(ActivityDuration.LESS_THAN_6_MONTHS);
+    expect(payload.incomes[0].activityDuration).toBe(
+      ActivityDuration.LESS_THAN_6_MONTHS,
+    );
   });
 });

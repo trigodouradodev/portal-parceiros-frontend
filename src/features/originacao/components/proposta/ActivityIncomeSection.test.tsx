@@ -63,7 +63,7 @@ describe("ActivityIncomeSection", () => {
     ).toBeNull();
   });
 
-  it("shows explanatory hints for renda mensal and múltiplas fontes", () => {
+  it("shows explanatory hints and the new income section labels", () => {
     renderActivityIncome();
 
     expect(
@@ -71,16 +71,22 @@ describe("ActivityIncomeSection", () => {
         ?.textContent,
     ).toContain("Renda da atividade principal informada nesta tela.");
     expect(
-      document.getElementById("field-activityIncome.hasMultipleSources")
-        ?.textContent,
-    ).toContain("Considere renda além da atividade principal");
+      screen.getByText("Adicione somente quando houver outra fonte de renda."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Adicionar outra renda" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Renda e Atividade")).toBeInTheDocument();
+    expect(screen.getByText("Outras rendas")).toBeInTheDocument();
+    expect(screen.getByText("Renda total declarada")).toBeInTheDocument();
+    expect(screen.getByText("R$ 0,00")).toBeInTheDocument();
   });
 
-  it("labels a fonte principal da renda, with a hint, and no longer offers renda mista", () => {
+  it("labels the income source consistently, with a hint, and no longer offers renda mista", () => {
     renderActivityIncome();
 
     const field = document.getElementById("field-activityIncome.incomeSource");
-    expect(field?.textContent).toContain("Fonte principal da renda declarada");
+    expect(field?.textContent).toContain("Fonte da renda");
     expect(field?.textContent).toContain(
       "Refere-se apenas à renda declarada acima",
     );
@@ -89,6 +95,24 @@ describe("ActivityIncomeSection", () => {
 
     expect(screen.getByText("Salário")).toBeInTheDocument();
     expect(screen.queryByText("Renda mista")).not.toBeInTheDocument();
+  });
+
+  it("updates the declared income total in real time", () => {
+    renderActivityIncome();
+
+    fireEvent.change(fieldInput("activityIncome.monthlyIncome")!, {
+      target: { value: "100000" },
+    });
+    expect(screen.getByText("R$ 1.000,00")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Adicionar outra renda" }),
+    );
+    fireEvent.change(fieldInput("activityIncome.additionalIncomes.0.amount")!, {
+      target: { value: "50000" },
+    });
+
+    expect(screen.getByText("R$ 1.500,00")).toBeInTheDocument();
   });
 
   it.each([

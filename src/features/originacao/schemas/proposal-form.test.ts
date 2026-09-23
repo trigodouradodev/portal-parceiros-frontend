@@ -16,10 +16,22 @@ function baseIncome(
     activityTime: "six_months_to_2_years",
     monthlyIncome: "R$ 2.600,00",
     incomeSource: "salary",
-    hasMultipleSources: false,
     ...overrides,
   };
 }
+
+const validSecondaryIncome = {
+  id: 1,
+  activityCategories: ["business_owner"],
+  activityCategoryOther: "",
+  occupation: "",
+  businessActivityBranch: "retail_commerce",
+  businessActivitySubcategory: "general_commerce",
+  activityTime: "1_to_3_years",
+  source: "rent",
+  amount: "R$ 800,00",
+  familyRelationship: "",
+};
 
 describe("activityIncomeSchema monthlyIncome (AUREA-482)", () => {
   it("rejects empty income", () => {
@@ -45,19 +57,18 @@ describe("activityIncomeSchema monthlyIncome (AUREA-482)", () => {
     expect(result.success).toBe(true);
   });
 
-  it("requires at least one additional income when multiple sources is yes", () => {
+  it("accepts no secondary income", () => {
     const result = activityIncomeSchema.safeParse(
-      baseIncome({ hasMultipleSources: true, additionalIncomes: [] }),
+      baseIncome({ additionalIncomes: [] }),
     );
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("validates source and positive amount for every additional income", () => {
     expect(
       activityIncomeSchema.safeParse(
         baseIncome({
-          hasMultipleSources: true,
-          additionalIncomes: [{ id: 1, source: "rent", amount: "R$ 800,00" }],
+          additionalIncomes: [validSecondaryIncome],
         }),
       ).success,
     ).toBe(true);
@@ -65,8 +76,9 @@ describe("activityIncomeSchema monthlyIncome (AUREA-482)", () => {
     expect(
       activityIncomeSchema.safeParse(
         baseIncome({
-          hasMultipleSources: true,
-          additionalIncomes: [{ id: 1, source: "", amount: "R$ 0,00" }],
+          additionalIncomes: [
+            { ...validSecondaryIncome, source: "", amount: "R$ 0,00" },
+          ],
         }),
       ).success,
     ).toBe(false);

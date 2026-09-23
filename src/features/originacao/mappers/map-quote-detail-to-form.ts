@@ -112,17 +112,23 @@ function mapRegistration(
 }
 
 function mapIncome(detail: QuoteDetail["income"]): ActivityIncomeData {
-  const additionalIncomes = detail.additionalIncomes.map((item, index) => ({
+  const [primary, ...secondary] = detail.incomes;
+  const additionalIncomes = secondary.map((item, index) => ({
     id: index + 1,
-    source: item.source,
+    activityCategories: item.economicActivity ? [item.economicActivity] : [],
+    activityCategoryOther: item.economicActivityOther ?? "",
+    occupation: item.profession ?? "",
+    businessActivityBranch: item.businessActivityBranch ?? "",
+    businessActivitySubcategory: item.businessActivitySubcategory ?? "",
+    activityTime: item.activityDuration ?? "",
+    source: item.source ?? "",
     amount: moneyOrEmpty(item.amount),
+    familyRelationship: item.familyRelationship ?? "",
   }));
   return {
-    cnpj: "",
-    activityTime: detail.activityDuration ?? "",
-    monthlyIncome: moneyOrEmpty(detail.declaredMonthlyIncome),
-    incomeSource: detail.incomeSource ?? "",
-    hasMultipleSources: detail.hasMultipleIncomeSources,
+    activityTime: primary?.activityDuration ?? "",
+    monthlyIncome: moneyOrEmpty(primary?.amount),
+    incomeSource: primary?.source ?? "",
     additionalIncomes,
     nextAdditionalIncomeId: additionalIncomes.length + 1,
   };

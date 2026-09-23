@@ -26,6 +26,8 @@ import {
   HOW_KNOWS_CLIENT_OPTIONS as QUOTE_HOW_KNOWS_CLIENT_OPTIONS,
   DOCUMENTATION_INCOME_PROOF_OPTIONS as QUOTE_DOCUMENTATION_INCOME_PROOF_OPTIONS,
   INCOME_SOURCE_OPTIONS as QUOTE_INCOME_SOURCE_OPTIONS,
+  PRIMARY_INCOME_SOURCE_OPTIONS as QUOTE_PRIMARY_INCOME_SOURCE_OPTIONS,
+  FAMILY_RELATIONSHIP_OPTIONS as QUOTE_FAMILY_RELATIONSHIP_OPTIONS,
   KINSHIP_OPTIONS as QUOTE_KINSHIP_OPTIONS,
   LOAN_CATEGORY_OPTIONS as QUOTE_LOAN_CATEGORY_OPTIONS,
   PAYMENT_PIX_OPTIONS as QUOTE_PAYMENT_PIX_OPTIONS,
@@ -102,6 +104,10 @@ export const BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH: Record<
 > = QUOTE_BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH;
 export const INCOME_SOURCE_OPTIONS: SelectOption[] =
   QUOTE_INCOME_SOURCE_OPTIONS;
+export const PRIMARY_INCOME_SOURCE_OPTIONS: SelectOption[] =
+  QUOTE_PRIMARY_INCOME_SOURCE_OPTIONS;
+export const FAMILY_RELATIONSHIP_OPTIONS: SelectOption[] =
+  QUOTE_FAMILY_RELATIONSHIP_OPTIONS;
 export const RELATIONSHIP_TIME_OPTIONS: SelectOption[] =
   QUOTE_RELATIONSHIP_TIME_OPTIONS;
 export const HOW_KNOWS_CLIENT_OPTIONS: SelectOption[] =
@@ -228,16 +234,21 @@ export interface RegistrationData {
 
 export interface AdditionalIncomeItem {
   id: number;
+  activityCategories: string[];
+  activityCategoryOther: string;
+  occupation: string;
+  businessActivityBranch: string;
+  businessActivitySubcategory: string;
+  activityTime: string;
   source: string;
   amount: string;
+  familyRelationship: string;
 }
 
 export interface ActivityIncomeData {
-  cnpj: string;
   activityTime: string;
   monthlyIncome: string;
   incomeSource: string;
-  hasMultipleSources: boolean | null;
   additionalIncomes: AdditionalIncomeItem[];
   nextAdditionalIncomeId: number;
 }
@@ -390,11 +401,9 @@ export function createEmptyProposalForm(): ProposalFormData {
       debtCreditor: "",
     },
     activityIncome: {
-      cnpj: "",
       activityTime: "",
       monthlyIncome: "",
       incomeSource: "",
-      hasMultipleSources: null,
       additionalIncomes: [],
       nextAdditionalIncomeId: 1,
     },
