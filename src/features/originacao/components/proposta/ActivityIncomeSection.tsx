@@ -15,7 +15,7 @@ import {
   requiresProfession,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
-import { formatMoneyBrl } from "@/lib/format/money";
+import { fmtBRL, formatMoneyBrl, parseMoneyBrl } from "@/lib/format/money";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
 import {
   RemovableCard,
@@ -26,6 +26,8 @@ import { IncomeSource } from "@/services/quotes/quotes.enums";
 export function ActivityIncomeSection() {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
   const nextAdditionalIncomeId = watch("activityIncome.nextAdditionalIncomeId");
+  const primaryIncome = watch("activityIncome.monthlyIncome");
+  const additionalIncomeValues = watch("activityIncome.additionalIncomes");
   const activityCategories = watch("registration.activityCategories");
   const professionRequired = requiresProfession(activityCategories);
   const businessActivityBranch = watch("registration.businessActivityBranch");
@@ -35,6 +37,12 @@ export function ActivityIncomeSection() {
   const branchLabel = BUSINESS_ACTIVITY_BRANCH_OPTIONS.find(
     (option) => option.value === businessActivityBranch,
   )?.label;
+  const totalDeclaredIncome =
+    parseMoneyBrl(primaryIncome) +
+    additionalIncomeValues.reduce(
+      (total, income) => total + parseMoneyBrl(income.amount),
+      0,
+    );
   const {
     fields: additionalIncomes,
     append: appendAdditionalIncome,
@@ -99,7 +107,7 @@ export function ActivityIncomeSection() {
 
   return (
     <div className="flex flex-col gap-5">
-      <FormSection title="Renda principal">
+      <FormSection title="Renda e Atividade">
         <FormField
           control={control}
           name="registration.activityCategories"
@@ -177,10 +185,10 @@ export function ActivityIncomeSection() {
       />
 
       <RepeatableGroup
-        title="Rendas secundárias"
+        title="Outras rendas"
         hint="Adicione somente quando houver outra fonte de renda."
-        addLabel="Adicionar renda secundária"
-        emptyLabel="Nenhuma renda secundária adicionada."
+        addLabel="Adicionar outra renda"
+        emptyLabel="Nenhuma outra renda adicionada."
         isEmpty={additionalIncomes.length === 0}
         onAdd={addAdditionalIncome}
       >
@@ -202,9 +210,9 @@ export function ActivityIncomeSection() {
           return (
             <RemovableCard
               key={income.fieldId}
-              removeLabel="Remover renda secundária"
+              removeLabel="Remover outra renda"
               onRemove={() => removeAdditionalIncome(index)}
-              header={<strong>Renda secundária {index + 1}</strong>}
+              header={<strong>Outra renda {index + 1}</strong>}
             >
               <FormField
                 control={control}
@@ -287,6 +295,20 @@ export function ActivityIncomeSection() {
           );
         })}
       </RepeatableGroup>
+
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-muted p-4">
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Renda total declarada
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Soma de todas as rendas, incluindo renda familiar.
+          </p>
+        </div>
+        <strong className="whitespace-nowrap text-base text-foreground">
+          {fmtBRL(totalDeclaredIncome)}
+        </strong>
+      </div>
     </div>
   );
 }
