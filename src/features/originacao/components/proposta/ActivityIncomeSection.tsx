@@ -302,7 +302,7 @@ export function ActivityIncomeSection() {
             Renda total declarada
           </p>
           <p className="text-xs text-muted-foreground">
-            Soma de todas as rendas, incluindo renda familiar.
+            Soma de todas as rendas
           </p>
         </div>
         <strong className="whitespace-nowrap text-base text-foreground">
