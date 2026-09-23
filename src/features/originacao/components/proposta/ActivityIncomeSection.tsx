@@ -108,6 +108,13 @@ export function ActivityIncomeSection() {
   return (
     <div className="flex flex-col gap-5">
       <FormSection title="Renda e Atividade">
+        <FormSelect<ProposalFormData>
+          name="activityIncome.incomeSource"
+          label="Tipo de renda"
+          hint="Refere-se apenas à renda declarada neste bloco — outras rendas são informadas a seguir."
+          options={PRIMARY_INCOME_SOURCE_OPTIONS}
+          required
+        />
         <FormField
           control={control}
           name="registration.activityCategories"
@@ -131,7 +138,6 @@ export function ActivityIncomeSection() {
             required
           />
         ) : null}
-
         {professionRequired ? (
           <FormInput<ProposalFormData>
             name="registration.occupation"
@@ -140,7 +146,6 @@ export function ActivityIncomeSection() {
             required
           />
         ) : null}
-
         <FormSelect<ProposalFormData>
           name="registration.businessActivityBranch"
           label="Ramo de atividade"
@@ -163,26 +168,17 @@ export function ActivityIncomeSection() {
           options={ACTIVITY_TIME_OPTIONS}
           required
         />
+        <FormInput<ProposalFormData>
+          name="activityIncome.monthlyIncome"
+          label="Renda mensal"
+          hint="Renda da atividade principal informada neste bloco."
+          transform={formatMoneyBrl}
+          icon={<Wallet size={16} />}
+          placeholder="R$ 0,00"
+          inputMode="numeric"
+          required
+        />
       </FormSection>
-
-      <FormInput<ProposalFormData>
-        name="activityIncome.monthlyIncome"
-        label="Renda mensal declarada"
-        hint="Renda da atividade principal informada nesta tela."
-        transform={formatMoneyBrl}
-        icon={<Wallet size={16} />}
-        placeholder="R$ 0,00"
-        inputMode="numeric"
-        required
-      />
-
-      <FormSelect<ProposalFormData>
-        name="activityIncome.incomeSource"
-        label="Fonte da renda"
-        hint="Refere-se apenas à renda declarada acima — outras fontes são informadas a seguir."
-        options={PRIMARY_INCOME_SOURCE_OPTIONS}
-        required
-      />
 
       <RepeatableGroup
         title="Outras rendas"
@@ -214,6 +210,20 @@ export function ActivityIncomeSection() {
               onRemove={() => removeAdditionalIncome(index)}
               header={<strong>Outra renda {index + 1}</strong>}
             >
+              <FormSelect<ProposalFormData>
+                name={`activityIncome.additionalIncomes.${index}.source`}
+                label="Tipo de renda"
+                options={INCOME_SOURCE_OPTIONS}
+                required
+              />
+              {source === IncomeSource.FAMILY_INCOME ? (
+                <FormSelect<ProposalFormData>
+                  name={`activityIncome.additionalIncomes.${index}.familyRelationship`}
+                  label="Grau de parentesco"
+                  options={FAMILY_RELATIONSHIP_OPTIONS}
+                  required
+                />
+              ) : null}
               <FormField
                 control={control}
                 name={`activityIncome.additionalIncomes.${index}.activityCategories`}
@@ -270,27 +280,13 @@ export function ActivityIncomeSection() {
               />
               <FormInput<ProposalFormData>
                 name={`activityIncome.additionalIncomes.${index}.amount`}
-                label="Renda mensal declarada"
+                label="Renda mensal"
                 transform={formatMoneyBrl}
                 icon={<Wallet size={16} />}
                 placeholder="R$ 0,00"
                 inputMode="numeric"
                 required
               />
-              <FormSelect<ProposalFormData>
-                name={`activityIncome.additionalIncomes.${index}.source`}
-                label="Fonte da renda"
-                options={INCOME_SOURCE_OPTIONS}
-                required
-              />
-              {source === IncomeSource.FAMILY_INCOME ? (
-                <FormSelect<ProposalFormData>
-                  name={`activityIncome.additionalIncomes.${index}.familyRelationship`}
-                  label="Grau de parentesco"
-                  options={FAMILY_RELATIONSHIP_OPTIONS}
-                  required
-                />
-              ) : null}
             </RemovableCard>
           );
         })}
