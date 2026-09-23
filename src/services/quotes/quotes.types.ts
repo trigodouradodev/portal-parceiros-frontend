@@ -8,12 +8,14 @@ import type {
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
   ExpenseCategory,
+  FamilyRelationship,
   Gender,
   GovernmentProgram,
   GuarantorRelationship,
   HousingStatus,
   IncomeProofType,
   IncomeSource,
+  IncomeEntryRole,
   LoanCategory,
   LoanFrequency,
   LoanInstitution,
@@ -102,25 +104,22 @@ export interface QuoteRegistrationSnapshot extends SaveQuoteRegistrationPayload 
   updatedAt: string;
 }
 
-export interface QuoteAdditionalIncomePayload {
-  source: IncomeSource;
+export interface QuoteIncomeEntryPayload {
+  id: string;
+  role: IncomeEntryRole;
+  economicActivity: EconomicActivityCategory;
+  economicActivityOther?: string;
+  profession?: string;
+  businessActivityBranch: BusinessActivityBranch;
+  businessActivitySubcategory: BusinessActivitySubcategory;
+  activityDuration: ActivityDuration;
   amount: number;
+  source: IncomeSource;
+  familyRelationship?: FamilyRelationship;
 }
 
 export interface SaveQuoteIncomePayload {
-  profession?: string;
-  economicActivityCategories: EconomicActivityCategory[];
-  economicActivityOther?: string;
-  businessActivityBranch: BusinessActivityBranch;
-  businessActivitySubcategory: BusinessActivitySubcategory;
-  businessDocument?: string;
-  activityDuration: ActivityDuration;
-  declaredMonthlyIncome: number;
-  incomeSource: IncomeSource;
-  hasMultipleIncomeSources: boolean;
-  additionalIncomes: QuoteAdditionalIncomePayload[];
-  /** Legado: comprovante de renda agora é sempre obrigatório na Documentação. */
-  availableIncomeProof?: AvailableIncomeProof;
+  incomes: QuoteIncomeEntryPayload[];
 }
 
 export interface QuoteIncomeSnapshot extends SaveQuoteIncomePayload {
@@ -129,6 +128,7 @@ export interface QuoteIncomeSnapshot extends SaveQuoteIncomePayload {
   step: typeof QuoteDraftStep.INCOME | "income";
   completedAt: string;
   updatedAt: string;
+  incomeModelVersion: number;
 }
 
 export interface QuoteGeolocationPayload {
@@ -334,12 +334,8 @@ export interface QuoteRegistrationDetail {
 }
 
 export interface QuoteIncomeDetail {
-  businessDocument: string | null;
-  activityDuration: ActivityDuration | null;
-  declaredMonthlyIncome: number;
-  incomeSource: IncomeSource | null;
-  hasMultipleIncomeSources: boolean | null;
-  additionalIncomes: QuoteAdditionalIncomePayload[];
+  incomeModelVersion: number;
+  incomes: QuoteIncomeEntryPayload[];
   availableIncomeProof: AvailableIncomeProof | null;
 }
 

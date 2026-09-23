@@ -61,6 +61,7 @@ import {
   scrollToField,
 } from "@/features/originacao/utils/scroll-to-first-error";
 import { fmtBRL } from "@/lib/utils";
+import { parseMoneyBrl } from "@/lib/format/money";
 
 export function PropostaPage() {
   const { onMobileLogout } = useOutletContext<AppShellOutletContext>();
@@ -411,10 +412,35 @@ function ProposalWizard({
       }
     }
     if (step === 5) {
+      const values = form.getValues();
+      const consideredIncome =
+        parseMoneyBrl(values.activityIncome.monthlyIncome) +
+        values.activityIncome.additionalIncomes
+          .filter((income) => income.source !== "family_income")
+          .reduce((total, income) => total + parseMoneyBrl(income.amount), 0);
+      const committedAmount =
+        values.financial.expenses.reduce(
+          (total, expense) => total + parseMoneyBrl(expense.amount),
+          0,
+        ) +
+        values.financial.loans.reduce(
+          (total, loan) => total + parseMoneyBrl(loan.installmentAmount),
+          0,
+        );
+      const availableForInstallment = consideredIncome - committedAmount;
+
+      if (availableForInstallment < proposal.simulation.installmentAmount) {
+        showToast(
+          `A parcela de ${fmtBRL(proposal.simulation.installmentAmount)} excede o montante disponível de ${fmtBRL(availableForInstallment)}. Ajuste as rendas, despesas, empréstimos ou a simulação para continuar.`,
+          { variant: "destructive" },
+        );
+        return;
+      }
+
       try {
         await saveFinancial({
           quoteId: proposal.id,
-          financial: form.getValues().financial,
+          financial: values.financial,
         });
       } catch (err) {
         const message = isAxiosError(err)

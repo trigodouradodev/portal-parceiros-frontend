@@ -5,6 +5,7 @@ import {
   nextWizardStepIndex,
 } from "@/features/originacao/mappers/map-quote-detail-to-form";
 import {
+  ActivityDuration,
   BusinessActivityBranch,
   BusinessActivitySubcategory,
   CreditPurpose,
@@ -13,6 +14,8 @@ import {
   GovernmentProgram,
   GuarantorRelationship,
   HousingStatus,
+  IncomeEntryRole,
+  IncomeSource,
   MaritalStatus,
   PaymentPixType,
   QuoteDraftStep,
@@ -67,12 +70,21 @@ function baseDetail(overrides: Partial<QuoteDetail> = {}): QuoteDetail {
       creditPurpose: CreditPurpose.PERSONAL_EXPENSE,
     },
     income: {
-      businessDocument: null,
-      activityDuration: null,
-      declaredMonthlyIncome: 2500,
-      incomeSource: null,
-      hasMultipleIncomeSources: false,
-      additionalIncomes: [],
+      incomeModelVersion: 1,
+      incomes: [
+        {
+          id: "primary",
+          role: IncomeEntryRole.PRIMARY,
+          economicActivity: EconomicActivityCategory.CLT_EMPLOYEE,
+          profession: "Vendedora",
+          businessActivityBranch: BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.ACCOUNTING_OFFICE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 2500,
+          source: IncomeSource.SALARY,
+        },
+      ],
       availableIncomeProof: null,
     },
     address: {
@@ -261,7 +273,10 @@ describe("mergeRenewalPrefillIntoForm", () => {
       },
       income: {
         ...baseDetail().income,
-        declaredMonthlyIncome: 7000,
+        incomes: baseDetail().income.incomes.map((income) => ({
+          ...income,
+          amount: 7000,
+        })),
       },
       address: {
         ...baseDetail().address,

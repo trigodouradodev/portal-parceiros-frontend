@@ -10,10 +10,12 @@ import {
   BusinessActivityBranch,
   BusinessActivitySubcategory,
   EconomicActivityCategory,
+  IncomeSource,
 } from "@/services/quotes/quotes.enums";
 
 function renderActivityIncome(
   registrationOverrides: Partial<ProposalFormData["registration"]> = {},
+  activityIncomeOverrides: Partial<ProposalFormData["activityIncome"]> = {},
 ) {
   function Harness() {
     const empty = createEmptyProposalForm();
@@ -23,6 +25,10 @@ function renderActivityIncome(
         registration: {
           ...empty.registration,
           ...registrationOverrides,
+        },
+        activityIncome: {
+          ...empty.activityIncome,
+          ...activityIncomeOverrides,
         },
       },
     });
@@ -47,6 +53,18 @@ function fieldInput(name: string) {
   return root?.querySelector("input") ?? null;
 }
 
+function expectFieldBefore(first: string, second: string) {
+  const firstField = document.getElementById(`field-${first}`);
+  const secondField = document.getElementById(`field-${second}`);
+
+  expect(firstField).not.toBeNull();
+  expect(secondField).not.toBeNull();
+  expect(
+    firstField!.compareDocumentPosition(secondField!) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+}
+
 describe("ActivityIncomeSection", () => {
   it("groups atividade econômica, ramo de atividade and tempo na atividade, hiding profissão, a subcategoria and the activity-other field by default", () => {
     renderActivityIncome();
@@ -63,32 +81,115 @@ describe("ActivityIncomeSection", () => {
     ).toBeNull();
   });
 
-  it("shows explanatory hints for renda mensal and múltiplas fontes", () => {
+  it("shows explanatory hints and the new income section labels", () => {
     renderActivityIncome();
 
     expect(
       document.getElementById("field-activityIncome.monthlyIncome")
         ?.textContent,
-    ).toContain("Renda da atividade principal informada nesta tela.");
+    ).toContain("Renda da atividade principal informada neste bloco.");
     expect(
-      document.getElementById("field-activityIncome.hasMultipleSources")
-        ?.textContent,
-    ).toContain("Considere renda além da atividade principal");
+      screen.getByText("Adicione somente quando houver outra fonte de renda."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Adicionar outra renda" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Renda e Atividade")).toBeInTheDocument();
+    expect(screen.getByText("Outras rendas")).toBeInTheDocument();
+    expect(screen.getByText("Renda total declarada")).toBeInTheDocument();
+    expect(screen.getByText("R$ 0,00")).toBeInTheDocument();
   });
 
-  it("labels a fonte principal da renda, with a hint, and no longer offers renda mista", () => {
+  it("labels the income type consistently, with a hint, and no longer offers renda mista", () => {
     renderActivityIncome();
 
     const field = document.getElementById("field-activityIncome.incomeSource");
-    expect(field?.textContent).toContain("Fonte principal da renda declarada");
+    expect(field?.textContent).toContain("Tipo de renda");
     expect(field?.textContent).toContain(
-      "Refere-se apenas à renda declarada acima",
+      "Refere-se apenas à renda declarada neste bloco",
     );
 
     fireEvent.click(fieldTrigger("activityIncome.incomeSource")!);
 
     expect(screen.getByText("Salário")).toBeInTheDocument();
     expect(screen.queryByText("Renda mista")).not.toBeInTheDocument();
+  });
+
+  it("orders the primary income fields starting with income type", () => {
+    renderActivityIncome({
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+    });
+
+    expectFieldBefore(
+      "activityIncome.incomeSource",
+      "registration.activityCategories",
+    );
+    expectFieldBefore(
+      "registration.activityCategories",
+      "registration.businessActivityBranch",
+    );
+    expectFieldBefore(
+      "registration.businessActivityBranch",
+      "registration.businessActivitySubcategory",
+    );
+    expectFieldBefore(
+      "registration.businessActivitySubcategory",
+      "activityIncome.activityTime",
+    );
+    expectFieldBefore(
+      "activityIncome.activityTime",
+      "activityIncome.monthlyIncome",
+    );
+  });
+
+  it("places family relationship immediately after the secondary income type", () => {
+    renderActivityIncome(undefined, {
+      additionalIncomes: [
+        {
+          id: 1,
+          activityCategories: [],
+          activityCategoryOther: "",
+          occupation: "",
+          businessActivityBranch: "",
+          businessActivitySubcategory: "",
+          activityTime: "",
+          source: IncomeSource.FAMILY_INCOME,
+          amount: "",
+          familyRelationship: "",
+        },
+      ],
+    });
+
+    expectFieldBefore(
+      "activityIncome.additionalIncomes.0.source",
+      "activityIncome.additionalIncomes.0.familyRelationship",
+    );
+    expectFieldBefore(
+      "activityIncome.additionalIncomes.0.familyRelationship",
+      "activityIncome.additionalIncomes.0.activityCategories",
+    );
+    expectFieldBefore(
+      "activityIncome.additionalIncomes.0.activityCategories",
+      "activityIncome.additionalIncomes.0.businessActivityBranch",
+    );
+  });
+
+  it("updates the declared income total in real time", () => {
+    renderActivityIncome();
+
+    fireEvent.change(fieldInput("activityIncome.monthlyIncome")!, {
+      target: { value: "100000" },
+    });
+    expect(screen.getByText("R$ 1.000,00")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Adicionar outra renda" }),
+    );
+    fireEvent.change(fieldInput("activityIncome.additionalIncomes.0.amount")!, {
+      target: { value: "50000" },
+    });
+
+    expect(screen.getByText("R$ 1.500,00")).toBeInTheDocument();
   });
 
   it.each([
@@ -100,6 +201,14 @@ describe("ActivityIncomeSection", () => {
     renderActivityIncome({ activityCategories: [category] });
 
     expect(fieldInput("registration.occupation")).toBeTruthy();
+    expectFieldBefore(
+      "registration.activityCategories",
+      "registration.occupation",
+    );
+    expectFieldBefore(
+      "registration.occupation",
+      "registration.businessActivityBranch",
+    );
   });
 
   it.each([
@@ -174,5 +283,13 @@ describe("ActivityIncomeSection", () => {
     });
 
     expect(fieldInput("registration.activityCategoryOther")).toBeTruthy();
+    expectFieldBefore(
+      "registration.activityCategories",
+      "registration.activityCategoryOther",
+    );
+    expectFieldBefore(
+      "registration.activityCategoryOther",
+      "registration.businessActivityBranch",
+    );
   });
 });
