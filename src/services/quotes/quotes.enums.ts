@@ -238,9 +238,28 @@ export const IncomeSource = {
   BENEFIT: "benefit",
   RENT: "rent",
   MIXED_INCOME: "mixed_income",
+  FAMILY_INCOME: "family_income",
   OTHER: "other",
 } as const;
 export type IncomeSource = (typeof IncomeSource)[keyof typeof IncomeSource];
+
+export const IncomeEntryRole = {
+  PRIMARY: "primary",
+  SECONDARY: "secondary",
+} as const;
+export type IncomeEntryRole =
+  (typeof IncomeEntryRole)[keyof typeof IncomeEntryRole];
+
+export const FamilyRelationship = {
+  SPOUSE: "spouse",
+  FATHER: "father",
+  MOTHER: "mother",
+  CHILD: "child",
+  SIBLING: "sibling",
+  OTHER_RELATIVE: "other_relative",
+} as const;
+export type FamilyRelationship =
+  (typeof FamilyRelationship)[keyof typeof FamilyRelationship];
 
 export const AvailableIncomeProof = {
   PAYSLIP: "payslip",

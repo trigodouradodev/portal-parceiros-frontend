@@ -18,6 +18,8 @@ import {
   isRegistrationValid,
 } from "@/features/originacao/schemas/proposal-form";
 import {
+  BusinessActivityBranch,
+  BusinessActivitySubcategory,
   CreditPurpose,
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
@@ -227,9 +229,23 @@ describe("proposal validators", () => {
         activityTime: "1_to_3_years",
         monthlyIncome: "3000",
         incomeSource: IncomeSource.SALARY,
-        hasMultipleSources: true,
+        additionalIncomes: [
+          {
+            id: 1,
+            activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
+            activityCategoryOther: "",
+            occupation: "",
+            businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+            businessActivitySubcategory:
+              BusinessActivitySubcategory.GENERAL_COMMERCE,
+            activityTime: "1_to_3_years",
+            source: IncomeSource.OWN_BUSINESS,
+            amount: "R$ 1.000,00",
+            familyRelationship: "",
+          },
+        ],
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("validates address required fields", () => {

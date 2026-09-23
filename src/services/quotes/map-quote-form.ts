@@ -19,6 +19,8 @@ import {
   CustomerRelationshipOrigin,
   EconomicActivityCategory,
   ExpenseCategory,
+  IncomeEntryRole,
+  IncomeSource,
   GovernmentProgram,
   LoanCategory,
   LoanInstitution,
@@ -29,7 +31,7 @@ import {
   type Gender,
   type GuarantorRelationship,
   type HousingStatus,
-  type IncomeSource,
+  type FamilyRelationship,
   type LoanFrequency,
   type ResidenceDuration,
 } from "./quotes.enums";
@@ -100,37 +102,58 @@ export function mapIncomeToPayload(
   data: ActivityIncomeData,
   registration: RegistrationData,
 ): SaveQuoteIncomePayload {
-  const hasMultiple = Boolean(data.hasMultipleSources);
-  const categories =
-    registration.activityCategories as SaveQuoteIncomePayload["economicActivityCategories"];
-  const payload: SaveQuoteIncomePayload = {
-    economicActivityCategories: categories,
+  const primaryActivity = registration
+    .activityCategories[0] as EconomicActivityCategory;
+  const primary = {
+    id: "primary",
+    role: IncomeEntryRole.PRIMARY,
+    economicActivity: primaryActivity,
+    ...(primaryActivity === EconomicActivityCategory.OTHER
+      ? { economicActivityOther: registration.activityCategoryOther.trim() }
+      : {}),
+    ...(requiresProfession(registration.activityCategories)
+      ? { profession: registration.occupation.trim() }
+      : {}),
     businessActivityBranch:
-      registration.businessActivityBranch as SaveQuoteIncomePayload["businessActivityBranch"],
+      registration.businessActivityBranch as SaveQuoteIncomePayload["incomes"][number]["businessActivityBranch"],
     businessActivitySubcategory:
-      registration.businessActivitySubcategory as SaveQuoteIncomePayload["businessActivitySubcategory"],
+      registration.businessActivitySubcategory as SaveQuoteIncomePayload["incomes"][number]["businessActivitySubcategory"],
     activityDuration: (data.activityTime.trim() ||
       ActivityDuration.LESS_THAN_6_MONTHS) as ActivityDuration,
-    declaredMonthlyIncome: parseMoneyBrl(data.monthlyIncome),
-    incomeSource: data.incomeSource as IncomeSource,
-    hasMultipleIncomeSources: hasMultiple,
-    additionalIncomes: hasMultiple
-      ? data.additionalIncomes.map((item) => ({
-          source: item.source as IncomeSource,
-          amount: parseMoneyBrl(item.amount),
-        }))
-      : [],
+    amount: parseMoneyBrl(data.monthlyIncome),
+    source: data.incomeSource as IncomeSource,
   };
 
-  if (categories.includes(EconomicActivityCategory.OTHER)) {
-    payload.economicActivityOther = registration.activityCategoryOther.trim();
-  }
+  const secondary = data.additionalIncomes.map((item) => {
+    const economicActivity = item
+      .activityCategories[0] as EconomicActivityCategory;
+    const source = item.source as IncomeSource;
+    return {
+      id: `secondary-${item.id}`,
+      role: IncomeEntryRole.SECONDARY,
+      economicActivity,
+      ...(economicActivity === EconomicActivityCategory.OTHER
+        ? { economicActivityOther: item.activityCategoryOther.trim() }
+        : {}),
+      ...(requiresProfession(item.activityCategories)
+        ? { profession: item.occupation.trim() }
+        : {}),
+      businessActivityBranch:
+        item.businessActivityBranch as SaveQuoteIncomePayload["incomes"][number]["businessActivityBranch"],
+      businessActivitySubcategory:
+        item.businessActivitySubcategory as SaveQuoteIncomePayload["incomes"][number]["businessActivitySubcategory"],
+      activityDuration: item.activityTime as ActivityDuration,
+      amount: parseMoneyBrl(item.amount),
+      source,
+      ...(source === IncomeSource.FAMILY_INCOME
+        ? {
+            familyRelationship: item.familyRelationship as FamilyRelationship,
+          }
+        : {}),
+    };
+  });
 
-  if (requiresProfession(categories)) {
-    payload.profession = registration.occupation.trim();
-  }
-
-  return payload;
+  return { incomes: [primary, ...secondary] };
 }
 
 /** Form Endereço → PATCH .../address */

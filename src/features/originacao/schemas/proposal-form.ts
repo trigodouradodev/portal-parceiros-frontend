@@ -25,6 +25,7 @@ import { parseMoneyBrl } from "@/lib/format/money";
 import { digitsOnlyPhone } from "@/lib/format/phone";
 import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
 import { addPaymentPixFormatIssues } from "@/features/originacao/schemas/pix-key-validation";
+import { IncomeSource } from "@/services/quotes/quotes.enums";
 
 export const REQUIRED_FIELD_MESSAGE = "Campo obrigatório";
 export const POSITIVE_MONEY_MESSAGE = "Informe um valor maior que zero";
@@ -169,34 +170,62 @@ function registrationSchemaFor(data: RegistrationData) {
     });
 }
 
-export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z
+const additionalIncomeSchema = z
   .object({
-    cnpj: z.string(),
+    id: z.number(),
+    activityCategories: z.array(requiredString).min(1, REQUIRED_FIELD_MESSAGE),
+    activityCategoryOther: z.string(),
+    occupation: z.string(),
+    businessActivityBranch: requiredString,
+    businessActivitySubcategory: requiredString,
     activityTime: requiredString,
-    monthlyIncome: positiveMoneyString(),
-    incomeSource: requiredString,
-    hasMultipleSources: z.boolean().nullable(),
-    additionalIncomes: z.array(
-      z.object({
-        id: z.number(),
-        source: requiredString,
-        amount: positiveMoneyString(),
-      }),
-    ),
-    nextAdditionalIncomeId: z.number(),
+    source: requiredString,
+    amount: positiveMoneyString(),
+    familyRelationship: z.string(),
   })
   .superRefine((data, ctx) => {
     if (
-      data.hasMultipleSources === true &&
-      data.additionalIncomes.length === 0
+      data.activityCategories.includes(OTHER_OPTION) &&
+      data.activityCategoryOther.trim() === ""
     ) {
       ctx.addIssue({
         code: "custom",
-        path: ["additionalIncomes"],
-        message: "Adicione ao menos uma renda adicional",
+        path: ["activityCategoryOther"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    }
+    if (
+      requiresProfession(data.activityCategories) &&
+      data.occupation.trim().length < 2
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["occupation"],
+        message: REQUIRED_FIELD_MESSAGE,
+      });
+    }
+    if (
+      data.source === IncomeSource.FAMILY_INCOME &&
+      data.familyRelationship.trim() === ""
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["familyRelationship"],
+        message: REQUIRED_FIELD_MESSAGE,
       });
     }
   });
+
+export const activityIncomeSchema: z.ZodType<ActivityIncomeData> = z.object({
+  activityTime: requiredString,
+  monthlyIncome: positiveMoneyString(),
+  incomeSource: requiredString.refine(
+    (value) => value !== IncomeSource.FAMILY_INCOME,
+    "Renda Familiar é permitida apenas como renda secundária",
+  ),
+  additionalIncomes: z.array(additionalIncomeSchema).max(9),
+  nextAdditionalIncomeId: z.number(),
+});
 
 export const addressSchema: z.ZodType<AddressData> = addressCoreSchema.extend({
   landmark: requiredString,

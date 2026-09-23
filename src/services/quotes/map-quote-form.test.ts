@@ -14,6 +14,7 @@ import {
   GuarantorRelationship,
   HousingStatus,
   IncomeSource,
+  IncomeEntryRole,
   MaritalStatus,
   PartnerAssessment,
   ResidenceDuration,
@@ -124,21 +125,35 @@ describe("mapIncomeToPayload", () => {
     const payload = mapIncomeToPayload(
       {
         ...form,
-        cnpj: "11.222.333/0001-81",
         activityTime: ActivityDuration.ONE_TO_3_YEARS,
         monthlyIncome: formatMoneyBrl("350000"),
         incomeSource: IncomeSource.SALARY,
-        hasMultipleSources: true,
         additionalIncomes: [
           {
             id: 1,
+            activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
+            activityCategoryOther: "",
+            occupation: "",
+            businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+            businessActivitySubcategory:
+              BusinessActivitySubcategory.GENERAL_COMMERCE,
+            activityTime: ActivityDuration.ONE_TO_3_YEARS,
             source: IncomeSource.RENT,
             amount: formatMoneyBrl("80000"),
+            familyRelationship: "",
           },
           {
             id: 2,
+            activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
+            activityCategoryOther: "",
+            occupation: "",
+            businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+            businessActivitySubcategory:
+              BusinessActivitySubcategory.GENERAL_COMMERCE,
+            activityTime: ActivityDuration.ONE_TO_3_YEARS,
             source: IncomeSource.OTHER,
             amount: formatMoneyBrl("25000"),
+            familyRelationship: "",
           },
         ],
       },
@@ -146,17 +161,41 @@ describe("mapIncomeToPayload", () => {
     );
 
     expect(payload).toEqual({
-      profession: "Vendedora",
-      economicActivityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
-      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
-      businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
-      activityDuration: ActivityDuration.ONE_TO_3_YEARS,
-      declaredMonthlyIncome: 3500,
-      incomeSource: IncomeSource.SALARY,
-      hasMultipleIncomeSources: true,
-      additionalIncomes: [
-        { source: IncomeSource.RENT, amount: 800 },
-        { source: IncomeSource.OTHER, amount: 250 },
+      incomes: [
+        {
+          id: "primary",
+          role: IncomeEntryRole.PRIMARY,
+          economicActivity: EconomicActivityCategory.CLT_EMPLOYEE,
+          profession: "Vendedora",
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 3500,
+          source: IncomeSource.SALARY,
+        },
+        {
+          id: "secondary-1",
+          role: IncomeEntryRole.SECONDARY,
+          economicActivity: EconomicActivityCategory.BUSINESS_OWNER,
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 800,
+          source: IncomeSource.RENT,
+        },
+        {
+          id: "secondary-2",
+          role: IncomeEntryRole.SECONDARY,
+          economicActivity: EconomicActivityCategory.BUSINESS_OWNER,
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 250,
+          source: IncomeSource.OTHER,
+        },
       ],
     });
   });
@@ -169,7 +208,6 @@ describe("mapIncomeToPayload", () => {
         activityTime: ActivityDuration.LESS_THAN_6_MONTHS,
         monthlyIncome: formatMoneyBrl("100000"),
         incomeSource: IncomeSource.OWN_BUSINESS,
-        hasMultipleSources: false,
       },
       {
         ...createEmptyProposalForm().registration,
@@ -179,10 +217,10 @@ describe("mapIncomeToPayload", () => {
       },
     );
 
-    expect(payload.businessDocument).toBeUndefined();
+    expect(payload).not.toHaveProperty("businessDocument");
     expect(payload).not.toHaveProperty("availableIncomeProof");
-    expect(payload.additionalIncomes).toEqual([]);
-    expect(payload.declaredMonthlyIncome).toBe(1000);
+    expect(payload.incomes).toHaveLength(1);
+    expect(payload.incomes[0].amount).toBe(1000);
   });
 
   it("includes the description when the economic activity is Other", () => {
@@ -192,7 +230,6 @@ describe("mapIncomeToPayload", () => {
         activityTime: ActivityDuration.ONE_TO_3_YEARS,
         monthlyIncome: formatMoneyBrl("100000"),
         incomeSource: IncomeSource.OWN_BUSINESS,
-        hasMultipleSources: false,
       },
       {
         ...createEmptyProposalForm().registration,
@@ -203,7 +240,7 @@ describe("mapIncomeToPayload", () => {
       },
     );
 
-    expect(payload.economicActivityOther).toBe("Feira livre");
+    expect(payload.incomes[0].economicActivityOther).toBe("Feira livre");
   });
 });
 
