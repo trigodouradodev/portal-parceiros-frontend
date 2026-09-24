@@ -12,6 +12,7 @@ env:
   CLOUDFRONT_DISTRIBUTION_ID: E2GBFIY7UUU7AQ
   VITE_API_URL: https://portal-parceiros-api-homolog.trigodourado.com
   VITE_BACKOFFICE_URL: https://homolog.web.trigodourado.com
+  VITE_CLIENT_APP_URL: https://cliente-homolog.trigodourado.com/
 
 permissions:
   id-token: write

@@ -12,6 +12,7 @@ env:
   CLOUDFRONT_DISTRIBUTION_ID: EZJM0VN7NTYNF
   VITE_API_URL: https://portal-parceiros-api-dev.trigodourado.com
   VITE_BACKOFFICE_URL: https://dev.trigodourado.com
+  VITE_CLIENT_APP_URL: https://cliente-homolog.trigodourado.com/
 
 permissions:
   id-token: write
