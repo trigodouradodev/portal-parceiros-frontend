@@ -5,12 +5,13 @@ import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { OriginacaoTaskHeader } from "@/features/originacao/components/OriginacaoTaskHeader";
 import { originacaoCardClassName } from "@/features/originacao/components/OriginacaoPageFrame";
 import type { ProposalSnapshot } from "@/features/originacao/data/proposal";
+import { getClientAppUrl } from "@/lib/client-app";
 import { hasCallablePhone, openWhatsApp } from "@/lib/contact-actions";
 import { fmtBRL } from "@/lib/utils";
 
 function buildProposalWhatsAppMessage(clientName: string): string {
   const firstName = clientName.split(" ")[0] ?? clientName;
-  return `Olá, ${firstName}! Sua proposta na Aurea foi criada. Acesse o Portal do Cliente para revisar os dados, dar os consentimentos e concluir a aprovação.`;
+  return `Olá, ${firstName}! Sua proposta na Aurea foi criada. Acesse o Portal do Cliente para revisar os dados, dar os consentimentos e concluir a aprovação: ${getClientAppUrl()}`;
 }
 
 export function ProposalSuccess({
