@@ -227,6 +227,7 @@ export function useRegisterChargeActionFlow() {
             note,
             location.manualReason,
             Boolean(location.result?.addressLikelyWrong),
+            location.manualNote,
           )
         : note;
 

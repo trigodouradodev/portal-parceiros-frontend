@@ -136,10 +136,72 @@ describe("NotFoundStatus", () => {
     });
     expect(confirm).toBeDisabled();
 
-    await user.click(screen.getByLabelText(/GPS impreciso/i));
+    await user.click(
+      screen.getByLabelText(/celular não conseguiu me localizar/i),
+    );
     expect(confirm).toBeEnabled();
 
     await user.click(confirm);
-    expect(onConfirmManual).toHaveBeenCalledWith("gps_imprecise");
+    expect(onConfirmManual).toHaveBeenCalledWith(
+      "device_unavailable",
+      undefined,
+    );
+  });
+
+  it("oferece o motivo do pin aproximado em vez de culpar o aparelho", () => {
+    render(
+      <NotFoundStatus
+        distanceMeters={34996.7}
+        addressLikelyWrong
+        onConfirmManual={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByLabelText(/Estou no endereço do cliente/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/celular não conseguiu me localizar/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("troca os motivos do aparelho por permissão quando o site está bloqueado", () => {
+    render(
+      <NotFoundStatus
+        geoFailureReason="permission_denied"
+        geoPermissionState="denied"
+        onConfirmManual={vi.fn()}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByLabelText(/Não consigo liberar a localização/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/celular não conseguiu me localizar/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("exige descrição quando o motivo é outro", async () => {
+    const user = userEvent.setup();
+    const onConfirmManual = vi.fn();
+    render(<NotFoundStatus onConfirmManual={onConfirmManual} />);
+
+    const confirm = screen.getByRole("button", {
+      name: /Confirmar presença/i,
+    });
+
+    await user.click(screen.getByLabelText(/Outro motivo/i));
+    expect(confirm).toBeDisabled();
+
+    await user.type(
+      screen.getByLabelText(/Descreva o motivo/i),
+      "encontrei na praça",
+    );
+    expect(confirm).toBeEnabled();
+
+    await user.click(confirm);
+    expect(onConfirmManual).toHaveBeenCalledWith("other", "encontrei na praça");
   });
 });

@@ -12,7 +12,10 @@ import {
   permissionStillPromptable,
   type MobileBrowserOs,
 } from "@/lib/geo/geo-position-error";
-import type { ManualLocationReason } from "@/features/register-action/preventive/constants/manual-location-reason";
+import type {
+  ManualLocationContext,
+  ManualLocationReason,
+} from "@/features/register-action/preventive/constants/manual-location-reason";
 import { ManualVisitConfirm } from "../ManualVisitConfirm";
 import { NavigateToAddressButton } from "../NavigateToAddressButton";
 import { VisitDistanceLabel } from "../VisitDistanceLabel";
@@ -31,7 +34,7 @@ interface NotFoundStatusProps {
   geoFailureReason?: GeoFailureReason | null;
   /** `prompt` ainda reabre a caixinha; `denied`/`unknown` não. */
   geoPermissionState?: GeoPermissionState | null;
-  onConfirmManual: (reason: ManualLocationReason) => void;
+  onConfirmManual: (reason: ManualLocationReason, note?: string) => void;
   onRetry?: () => void;
 }
 
@@ -43,6 +46,7 @@ interface NotFoundView {
   permissionBlocked: boolean;
   manualFirst: boolean;
   browserOs: MobileBrowserOs;
+  manualContext: ManualLocationContext;
 }
 
 function resolveNotFoundView(input: {
@@ -74,7 +78,7 @@ function resolveNotFoundView(input: {
   if (deviceFailure && input.geoFailureReason) {
     title = geoFailureTitle(input.geoFailureReason);
     if (permissionBlocked) {
-      description = locationPermissionIntro(browserOs);
+      description = locationPermissionIntro();
     } else if (
       permissionDenied &&
       permissionStillPromptable(input.geoPermissionState)
@@ -94,6 +98,11 @@ function resolveNotFoundView(input: {
       "O endereço foi localizado só de forma aproximada. Se você está no local, confirme a presença.";
   }
 
+  let manualContext: ManualLocationContext = "out_of_radius";
+  if (permissionBlocked) manualContext = "permission_blocked";
+  else if (deviceFailure || !hasDistance) manualContext = "device_failure";
+  else if (unreliableDistance) manualContext = "approximate_address";
+
   return {
     title,
     description,
@@ -102,6 +111,7 @@ function resolveNotFoundView(input: {
     permissionBlocked,
     manualFirst,
     browserOs,
+    manualContext,
   };
 }
 
@@ -159,6 +169,7 @@ export function NotFoundStatus({
             Se não conseguir, confirme a visita mesmo assim
           </p>
           <ManualVisitConfirm
+            context={view.manualContext}
             emphasis="secondary"
             showHint={false}
             legend="Escolha o motivo"
@@ -204,6 +215,7 @@ export function NotFoundStatus({
       {view.manualFirst ? (
         <>
           <ManualVisitConfirm
+            context={view.manualContext}
             emphasis="primary"
             showHint={false}
             onConfirmManual={onConfirmManual}
@@ -220,7 +232,10 @@ export function NotFoundStatus({
             address={address}
             destinationCoordinates={destinationCoordinates}
           />
-          <ManualVisitConfirm onConfirmManual={onConfirmManual} />
+          <ManualVisitConfirm
+            context={view.manualContext}
+            onConfirmManual={onConfirmManual}
+          />
         </>
       )}
     </div>
