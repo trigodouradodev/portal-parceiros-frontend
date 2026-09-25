@@ -284,7 +284,8 @@ describe("ActivityIncomeSection", () => {
     renderActivityIncome(
       {
         businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
-        businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
+        businessActivitySubcategory:
+          BusinessActivitySubcategory.GENERAL_COMMERCE,
       },
       { activityTime: ActivityDuration.ONE_TO_3_YEARS },
     );

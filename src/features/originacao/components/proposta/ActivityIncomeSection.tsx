@@ -22,7 +22,10 @@ import {
   RemovableCard,
   RepeatableGroup,
 } from "@/features/originacao/components/proposta/RepeatableGroup";
-import { FamilyRelationship, IncomeSource } from "@/services/quotes/quotes.enums";
+import {
+  FamilyRelationship,
+  IncomeSource,
+} from "@/services/quotes/quotes.enums";
 
 export function ActivityIncomeSection() {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
