@@ -98,4 +98,21 @@ describe("buildV2RegisterInteractionPayload", () => {
       longitude: -46.6,
     });
   });
+
+  it("envia como a visita foi confirmada e o motivo manual", () => {
+    expect(
+      buildV2RegisterInteractionPayload({
+        result: ActivityInteractionResult.NOT_LOCATED,
+        recipientType: ActivityRecipientType.CLIENT,
+        contactType: "visit",
+        latitude: -7.23,
+        longitude: -39.29,
+        locationConfirmation: "manual",
+        manualLocationReason: "wrong_address",
+      }),
+    ).toMatchObject({
+      locationConfirmation: "manual",
+      manualLocationReason: "wrong_address",
+    });
+  });
 });

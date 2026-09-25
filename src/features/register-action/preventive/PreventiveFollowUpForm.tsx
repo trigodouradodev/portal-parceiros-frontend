@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { ChevronRight, MapPinOff } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
   ActionClient,
@@ -25,6 +25,7 @@ import {
   type Channel,
 } from "@/features/register-action/preventive/components";
 import { getPreventiveOutcomes } from "@/features/register-action/preventive/constants/outcomes";
+import { appendManualLocationAuditNote } from "@/features/register-action/preventive/constants/manual-location-reason";
 import { useVisitLocationCheck } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
 import { getWaTemplates } from "@/features/register-action/preventive/utils/wa-templates";
 import { buildPreventiveFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
@@ -83,6 +84,9 @@ export function PreventiveFollowUpForm({
     status: locationStatus,
     result: locationCheckResult,
     coords: geoCoords,
+    geoFailureReason,
+    geoPermissionState,
+    manualReason,
     verify: verifyLocationCheck,
     confirmManual,
     reset: resetLocationCheck,
@@ -156,6 +160,15 @@ export function PreventiveFollowUpForm({
       (locationStatus === "confirmed" || locationStatus === "manual") &&
       geoCoords !== null;
 
+    const noteWithAudit =
+      channel === "visit" && locationStatus === "manual"
+        ? appendManualLocationAuditNote(
+            note,
+            manualReason,
+            Boolean(locationCheckResult?.addressLikelyWrong),
+          )
+        : note;
+
     try {
       const payload = buildPreventiveFollowUpPayload({
         contractId: client.id,
@@ -163,7 +176,7 @@ export function PreventiveFollowUpForm({
         channel,
         party: recipient,
         outcome,
-        note,
+        note: noteWithAudit,
         paymentForecast:
           outcome === "delay" && paymentForecast
             ? format(paymentForecast, "yyyy-MM-dd")
@@ -175,7 +188,7 @@ export function PreventiveFollowUpForm({
       onSaved({
         channel,
         outcome: outcome ?? undefined,
-        note: note || undefined,
+        note: noteWithAudit || undefined,
         status: outcome ?? undefined,
       });
     } catch (err) {
@@ -237,22 +250,14 @@ export function PreventiveFollowUpForm({
               >
                 Voltar
               </Button>
-              <Button
-                className="h-12 flex-1 gap-2 rounded-2xl bg-brand-navy font-semibold text-white"
-                disabled={channel === "visit" && !locationOk}
-                onClick={() => setStep("outcome")}
-              >
-                {channel === "visit" && !locationOk ? (
-                  <>
-                    <MapPinOff size={15} />
-                    Confirme a localização
-                  </>
-                ) : (
-                  <>
-                    Registrar resultado <ChevronRight size={16} />
-                  </>
-                )}
-              </Button>
+              {!(channel === "visit" && !locationOk) && (
+                <Button
+                  className="h-12 flex-1 gap-2 rounded-2xl bg-brand-navy font-semibold text-white"
+                  onClick={() => setStep("outcome")}
+                >
+                  Registrar resultado <ChevronRight size={16} />
+                </Button>
+              )}
             </>
           )}
 
@@ -312,6 +317,8 @@ export function PreventiveFollowUpForm({
             }`}
             status={locationStatus}
             locationCheckResult={locationCheckResult}
+            geoFailureReason={geoFailureReason}
+            geoPermissionState={geoPermissionState}
             onVerifyLocation={verifyLocationCheck}
             onConfirmManual={confirmManual}
           />

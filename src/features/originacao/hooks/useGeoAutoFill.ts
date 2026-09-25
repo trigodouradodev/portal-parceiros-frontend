@@ -12,6 +12,10 @@ import {
 } from "@/features/originacao/utils/apply-address-fill";
 import type { ProposalFormData } from "@/features/originacao/data/proposal";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import {
+  mapGeoPositionError,
+  geoFailureDescription,
+} from "@/lib/geo/geo-position-error";
 import { roundGeoCoordinate } from "@/services/locations/geo-coords";
 import {
   locationsKeys,
@@ -34,13 +38,7 @@ function isAbortError(error: unknown): boolean {
 }
 
 function geoPositionErrorMessage(error: GeolocationPositionError): string {
-  if (error.code === error.PERMISSION_DENIED) {
-    return "Permissão de localização negada. Habilite o GPS no navegador.";
-  }
-  if (error.code === error.TIMEOUT) {
-    return "Tempo esgotado ao obter a localização.";
-  }
-  return "Não foi possível obter a localização.";
+  return geoFailureDescription(mapGeoPositionError(error));
 }
 
 export function useGeoAutoFill(namePrefix: AddressPrefix) {

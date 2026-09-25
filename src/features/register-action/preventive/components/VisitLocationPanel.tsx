@@ -1,5 +1,10 @@
 import { hasValidAddress } from "@/lib/contact-actions";
-import type { LocationCheckResult } from "@/services/location-check/location-check.types";
+import type {
+  GeoFailureReason,
+  GeoPermissionState,
+} from "@/lib/geo/geo-position-error";
+import type { ManualLocationReason } from "@/features/register-action/preventive/constants/manual-location-reason";
+import type { VisitLocationDecision } from "@/features/register-action/preventive/utils/apply-visit-location-tolerance";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 import type { VisitLocationStatus } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
 import { GuidanceCard } from "@/features/register-action/components/primitives/contact/GuidanceCard";
@@ -19,9 +24,11 @@ interface VisitLocationPanelProps {
   addressLabel?: string;
   orientationScript?: string;
   status: VisitLocationStatus;
-  locationCheckResult?: LocationCheckResult | null;
+  locationCheckResult?: VisitLocationDecision | null;
+  geoFailureReason?: GeoFailureReason | null;
+  geoPermissionState?: GeoPermissionState | null;
   onVerifyLocation: () => void;
-  onConfirmManual: () => void;
+  onConfirmManual: (reason: ManualLocationReason) => void;
 }
 
 export function VisitLocationPanel({
@@ -30,15 +37,22 @@ export function VisitLocationPanel({
   orientationScript,
   status,
   locationCheckResult,
+  geoFailureReason = null,
+  geoPermissionState = null,
   onVerifyLocation,
   onConfirmManual,
 }: VisitLocationPanelProps) {
   const hasAddress = hasValidAddress(address);
   const showIdle = hasAddress && status === "idle";
+  const showLocating = hasAddress && status === "locating";
   const showChecking = hasAddress && status === "checking";
   const showConfirmed = hasAddress && status === "confirmed";
   const showManual = hasAddress && status === "manual";
   const showNotFound = hasAddress && status === "not_found";
+  const unreliablePin = Boolean(
+    locationCheckResult?.addressLikelyWrong ||
+    locationCheckResult?.partialMatch,
+  );
 
   return (
     <div className="flex flex-col gap-4">
@@ -58,23 +72,39 @@ export function VisitLocationPanel({
       )}
 
       {showIdle && <IdleStatus onVerifyLocation={onVerifyLocation} />}
-      {showChecking && <CheckingStatus />}
+      {showLocating && <CheckingStatus phase="locating" />}
+      {showChecking && <CheckingStatus phase="checking" />}
       {showConfirmed && (
         <ConfirmedStatus
           distanceMeters={locationCheckResult?.distanceMeters}
-          radiusMeters={locationCheckResult?.radiusMeters}
+          radiusMeters={
+            locationCheckResult?.effectiveRadiusMeters ??
+            locationCheckResult?.radiusMeters
+          }
           partialMatch={locationCheckResult?.partialMatch}
+          confirmationLevel={locationCheckResult?.confirmationLevel}
         />
       )}
       {showManual && <ManualStatus />}
       {showNotFound && (
         <NotFoundStatus
           address={address}
-          destinationCoordinates={locationCheckResult?.registeredCoordinates}
+          destinationCoordinates={
+            unreliablePin
+              ? undefined
+              : locationCheckResult?.registeredCoordinates
+          }
           distanceMeters={locationCheckResult?.distanceMeters}
-          radiusMeters={locationCheckResult?.radiusMeters}
+          radiusMeters={
+            locationCheckResult?.proximityRadiusMeters ??
+            locationCheckResult?.radiusMeters
+          }
           addressLikelyWrong={locationCheckResult?.addressLikelyWrong}
+          matchedAddress={locationCheckResult?.matchedAddress}
+          geoFailureReason={geoFailureReason}
+          geoPermissionState={geoPermissionState}
           onConfirmManual={onConfirmManual}
+          onRetry={onVerifyLocation}
         />
       )}
     </div>
