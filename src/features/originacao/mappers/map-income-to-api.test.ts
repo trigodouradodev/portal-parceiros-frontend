@@ -56,9 +56,7 @@ describe("mapIncomeToApi", () => {
           role: IncomeEntryRole.PRIMARY,
           economicActivity: EconomicActivityCategory.CLT_EMPLOYEE,
           profession: "Vendedora",
-          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
-          businessActivitySubcategory:
-            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          // CLT não tem negócio próprio — sem ramo/subcategoria no payload.
           activityDuration: ActivityDuration.ONE_TO_3_YEARS,
           amount: 3500,
           source: IncomeSource.SALARY,

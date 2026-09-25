@@ -1,4 +1,5 @@
 import {
+  requiresBusinessActivityBranch,
   requiresProfession,
   type ActivityIncomeData,
   type AddressData,
@@ -114,10 +115,14 @@ export function mapIncomeToPayload(
     ...(requiresProfession(registration.activityCategories)
       ? { profession: registration.occupation.trim() }
       : {}),
-    businessActivityBranch:
-      registration.businessActivityBranch as SaveQuoteIncomePayload["incomes"][number]["businessActivityBranch"],
-    businessActivitySubcategory:
-      registration.businessActivitySubcategory as SaveQuoteIncomePayload["incomes"][number]["businessActivitySubcategory"],
+    ...(requiresBusinessActivityBranch(registration.activityCategories)
+      ? {
+          businessActivityBranch:
+            registration.businessActivityBranch as SaveQuoteIncomePayload["incomes"][number]["businessActivityBranch"],
+          businessActivitySubcategory:
+            registration.businessActivitySubcategory as SaveQuoteIncomePayload["incomes"][number]["businessActivitySubcategory"],
+        }
+      : {}),
     activityDuration: (data.activityTime.trim() ||
       ActivityDuration.LESS_THAN_6_MONTHS) as ActivityDuration,
     amount: parseMoneyBrl(data.monthlyIncome),
@@ -138,10 +143,14 @@ export function mapIncomeToPayload(
       ...(requiresProfession(item.activityCategories)
         ? { profession: item.occupation.trim() }
         : {}),
-      businessActivityBranch:
-        item.businessActivityBranch as SaveQuoteIncomePayload["incomes"][number]["businessActivityBranch"],
-      businessActivitySubcategory:
-        item.businessActivitySubcategory as SaveQuoteIncomePayload["incomes"][number]["businessActivitySubcategory"],
+      ...(requiresBusinessActivityBranch(item.activityCategories)
+        ? {
+            businessActivityBranch:
+              item.businessActivityBranch as SaveQuoteIncomePayload["incomes"][number]["businessActivityBranch"],
+            businessActivitySubcategory:
+              item.businessActivitySubcategory as SaveQuoteIncomePayload["incomes"][number]["businessActivitySubcategory"],
+          }
+        : {}),
       activityDuration: item.activityTime as ActivityDuration,
       amount: parseMoneyBrl(item.amount),
       source,
