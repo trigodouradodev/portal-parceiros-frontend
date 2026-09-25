@@ -9,6 +9,7 @@ import {
   BUSINESS_ACTIVITY_BRANCH_OPTIONS,
   BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH,
   FAMILY_RELATIONSHIP_OPTIONS,
+  hasSpouse,
   INCOME_SOURCE_OPTIONS,
   OTHER_OPTION,
   PRIMARY_INCOME_SOURCE_OPTIONS,
@@ -21,7 +22,7 @@ import {
   RemovableCard,
   RepeatableGroup,
 } from "@/features/originacao/components/proposta/RepeatableGroup";
-import { IncomeSource } from "@/services/quotes/quotes.enums";
+import { FamilyRelationship, IncomeSource } from "@/services/quotes/quotes.enums";
 
 export function ActivityIncomeSection() {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
@@ -31,6 +32,11 @@ export function ActivityIncomeSection() {
   const activityCategories = watch("registration.activityCategories");
   const professionRequired = requiresProfession(activityCategories);
   const businessActivityBranch = watch("registration.businessActivityBranch");
+  const businessActivitySubcategory = watch(
+    "registration.businessActivitySubcategory",
+  );
+  const primaryActivityTime = watch("activityIncome.activityTime");
+  const maritalStatus = watch("registration.maritalStatus");
   const subcategoryOptions =
     BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[businessActivityBranch] ??
     [];
@@ -76,9 +82,11 @@ export function ActivityIncomeSection() {
       activityCategories: [],
       activityCategoryOther: "",
       occupation: "",
-      businessActivityBranch: "",
-      businessActivitySubcategory: "",
-      activityTime: "",
+      // Pré-preenchidos com a atividade principal — é o caso mais comum
+      // (mesma atividade, outra fonte de valor) e continuam editáveis.
+      businessActivityBranch,
+      businessActivitySubcategory,
+      activityTime: primaryActivityTime,
       source: "",
       amount: "",
       familyRelationship: "",
@@ -87,6 +95,22 @@ export function ActivityIncomeSection() {
       "activityIncome.nextAdditionalIncomeId",
       nextAdditionalIncomeId + 1,
       { shouldDirty: true },
+    );
+  }
+
+  function handleAdditionalSourceChange(index: number, nextSource: string) {
+    if (nextSource !== IncomeSource.FAMILY_INCOME || !hasSpouse(maritalStatus))
+      return;
+    const currentRelationship = watch(
+      `activityIncome.additionalIncomes.${index}.familyRelationship`,
+    );
+    // Só assume Cônjuge quando o campo ainda não foi respondido — nunca
+    // sobrescreve uma escolha que o consultor já fez.
+    if (currentRelationship) return;
+    setValue(
+      `activityIncome.additionalIncomes.${index}.familyRelationship`,
+      FamilyRelationship.SPOUSE,
+      { shouldValidate: true },
     );
   }
 
@@ -214,6 +238,9 @@ export function ActivityIncomeSection() {
                 name={`activityIncome.additionalIncomes.${index}.source`}
                 label="Tipo de renda"
                 options={INCOME_SOURCE_OPTIONS}
+                onValueChange={(value) =>
+                  handleAdditionalSourceChange(index, value)
+                }
                 required
               />
               {source === IncomeSource.FAMILY_INCOME ? (
