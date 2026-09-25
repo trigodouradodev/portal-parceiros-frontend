@@ -88,6 +88,7 @@ export function useVisitLocationCheck({
   const beginGeolocationRequest = useCallback(
     (requestId: number) => {
       setStatus("locating");
+      setCoords(null);
       setResult(null);
       setGeoFailureReason(null);
       setGeoPermissionState(null);
