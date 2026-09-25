@@ -154,6 +154,7 @@ export function FinancialSection() {
             key={expense.fieldId}
             removeLabel="Remover despesa"
             onRemove={() => removeExpense(index)}
+            align="end"
             header={
               <FormSelect<ProposalFormData>
                 name={`financial.expenses.${index}.category`}
@@ -195,6 +196,7 @@ export function FinancialSection() {
               key={loan.fieldId}
               removeLabel="Remover empréstimo"
               onRemove={() => removeLoan(index)}
+              align="end"
               header={
                 <FormSelect<ProposalFormData>
                   name={`financial.loans.${index}.institution`}
