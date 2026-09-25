@@ -139,7 +139,7 @@ describe("nextWizardStepIndex", () => {
     expect(nextWizardStepIndex([])).toBe(0);
     expect(
       nextWizardStepIndex([QuoteDraftStep.REGISTRATION, QuoteDraftStep.INCOME]),
-    ).toBe(2);
+    ).toBe(1);
     expect(nextWizardStepIndex(Object.values(QuoteDraftStep))).toBe(6);
   });
 });
@@ -150,7 +150,7 @@ describe("mapQuoteDetailToProposal", () => {
     expect(proposal.id).toBe("quote-1");
     expect(proposal.status).toBe(QuoteStatus.DRAFT);
     expect(proposal.canEdit).toBe(true);
-    expect(proposal.step).toBe(2);
+    expect(proposal.step).toBe(1);
     expect(proposal.simulation.name).toBe("Maria Silva");
     expect(proposal.simulation.amount).toBe(1500);
     expect(proposal.data.registration.name).toBe("Maria Silva");

@@ -22,7 +22,7 @@ export function getBlockedEmailField(
     return "registration.email";
   }
   if (
-    step === 4 &&
+    step === 2 &&
     guarantorEmailStatus === EmailDeliverabilityStatus.BLOCKED
   ) {
     return "guarantor.email";

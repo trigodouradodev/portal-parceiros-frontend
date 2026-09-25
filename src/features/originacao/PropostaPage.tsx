@@ -244,7 +244,7 @@ function ProposalWizard({
     step === 0 ? data.registration.email : undefined,
   );
   const guarantorEmailDeliverability = useEmailDeliverability(
-    step === 4 ? data.guarantor.email : undefined,
+    step === 2 ? data.guarantor.email : undefined,
   );
 
   function computeStepValid(values: ProposalFormData) {
@@ -266,17 +266,17 @@ function ProposalWizard({
       values.registration.occupation.trim().length >= 2;
     return [
       isRegistrationValid(values.registration),
+      isAddressValid(values.address),
+      isGuarantorValid(values.guarantor),
       isActivityIncomeValid(values.activityIncome) &&
         values.registration.activityCategories.length > 0 &&
         activityCategoryOtherValid &&
         occupationValid &&
         branchValid &&
         subcategoryValid,
-      isAddressValid(values.address),
-      isPartnerOpinionValid(values.partnerOpinion),
-      isGuarantorValid(values.guarantor),
       isFinancialValid(values.financial),
       isDocumentsValid(values.documents),
+      isPartnerOpinionValid(values.partnerOpinion),
     ];
   }
 
@@ -357,6 +357,34 @@ function ProposalWizard({
     }
     if (step === 1) {
       try {
+        await saveAddress({
+          quoteId: proposal.id,
+          address: form.getValues().address,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o endereço."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 2) {
+      try {
+        await saveGuarantor({
+          quoteId: proposal.id,
+          guarantor: form.getValues().guarantor,
+        });
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar o avalista."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 3) {
+      try {
         const values = form.getValues();
         await saveIncome({
           quoteId: proposal.id,
@@ -371,55 +399,7 @@ function ProposalWizard({
         return;
       }
     }
-    if (step === 2) {
-      try {
-        await saveAddress({
-          quoteId: proposal.id,
-          address: form.getValues().address,
-        });
-      } catch (err) {
-        showToast(
-          getApiErrorMessage(err, "Não foi possível salvar o endereço."),
-          { variant: "destructive" },
-        );
-        return;
-      }
-    }
-    if (step === 3) {
-      try {
-        const values = form.getValues();
-        await saveIncome({
-          quoteId: proposal.id,
-          activityIncome: values.activityIncome,
-          registration: values.registration,
-        });
-        await savePartnerOpinion({
-          quoteId: proposal.id,
-          partnerOpinion: values.partnerOpinion,
-        });
-      } catch (err) {
-        showToast(
-          getApiErrorMessage(err, "Não foi possível salvar o parecer."),
-          { variant: "destructive" },
-        );
-        return;
-      }
-    }
     if (step === 4) {
-      try {
-        await saveGuarantor({
-          quoteId: proposal.id,
-          guarantor: form.getValues().guarantor,
-        });
-      } catch (err) {
-        showToast(
-          getApiErrorMessage(err, "Não foi possível salvar o avalista."),
-          { variant: "destructive" },
-        );
-        return;
-      }
-    }
-    if (step === 5) {
       const values = form.getValues();
       const consideredIncome =
         parseMoneyBrl(values.activityIncome.monthlyIncome) +
@@ -460,9 +440,23 @@ function ProposalWizard({
         return;
       }
     }
-    if (step === 6) {
+    if (step === 5) {
       try {
         await completeDocumentation(proposal.id);
+      } catch (err) {
+        showToast(
+          getApiErrorMessage(err, "Não foi possível salvar a documentação."),
+          { variant: "destructive" },
+        );
+        return;
+      }
+    }
+    if (step === 6) {
+      try {
+        await savePartnerOpinion({
+          quoteId: proposal.id,
+          partnerOpinion: form.getValues().partnerOpinion,
+        });
         await submitDraft(proposal.id);
       } catch (err) {
         showToast(
@@ -537,16 +531,16 @@ function ProposalWizard({
               emailDeliverabilityStatus={emailDeliverability.status}
             />
           ) : null}
-          {step === 1 ? <ActivityIncomeSection /> : null}
-          {step === 2 ? <AddressSection /> : null}
-          {step === 3 ? <PartnerOpinionSection /> : null}
-          {step === 4 ? (
+          {step === 1 ? <AddressSection /> : null}
+          {step === 2 ? (
             <GuarantorSection
               emailDeliverabilityStatus={guarantorEmailDeliverability.status}
             />
           ) : null}
-          {step === 5 ? <FinancialSection /> : null}
-          {step === 6 ? <DocumentsSection quoteId={proposal.id} /> : null}
+          {step === 3 ? <ActivityIncomeSection /> : null}
+          {step === 4 ? <FinancialSection /> : null}
+          {step === 5 ? <DocumentsSection quoteId={proposal.id} /> : null}
+          {step === 6 ? <PartnerOpinionSection /> : null}
 
           <div className="mt-6 flex gap-2">
             {step > 0 ? (
@@ -579,7 +573,7 @@ function ProposalWizard({
         open={renewalPrefillOpen}
         onOpenChange={setRenewalPrefillOpen}
         title="Continuar com a renovação?"
-        description="Ao continuar, copiaremos automaticamente os dados de Cadastro, Atividade e renda e Endereço da última proposta desembolsada ou quitada deste tomador. Os dados da nova simulação serão mantidos e você poderá conferir os campos antes de avançar."
+        description="Ao continuar, copiaremos automaticamente os dados de Cadastro, Endereço e Atividade e renda da última proposta desembolsada ou quitada deste tomador. Os dados da nova simulação serão mantidos e você poderá conferir os campos antes de avançar."
         confirmLabel="Continuar"
         cancelLabel="Cancelar"
         onConfirm={handleRenewalPrefill}

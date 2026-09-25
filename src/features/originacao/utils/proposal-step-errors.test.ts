@@ -62,7 +62,7 @@ describe("getProposalStepFieldErrors", () => {
     data.registration.occupation = "Vendedora";
     data.registration.businessActivityBranch = "food";
     data.registration.businessActivitySubcategory = "restaurant_or_snack_bar";
-    expect(getProposalStepFieldErrors(1, data)).toEqual([]);
+    expect(getProposalStepFieldErrors(3, data)).toEqual([]);
   });
 
   it("requires referrer CPF on Áurea customer referral", () => {
@@ -77,20 +77,20 @@ describe("getProposalStepFieldErrors", () => {
       notes: "Cliente conhecido.",
     };
     expect(
-      getProposalStepFieldErrors(3, data).find(
+      getProposalStepFieldErrors(6, data).find(
         (item) => item.name === "partnerOpinion.referrerCpf",
       )?.message,
     ).toBe(REQUIRED_FIELD_MESSAGE);
 
     data.partnerOpinion.referrerCpf = "000.000.000-00";
     expect(
-      getProposalStepFieldErrors(3, data).find(
+      getProposalStepFieldErrors(6, data).find(
         (item) => item.name === "partnerOpinion.referrerCpf",
       )?.message,
     ).toBe("CPF inválido");
 
     data.partnerOpinion.referrerCpf = "529.982.247-25";
-    expect(getProposalStepFieldErrors(3, data)).toEqual([]);
+    expect(getProposalStepFieldErrors(6, data)).toEqual([]);
   });
 
   it("requires atividade econômica, profissão e ramo de atividade (dados do Cadastro) no step Atividade e Renda", () => {
@@ -102,7 +102,7 @@ describe("getProposalStepFieldErrors", () => {
       incomeSource: "salary",
     };
     expect(
-      getProposalStepFieldErrors(1, data).map((item) => item.name),
+      getProposalStepFieldErrors(3, data).map((item) => item.name),
     ).toEqual([
       "registration.activityCategories",
       "registration.businessActivityBranch",
@@ -112,14 +112,14 @@ describe("getProposalStepFieldErrors", () => {
     // atividade + Subcategoria já descrevem a atividade.
     data.registration.activityCategories = ["clt_employee"];
     expect(
-      getProposalStepFieldErrors(1, data).find(
+      getProposalStepFieldErrors(3, data).find(
         (item) => item.name === "registration.occupation",
       )?.message,
     ).toBe(REQUIRED_FIELD_MESSAGE);
 
     data.registration.activityCategories = ["other"];
     expect(
-      getProposalStepFieldErrors(1, data).find(
+      getProposalStepFieldErrors(3, data).find(
         (item) => item.name === "registration.activityCategoryOther",
       )?.message,
     ).toBe(REQUIRED_FIELD_MESSAGE);
@@ -127,30 +127,30 @@ describe("getProposalStepFieldErrors", () => {
     data.registration.activityCategoryOther = "Artesanato";
     data.registration.occupation = "Comerciante";
     expect(
-      getProposalStepFieldErrors(1, data).find(
+      getProposalStepFieldErrors(3, data).find(
         (item) => item.name === "registration.businessActivityBranch",
       )?.message,
     ).toBe(REQUIRED_FIELD_MESSAGE);
 
     data.registration.businessActivityBranch = "retail_commerce";
     expect(
-      getProposalStepFieldErrors(1, data).find(
+      getProposalStepFieldErrors(3, data).find(
         (item) => item.name === "registration.businessActivitySubcategory",
       )?.message,
     ).toBe(REQUIRED_FIELD_MESSAGE);
 
     data.registration.businessActivitySubcategory = "general_commerce";
-    expect(getProposalStepFieldErrors(1, data)).toEqual([]);
+    expect(getProposalStepFieldErrors(3, data)).toEqual([]);
   });
 
   it("requires PIX fields on the financial step", () => {
     const empty = createEmptyProposalForm();
     expect(
-      getProposalStepFieldErrors(5, empty).map((item) => item.name),
+      getProposalStepFieldErrors(4, empty).map((item) => item.name),
     ).toEqual(["financial.paymentPixType", "financial.paymentPixCode"]);
 
     empty.financial.paymentPixType = "CPF";
     empty.financial.paymentPixCode = "529.982.247-25";
-    expect(getProposalStepFieldErrors(5, empty)).toEqual([]);
+    expect(getProposalStepFieldErrors(4, empty)).toEqual([]);
   });
 });

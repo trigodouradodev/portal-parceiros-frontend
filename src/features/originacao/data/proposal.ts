@@ -42,12 +42,12 @@ import {
 
 export const PROPOSAL_STEPS = [
   "Cadastro",
-  "Atividade e Renda",
   "Endereço",
-  "Parecer do Parceiro",
   "Avalista",
+  "Atividade e Renda",
   "Financeiro",
   "Documentação",
+  "Parecer do Parceiro",
 ] as const;
 
 export const UF_LIST = [
