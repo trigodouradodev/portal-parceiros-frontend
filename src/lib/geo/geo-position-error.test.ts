@@ -15,7 +15,24 @@ describe("detectMobileBrowserOs", () => {
     expect(
       detectMobileBrowserOs("Mozilla/5.0 (Linux; Android 14; Pixel 8)"),
     ).toBe("android");
-    expect(detectMobileBrowserOs("Mozilla/5.0 (Macintosh)")).toBe("other");
+    expect(detectMobileBrowserOs("Mozilla/5.0 (Macintosh)", 0)).toBe("desktop");
+  });
+
+  it("trata o iPad como iOS mesmo se anunciando como Macintosh", () => {
+    expect(
+      detectMobileBrowserOs(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        5,
+      ),
+    ).toBe("ios");
+  });
+
+  it("assume celular quando o userAgent não parece de computador", () => {
+    // Webview de app e navegador de fabricante caem aqui: passar instruções
+    // de desktop mandaria o parceiro procurar um cadeado inexistente.
+    expect(detectMobileBrowserOs("Mozilla/5.0 (Unknown device)", 1)).toBe(
+      "android",
+    );
   });
 });
 

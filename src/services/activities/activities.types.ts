@@ -26,10 +26,13 @@ export interface RegisterInteractionPayload {
   longitude?: number;
   locationConfirmation?: "exact" | "proximity" | "manual";
   manualLocationReason?:
-    | "gps_imprecise"
-    | "no_signal"
-    | "wrong_address"
-    | "receiving_at_address";
+    | "at_address_pin_wrong"
+    | "client_came_to_me"
+    | "visited_other_address"
+    | "registered_address_wrong"
+    | "device_unavailable"
+    | "permission_unavailable"
+    | "other";
 }
 
 export interface ActivityInteractionResponse {

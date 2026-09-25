@@ -4,7 +4,7 @@ export type GeoFailureReason =
   | "position_unavailable"
   | "timeout";
 
-export type MobileBrowserOs = "ios" | "android" | "other";
+export type MobileBrowserOs = "ios" | "android" | "desktop";
 
 /** `unknown` quando o navegador não expõe a Permissions API (Safari antigo). */
 export type GeoPermissionState = PermissionState | "unknown";
@@ -33,12 +33,24 @@ export function geoFailureTitle(reason: GeoFailureReason): string {
   }
 }
 
+/** Plataformas em que a barra de endereço é a de um navegador de computador. */
+const DESKTOP_PLATFORM = /Windows NT|Macintosh|CrOS|X11|Linux x86_64/i;
+
+/**
+ * Sem sinal claro de computador assumimos celular, que é de onde vem quase
+ * todo o acesso dos parceiros: errar para o lado do desktop deixa a pessoa
+ * procurando um cadeado que não existe na tela dela.
+ *
+ * O iPadOS 13+ se anuncia como Macintosh, então só o toque separa os dois.
+ */
 export function detectMobileBrowserOs(
   userAgent: string = navigator.userAgent,
+  touchPoints: number = navigator.maxTouchPoints ?? 0,
 ): MobileBrowserOs {
   if (/iPhone|iPad|iPod/i.test(userAgent)) return "ios";
+  if (/Macintosh/i.test(userAgent) && touchPoints > 0) return "ios";
   if (/Android/i.test(userAgent)) return "android";
-  return "other";
+  return DESKTOP_PLATFORM.test(userAgent) ? "desktop" : "android";
 }
 
 /**
@@ -91,7 +103,7 @@ export function locationPermissionSteps(os: MobileBrowserOs): string[] {
         "Toque em Permissões.",
         "Em Localização, escolha Permitir.",
       ];
-    case "other":
+    case "desktop":
       return [
         "Clique no cadeado ao lado do endereço, em cima da página.",
         "Clique em Permissões do site.",
@@ -100,13 +112,12 @@ export function locationPermissionSteps(os: MobileBrowserOs): string[] {
   }
 }
 
-export function locationPermissionIntro(os: MobileBrowserOs): string {
-  const device = os === "other" ? "computador" : "celular";
-  return `O ${device} não vai mais perguntar onde você está. Faça assim:`;
+export function locationPermissionIntro(): string {
+  return "O sistema não vai mais perguntar onde você está. Siga os passos:";
 }
 
 function permissionDeniedDescription(os: MobileBrowserOs): string {
-  return `${locationPermissionIntro(os)} ${locationPermissionSteps(os).join(" ")}`;
+  return `${locationPermissionIntro()} ${locationPermissionSteps(os).join(" ")}`;
 }
 
 export function geoFailureDescription(
