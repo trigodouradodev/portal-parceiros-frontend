@@ -110,8 +110,8 @@ export interface QuoteIncomeEntryPayload {
   economicActivity: EconomicActivityCategory;
   economicActivityOther?: string;
   profession?: string;
-  businessActivityBranch: BusinessActivityBranch;
-  businessActivitySubcategory: BusinessActivitySubcategory;
+  businessActivityBranch?: BusinessActivityBranch;
+  businessActivitySubcategory?: BusinessActivitySubcategory;
   activityDuration: ActivityDuration;
   amount: number;
   source: IncomeSource;

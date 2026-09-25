@@ -167,9 +167,8 @@ describe("mapIncomeToPayload", () => {
           role: IncomeEntryRole.PRIMARY,
           economicActivity: EconomicActivityCategory.CLT_EMPLOYEE,
           profession: "Vendedora",
-          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
-          businessActivitySubcategory:
-            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          // CLT não tem negócio próprio — sem ramo/subcategoria no payload,
+          // mesmo com valores preenchidos no form (registration acima).
           activityDuration: ActivityDuration.ONE_TO_3_YEARS,
           amount: 3500,
           source: IncomeSource.SALARY,
@@ -241,6 +240,66 @@ describe("mapIncomeToPayload", () => {
     );
 
     expect(payload.incomes[0].economicActivityOther).toBe("Feira livre");
+  });
+
+  it.each([
+    EconomicActivityCategory.CLT_EMPLOYEE,
+    EconomicActivityCategory.PUBLIC_SERVANT,
+    EconomicActivityCategory.RETIRED_OR_PENSIONER,
+    EconomicActivityCategory.UNEMPLOYED,
+  ])(
+    "omits businessActivityBranch/Subcategory for %s, even with values filled in",
+    (category) => {
+      const payload = mapIncomeToPayload(
+        {
+          ...createEmptyProposalForm().activityIncome,
+          activityTime: ActivityDuration.ONE_TO_3_YEARS,
+          monthlyIncome: formatMoneyBrl("350000"),
+          incomeSource: IncomeSource.SALARY,
+        },
+        {
+          ...createEmptyProposalForm().registration,
+          activityCategories: [category],
+          occupation: "Recepcionista",
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+        },
+      );
+
+      expect(payload.incomes[0]).not.toHaveProperty("businessActivityBranch");
+      expect(payload.incomes[0]).not.toHaveProperty(
+        "businessActivitySubcategory",
+      );
+    },
+  );
+
+  it.each([
+    EconomicActivityCategory.BUSINESS_OWNER,
+    EconomicActivityCategory.SELF_EMPLOYED_OR_INFORMAL,
+  ])("still sends businessActivityBranch/Subcategory for %s", (category) => {
+    const payload = mapIncomeToPayload(
+      {
+        ...createEmptyProposalForm().activityIncome,
+        activityTime: ActivityDuration.ONE_TO_3_YEARS,
+        monthlyIncome: formatMoneyBrl("350000"),
+        incomeSource: IncomeSource.OWN_BUSINESS,
+      },
+      {
+        ...createEmptyProposalForm().registration,
+        activityCategories: [category],
+        businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+        businessActivitySubcategory:
+          BusinessActivitySubcategory.GENERAL_COMMERCE,
+      },
+    );
+
+    expect(payload.incomes[0].businessActivityBranch).toBe(
+      BusinessActivityBranch.RETAIL_COMMERCE,
+    );
+    expect(payload.incomes[0].businessActivitySubcategory).toBe(
+      BusinessActivitySubcategory.GENERAL_COMMERCE,
+    );
   });
 });
 
