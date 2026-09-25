@@ -7,10 +7,13 @@ import {
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
 import {
+  ActivityDuration,
   BusinessActivityBranch,
   BusinessActivitySubcategory,
   EconomicActivityCategory,
+  FamilyRelationship,
   IncomeSource,
+  MaritalStatus,
 } from "@/services/quotes/quotes.enums";
 
 function renderActivityIncome(
@@ -327,6 +330,148 @@ describe("ActivityIncomeSection", () => {
     expect(
       fieldTrigger("registration.businessActivitySubcategory"),
     ).toBeTruthy();
+  });
+
+  it("pre-fills ramo, subcategoria and tempo na atividade from the primary income when adding outra renda", () => {
+    renderActivityIncome(
+      {
+        businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+        businessActivitySubcategory:
+          BusinessActivitySubcategory.GENERAL_COMMERCE,
+      },
+      { activityTime: ActivityDuration.ONE_TO_3_YEARS },
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Adicionar outra renda" }),
+    );
+
+    expect(
+      fieldTrigger("activityIncome.additionalIncomes.0.businessActivityBranch")
+        ?.textContent,
+    ).toContain("Comércio / Varejo");
+    expect(
+      fieldTrigger(
+        "activityIncome.additionalIncomes.0.businessActivitySubcategory",
+      )?.textContent,
+    ).toContain("Comércio Geral");
+    expect(
+      fieldTrigger("activityIncome.additionalIncomes.0.activityTime")
+        ?.textContent,
+    ).toContain("1 a 3 anos");
+  });
+
+  it("leaves ramo, subcategoria and tempo na atividade blank when the primary income doesn't have them yet", () => {
+    renderActivityIncome();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Adicionar outra renda" }),
+    );
+
+    expect(
+      document.getElementById(
+        "field-activityIncome.additionalIncomes.0.businessActivitySubcategory",
+      ),
+    ).toBeNull();
+    expect(
+      fieldTrigger("activityIncome.additionalIncomes.0.businessActivityBranch")
+        ?.textContent,
+    ).toBe("Selecione");
+  });
+
+  it.each([MaritalStatus.MARRIED, MaritalStatus.STABLE_UNION])(
+    "defaults grau de parentesco to Cônjuge when the customer is %s and outra renda is Renda Familiar",
+    (maritalStatus) => {
+      renderActivityIncome(
+        { maritalStatus },
+        {
+          additionalIncomes: [
+            {
+              id: 1,
+              activityCategories: [],
+              activityCategoryOther: "",
+              occupation: "",
+              businessActivityBranch: "",
+              businessActivitySubcategory: "",
+              activityTime: "",
+              source: "",
+              amount: "",
+              familyRelationship: "",
+            },
+          ],
+        },
+      );
+
+      fireEvent.click(
+        fieldTrigger("activityIncome.additionalIncomes.0.source")!,
+      );
+      fireEvent.click(screen.getByText("Renda Familiar"));
+
+      expect(
+        fieldTrigger("activityIncome.additionalIncomes.0.familyRelationship")
+          ?.textContent,
+      ).toContain("Cônjuge");
+    },
+  );
+
+  it("does not default grau de parentesco when the customer is not married", () => {
+    renderActivityIncome(
+      { maritalStatus: MaritalStatus.SINGLE },
+      {
+        additionalIncomes: [
+          {
+            id: 1,
+            activityCategories: [],
+            activityCategoryOther: "",
+            occupation: "",
+            businessActivityBranch: "",
+            businessActivitySubcategory: "",
+            activityTime: "",
+            source: "",
+            amount: "",
+            familyRelationship: "",
+          },
+        ],
+      },
+    );
+
+    fireEvent.click(fieldTrigger("activityIncome.additionalIncomes.0.source")!);
+    fireEvent.click(screen.getByText("Renda Familiar"));
+
+    expect(
+      fieldTrigger("activityIncome.additionalIncomes.0.familyRelationship")
+        ?.textContent,
+    ).toBe("Selecione");
+  });
+
+  it("does not overwrite an already-chosen grau de parentesco", () => {
+    renderActivityIncome(
+      { maritalStatus: MaritalStatus.MARRIED },
+      {
+        additionalIncomes: [
+          {
+            id: 1,
+            activityCategories: [],
+            activityCategoryOther: "",
+            occupation: "",
+            businessActivityBranch: "",
+            businessActivitySubcategory: "",
+            activityTime: "",
+            source: IncomeSource.FAMILY_INCOME,
+            amount: "",
+            familyRelationship: FamilyRelationship.SIBLING,
+          },
+        ],
+      },
+    );
+
+    fireEvent.click(fieldTrigger("activityIncome.additionalIncomes.0.source")!);
+    fireEvent.click(screen.getAllByText("Renda Familiar")[0]);
+
+    expect(
+      fieldTrigger("activityIncome.additionalIncomes.0.familyRelationship")
+        ?.textContent,
+    ).toContain("Irmão");
   });
 
   it("shows the activity-other field only when atividade econômica is Outros", () => {
