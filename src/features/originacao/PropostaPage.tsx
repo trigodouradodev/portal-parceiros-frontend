@@ -36,6 +36,7 @@ import {
   OTHER_OPTION,
   PROPOSAL_STEPS,
   applyRegistrationIdentityToSimulation,
+  requiresBusinessActivityBranch,
   requiresProfession,
   type ProposalFormData,
   type ProposalSnapshot,
@@ -247,7 +248,14 @@ function ProposalWizard({
   );
 
   function computeStepValid(values: ProposalFormData) {
+    const branchRequired = requiresBusinessActivityBranch(
+      values.registration.activityCategories,
+    );
+    const branchValid =
+      !branchRequired ||
+      values.registration.businessActivityBranch.trim() !== "";
     const subcategoryValid =
+      !branchRequired ||
       values.registration.businessActivityBranch.trim() === "" ||
       values.registration.businessActivitySubcategory.trim() !== "";
     const activityCategoryOtherValid =
@@ -262,7 +270,7 @@ function ProposalWizard({
         values.registration.activityCategories.length > 0 &&
         activityCategoryOtherValid &&
         occupationValid &&
-        values.registration.businessActivityBranch.trim() !== "" &&
+        branchValid &&
         subcategoryValid,
       isAddressValid(values.address),
       isPartnerOpinionValid(values.partnerOpinion),
