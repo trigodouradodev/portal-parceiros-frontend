@@ -263,9 +263,10 @@ export function mapQuoteDetailToForm(detail: QuoteDetail): ProposalFormData {
 }
 
 /**
- * Aplica somente os três blocos permitidos no prefill. Campos de dívida do
- * cadastro e a geolocalização atual não fazem parte da cópia; os passos 4 a 7
- * permanecem exatamente como estavam no formulário.
+ * Aplica somente os três blocos permitidos no prefill (Cadastro, Endereço e
+ * Atividade e Renda). Campos de dívida do cadastro e a geolocalização atual
+ * não fazem parte da cópia; os demais passos (Avalista, Financeiro,
+ * Documentação e Parecer) permanecem exatamente como estavam no formulário.
  */
 export function mergeRenewalPrefillIntoForm(
   current: ProposalFormData,
