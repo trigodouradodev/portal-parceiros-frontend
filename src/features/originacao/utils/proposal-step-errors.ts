@@ -14,12 +14,12 @@ export interface ProposalFieldError {
 
 const PROPOSAL_FORM_SLICE_KEYS = [
   "registration",
-  "activityIncome",
   "address",
-  "partnerOpinion",
   "guarantor",
+  "activityIncome",
   "financial",
   "documents",
+  "partnerOpinion",
 ] as const;
 
 export function getProposalStepFieldErrors(

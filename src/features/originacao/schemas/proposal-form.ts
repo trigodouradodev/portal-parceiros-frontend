@@ -354,26 +354,32 @@ export const documentsSchema: z.ZodType<DocumentsData> = z
     }
   });
 
+// Ordem alinhada a PROPOSAL_STEPS: Cadastro, Endereço, Avalista, Atividade e
+// Renda, Financeiro, Documentação, Parecer do Parceiro. Cadastro (índice 0) e
+// Atividade e Renda (índice 3) são especial-casados abaixo, então as
+// entradas correspondentes aqui nunca são realmente lidas — ficam só pra
+// manter os três arrays (STEP_SCHEMAS, STEP_KEYS, PROPOSAL_STEPS) com o
+// mesmo tamanho e a mesma ordem, sem depender de ninguém lembrar disso.
 const STEP_SCHEMAS = [
   null,
-  activityIncomeSchema,
   addressSchema,
-  partnerOpinionSchema,
   guarantorSchema,
+  activityIncomeSchema,
   financialSchema,
   documentsSchema,
+  partnerOpinionSchema,
 ] as const;
 
 type StepKey = keyof ProposalFormData;
 
 const STEP_KEYS: Array<StepKey | null> = [
   "registration",
-  "activityIncome",
   "address",
-  "partnerOpinion",
   "guarantor",
+  "activityIncome",
   "financial",
   "documents",
+  "partnerOpinion",
 ];
 
 export function parseProposalStep(step: number, data: ProposalFormData) {
@@ -382,7 +388,7 @@ export function parseProposalStep(step: number, data: ProposalFormData) {
       data.registration,
     );
   }
-  if (step === 1) {
+  if (step === 3) {
     // Atividade econômica, Profissão, Ramo de atividade e Subcategoria são
     // dados de `registration`, mas são exigidos e editados neste step — as
     // checagens abaixo seguem a mesma ordem visual da tela.

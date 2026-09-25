@@ -38,12 +38,12 @@ import type {
 /** Ordem dos passos do wizard alinhada a `PROPOSAL_STEPS`. */
 export const QUOTE_WIZARD_STEPS: QuoteDraftStep[] = [
   QuoteDraftStep.REGISTRATION,
-  QuoteDraftStep.INCOME,
   QuoteDraftStep.ADDRESS,
-  QuoteDraftStep.PARTNER_OPINION,
   QuoteDraftStep.GUARANTOR,
+  QuoteDraftStep.INCOME,
   QuoteDraftStep.FINANCIAL,
   QuoteDraftStep.DOCUMENTATION,
+  QuoteDraftStep.PARTNER_OPINION,
 ];
 
 export function nextWizardStepIndex(completedSteps: QuoteDraftStep[]): number {
