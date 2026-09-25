@@ -4,7 +4,11 @@ export type GeoFailureReason =
   | "position_unavailable"
   | "timeout";
 
-export type MobileBrowserOs = "ios" | "android" | "desktop";
+/**
+ * O Chrome no iOS é um caso à parte: não tem tela de permissão por site, então
+ * os passos que ele recebe são outros.
+ */
+export type MobileBrowserOs = "ios" | "ios_chrome" | "android" | "desktop";
 
 /** `unknown` quando o navegador não expõe a Permissions API (Safari antigo). */
 export type GeoPermissionState = PermissionState | "unknown";
@@ -42,13 +46,17 @@ const DESKTOP_PLATFORM = /Windows NT|Macintosh|CrOS|X11|Linux x86_64/i;
  * procurando um cadeado que não existe na tela dela.
  *
  * O iPadOS 13+ se anuncia como Macintosh, então só o toque separa os dois.
+ * Dentro do iOS ainda separamos o Chrome (`CriOS`), porque as telas que ele
+ * oferece são diferentes das do Safari.
  */
 export function detectMobileBrowserOs(
   userAgent: string = navigator.userAgent,
   touchPoints: number = navigator.maxTouchPoints ?? 0,
 ): MobileBrowserOs {
-  if (/iPhone|iPad|iPod/i.test(userAgent)) return "ios";
-  if (/Macintosh/i.test(userAgent) && touchPoints > 0) return "ios";
+  const isIos =
+    /iPhone|iPad|iPod/i.test(userAgent) ||
+    (/Macintosh/i.test(userAgent) && touchPoints > 0);
+  if (isIos) return /CriOS/i.test(userAgent) ? "ios_chrome" : "ios";
   if (/Android/i.test(userAgent)) return "android";
   return DESKTOP_PLATFORM.test(userAgent) ? "desktop" : "android";
 }
@@ -91,11 +99,23 @@ export function retryStillBlocked(
 /** Passos na ordem em que a pessoa vê na tela do celular ou do computador. */
 export function locationPermissionSteps(os: MobileBrowserOs): string[] {
   switch (os) {
+    // O botão mudou de lugar no iOS 26 e a barra de endereço fica embaixo
+    // desde o iOS 15, então não afirmamos onde ele está na tela.
     case "ios":
       return [
-        "Toque no AA ao lado do endereço, em cima da tela.",
-        "Toque em Ajustes do site.",
-        "Em Localização, escolha Permitir.",
+        "Ao lado do endereço, toque nos três pontinhos (ou no AA, em iPhones mais antigos).",
+        "Se abrir outra linha de opções, toque nos três pontinhos de novo.",
+        "Role até Ajustes do Site e, em Localização, escolha Permitir.",
+      ];
+    // O Chrome no iPhone não tem permissão por site: depois de bloquear, nem
+    // limpar os dados do site reabre a caixinha de forma confiável. Só resta
+    // o ajuste do app inteiro e, se não bastar, trocar de navegador.
+    case "ios_chrome":
+      return [
+        "Abra os Ajustes do iPhone e toque em Privacidade e Segurança.",
+        "Em Serviços de Localização, toque em Chrome e escolha Ao Usar o App.",
+        "Volte ao Chrome e recarregue a página.",
+        "Se continuar bloqueado, abra o mesmo link no Safari.",
       ];
     case "android":
       return [
