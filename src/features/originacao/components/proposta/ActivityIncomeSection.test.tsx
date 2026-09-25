@@ -205,10 +205,62 @@ describe("ActivityIncomeSection", () => {
       "registration.activityCategories",
       "registration.occupation",
     );
-    expectFieldBefore(
-      "registration.occupation",
-      "registration.businessActivityBranch",
-    );
+  });
+
+  it.each([
+    EconomicActivityCategory.CLT_EMPLOYEE,
+    EconomicActivityCategory.PUBLIC_SERVANT,
+    EconomicActivityCategory.RETIRED_OR_PENSIONER,
+    EconomicActivityCategory.UNEMPLOYED,
+  ])(
+    "hides ramo de atividade and subcategoria when atividade econômica is %s — não tem negócio próprio",
+    (category) => {
+      renderActivityIncome({
+        activityCategories: [category],
+        businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+        businessActivitySubcategory:
+          BusinessActivitySubcategory.GENERAL_COMMERCE,
+      });
+
+      expect(
+        document.getElementById("field-registration.businessActivityBranch"),
+      ).toBeNull();
+      expect(
+        document.getElementById(
+          "field-registration.businessActivitySubcategory",
+        ),
+      ).toBeNull();
+    },
+  );
+
+  it.each([
+    EconomicActivityCategory.BUSINESS_OWNER,
+    EconomicActivityCategory.SELF_EMPLOYED_OR_INFORMAL,
+    EconomicActivityCategory.OTHER,
+  ])(
+    "keeps ramo de atividade required when atividade econômica is %s",
+    (category) => {
+      renderActivityIncome({ activityCategories: [category] });
+
+      expect(fieldTrigger("registration.businessActivityBranch")).toBeTruthy();
+    },
+  );
+
+  it("clears ramo de atividade and subcategoria when switching to a category that doesn't need them", () => {
+    renderActivityIncome({
+      activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+      businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
+    });
+
+    expect(fieldTrigger("registration.businessActivityBranch")).toBeTruthy();
+
+    fireEvent.click(fieldTrigger("registration.activityCategories")!);
+    fireEvent.click(screen.getByText("Empregado CLT"));
+
+    expect(
+      document.getElementById("field-registration.businessActivityBranch"),
+    ).toBeNull();
   });
 
   it.each([

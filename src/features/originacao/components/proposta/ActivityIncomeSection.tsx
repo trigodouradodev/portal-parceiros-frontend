@@ -12,6 +12,7 @@ import {
   INCOME_SOURCE_OPTIONS,
   OTHER_OPTION,
   PRIMARY_INCOME_SOURCE_OPTIONS,
+  requiresBusinessActivityBranch,
   requiresProfession,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
@@ -30,6 +31,8 @@ export function ActivityIncomeSection() {
   const additionalIncomeValues = watch("activityIncome.additionalIncomes");
   const activityCategories = watch("registration.activityCategories");
   const professionRequired = requiresProfession(activityCategories);
+  const businessActivityRequired =
+    requiresBusinessActivityBranch(activityCategories);
   const businessActivityBranch = watch("registration.businessActivityBranch");
   const subcategoryOptions =
     BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[businessActivityBranch] ??
@@ -123,7 +126,18 @@ export function ActivityIncomeSection() {
               name={field.name}
               label="Atividade econômica"
               value={field.value[0] ?? ""}
-              onChange={(value) => field.onChange(value ? [value] : [])}
+              onChange={(value) => {
+                const nextCategories = value ? [value] : [];
+                field.onChange(nextCategories);
+                if (!requiresBusinessActivityBranch(nextCategories)) {
+                  setValue("registration.businessActivityBranch", "", {
+                    shouldValidate: true,
+                  });
+                  setValue("registration.businessActivitySubcategory", "", {
+                    shouldValidate: true,
+                  });
+                }
+              }}
               options={ACTIVITY_CATEGORY_OPTIONS}
               required
               error={fieldState.error?.message}
@@ -146,14 +160,16 @@ export function ActivityIncomeSection() {
             required
           />
         ) : null}
-        <FormSelect<ProposalFormData>
-          name="registration.businessActivityBranch"
-          label="Ramo de atividade"
-          options={BUSINESS_ACTIVITY_BRANCH_OPTIONS}
-          onValueChange={handleBranchChange}
-          required
-        />
-        {businessActivityBranch ? (
+        {businessActivityRequired ? (
+          <FormSelect<ProposalFormData>
+            name="registration.businessActivityBranch"
+            label="Ramo de atividade"
+            options={BUSINESS_ACTIVITY_BRANCH_OPTIONS}
+            onValueChange={handleBranchChange}
+            required
+          />
+        ) : null}
+        {businessActivityRequired && businessActivityBranch ? (
           <FormSelect<ProposalFormData>
             name="registration.businessActivitySubcategory"
             label={`Subcategoria de ${branchLabel}`}
@@ -192,6 +208,8 @@ export function ActivityIncomeSection() {
           const categories = watch(
             `activityIncome.additionalIncomes.${index}.activityCategories`,
           );
+          const additionalBusinessActivityRequired =
+            requiresBusinessActivityBranch(categories);
           const branch = watch(
             `activityIncome.additionalIncomes.${index}.businessActivityBranch`,
           );
@@ -232,7 +250,22 @@ export function ActivityIncomeSection() {
                     name={field.name}
                     label="Atividade econômica"
                     value={field.value[0] ?? ""}
-                    onChange={(value) => field.onChange(value ? [value] : [])}
+                    onChange={(value) => {
+                      const nextCategories = value ? [value] : [];
+                      field.onChange(nextCategories);
+                      if (!requiresBusinessActivityBranch(nextCategories)) {
+                        setValue(
+                          `activityIncome.additionalIncomes.${index}.businessActivityBranch`,
+                          "",
+                          { shouldValidate: true },
+                        );
+                        setValue(
+                          `activityIncome.additionalIncomes.${index}.businessActivitySubcategory`,
+                          "",
+                          { shouldValidate: true },
+                        );
+                      }
+                    }}
                     options={ACTIVITY_CATEGORY_OPTIONS}
                     required
                     error={fieldState.error?.message}
@@ -255,16 +288,18 @@ export function ActivityIncomeSection() {
                   required
                 />
               ) : null}
-              <FormSelect<ProposalFormData>
-                name={`activityIncome.additionalIncomes.${index}.businessActivityBranch`}
-                label="Ramo de atividade"
-                options={BUSINESS_ACTIVITY_BRANCH_OPTIONS}
-                onValueChange={(value) =>
-                  handleAdditionalBranchChange(index, value)
-                }
-                required
-              />
-              {branch ? (
+              {additionalBusinessActivityRequired ? (
+                <FormSelect<ProposalFormData>
+                  name={`activityIncome.additionalIncomes.${index}.businessActivityBranch`}
+                  label="Ramo de atividade"
+                  options={BUSINESS_ACTIVITY_BRANCH_OPTIONS}
+                  onValueChange={(value) =>
+                    handleAdditionalBranchChange(index, value)
+                  }
+                  required
+                />
+              ) : null}
+              {additionalBusinessActivityRequired && branch ? (
                 <FormSelect<ProposalFormData>
                   name={`activityIncome.additionalIncomes.${index}.businessActivitySubcategory`}
                   label={`Subcategoria de ${secondaryBranchLabel}`}

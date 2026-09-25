@@ -5,6 +5,7 @@ import {
   AUREA_REFERRAL_OPTION,
   OTHER_OPTION,
   hasSpouse,
+  requiresBusinessActivityBranch,
   requiresProfession,
   type ActivityIncomeData,
   type AddressData,
@@ -176,8 +177,8 @@ const additionalIncomeSchema = z
     activityCategories: z.array(requiredString).min(1, REQUIRED_FIELD_MESSAGE),
     activityCategoryOther: z.string(),
     occupation: z.string(),
-    businessActivityBranch: requiredString,
-    businessActivitySubcategory: requiredString,
+    businessActivityBranch: z.string(),
+    businessActivitySubcategory: z.string(),
     activityTime: requiredString,
     source: requiredString,
     amount: positiveMoneyString(),
@@ -203,6 +204,21 @@ const additionalIncomeSchema = z
         path: ["occupation"],
         message: REQUIRED_FIELD_MESSAGE,
       });
+    }
+    if (requiresBusinessActivityBranch(data.activityCategories)) {
+      if (data.businessActivityBranch.trim() === "") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["businessActivityBranch"],
+          message: REQUIRED_FIELD_MESSAGE,
+        });
+      } else if (data.businessActivitySubcategory.trim() === "") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["businessActivitySubcategory"],
+          message: REQUIRED_FIELD_MESSAGE,
+        });
+      }
     }
     if (
       data.source === IncomeSource.FAMILY_INCOME &&
@@ -410,16 +426,18 @@ export function parseProposalStep(step: number, data: ProposalFormData) {
         message: REQUIRED_FIELD_MESSAGE,
       });
     }
-    if (data.registration.businessActivityBranch.trim() === "") {
-      issues.push({
-        path: ["registration", "businessActivityBranch"],
-        message: REQUIRED_FIELD_MESSAGE,
-      });
-    } else if (data.registration.businessActivitySubcategory.trim() === "") {
-      issues.push({
-        path: ["registration", "businessActivitySubcategory"],
-        message: REQUIRED_FIELD_MESSAGE,
-      });
+    if (requiresBusinessActivityBranch(data.registration.activityCategories)) {
+      if (data.registration.businessActivityBranch.trim() === "") {
+        issues.push({
+          path: ["registration", "businessActivityBranch"],
+          message: REQUIRED_FIELD_MESSAGE,
+        });
+      } else if (data.registration.businessActivitySubcategory.trim() === "") {
+        issues.push({
+          path: ["registration", "businessActivitySubcategory"],
+          message: REQUIRED_FIELD_MESSAGE,
+        });
+      }
     }
 
     const parsed = activityIncomeSchema.safeParse(data.activityIncome);

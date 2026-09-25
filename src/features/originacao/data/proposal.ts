@@ -174,11 +174,11 @@ export const RETAIL_COMMERCE_BRANCH = BusinessActivityBranch.RETAIL_COMMERCE;
 
 /**
  * Categorias em que profissão faz sentido como dado próprio da pessoa —
- * CLT e Servidor Público porque Ramo de atividade pode ser o setor do
- * empregador (distinto do cargo da pessoa); Aposentado e Desempregado
- * porque não têm Ramo de atividade em curso para descrever a ocupação.
- * Empresário/Autônomo ficam de fora: a Subcategoria já descreve a
- * atividade de forma estruturada.
+ * CLT, Servidor Público, Aposentado e Desempregado não têm negócio próprio
+ * nem atividade autônoma em curso, então Ramo/Subcategoria não se aplicam
+ * (ver `requiresBusinessActivityBranch`, o complemento exato desta lista —
+ * confirmado com o time de crédito). Empresário/Autônomo ficam de fora: a
+ * Subcategoria já descreve a atividade de forma estruturada.
  */
 const PROFESSION_REQUIRED_CATEGORIES: string[] = [
   EconomicActivityCategory.CLT_EMPLOYEE,
@@ -192,6 +192,18 @@ export function requiresProfession(activityCategories: string[]): boolean {
   return activityCategories.some((category) =>
     PROFESSION_REQUIRED_CATEGORIES.includes(category),
   );
+}
+
+/**
+ * Ramo de atividade e Subcategoria só fazem sentido pra quem tem negócio
+ * próprio ou é autônomo/informal (MEI) — complemento exato de
+ * `requiresProfession`. Confirmado com o time de crédito: não exigir de
+ * CLT, Servidor Público, Aposentado/Pensionista e Desempregado.
+ */
+export function requiresBusinessActivityBranch(
+  activityCategories: string[],
+): boolean {
+  return !requiresProfession(activityCategories);
 }
 export const NONE_PROGRAM = GovernmentProgram.NONE;
 export const HOW_KNOWS_OTHER = CustomerRelationshipOrigin.OTHER;
