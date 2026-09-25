@@ -514,6 +514,7 @@ export const LOAN_CATEGORY_OPTIONS = options([
   [LoanCategory.OVERDRAFT, "Cheque especial"],
   [LoanCategory.SAVINGS_GROUP_OR_CONSORTIUM, "Caixa financeira/consórcio"],
   [LoanCategory.LOAN_SHARK, "Agiota"],
+  [LoanCategory.MICROCREDIT, "Microcrédito"],
   [LoanCategory.OTHER, "Outros"],
 ]);
 
