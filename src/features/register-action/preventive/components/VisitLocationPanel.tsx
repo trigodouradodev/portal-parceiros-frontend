@@ -19,6 +19,26 @@ import {
 
 export type { VisitLocationStatus };
 
+function visitLocationSections(
+  address: ClientAddress | undefined,
+  status: VisitLocationStatus,
+) {
+  const hasAddress = hasValidAddress(address);
+  return {
+    hasAddress,
+    showIdle: hasAddress && status === "idle",
+    showLocating: hasAddress && status === "locating",
+    showChecking: hasAddress && status === "checking",
+    showConfirmed: hasAddress && status === "confirmed",
+    showManual: hasAddress && status === "manual",
+    showNotFound: hasAddress && status === "not_found",
+  };
+}
+
+function isUnreliablePin(result: VisitLocationDecision | null | undefined) {
+  return Boolean(result?.addressLikelyWrong || result?.partialMatch);
+}
+
 interface VisitLocationPanelProps {
   address?: ClientAddress;
   addressLabel?: string;
@@ -42,17 +62,8 @@ export function VisitLocationPanel({
   onVerifyLocation,
   onConfirmManual,
 }: VisitLocationPanelProps) {
-  const hasAddress = hasValidAddress(address);
-  const showIdle = hasAddress && status === "idle";
-  const showLocating = hasAddress && status === "locating";
-  const showChecking = hasAddress && status === "checking";
-  const showConfirmed = hasAddress && status === "confirmed";
-  const showManual = hasAddress && status === "manual";
-  const showNotFound = hasAddress && status === "not_found";
-  const unreliablePin = Boolean(
-    locationCheckResult?.addressLikelyWrong ||
-    locationCheckResult?.partialMatch,
-  );
+  const sections = visitLocationSections(address, status);
+  const unreliablePin = isUnreliablePin(locationCheckResult);
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,16 +76,16 @@ export function VisitLocationPanel({
         />
       )}
 
-      {!hasAddress && (
+      {!sections.hasAddress && (
         <p className="rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
           Não é possível verificar a localização sem endereço cadastrado.
         </p>
       )}
 
-      {showIdle && <IdleStatus onVerifyLocation={onVerifyLocation} />}
-      {showLocating && <CheckingStatus phase="locating" />}
-      {showChecking && <CheckingStatus phase="checking" />}
-      {showConfirmed && (
+      {sections.showIdle && <IdleStatus onVerifyLocation={onVerifyLocation} />}
+      {sections.showLocating && <CheckingStatus phase="locating" />}
+      {sections.showChecking && <CheckingStatus phase="checking" />}
+      {sections.showConfirmed && (
         <ConfirmedStatus
           distanceMeters={locationCheckResult?.distanceMeters}
           radiusMeters={
@@ -85,8 +96,8 @@ export function VisitLocationPanel({
           confirmationLevel={locationCheckResult?.confirmationLevel}
         />
       )}
-      {showManual && <ManualStatus />}
-      {showNotFound && (
+      {sections.showManual && <ManualStatus />}
+      {sections.showNotFound && (
         <NotFoundStatus
           address={address}
           destinationCoordinates={

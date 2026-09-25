@@ -130,14 +130,14 @@ export function useVisitLocationCheck({
               party,
               latitude: positionCoords.latitude,
               longitude: positionCoords.longitude,
+              accuracyMeters: Number.isFinite(accuracyMeters)
+                ? accuracyMeters
+                : undefined,
             })
             .then((checkResult) => {
               if (requestId !== requestIdRef.current) return;
 
-              const decision = applyVisitLocationTolerance(
-                checkResult,
-                Number.isFinite(accuracyMeters) ? accuracyMeters : undefined,
-              );
+              const decision = applyVisitLocationTolerance(checkResult);
 
               setCoords(positionCoords);
               setResult(decision);
@@ -176,11 +176,17 @@ export function useVisitLocationCheck({
             setStatus("not_found");
             return;
           }
-          void readGeoPermissionState().then((state) => {
-            if (requestId !== requestIdRef.current) return;
-            setGeoPermissionState(state);
-            setStatus("not_found");
-          });
+          readGeoPermissionState()
+            .then((state) => {
+              if (requestId !== requestIdRef.current) return;
+              setGeoPermissionState(state);
+              setStatus("not_found");
+            })
+            .catch(() => {
+              if (requestId !== requestIdRef.current) return;
+              setGeoPermissionState("unknown");
+              setStatus("not_found");
+            });
         },
         GEO_OPTIONS,
       );
@@ -200,7 +206,7 @@ export function useVisitLocationCheck({
     const failureAtClick = geoFailureReason;
     const permissionAtClick = geoPermissionState;
 
-    void (async () => {
+    const continueVerification = async () => {
       if (failureAtClick === "permission_denied") {
         const latest = await readGeoPermissionState();
         if (requestId !== requestIdRef.current) return;
@@ -214,7 +220,12 @@ export function useVisitLocationCheck({
 
       if (requestId !== requestIdRef.current) return;
       beginGeolocationRequest(requestId);
-    })();
+    };
+
+    continueVerification().catch(() => {
+      if (requestId !== requestIdRef.current) return;
+      beginGeolocationRequest(requestId);
+    });
   }, [
     beginGeolocationRequest,
     geoFailureReason,

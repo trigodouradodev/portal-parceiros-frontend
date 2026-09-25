@@ -1,6 +1,6 @@
 import { CheckCircle2 } from "lucide-react";
 import { ActionHint } from "@/features/register-action/components/primitives/contact/ActionHint";
-import type { LocationConfirmationLevel } from "@/features/register-action/preventive/utils/apply-visit-location-tolerance";
+import type { LocationConfirmationLevel } from "@/services/location-check/location-check.types";
 import { PartialMatchAlert } from "../PartialMatchAlert";
 import { VisitDistanceLabel } from "../VisitDistanceLabel";
 

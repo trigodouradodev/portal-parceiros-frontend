@@ -23,9 +23,13 @@ function apiResult(
 }
 
 describe("applyVisitLocationTolerance", () => {
-  it("confirma exact dentro do raio base", () => {
+  it("mantém a confirmação exata devolvida pela API", () => {
     const decision = applyVisitLocationTolerance(
-      apiResult({ distanceMeters: 80, withinRadius: true }),
+      apiResult({
+        distanceMeters: 80,
+        withinRadius: true,
+        confirmationLevel: "exact",
+      }),
     );
 
     expect(decision.confirmationLevel).toBe("exact");
@@ -33,23 +37,20 @@ describe("applyVisitLocationTolerance", () => {
     expect(decision.effectiveRadiusMeters).toBe(100);
   });
 
-  it("amplia o raio exato com accuracy (teto 100 m)", () => {
+  it("mantém a confirmação por proximidade devolvida pela API", () => {
     const decision = applyVisitLocationTolerance(
-      apiResult({ distanceMeters: 150, withinRadius: false }),
-      60,
-    );
-
-    expect(decision.confirmationLevel).toBe("exact");
-    expect(decision.effectiveRadiusMeters).toBe(160);
-  });
-
-  it("confirma por proximidade entre o raio efetivo e 300 m", () => {
-    const decision = applyVisitLocationTolerance(
-      apiResult({ distanceMeters: 220, withinRadius: false }),
+      apiResult({
+        distanceMeters: 220,
+        withinRadius: true,
+        confirmationLevel: "proximity",
+        effectiveRadiusMeters: 160,
+      }),
     );
 
     expect(decision.confirmationLevel).toBe("proximity");
     expect(decision.withinRadius).toBe(true);
+    expect(decision.effectiveRadiusMeters).toBe(160);
+    expect(decision.proximityRadiusMeters).toBe(300);
   });
 
   it("não confirma quando o geocoding do endereço não é confiável", () => {
@@ -57,6 +58,7 @@ describe("applyVisitLocationTolerance", () => {
       apiResult({
         distanceMeters: 10,
         withinRadius: true,
+        confirmationLevel: "exact",
         addressLikelyWrong: true,
         partialMatch: true,
         locationType: "GEOMETRIC_CENTER",
@@ -67,9 +69,13 @@ describe("applyVisitLocationTolerance", () => {
     expect(decision.withinRadius).toBe(false);
   });
 
-  it("rejeita além da faixa de proximidade", () => {
+  it("mantém a recusa da API fora da faixa", () => {
     const decision = applyVisitLocationTolerance(
-      apiResult({ distanceMeters: 400, withinRadius: false }),
+      apiResult({
+        distanceMeters: 400,
+        withinRadius: false,
+        confirmationLevel: null,
+      }),
     );
 
     expect(decision.confirmationLevel).toBeNull();

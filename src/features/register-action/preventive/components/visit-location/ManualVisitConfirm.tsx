@@ -5,10 +5,26 @@ import {
   type ManualLocationReason,
 } from "@/features/register-action/preventive/constants/manual-location-reason";
 
+type ManualConfirmEmphasis = "primary" | "secondary";
+
+const CONFIRM_BUTTON_CLASS: Record<ManualConfirmEmphasis, string> = {
+  primary:
+    "flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-navy py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy/90 disabled:cursor-not-allowed disabled:opacity-50",
+  secondary:
+    "flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-warning py-3.5 text-sm font-semibold text-warning transition-colors hover:bg-warning-bg disabled:cursor-not-allowed disabled:opacity-50",
+};
+
+const REASON_OPTION_CLASS: Record<ManualConfirmEmphasis, string> = {
+  primary:
+    "flex cursor-pointer items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm has-[:checked]:border-brand-navy has-[:checked]:bg-muted",
+  secondary:
+    "flex cursor-pointer items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm has-[:checked]:border-warning has-[:checked]:bg-warning-bg",
+};
+
 interface ManualVisitConfirmProps {
   onConfirmManual: (reason: ManualLocationReason) => void;
   /** primary quando a confirmação manual é o caminho esperado. */
-  emphasis?: "primary" | "secondary";
+  emphasis?: ManualConfirmEmphasis;
   /** Esconde o aviso amarelo quando o card de status já explica o caso. */
   showHint?: boolean;
   legend?: string;
@@ -21,10 +37,6 @@ export function ManualVisitConfirm({
   legend = "Motivo da confirmação manual",
 }: ManualVisitConfirmProps) {
   const [reason, setReason] = useState<ManualLocationReason | null>(null);
-  const confirmClassName =
-    emphasis === "primary"
-      ? "flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-navy py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy/90 disabled:cursor-not-allowed disabled:opacity-50"
-      : "flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-warning py-3.5 text-sm font-semibold text-warning transition-colors hover:bg-warning-bg disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <>
@@ -44,14 +56,7 @@ export function ManualVisitConfirm({
         </legend>
         <div className="flex flex-col gap-1.5">
           {MANUAL_LOCATION_REASON_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className={`flex cursor-pointer items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm ${
-                emphasis === "primary"
-                  ? "has-[:checked]:border-brand-navy has-[:checked]:bg-muted"
-                  : "has-[:checked]:border-warning has-[:checked]:bg-warning-bg"
-              }`}
-            >
+            <label key={option.value} className={REASON_OPTION_CLASS[emphasis]}>
               <input
                 type="radio"
                 name="manual-location-reason"
@@ -73,7 +78,7 @@ export function ManualVisitConfirm({
           if (!reason) return;
           onConfirmManual(reason);
         }}
-        className={confirmClassName}
+        className={CONFIRM_BUTTON_CLASS[emphasis]}
       >
         <Check size={16} />
         Confirmar presença

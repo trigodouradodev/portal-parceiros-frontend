@@ -10,6 +10,7 @@ import {
   locationPermissionIntro,
   locationPermissionSteps,
   permissionStillPromptable,
+  type MobileBrowserOs,
 } from "@/lib/geo/geo-position-error";
 import type { ManualLocationReason } from "@/features/register-action/preventive/constants/manual-location-reason";
 import { ManualVisitConfirm } from "../ManualVisitConfirm";
@@ -34,6 +35,76 @@ interface NotFoundStatusProps {
   onRetry?: () => void;
 }
 
+interface NotFoundView {
+  title: string;
+  description: string;
+  unreliableDistance: boolean;
+  deviceFailure: boolean;
+  permissionBlocked: boolean;
+  manualFirst: boolean;
+  browserOs: MobileBrowserOs;
+}
+
+function resolveNotFoundView(input: {
+  distanceMeters?: number;
+  addressLikelyWrong: boolean;
+  geoFailureReason: GeoFailureReason | null;
+  geoPermissionState: GeoPermissionState | null;
+}): NotFoundView {
+  const hasDistance = input.distanceMeters !== undefined;
+  // AUREA-352: quando o geocoding não é confiável, a distância calculada
+  // pode estar errada por vários km (caso real: parceiro confirmadamente no
+  // endereço certo, sistema acusou ~35km). Mostrar esse número, mesmo ao
+  // lado de um aviso, ainda passa a mensagem falsa de "você está longe" —
+  // por isso aqui nem o título nem a distância assumem que o parceiro está
+  // no lugar errado; só dizemos que não foi possível confirmar.
+  const unreliableDistance = hasDistance && input.addressLikelyWrong;
+  const deviceFailure = Boolean(input.geoFailureReason) && !hasDistance;
+  const permissionDenied = input.geoFailureReason === "permission_denied";
+  const permissionBlocked =
+    deviceFailure &&
+    permissionDenied &&
+    !permissionStillPromptable(input.geoPermissionState);
+  const browserOs = detectMobileBrowserOs();
+  const manualFirst = unreliableDistance;
+
+  let title = "Você não está no endereço";
+  let description =
+    "Para registrar a visita, vá ao endereço ou confirme presença manualmente.";
+  if (deviceFailure && input.geoFailureReason) {
+    title = geoFailureTitle(input.geoFailureReason);
+    if (permissionBlocked) {
+      description = locationPermissionIntro(browserOs);
+    } else if (
+      permissionDenied &&
+      permissionStillPromptable(input.geoPermissionState)
+    ) {
+      description =
+        "O navegador ainda pode pedir a localização. Toque em Tentar novamente para autorizar.";
+    } else {
+      description = geoFailureDescription(input.geoFailureReason);
+    }
+  } else if (!hasDistance) {
+    title = "Não foi possível obter sua localização";
+    description =
+      "Vá ao endereço ou confirme presença manualmente para continuar.";
+  } else if (unreliableDistance) {
+    title = "Não foi possível confirmar sua localização";
+    description =
+      "O endereço foi localizado só de forma aproximada. Se você está no local, confirme a presença.";
+  }
+
+  return {
+    title,
+    description,
+    unreliableDistance,
+    deviceFailure,
+    permissionBlocked,
+    manualFirst,
+    browserOs,
+  };
+}
+
 export function NotFoundStatus({
   address,
   destinationCoordinates,
@@ -46,59 +117,25 @@ export function NotFoundStatus({
   onConfirmManual,
   onRetry,
 }: NotFoundStatusProps) {
-  const hasDistance = distanceMeters !== undefined;
-  // AUREA-352: quando o geocoding não é confiável, a distância calculada
-  // pode estar errada por vários km (caso real: parceiro confirmadamente no
-  // endereço certo, sistema acusou ~35km). Mostrar esse número, mesmo ao
-  // lado de um aviso, ainda passa a mensagem falsa de "você está longe" —
-  // por isso aqui nem o título nem a distância assumem que o parceiro está
-  // no lugar errado; só dizemos que não foi possível confirmar.
-  const unreliableDistance = hasDistance && addressLikelyWrong;
-  const deviceFailure = Boolean(geoFailureReason) && !hasDistance;
-  const permissionDenied = geoFailureReason === "permission_denied";
-  const permissionBlocked =
-    deviceFailure &&
-    permissionDenied &&
-    !permissionStillPromptable(geoPermissionState);
-  const browserOs = detectMobileBrowserOs();
-  const manualFirst = unreliableDistance;
+  const view = resolveNotFoundView({
+    distanceMeters,
+    addressLikelyWrong,
+    geoFailureReason,
+    geoPermissionState,
+  });
 
-  let title = "Você não está no endereço";
-  let description =
-    "Para registrar a visita, vá ao endereço ou confirme presença manualmente.";
-  if (deviceFailure && geoFailureReason) {
-    title = geoFailureTitle(geoFailureReason);
-    if (permissionBlocked) {
-      description = locationPermissionIntro(browserOs);
-    } else if (
-      permissionDenied &&
-      permissionStillPromptable(geoPermissionState)
-    ) {
-      description =
-        "O navegador ainda pode pedir a localização. Toque em Tentar novamente para autorizar.";
-    } else {
-      description = geoFailureDescription(geoFailureReason);
-    }
-  } else if (!hasDistance) {
-    title = "Não foi possível obter sua localização";
-    description =
-      "Vá ao endereço ou confirme presença manualmente para continuar.";
-  } else if (unreliableDistance) {
-    title = "Não foi possível confirmar sua localização";
-    description =
-      "O endereço foi localizado só de forma aproximada. Se você está no local, confirme a presença.";
-  }
-
-  if (permissionBlocked) {
+  if (view.permissionBlocked) {
     return (
       <div className="flex flex-col gap-4">
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="text-base font-semibold text-foreground">
             Libere a localização
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {view.description}
+          </p>
           <ol className="mt-4 flex flex-col gap-3">
-            {locationPermissionSteps(browserOs).map((step, index) => (
+            {locationPermissionSteps(view.browserOs).map((step, index) => (
               <li key={step} className="flex items-start gap-3">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-semibold text-white">
                   {index + 1}
@@ -142,9 +179,9 @@ export function NotFoundStatus({
       <div className="flex items-start gap-3 rounded-2xl border border-destructive/40 bg-destructive-bg p-4">
         <MapPinOff size={18} className="mt-0.5 shrink-0 text-destructive" />
         <div>
-          <p className="text-sm font-semibold text-destructive">{title}</p>
+          <p className="text-sm font-semibold text-destructive">{view.title}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {!unreliableDistance && !deviceFailure && (
+            {!view.unreliableDistance && !view.deviceFailure && (
               <VisitDistanceLabel
                 distanceMeters={distanceMeters}
                 radiusMeters={radiusMeters}
@@ -152,19 +189,19 @@ export function NotFoundStatus({
                 centered={false}
               />
             )}
-            {description}
+            {view.description}
           </p>
-          {unreliableDistance && matchedAddress && (
+          {view.unreliableDistance && matchedAddress && (
             <p className="mt-2 text-xs text-muted-foreground">
               Endereço usado: {matchedAddress}
             </p>
           )}
         </div>
       </div>
-      {deviceFailure && !manualFirst && onRetry && (
+      {view.deviceFailure && !view.manualFirst && onRetry && (
         <RetryLocationButton onRetry={onRetry} />
       )}
-      {manualFirst ? (
+      {view.manualFirst ? (
         <>
           <ManualVisitConfirm
             emphasis="primary"
