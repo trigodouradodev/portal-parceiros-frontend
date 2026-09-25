@@ -58,7 +58,7 @@ export function RemovableCard({
 }: RemovableCardProps) {
   return (
     <div className="flex flex-col gap-3 rounded-2xl bg-muted p-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-end gap-2">
         <div className="min-w-0 flex-1">{header}</div>
         <button
           type="button"
