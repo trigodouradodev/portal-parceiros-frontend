@@ -33,6 +33,7 @@ import {
   mapTaskChannelToActivityTaskType,
 } from "@/features/register-action/utils/map-to-interaction";
 import { useVisitLocationCheck } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
+import { appendManualLocationAuditNote } from "@/features/register-action/preventive/constants/manual-location-reason";
 import { useRegisterInteraction } from "@/hooks/useRegisterInteraction";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
@@ -220,6 +221,14 @@ export function useRegisterChargeActionFlow() {
 
     const coords = location.coords;
     const includeGeo = isVisitTask && location.locationOk && coords !== null;
+    const noteWithAudit =
+      isVisitTask && location.status === "manual"
+        ? appendManualLocationAuditNote(
+            note,
+            location.manualReason,
+            Boolean(location.result?.addressLikelyWrong),
+          )
+        : note;
 
     try {
       const payload = buildV2RegisterInteractionPayload({
@@ -227,10 +236,20 @@ export function useRegisterChargeActionFlow() {
         recipientType,
         contactType,
         taskChannel,
-        note,
+        note: noteWithAudit,
         promiseDate: promiseDateValue,
         latitude: includeGeo ? coords.latitude : undefined,
         longitude: includeGeo ? coords.longitude : undefined,
+        locationConfirmation:
+          location.status === "confirmed"
+            ? (location.result?.confirmationLevel ?? "exact")
+            : location.status === "manual"
+              ? "manual"
+              : undefined,
+        manualLocationReason:
+          location.status === "manual"
+            ? (location.manualReason ?? undefined)
+            : undefined,
       });
       await registerInteraction.mutateAsync({
         taskId,
@@ -239,7 +258,7 @@ export function useRegisterChargeActionFlow() {
         installmentNumber: client.installmentNumber,
         installmentId,
       });
-      onComplete({ note, outcome: result });
+      onComplete({ note: noteWithAudit, outcome: result });
       navigate("/", {
         replace: true,
         state: buildCompletedHighlightNavigationState(installmentId),

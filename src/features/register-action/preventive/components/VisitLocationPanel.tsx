@@ -1,5 +1,10 @@
 import { hasValidAddress } from "@/lib/contact-actions";
-import type { LocationCheckResult } from "@/services/location-check/location-check.types";
+import type {
+  GeoFailureReason,
+  GeoPermissionState,
+} from "@/lib/geo/geo-position-error";
+import type { ManualLocationReason } from "@/features/register-action/preventive/constants/manual-location-reason";
+import type { VisitLocationDecision } from "@/features/register-action/preventive/utils/apply-visit-location-tolerance";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
 import type { VisitLocationStatus } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
 import { GuidanceCard } from "@/features/register-action/components/primitives/contact/GuidanceCard";
@@ -14,14 +19,36 @@ import {
 
 export type { VisitLocationStatus };
 
+function visitLocationSections(
+  address: ClientAddress | undefined,
+  status: VisitLocationStatus,
+) {
+  const hasAddress = hasValidAddress(address);
+  return {
+    hasAddress,
+    showIdle: hasAddress && status === "idle",
+    showLocating: hasAddress && status === "locating",
+    showChecking: hasAddress && status === "checking",
+    showConfirmed: hasAddress && status === "confirmed",
+    showManual: hasAddress && status === "manual",
+    showNotFound: hasAddress && status === "not_found",
+  };
+}
+
+function isUnreliablePin(result: VisitLocationDecision | null | undefined) {
+  return Boolean(result?.addressLikelyWrong || result?.partialMatch);
+}
+
 interface VisitLocationPanelProps {
   address?: ClientAddress;
   addressLabel?: string;
   orientationScript?: string;
   status: VisitLocationStatus;
-  locationCheckResult?: LocationCheckResult | null;
+  locationCheckResult?: VisitLocationDecision | null;
+  geoFailureReason?: GeoFailureReason | null;
+  geoPermissionState?: GeoPermissionState | null;
   onVerifyLocation: () => void;
-  onConfirmManual: () => void;
+  onConfirmManual: (reason: ManualLocationReason) => void;
 }
 
 export function VisitLocationPanel({
@@ -30,15 +57,13 @@ export function VisitLocationPanel({
   orientationScript,
   status,
   locationCheckResult,
+  geoFailureReason = null,
+  geoPermissionState = null,
   onVerifyLocation,
   onConfirmManual,
 }: VisitLocationPanelProps) {
-  const hasAddress = hasValidAddress(address);
-  const showIdle = hasAddress && status === "idle";
-  const showChecking = hasAddress && status === "checking";
-  const showConfirmed = hasAddress && status === "confirmed";
-  const showManual = hasAddress && status === "manual";
-  const showNotFound = hasAddress && status === "not_found";
+  const sections = visitLocationSections(address, status);
+  const unreliablePin = isUnreliablePin(locationCheckResult);
 
   return (
     <div className="flex flex-col gap-4">
@@ -51,30 +76,46 @@ export function VisitLocationPanel({
         />
       )}
 
-      {!hasAddress && (
+      {!sections.hasAddress && (
         <p className="rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
           Não é possível verificar a localização sem endereço cadastrado.
         </p>
       )}
 
-      {showIdle && <IdleStatus onVerifyLocation={onVerifyLocation} />}
-      {showChecking && <CheckingStatus />}
-      {showConfirmed && (
+      {sections.showIdle && <IdleStatus onVerifyLocation={onVerifyLocation} />}
+      {sections.showLocating && <CheckingStatus phase="locating" />}
+      {sections.showChecking && <CheckingStatus phase="checking" />}
+      {sections.showConfirmed && (
         <ConfirmedStatus
           distanceMeters={locationCheckResult?.distanceMeters}
-          radiusMeters={locationCheckResult?.radiusMeters}
+          radiusMeters={
+            locationCheckResult?.effectiveRadiusMeters ??
+            locationCheckResult?.radiusMeters
+          }
           partialMatch={locationCheckResult?.partialMatch}
+          confirmationLevel={locationCheckResult?.confirmationLevel}
         />
       )}
-      {showManual && <ManualStatus />}
-      {showNotFound && (
+      {sections.showManual && <ManualStatus />}
+      {sections.showNotFound && (
         <NotFoundStatus
           address={address}
-          destinationCoordinates={locationCheckResult?.registeredCoordinates}
+          destinationCoordinates={
+            unreliablePin
+              ? undefined
+              : locationCheckResult?.registeredCoordinates
+          }
           distanceMeters={locationCheckResult?.distanceMeters}
-          radiusMeters={locationCheckResult?.radiusMeters}
+          radiusMeters={
+            locationCheckResult?.proximityRadiusMeters ??
+            locationCheckResult?.radiusMeters
+          }
           addressLikelyWrong={locationCheckResult?.addressLikelyWrong}
+          matchedAddress={locationCheckResult?.matchedAddress}
+          geoFailureReason={geoFailureReason}
+          geoPermissionState={geoPermissionState}
           onConfirmManual={onConfirmManual}
+          onRetry={onVerifyLocation}
         />
       )}
     </div>

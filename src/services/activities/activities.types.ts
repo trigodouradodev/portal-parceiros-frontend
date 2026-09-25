@@ -24,6 +24,12 @@ export interface RegisterInteractionPayload {
   recipientContactId?: string;
   latitude?: number;
   longitude?: number;
+  locationConfirmation?: "exact" | "proximity" | "manual";
+  manualLocationReason?:
+    | "gps_imprecise"
+    | "no_signal"
+    | "wrong_address"
+    | "receiving_at_address";
 }
 
 export interface ActivityInteractionResponse {

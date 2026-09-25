@@ -1,8 +1,13 @@
 import { ContactToneBadges } from "@/features/register-action/charge/components/ContactToneBadges";
 import { VisitLocationPanel } from "@/features/register-action/preventive/components";
+import type { ManualLocationReason } from "@/features/register-action/preventive/constants/manual-location-reason";
 import type { VisitLocationStatus } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
+import type { VisitLocationDecision } from "@/features/register-action/preventive/utils/apply-visit-location-tolerance";
+import type {
+  GeoFailureReason,
+  GeoPermissionState,
+} from "@/lib/geo/geo-position-error";
 import type { ClientAddress } from "@/services/dashboard/dashboard.types";
-import type { LocationCheckResult } from "@/services/location-check/location-check.types";
 import type { QueueTone } from "@/services/activities/activity.enums";
 
 interface ChargeVisitStepProps {
@@ -11,9 +16,11 @@ interface ChargeVisitStepProps {
   addressLabel: string;
   orientationScript: string;
   status: VisitLocationStatus;
-  locationCheckResult?: LocationCheckResult | null;
+  locationCheckResult?: VisitLocationDecision | null;
+  geoFailureReason?: GeoFailureReason | null;
+  geoPermissionState?: GeoPermissionState | null;
   onVerifyLocation: () => void;
-  onConfirmManual: () => void;
+  onConfirmManual: (reason: ManualLocationReason) => void;
 }
 
 export function ChargeVisitStep({
@@ -23,6 +30,8 @@ export function ChargeVisitStep({
   orientationScript,
   status,
   locationCheckResult,
+  geoFailureReason,
+  geoPermissionState,
   onVerifyLocation,
   onConfirmManual,
 }: ChargeVisitStepProps) {
@@ -35,6 +44,8 @@ export function ChargeVisitStep({
         orientationScript={orientationScript}
         status={status}
         locationCheckResult={locationCheckResult}
+        geoFailureReason={geoFailureReason}
+        geoPermissionState={geoPermissionState}
         onVerifyLocation={onVerifyLocation}
         onConfirmManual={onConfirmManual}
       />

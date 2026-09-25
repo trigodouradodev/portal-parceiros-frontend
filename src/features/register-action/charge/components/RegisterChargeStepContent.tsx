@@ -97,6 +97,8 @@ export function RegisterChargeStepContent({
         orientationScript={visitScript}
         status={location.status}
         locationCheckResult={location.result}
+        geoFailureReason={location.geoFailureReason}
+        geoPermissionState={location.geoPermissionState}
         onVerifyLocation={location.verify}
         onConfirmManual={location.confirmManual}
       />
