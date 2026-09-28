@@ -5,6 +5,7 @@ import type { PartyFormData } from "@/services/parties/parties.types";
 
 export interface PartyIdentityFill {
   name?: string;
+  birthDate?: string;
   email?: string;
   phone?: string;
 }
@@ -31,13 +32,16 @@ export function formatPartyTelephone(value: string): string {
   return formatPhone(digits);
 }
 
-/** Nome, e-mail e telefone a partir do GET /parties/by-cpf. Sem CPF nem nascimento. */
+/** Identidade a partir do GET /parties/by-cpf, sem alterar o CPF consultado. */
 export function mapPartyToIdentityFill(
   party: PartyFormData,
 ): PartyIdentityFill {
   const fill: PartyIdentityFill = {};
   const name = party.name.trim();
   if (name) fill.name = name;
+
+  const birthDate = party.birthDate?.trim();
+  if (birthDate) fill.birthDate = birthDate;
 
   const email = party.email?.trim();
   if (email) fill.email = email;
@@ -48,7 +52,7 @@ export function mapPartyToIdentityFill(
   return fill;
 }
 
-/** Campos do avalista a partir do GET /parties/by-cpf. Não inclui CPF, nascimento nem parentesco. */
+/** Campos do avalista a partir do GET /parties/by-cpf. Não inclui CPF nem parentesco. */
 export function mapPartyToGuarantorFill(
   party: PartyFormData,
 ): GuarantorPartyFill {

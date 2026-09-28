@@ -360,11 +360,12 @@ describe("SimulacaoForm", () => {
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
-  it("fills name, email and phone from the party lookup after a valid CPF", async () => {
+  it("fills identity data from the party lookup after a valid CPF", async () => {
     const user = userEvent.setup();
     findFormDataByCpf.mockResolvedValue({
       name: "Maria Souza",
       document: "52998224725",
+      birthDate: "1990-05-20",
       email: "maria@email.com",
       telephone: "+5511987654321",
       address: null,
@@ -394,6 +395,7 @@ describe("SimulacaoForm", () => {
     expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue(
       "Maria Souza",
     );
+    expect(screen.getByText("20/05/1990")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
       "maria@email.com",
     );
@@ -430,6 +432,7 @@ describe("SimulacaoForm", () => {
     findFormDataByCpf.mockResolvedValue({
       name: "Maria Souza",
       document: "52998224725",
+      birthDate: "1985-02-10",
       email: "maria@email.com",
       telephone: "11987654321",
       address: null,
@@ -458,6 +461,7 @@ describe("SimulacaoForm", () => {
     expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
       "maria@email.com",
     );
+    expect(screen.getByText("10/02/1985")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue(
       "(11) 98765-4321",
     );

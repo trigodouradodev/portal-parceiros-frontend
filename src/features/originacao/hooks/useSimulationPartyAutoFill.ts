@@ -13,6 +13,7 @@ export function useSimulationPartyAutoFill(
     const fill = mapPartyToIdentityFill(party);
     const fieldOptions = { shouldDirty: true, shouldValidate: true };
     if (fill.name) setValue("name", fill.name, fieldOptions);
+    if (fill.birthDate) setValue("birthDate", fill.birthDate, fieldOptions);
     if (fill.email) setValue("email", fill.email, fieldOptions);
     if (fill.phone) setValue("phone", fill.phone, fieldOptions);
   });
