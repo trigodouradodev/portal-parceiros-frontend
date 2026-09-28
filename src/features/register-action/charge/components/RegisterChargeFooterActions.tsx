@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronRight, MapPinOff } from "lucide-react";
+import { CalendarDays, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
@@ -11,23 +11,6 @@ type Flow = ReturnType<typeof useRegisterChargeActionFlow>;
 
 interface RegisterChargeFooterActionsProps {
   flow: Flow;
-}
-
-function getContactContinueContent(needsLocationConfirm: boolean): ReactNode {
-  if (needsLocationConfirm) {
-    return (
-      <>
-        <MapPinOff size={15} />
-        Confirme a localização
-      </>
-    );
-  }
-
-  return (
-    <>
-      Registrar resultado <ChevronRight size={16} />
-    </>
-  );
 }
 
 function getSaveButtonLabel(needsPromiseDate: boolean): string {
@@ -82,13 +65,15 @@ export function RegisterChargeFooterActions({
           >
             Voltar
           </Button>
-          <Button
-            className="h-12 flex-1 gap-2 rounded-2xl bg-brand-navy font-semibold text-white"
-            disabled={!canContinueContact}
-            onClick={() => setStep("outcome")}
-          >
-            {getContactContinueContent(needsLocationConfirm)}
-          </Button>
+          {!needsLocationConfirm && (
+            <Button
+              className="h-12 flex-1 gap-2 rounded-2xl bg-brand-navy font-semibold text-white"
+              disabled={!canContinueContact}
+              onClick={() => setStep("outcome")}
+            >
+              Registrar resultado <ChevronRight size={16} />
+            </Button>
+          )}
         </>
       )}
 

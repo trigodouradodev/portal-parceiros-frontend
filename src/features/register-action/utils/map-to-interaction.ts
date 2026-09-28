@@ -46,6 +46,8 @@ export function buildV2RegisterInteractionPayload(params: {
   promiseDate?: string;
   latitude?: number;
   longitude?: number;
+  locationConfirmation?: "exact" | "proximity" | "manual";
+  manualLocationReason?: RegisterInteractionPayload["manualLocationReason"];
 }): RegisterInteractionPayload {
   const payload: RegisterInteractionPayload = {
     channel: mapContactTypeToInteractionChannel(
@@ -71,6 +73,13 @@ export function buildV2RegisterInteractionPayload(params: {
   ) {
     payload.latitude = params.latitude;
     payload.longitude = params.longitude;
+  }
+
+  if (params.locationConfirmation) {
+    payload.locationConfirmation = params.locationConfirmation;
+  }
+  if (params.manualLocationReason) {
+    payload.manualLocationReason = params.manualLocationReason;
   }
 
   return payload;
