@@ -20,8 +20,7 @@ export function useGuarantorPartyAutoFill() {
         shouldDirty: true,
         shouldValidate: true,
       }),
-    clear: (field) =>
-      setValue(`guarantor.${field}`, "", { shouldDirty: true }),
+    clear: (field) => setValue(`guarantor.${field}`, "", { shouldDirty: true }),
   });
 
   return { status, onCpfComplete, onCpfIncomplete };
