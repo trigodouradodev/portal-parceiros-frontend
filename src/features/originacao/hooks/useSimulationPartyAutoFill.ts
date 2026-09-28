@@ -7,6 +7,7 @@ import {
   type PartyIdentityFill,
 } from "@/features/originacao/mappers/map-party-to-guarantor";
 import type { SimulationFormValues } from "@/features/originacao/schemas/simulation-form";
+import { partyFillUpdates } from "@/features/originacao/utils/party-fill-updates";
 
 export function useSimulationPartyAutoFill(
   getValues: UseFormGetValues<SimulationFormValues>,
@@ -17,15 +18,15 @@ export function useSimulationPartyAutoFill(
   const filledRef = useRef<PartyIdentityFill>({});
 
   useEffect(() => {
-    const previous = filledRef.current;
     const next = party ? mapPartyToIdentityFill(party) : {};
-    for (const field of PARTY_IDENTITY_FIELDS) {
-      const value = next[field];
-      if (value) {
-        setValue(field, value, { shouldDirty: true, shouldValidate: true });
-      } else if (previous[field] && getValues(field) === previous[field]) {
-        setValue(field, "", { shouldDirty: true });
-      }
+    const updates = partyFillUpdates(
+      PARTY_IDENTITY_FIELDS,
+      filledRef.current,
+      next,
+      getValues,
+    );
+    for (const [field, value] of updates) {
+      setValue(field, value, { shouldDirty: true, shouldValidate: !!value });
     }
     filledRef.current = next;
   }, [party, getValues, setValue]);

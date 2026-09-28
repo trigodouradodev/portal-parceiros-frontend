@@ -8,7 +8,7 @@ import {
   KINSHIP_OPTIONS,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
-import { useGuarantorPartyAutoFill } from "@/features/originacao/hooks/useGuarantorPartyAutoFill";
+import type { GuarantorPartyAutoFill } from "@/features/originacao/hooks/useGuarantorPartyAutoFill";
 import type { EmailDeliverabilityStatus } from "@/features/originacao/hooks/useEmailDeliverability";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatPhone } from "@/lib/format/phone";
@@ -18,13 +18,13 @@ const MAX_BIRTH_ISO = maxAdultBirthIso();
 
 interface GuarantorSectionProps {
   emailDeliverabilityStatus: EmailDeliverabilityStatus;
+  partyAutoFill: GuarantorPartyAutoFill;
 }
 
 export function GuarantorSection({
   emailDeliverabilityStatus,
+  partyAutoFill: { status, onCpfChange },
 }: GuarantorSectionProps) {
-  const { status, onCpfChange } = useGuarantorPartyAutoFill();
-
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">

@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { ToastProvider } from "@/contexts/toast/ToastContext";
 import {
   createEmptyProposalForm,
@@ -32,26 +32,27 @@ function renderGuarantorAutoFill() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  let form!: ReturnType<typeof useForm<ProposalFormData>>;
   function Wrapper({ children }: { children: ReactNode }) {
-    form = useForm<ProposalFormData>({
-      defaultValues: createEmptyProposalForm(),
-    });
     return (
       <QueryClientProvider client={client}>
-        <ToastProvider>
-          <FormProvider {...form}>{children}</FormProvider>
-        </ToastProvider>
+        <ToastProvider>{children}</ToastProvider>
       </QueryClientProvider>
     );
   }
-  const hook = renderHook(() => useGuarantorPartyAutoFill(), {
-    wrapper: Wrapper,
-  });
+  const hook = renderHook(
+    () => {
+      const form = useForm<ProposalFormData>({
+        defaultValues: createEmptyProposalForm(),
+      });
+      const autoFill = useGuarantorPartyAutoFill(form.getValues, form.setValue);
+      return { form, ...autoFill };
+    },
+    { wrapper: Wrapper },
+  );
   return {
     hook,
-    guarantor: () => form.getValues("guarantor"),
-    form: () => form,
+    guarantor: () => hook.result.current.form.getValues("guarantor"),
+    form: () => hook.result.current.form,
   };
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useFormContext } from "react-hook-form";
+import type { UseFormGetValues, UseFormSetValue } from "react-hook-form";
 import {
   GUARANTOR_PARTY_FIELDS,
   mapPartyToGuarantorFill,
@@ -7,25 +7,34 @@ import {
 } from "@/features/originacao/mappers/map-party-to-guarantor";
 import type { ProposalFormData } from "@/features/originacao/data/proposal";
 import { usePartyLookup } from "@/features/originacao/hooks/usePartyLookup";
+import { partyFillUpdates } from "@/features/originacao/utils/party-fill-updates";
 
-export type { PartyLookupStatus } from "@/features/originacao/hooks/usePartyLookup";
+export type GuarantorPartyAutoFill = ReturnType<
+  typeof useGuarantorPartyAutoFill
+>;
 
-export function useGuarantorPartyAutoFill() {
-  const { getValues, setValue } = useFormContext<ProposalFormData>();
+// Fica no PropostaPage, e não no GuarantorSection: o wizard desmonta a etapa
+// ao navegar e perderia o registro do que veio do cadastro.
+export function useGuarantorPartyAutoFill(
+  getValues: UseFormGetValues<ProposalFormData>,
+  setValue: UseFormSetValue<ProposalFormData>,
+) {
   const { party, status, onCpfChange } = usePartyLookup();
   const filledRef = useRef<GuarantorPartyFill>({});
 
   useEffect(() => {
-    const previous = filledRef.current;
     const next = party ? mapPartyToGuarantorFill(party) : {};
-    for (const field of GUARANTOR_PARTY_FIELDS) {
-      const path = `guarantor.${field}` as const;
-      const value = next[field];
-      if (value) {
-        setValue(path, value, { shouldDirty: true, shouldValidate: true });
-      } else if (previous[field] && getValues(path) === previous[field]) {
-        setValue(path, "", { shouldDirty: true });
-      }
+    const updates = partyFillUpdates(
+      GUARANTOR_PARTY_FIELDS,
+      filledRef.current,
+      next,
+      (field) => getValues(`guarantor.${field}`),
+    );
+    for (const [field, value] of updates) {
+      setValue(`guarantor.${field}`, value, {
+        shouldDirty: true,
+        shouldValidate: !!value,
+      });
     }
     filledRef.current = next;
   }, [party, getValues, setValue]);

@@ -16,21 +16,13 @@ export const GUARANTOR_PARTY_FIELDS = [
   "state",
 ] as const;
 
-export interface PartyIdentityFill {
-  name?: string;
-  email?: string;
-  phone?: string;
-}
+export type PartyIdentityFill = Partial<
+  Record<(typeof PARTY_IDENTITY_FIELDS)[number], string>
+>;
 
-export interface GuarantorPartyFill extends PartyIdentityFill {
-  zipCode?: string;
-  street?: string;
-  number?: string;
-  complement?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-}
+export type GuarantorPartyFill = Partial<
+  Record<(typeof GUARANTOR_PARTY_FIELDS)[number], string>
+>;
 
 /** Telefone da party pode vir com DDI 55. */
 export function formatPartyTelephone(value: string): string {
