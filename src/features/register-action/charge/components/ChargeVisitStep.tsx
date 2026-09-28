@@ -20,7 +20,7 @@ interface ChargeVisitStepProps {
   geoFailureReason?: GeoFailureReason | null;
   geoPermissionState?: GeoPermissionState | null;
   onVerifyLocation: () => void;
-  onConfirmManual: (reason: ManualLocationReason) => void;
+  onConfirmManual: (reason: ManualLocationReason, note?: string) => void;
 }
 
 export function ChargeVisitStep({

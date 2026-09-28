@@ -108,11 +108,11 @@ describe("buildV2RegisterInteractionPayload", () => {
         latitude: -7.23,
         longitude: -39.29,
         locationConfirmation: "manual",
-        manualLocationReason: "wrong_address",
+        manualLocationReason: "registered_address_wrong",
       }),
     ).toMatchObject({
       locationConfirmation: "manual",
-      manualLocationReason: "wrong_address",
+      manualLocationReason: "registered_address_wrong",
     });
   });
 });

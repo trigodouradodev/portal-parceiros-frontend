@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { AlertTriangle, Check } from "lucide-react";
 import {
-  MANUAL_LOCATION_REASON_OPTIONS,
+  manualLocationReasonOptions,
+  manualLocationReasonRequiresNote,
+  type ManualLocationContext,
   type ManualLocationReason,
 } from "@/features/register-action/preventive/constants/manual-location-reason";
 
 type ManualConfirmEmphasis = "primary" | "secondary";
+
+const MANUAL_NOTE_MAX_LENGTH = 200;
 
 const CONFIRM_BUTTON_CLASS: Record<ManualConfirmEmphasis, string> = {
   primary:
@@ -16,13 +20,15 @@ const CONFIRM_BUTTON_CLASS: Record<ManualConfirmEmphasis, string> = {
 
 const REASON_OPTION_CLASS: Record<ManualConfirmEmphasis, string> = {
   primary:
-    "flex cursor-pointer items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm has-[:checked]:border-brand-navy has-[:checked]:bg-muted",
+    "flex cursor-pointer items-start gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm has-[:checked]:border-brand-navy has-[:checked]:bg-muted",
   secondary:
-    "flex cursor-pointer items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm has-[:checked]:border-warning has-[:checked]:bg-warning-bg",
+    "flex cursor-pointer items-start gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm has-[:checked]:border-warning has-[:checked]:bg-warning-bg",
 };
 
 interface ManualVisitConfirmProps {
-  onConfirmManual: (reason: ManualLocationReason) => void;
+  onConfirmManual: (reason: ManualLocationReason, note?: string) => void;
+  /** Define quais motivos fazem sentido oferecer. */
+  context: ManualLocationContext;
   /** primary quando a confirmação manual é o caminho esperado. */
   emphasis?: ManualConfirmEmphasis;
   /** Esconde o aviso amarelo quando o card de status já explica o caso. */
@@ -32,11 +38,16 @@ interface ManualVisitConfirmProps {
 
 export function ManualVisitConfirm({
   onConfirmManual,
+  context,
   emphasis = "secondary",
   showHint = true,
   legend = "Motivo da confirmação manual",
 }: ManualVisitConfirmProps) {
   const [reason, setReason] = useState<ManualLocationReason | null>(null);
+  const [note, setNote] = useState("");
+
+  const needsNote = reason !== null && manualLocationReasonRequiresNote(reason);
+  const canConfirm = reason !== null && (!needsNote || note.trim().length > 0);
 
   return (
     <>
@@ -55,7 +66,7 @@ export function ManualVisitConfirm({
           {legend}
         </legend>
         <div className="flex flex-col gap-1.5">
-          {MANUAL_LOCATION_REASON_OPTIONS.map((option) => (
+          {manualLocationReasonOptions(context).map((option) => (
             <label key={option.value} className={REASON_OPTION_CLASS[emphasis]}>
               <input
                 type="radio"
@@ -63,20 +74,43 @@ export function ManualVisitConfirm({
                 value={option.value}
                 checked={reason === option.value}
                 onChange={() => setReason(option.value)}
-                className="accent-warning"
+                className="mt-0.5 accent-warning"
               />
-              {option.label}
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium text-foreground">
+                  {option.label}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {option.description}
+                </span>
+              </span>
             </label>
           ))}
         </div>
       </fieldset>
 
+      {needsNote && (
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-muted-foreground">
+            Descreva o motivo
+          </span>
+          <textarea
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            maxLength={MANUAL_NOTE_MAX_LENGTH}
+            rows={3}
+            placeholder="Ex.: o cliente pediu para encontrar na praça do bairro."
+            className="w-full resize-none rounded-xl border border-border px-3 py-2.5 text-sm outline-none focus-visible:border-brand-navy"
+          />
+        </label>
+      )}
+
       <button
         type="button"
-        disabled={!reason}
+        disabled={!canConfirm}
         onClick={() => {
-          if (!reason) return;
-          onConfirmManual(reason);
+          if (!reason || !canConfirm) return;
+          onConfirmManual(reason, needsNote ? note.trim() : undefined);
         }}
         className={CONFIRM_BUTTON_CLASS[emphasis]}
       >

@@ -13,18 +13,54 @@ describe("detectMobileBrowserOs", () => {
       detectMobileBrowserOs("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)"),
     ).toBe("ios");
     expect(
+      detectMobileBrowserOs(
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) CriOS/140.0",
+      ),
+    ).toBe("ios_chrome");
+    expect(
       detectMobileBrowserOs("Mozilla/5.0 (Linux; Android 14; Pixel 8)"),
     ).toBe("android");
-    expect(detectMobileBrowserOs("Mozilla/5.0 (Macintosh)")).toBe("other");
+    expect(detectMobileBrowserOs("Mozilla/5.0 (Macintosh)", 0)).toBe("desktop");
+  });
+
+  it("trata o iPad como iOS mesmo se anunciando como Macintosh", () => {
+    expect(
+      detectMobileBrowserOs(
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        5,
+      ),
+    ).toBe("ios");
+  });
+
+  it("assume celular quando o userAgent não parece de computador", () => {
+    // Webview de app e navegador de fabricante caem aqui: passar instruções
+    // de desktop mandaria o parceiro procurar um cadeado inexistente.
+    expect(detectMobileBrowserOs("Mozilla/5.0 (Unknown device)", 1)).toBe(
+      "android",
+    );
   });
 });
 
 describe("geoFailureDescription", () => {
-  it("guia o iPhone a tocar em AA e permitir localização", () => {
-    expect(geoFailureDescription("permission_denied", "ios")).toMatch(/AA/);
+  it("guia o Safari do iPhone até Ajustes do Site", () => {
     expect(geoFailureDescription("permission_denied", "ios")).toMatch(
-      /Ajustes do site/,
+      /três pontinhos/,
     );
+    expect(geoFailureDescription("permission_denied", "ios")).toMatch(
+      /Ajustes do Site/,
+    );
+  });
+
+  // O Chrome no iPhone não tem permissão por site, então mandar o parceiro
+  // procurar "Ajustes do Site" ali seria uma instrução impossível de seguir.
+  it("manda o Chrome do iPhone para os Ajustes do sistema, não para o site", () => {
+    const description = geoFailureDescription(
+      "permission_denied",
+      "ios_chrome",
+    );
+    expect(description).toMatch(/Serviços de Localização/);
+    expect(description).toMatch(/Safari/);
+    expect(description).not.toMatch(/Ajustes do Site/);
   });
 
   it("guia o Android a tocar no cadeado e em Permissões", () => {

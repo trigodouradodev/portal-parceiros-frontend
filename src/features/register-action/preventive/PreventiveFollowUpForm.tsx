@@ -87,6 +87,7 @@ export function PreventiveFollowUpForm({
     geoFailureReason,
     geoPermissionState,
     manualReason,
+    manualNote,
     verify: verifyLocationCheck,
     confirmManual,
     reset: resetLocationCheck,
@@ -166,6 +167,7 @@ export function PreventiveFollowUpForm({
             note,
             manualReason,
             Boolean(locationCheckResult?.addressLikelyWrong),
+            manualNote,
           )
         : note;
 

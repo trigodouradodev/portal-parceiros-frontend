@@ -67,6 +67,7 @@ export function useVisitLocationCheck({
   const [manualReason, setManualReason] = useState<ManualLocationReason | null>(
     null,
   );
+  const [manualNote, setManualNote] = useState<string | null>(null);
 
   const locationOk = status === "confirmed" || status === "manual";
 
@@ -78,12 +79,17 @@ export function useVisitLocationCheck({
     setGeoFailureReason(null);
     setGeoPermissionState(null);
     setManualReason(null);
+    setManualNote(null);
   }, []);
 
-  const confirmManual = useCallback((reason: ManualLocationReason) => {
-    setManualReason(reason);
-    setStatus("manual");
-  }, []);
+  const confirmManual = useCallback(
+    (reason: ManualLocationReason, note?: string) => {
+      setManualReason(reason);
+      setManualNote(note?.trim() || null);
+      setStatus("manual");
+    },
+    [],
+  );
 
   const beginGeolocationRequest = useCallback(
     (requestId: number) => {
@@ -93,6 +99,7 @@ export function useVisitLocationCheck({
       setGeoFailureReason(null);
       setGeoPermissionState(null);
       setManualReason(null);
+      setManualNote(null);
 
       if (!navigator.geolocation) {
         if (requestId === requestIdRef.current) {
@@ -241,6 +248,7 @@ export function useVisitLocationCheck({
     geoFailureReason,
     geoPermissionState,
     manualReason,
+    manualNote,
     verify,
     confirmManual,
     reset,
