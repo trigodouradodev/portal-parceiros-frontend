@@ -143,7 +143,7 @@ export function SimulacaoForm({
     status: partyLookupStatus,
     onCpfComplete,
     onCpfIncomplete,
-  } = useSimulationPartyAutoFill(form.setValue, {
+  } = useSimulationPartyAutoFill(form.getValues, form.setValue, {
     lookupOnMountCpf: editing ? undefined : prefill?.cpf,
   });
 

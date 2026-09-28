@@ -19,16 +19,38 @@ function isAbortError(error: unknown): boolean {
     : error instanceof Error && error.name === "AbortError";
 }
 
-export function usePartyLookup(onFound: (party: PartyFormData) => void) {
+export type PartyFill<F extends string> = Partial<Record<F, string>>;
+
+export interface PartyFillTarget<F extends string> {
+  mapParty: (party: PartyFormData) => PartyFill<F>;
+  read: (field: F) => unknown;
+  write: (field: F, value: string) => void;
+  clear: (field: F) => void;
+}
+
+/**
+ * Busca a party pelo CPF e preenche os campos do formulário. Lembra o que
+ * preencheu para limpar ao trocar de CPF, sem apagar o que o usuário editou.
+ */
+export function usePartyLookup<F extends string>(target: PartyFillTarget<F>) {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<PartyLookupStatus>("idle");
   const activeDigitsRef = useRef<string | null>(null);
-  const onFoundRef = useRef(onFound);
+  const filledRef = useRef(new Map<F, string>());
+  const targetRef = useRef(target);
 
   useEffect(() => {
-    onFoundRef.current = onFound;
-  }, [onFound]);
+    targetRef.current = target;
+  }, [target]);
+
+  const clearFilled = useCallback(() => {
+    const { read, clear } = targetRef.current;
+    for (const [field, value] of filledRef.current) {
+      if (read(field) === value) clear(field);
+    }
+    filledRef.current.clear();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -39,14 +61,25 @@ export function usePartyLookup(onFound: (party: PartyFormData) => void) {
     };
   }, [queryClient]);
 
-  const applyFill = useCallback((party: PartyFormData | null) => {
-    if (!party) {
-      setStatus("idle");
-      return;
-    }
-    onFoundRef.current(party);
-    setStatus("found");
-  }, []);
+  const applyFill = useCallback(
+    (party: PartyFormData | null) => {
+      clearFilled();
+      if (!party) {
+        setStatus("idle");
+        return;
+      }
+      const { mapParty, write } = targetRef.current;
+      const fill = mapParty(party);
+      for (const field of Object.keys(fill) as F[]) {
+        const value = fill[field];
+        if (!value) continue;
+        write(field, value);
+        filledRef.current.set(field, value);
+      }
+      setStatus("found");
+    },
+    [clearFilled],
+  );
 
   const lookup = useCallback(
     async (digits: string) => {
@@ -79,6 +112,7 @@ export function usePartyLookup(onFound: (party: PartyFormData) => void) {
         if (activeDigitsRef.current !== digits) return;
         if (isAbortError(error)) return;
 
+        clearFilled();
         setStatus("idle");
         queryClient.removeQueries({ queryKey: partiesKeys.byCpf(digits) });
         showToast(
@@ -90,7 +124,7 @@ export function usePartyLookup(onFound: (party: PartyFormData) => void) {
         );
       }
     },
-    [applyFill, queryClient, showToast],
+    [applyFill, clearFilled, queryClient, showToast],
   );
 
   const onCpfComplete = useCallback(
@@ -107,8 +141,9 @@ export function usePartyLookup(onFound: (party: PartyFormData) => void) {
     if (previous) {
       queryClient.cancelQueries({ queryKey: partiesKeys.byCpf(previous) });
     }
+    clearFilled();
     setStatus("idle");
-  }, [queryClient]);
+  }, [clearFilled, queryClient]);
 
   return { status, onCpfComplete, onCpfIncomplete };
 }
