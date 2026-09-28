@@ -1,33 +1,34 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { UseFormGetValues, UseFormSetValue } from "react-hook-form";
 import { usePartyLookup } from "@/features/originacao/hooks/usePartyLookup";
 import {
+  PARTY_IDENTITY_FIELDS,
   mapPartyToIdentityFill,
   type PartyIdentityFill,
 } from "@/features/originacao/mappers/map-party-to-guarantor";
 import type { SimulationFormValues } from "@/features/originacao/schemas/simulation-form";
-import { isValidCpf } from "@/lib/validation/cpf";
 
 export function useSimulationPartyAutoFill(
   getValues: UseFormGetValues<SimulationFormValues>,
   setValue: UseFormSetValue<SimulationFormValues>,
-  options?: { lookupOnMountCpf?: string },
+  initialCpf?: string,
 ) {
-  const { status, onCpfComplete, onCpfIncomplete } = usePartyLookup<
-    keyof PartyIdentityFill
-  >({
-    mapParty: mapPartyToIdentityFill,
-    read: (field) => getValues(field),
-    write: (field, value) =>
-      setValue(field, value, { shouldDirty: true, shouldValidate: true }),
-    clear: (field) => setValue(field, "", { shouldDirty: true }),
-  });
+  const { party, status, onCpfChange } = usePartyLookup(initialCpf);
+  const filledRef = useRef<PartyIdentityFill>({});
 
-  const mountCpf = options?.lookupOnMountCpf;
   useEffect(() => {
-    const digits = (mountCpf ?? "").replace(/\D/g, "");
-    if (isValidCpf(digits)) onCpfComplete(digits);
-  }, [mountCpf, onCpfComplete]);
+    const previous = filledRef.current;
+    const next = party ? mapPartyToIdentityFill(party) : {};
+    for (const field of PARTY_IDENTITY_FIELDS) {
+      const value = next[field];
+      if (value) {
+        setValue(field, value, { shouldDirty: true, shouldValidate: true });
+      } else if (previous[field] && getValues(field) === previous[field]) {
+        setValue(field, "", { shouldDirty: true });
+      }
+    }
+    filledRef.current = next;
+  }, [party, getValues, setValue]);
 
-  return { status, onCpfComplete, onCpfIncomplete };
+  return { status, onCpfChange };
 }

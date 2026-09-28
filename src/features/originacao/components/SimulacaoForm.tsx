@@ -48,7 +48,6 @@ import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { formatPhone, digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
-import { isValidCpf } from "@/lib/validation/cpf";
 import { fmtBRL } from "@/lib/utils";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
@@ -139,21 +138,11 @@ export function SimulacaoForm({
   const ineligible =
     ineligibleAttemptKey != null &&
     ineligibleAttemptKey === simulationAttemptKey(watchedValues);
-  const {
-    status: partyLookupStatus,
-    onCpfComplete,
-    onCpfIncomplete,
-  } = useSimulationPartyAutoFill(form.getValues, form.setValue, {
-    lookupOnMountCpf: editing ? undefined : prefill?.cpf,
-  });
-
-  function handleCpfChange(formatted: string) {
-    if (isValidCpf(formatted)) {
-      onCpfComplete(formatted.replace(/\D/g, ""));
-    } else {
-      onCpfIncomplete();
-    }
-  }
+  const { status: partyLookupStatus, onCpfChange } = useSimulationPartyAutoFill(
+    form.getValues,
+    form.setValue,
+    editing ? undefined : prefill?.cpf,
+  );
 
   const productId = watchedValues.product;
   const installments = watchedValues.installments;
@@ -298,7 +287,7 @@ export function SimulacaoForm({
               name="cpf"
               label="CPF"
               transform={formatCpf}
-              onValueChange={handleCpfChange}
+              onValueChange={onCpfChange}
               icon={<CreditCard size={16} />}
               placeholder="000.000.000-00"
               inputMode="numeric"

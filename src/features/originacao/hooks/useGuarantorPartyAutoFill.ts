@@ -1,5 +1,7 @@
+import { useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import {
+  GUARANTOR_PARTY_FIELDS,
   mapPartyToGuarantorFill,
   type GuarantorPartyFill,
 } from "@/features/originacao/mappers/map-party-to-guarantor";
@@ -10,18 +12,23 @@ export type { PartyLookupStatus } from "@/features/originacao/hooks/usePartyLook
 
 export function useGuarantorPartyAutoFill() {
   const { getValues, setValue } = useFormContext<ProposalFormData>();
-  const { status, onCpfComplete, onCpfIncomplete } = usePartyLookup<
-    keyof GuarantorPartyFill
-  >({
-    mapParty: mapPartyToGuarantorFill,
-    read: (field) => getValues(`guarantor.${field}`),
-    write: (field, value) =>
-      setValue(`guarantor.${field}`, value, {
-        shouldDirty: true,
-        shouldValidate: true,
-      }),
-    clear: (field) => setValue(`guarantor.${field}`, "", { shouldDirty: true }),
-  });
+  const { party, status, onCpfChange } = usePartyLookup();
+  const filledRef = useRef<GuarantorPartyFill>({});
 
-  return { status, onCpfComplete, onCpfIncomplete };
+  useEffect(() => {
+    const previous = filledRef.current;
+    const next = party ? mapPartyToGuarantorFill(party) : {};
+    for (const field of GUARANTOR_PARTY_FIELDS) {
+      const path = `guarantor.${field}` as const;
+      const value = next[field];
+      if (value) {
+        setValue(path, value, { shouldDirty: true, shouldValidate: true });
+      } else if (previous[field] && getValues(path) === previous[field]) {
+        setValue(path, "", { shouldDirty: true });
+      }
+    }
+    filledRef.current = next;
+  }, [party, getValues, setValue]);
+
+  return { status, onCpfChange };
 }

@@ -3,6 +3,19 @@ import { formatCep } from "@/features/originacao/utils/format-cep";
 import { formatPhone } from "@/lib/format/phone";
 import type { PartyFormData } from "@/services/parties/parties.types";
 
+export const PARTY_IDENTITY_FIELDS = ["name", "email", "phone"] as const;
+
+export const GUARANTOR_PARTY_FIELDS = [
+  ...PARTY_IDENTITY_FIELDS,
+  "zipCode",
+  "street",
+  "number",
+  "complement",
+  "neighborhood",
+  "city",
+  "state",
+] as const;
+
 export interface PartyIdentityFill {
   name?: string;
   email?: string;

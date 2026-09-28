@@ -589,13 +589,13 @@ describe("SimulacaoForm", () => {
     );
 
     await waitFor(() => {
-      expect(findFormDataByCpf).toHaveBeenCalledWith(
-        "52998224725",
-        expect.anything(),
+      expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
+        "maria@email.com",
       );
     });
-    expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
-      "maria@email.com",
+    expect(findFormDataByCpf).toHaveBeenCalledWith(
+      "52998224725",
+      expect.anything(),
     );
     expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue(
       "(11) 98765-4321",
