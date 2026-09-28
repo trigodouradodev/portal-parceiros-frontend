@@ -23,7 +23,11 @@ afterEach(() => {
 
 describe("partiesService.findFormDataByCpf", () => {
   it("GETs /parties/by-cpf and returns the party", async () => {
-    const party = { name: "Maria", document: "52998224725" };
+    const party = {
+      name: "Maria",
+      document: "52998224725",
+      birthDate: "1990-05-20",
+    };
     get.mockResolvedValue({ data: { party } });
 
     await expect(

@@ -12,6 +12,7 @@ export function useGuarantorPartyAutoFill() {
     const options = { shouldDirty: true, shouldValidate: true };
     const fields = [
       "name",
+      "birthDate",
       "email",
       "phone",
       "zipCode",
