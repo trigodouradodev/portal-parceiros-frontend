@@ -220,6 +220,62 @@ describe("SimulacaoForm", () => {
     expect(onStartProposal).not.toHaveBeenCalled();
   });
 
+  it("mostra a parcela financiada com seguro quando a simulação cotou o seguro", async () => {
+    const user = userEvent.setup();
+    const editing = snapshot();
+    const saved = snapshot({
+      insurancePremium: 189.9,
+      installmentAmountWithInsurance: 641.12,
+    });
+    simulate.mockResolvedValue({ eligible: true, simulation: saved });
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={editing}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitForReady();
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
+    });
+    // Seguro é opt-out (praticamente sempre incluso) — a parcela em
+    // destaque já é a financiada COM seguro, sem indicação visual disso,
+    // e não o installmentAmount "puro" (597,88).
+    expect(screen.getByText("10x de R$ 641,12")).toBeInTheDocument();
+    expect(screen.queryByText(/seguro/i)).not.toBeInTheDocument();
+  });
+
+  it("mostra a parcela sem seguro quando a simulação não cotou (cliente inelegível ou Caburé indisponível)", async () => {
+    const user = userEvent.setup();
+    const editing = snapshot();
+    simulate.mockResolvedValue({ eligible: true, simulation: snapshot() });
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={editing}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitForReady();
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
+    });
+    expect(screen.getByText("10x de R$ 597,88")).toBeInTheDocument();
+  });
+
   it("starts a proposal from the latest persisted simulation", async () => {
     const user = userEvent.setup();
     const editing = snapshot();
@@ -360,11 +416,12 @@ describe("SimulacaoForm", () => {
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
-  it("fills name, email and phone from the party lookup after a valid CPF", async () => {
+  it("fills identity data from the party lookup after a valid CPF", async () => {
     const user = userEvent.setup();
     findFormDataByCpf.mockResolvedValue({
       name: "Maria Souza",
       document: "52998224725",
+      birthDate: "1990-05-20",
       email: "maria@email.com",
       telephone: "+5511987654321",
       address: null,
@@ -394,6 +451,7 @@ describe("SimulacaoForm", () => {
     expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue(
       "Maria Souza",
     );
+    expect(screen.getByText("20/05/1990")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
       "maria@email.com",
     );
@@ -412,6 +470,7 @@ describe("SimulacaoForm", () => {
         ? {
             name: "Maria Souza",
             document: "52998224725",
+            birthDate: "1990-05-20",
             email: "maria@email.com",
             telephone: "11987654321",
             address: null,
@@ -436,6 +495,7 @@ describe("SimulacaoForm", () => {
         "Maria Souza",
       );
     });
+    expect(screen.getByText("20/05/1990")).toBeInTheDocument();
 
     await user.clear(cpf);
     await user.type(cpf, "11122233396");
@@ -449,6 +509,7 @@ describe("SimulacaoForm", () => {
     expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue("");
     expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue("");
     expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue("");
+    expect(screen.queryByText("20/05/1990")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Cadastro encontrado e preenchido automaticamente"),
     ).not.toBeInTheDocument();
@@ -461,6 +522,7 @@ describe("SimulacaoForm", () => {
         ? {
             name: "Maria Souza",
             document: "52998224725",
+            birthDate: "1990-05-20",
             email: "maria@email.com",
             telephone: "11987654321",
             address: null,
@@ -501,6 +563,7 @@ describe("SimulacaoForm", () => {
         ? {
             name: "Maria Souza",
             document: "52998224725",
+            birthDate: "1990-05-20",
             email: "maria@email.com",
             telephone: "11987654321",
             address: null,
@@ -508,6 +571,7 @@ describe("SimulacaoForm", () => {
         : {
             name: "João Lima",
             document: digits,
+            birthDate: null,
             email: null,
             telephone: null,
             address: null,
@@ -569,6 +633,7 @@ describe("SimulacaoForm", () => {
     findFormDataByCpf.mockResolvedValue({
       name: "Maria Souza",
       document: "52998224725",
+      birthDate: "1985-02-10",
       email: "maria@email.com",
       telephone: "11987654321",
       address: null,
@@ -597,6 +662,7 @@ describe("SimulacaoForm", () => {
       "52998224725",
       expect.anything(),
     );
+    expect(screen.getByText("10/02/1985")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue(
       "(11) 98765-4321",
     );

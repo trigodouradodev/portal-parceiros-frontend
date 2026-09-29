@@ -64,6 +64,7 @@ describe("useGuarantorPartyAutoFill", () => {
         ? {
             name: "Maria Souza",
             document: REGISTERED_CPF,
+            birthDate: "1990-05-20",
             email: "maria@email.com",
             telephone: "11987654321",
             address: {

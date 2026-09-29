@@ -11,6 +11,7 @@ export interface PartyFormAddress {
 export interface PartyFormData {
   name: string;
   document: string;
+  birthDate: string | null;
   email: string | null;
   telephone: string | null;
   address: PartyFormAddress | null;

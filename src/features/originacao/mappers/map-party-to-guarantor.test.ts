@@ -9,6 +9,7 @@ import type { PartyFormData } from "@/services/parties/parties.types";
 const party: PartyFormData = {
   name: "Maria Souza",
   document: "52998224725",
+  birthDate: "1990-05-20",
   email: "maria@email.com",
   telephone: "+5511987654321",
   address: {
@@ -30,9 +31,10 @@ describe("formatPartyTelephone", () => {
 });
 
 describe("mapPartyToIdentityFill", () => {
-  it("maps name, email and phone without address or CPF", () => {
+  it("maps identity without address or CPF", () => {
     expect(mapPartyToIdentityFill(party)).toEqual({
       name: "Maria Souza",
+      birthDate: "1990-05-20",
       email: "maria@email.com",
       phone: "(11) 98765-4321",
     });
@@ -43,6 +45,7 @@ describe("mapPartyToIdentityFill", () => {
       mapPartyToIdentityFill({
         name: "Maria Souza",
         document: "52998224725",
+        birthDate: null,
         email: null,
         telephone: null,
         address: null,
@@ -55,6 +58,7 @@ describe("mapPartyToGuarantorFill", () => {
   it("maps identity and address without CPF", () => {
     expect(mapPartyToGuarantorFill(party)).toEqual({
       name: "Maria Souza",
+      birthDate: "1990-05-20",
       email: "maria@email.com",
       phone: "(11) 98765-4321",
       zipCode: "01001-000",
@@ -72,6 +76,7 @@ describe("mapPartyToGuarantorFill", () => {
       mapPartyToGuarantorFill({
         name: "Maria Souza",
         document: "52998224725",
+        birthDate: null,
         email: null,
         telephone: null,
         address: null,

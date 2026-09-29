@@ -3,7 +3,12 @@ import { formatCep } from "@/features/originacao/utils/format-cep";
 import { formatPhone } from "@/lib/format/phone";
 import type { PartyFormData } from "@/services/parties/parties.types";
 
-export const PARTY_IDENTITY_FIELDS = ["name", "email", "phone"] as const;
+export const PARTY_IDENTITY_FIELDS = [
+  "name",
+  "birthDate",
+  "email",
+  "phone",
+] as const;
 
 export const GUARANTOR_PARTY_FIELDS = [
   ...PARTY_IDENTITY_FIELDS,
@@ -36,13 +41,16 @@ export function formatPartyTelephone(value: string): string {
   return formatPhone(digits);
 }
 
-/** Nome, e-mail e telefone a partir do GET /parties/by-cpf. Sem CPF nem nascimento. */
+/** Identidade a partir do GET /parties/by-cpf, sem alterar o CPF consultado. */
 export function mapPartyToIdentityFill(
   party: PartyFormData,
 ): PartyIdentityFill {
   const fill: PartyIdentityFill = {};
   const name = party.name.trim();
   if (name) fill.name = name;
+
+  const birthDate = party.birthDate?.trim();
+  if (birthDate) fill.birthDate = birthDate;
 
   const email = party.email?.trim();
   if (email) fill.email = email;
@@ -53,7 +61,7 @@ export function mapPartyToIdentityFill(
   return fill;
 }
 
-/** Campos do avalista a partir do GET /parties/by-cpf. Não inclui CPF, nascimento nem parentesco. */
+/** Campos do avalista a partir do GET /parties/by-cpf. Não inclui CPF nem parentesco. */
 export function mapPartyToGuarantorFill(
   party: PartyFormData,
 ): GuarantorPartyFill {

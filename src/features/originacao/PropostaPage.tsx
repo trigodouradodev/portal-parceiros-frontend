@@ -421,10 +421,16 @@ function ProposalWizard({
           0,
         );
       const availableForInstallment = consideredIncome - committedAmount;
+      // Seguro é opt-out (vem incluído até o cliente desmarcar na
+      // assinatura) — a renda disponível precisa cobrir a parcela que ele
+      // vai efetivamente pagar por padrão, não a "sem seguro".
+      const effectiveInstallmentAmount =
+        proposal.simulation.installmentAmountWithInsurance ??
+        proposal.simulation.installmentAmount;
 
-      if (availableForInstallment < proposal.simulation.installmentAmount) {
+      if (availableForInstallment < effectiveInstallmentAmount) {
         showToast(
-          `A parcela de ${fmtBRL(proposal.simulation.installmentAmount)} excede o montante disponível de ${fmtBRL(availableForInstallment)}. Ajuste as rendas, despesas, empréstimos ou a simulação para continuar.`,
+          `A parcela de ${fmtBRL(effectiveInstallmentAmount)} excede o montante disponível de ${fmtBRL(availableForInstallment)}. Ajuste as rendas, despesas, empréstimos ou a simulação para continuar.`,
           { variant: "destructive" },
         );
         return;
@@ -509,7 +515,10 @@ function ProposalWizard({
       header={
         <OriginacaoTaskHeader
           title={`${PROPOSAL_STEPS[step]} · ${step + 1}/${PROPOSAL_STEPS.length}`}
-          subtitle={`${fmtBRL(simulation.amount)} · ${simulation.installments}x · ${simulation.productName}`}
+          subtitle={`${fmtBRL(simulation.amount)} · ${simulation.installments}x de ${fmtBRL(
+            simulation.installmentAmountWithInsurance ??
+              simulation.installmentAmount,
+          )} · ${simulation.productName}`}
           progress={((step + 1) / PROPOSAL_STEPS.length) * 100}
           backLabel="Salvar rascunho e ver todas as propostas"
           onBack={handleClose}
