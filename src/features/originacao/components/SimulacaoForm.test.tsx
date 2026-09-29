@@ -220,6 +220,62 @@ describe("SimulacaoForm", () => {
     expect(onStartProposal).not.toHaveBeenCalled();
   });
 
+  it("mostra a parcela financiada com seguro quando a simulação cotou o seguro", async () => {
+    const user = userEvent.setup();
+    const editing = snapshot();
+    const saved = snapshot({
+      insurancePremium: 189.9,
+      installmentAmountWithInsurance: 641.12,
+    });
+    simulate.mockResolvedValue({ eligible: true, simulation: saved });
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={editing}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitForReady();
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
+    });
+    // Seguro é opt-out (praticamente sempre incluso) — a parcela em
+    // destaque já é a financiada COM seguro, sem indicação visual disso,
+    // e não o installmentAmount "puro" (597,88).
+    expect(screen.getByText("10x de R$ 641,12")).toBeInTheDocument();
+    expect(screen.queryByText(/seguro/i)).not.toBeInTheDocument();
+  });
+
+  it("mostra a parcela sem seguro quando a simulação não cotou (cliente inelegível ou Caburé indisponível)", async () => {
+    const user = userEvent.setup();
+    const editing = snapshot();
+    simulate.mockResolvedValue({ eligible: true, simulation: snapshot() });
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={editing}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitForReady();
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
+    });
+    expect(screen.getByText("10x de R$ 597,88")).toBeInTheDocument();
+  });
+
   it("starts a proposal from the latest persisted simulation", async () => {
     const user = userEvent.setup();
     const editing = snapshot();

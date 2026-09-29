@@ -33,6 +33,10 @@ function item(overrides: Partial<QuoteListItem> = {}): QuoteListItem {
     productId: "prod-1",
     productName: "Crédito Pessoal",
     financeAmount: 1500,
+    installmentNumbers: 10,
+    installmentAmount: 189.5,
+    insurancePremium: null,
+    installmentAmountWithInsurance: null,
     consultant: { id: "user-1", name: "Parceiro" },
     completedSteps: [],
     canEdit: true,
@@ -209,6 +213,33 @@ describe("ProposalList", () => {
         expect.not.objectContaining({ status: expect.anything() }),
       );
     });
+  });
+
+  it("mostra a parcela financiada com seguro quando a proposta cotou seguro", async () => {
+    list.mockResolvedValue(
+      pageOf([
+        item({
+          installmentAmount: 673.58,
+          installmentAmountWithInsurance: 740.94,
+        }),
+      ]),
+    );
+
+    renderList(<ProposalList onOpen={vi.fn()} />);
+
+    expect(
+      await screen.findByText("Crédito Pessoal · 10x de R$ 740,94"),
+    ).toBeInTheDocument();
+  });
+
+  it("mostra só o produto quando a proposta não tem parcela calculada", async () => {
+    list.mockResolvedValue(
+      pageOf([item({ installmentAmount: null, installmentNumbers: 0 })]),
+    );
+
+    renderList(<ProposalList onOpen={vi.fn()} />);
+
+    expect(await screen.findByText("Crédito Pessoal")).toBeInTheDocument();
   });
 
   it("applies backoffice-aligned colors on the status badge", async () => {

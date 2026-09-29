@@ -23,6 +23,13 @@ export interface SimulationSnapshot {
   firstInstallmentDate: string;
   installmentAmount: number;
   simulationResult?: unknown;
+  /** Prêmio do seguro prestamista cotado na Caburé. Ausente quando o
+   * cliente não é elegível ou a cotação falhou nesta simulação. */
+  insurancePremium?: number;
+  /** Parcela COM seguro, já financiada com juros pela Celcoin — valor
+   * alternativo a `installmentAmount` (que é sempre o valor SEM seguro)
+   * quando o seguro está incluso. Ausente junto com `insurancePremium`. */
+  installmentAmountWithInsurance?: number;
 }
 
 export interface SimulatePayload {
