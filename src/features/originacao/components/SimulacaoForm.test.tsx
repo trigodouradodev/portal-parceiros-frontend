@@ -246,10 +246,15 @@ describe("SimulacaoForm", () => {
       expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
     });
     // Seguro é opt-out (praticamente sempre incluso) — a parcela em
-    // destaque já é a financiada COM seguro, sem indicação visual disso,
-    // e não o installmentAmount "puro" (597,88).
+    // destaque já é a financiada COM seguro, e não o installmentAmount
+    // "puro" (597,88). Na tela de simulação, os dois valores aparecem
+    // lado a lado (com e sem seguro) pra o consultor poder explicar a
+    // diferença pro cliente.
     expect(screen.getByText("10x de R$ 641,12")).toBeInTheDocument();
-    expect(screen.queryByText(/seguro/i)).not.toBeInTheDocument();
+    expect(screen.getByText("(com seguro)")).toBeInTheDocument();
+    expect(
+      screen.getByText("Sem seguro: 10x de R$ 597,88"),
+    ).toBeInTheDocument();
   });
 
   it("mostra a parcela sem seguro quando a simulação não cotou (cliente inelegível ou Caburé indisponível)", async () => {
@@ -274,6 +279,8 @@ describe("SimulacaoForm", () => {
       expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
     });
     expect(screen.getByText("10x de R$ 597,88")).toBeInTheDocument();
+    expect(screen.queryByText("(com seguro)")).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Sem seguro:/)).not.toBeInTheDocument();
   });
 
   it("starts a proposal from the latest persisted simulation", async () => {
