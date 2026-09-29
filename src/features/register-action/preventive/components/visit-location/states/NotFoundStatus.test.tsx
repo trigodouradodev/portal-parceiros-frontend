@@ -88,7 +88,12 @@ describe("NotFoundStatus", () => {
     expect(
       screen.getByText(/não vai mais perguntar onde você está/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/escolha Permitir/i)).toBeInTheDocument();
+    // jsdom não parece computador, então cai nos passos do Chrome no Android.
+    expect(screen.getByText("Chrome no Android")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Ligue Local ou escolha Permitir/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Se continuar bloqueado/)).toBeInTheDocument();
     expect(screen.queryByText(/visitando você/i)).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Confirmar presença/i }),
