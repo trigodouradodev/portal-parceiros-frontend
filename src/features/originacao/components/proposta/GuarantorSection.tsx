@@ -8,33 +8,23 @@ import {
   KINSHIP_OPTIONS,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
-import { useGuarantorPartyAutoFill } from "@/features/originacao/hooks/useGuarantorPartyAutoFill";
+import type { GuarantorPartyAutoFill } from "@/features/originacao/hooks/useGuarantorPartyAutoFill";
 import type { EmailDeliverabilityStatus } from "@/features/originacao/hooks/useEmailDeliverability";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
-import { isValidCpf } from "@/lib/validation/cpf";
 
 const MAX_BIRTH_ISO = maxAdultBirthIso();
 
 interface GuarantorSectionProps {
   emailDeliverabilityStatus: EmailDeliverabilityStatus;
+  partyAutoFill: GuarantorPartyAutoFill;
 }
 
 export function GuarantorSection({
   emailDeliverabilityStatus,
+  partyAutoFill: { status, onCpfChange },
 }: GuarantorSectionProps) {
-  const { status, onCpfComplete, onCpfIncomplete } =
-    useGuarantorPartyAutoFill();
-
-  function handleCpfChange(formatted: string) {
-    if (isValidCpf(formatted)) {
-      onCpfComplete(formatted.replace(/\D/g, ""));
-    } else {
-      onCpfIncomplete();
-    }
-  }
-
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
@@ -42,7 +32,7 @@ export function GuarantorSection({
           name="guarantor.cpf"
           label="CPF do avalista"
           transform={formatCpf}
-          onValueChange={handleCpfChange}
+          onValueChange={onCpfChange}
           icon={<CreditCard size={16} />}
           placeholder="000.000.000-00"
           inputMode="numeric"

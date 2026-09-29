@@ -26,6 +26,7 @@ import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQ
 import { useSaveQuoteRegistration } from "@/features/originacao/hooks/useSaveQuoteRegistration";
 import { useApplyRenewalPrefill } from "@/features/originacao/hooks/useApplyRenewalPrefill";
 import { useEmailDeliverability } from "@/features/originacao/hooks/useEmailDeliverability";
+import { useGuarantorPartyAutoFill } from "@/features/originacao/hooks/useGuarantorPartyAutoFill";
 import {
   useCompleteQuoteDocumentation,
   useSubmitQuoteDraft,
@@ -245,6 +246,10 @@ function ProposalWizard({
   );
   const guarantorEmailDeliverability = useEmailDeliverability(
     step === 2 ? data.guarantor.email : undefined,
+  );
+  const guarantorPartyAutoFill = useGuarantorPartyAutoFill(
+    form.getValues,
+    form.setValue,
   );
 
   function computeStepValid(values: ProposalFormData) {
@@ -544,6 +549,7 @@ function ProposalWizard({
           {step === 2 ? (
             <GuarantorSection
               emailDeliverabilityStatus={guarantorEmailDeliverability.status}
+              partyAutoFill={guarantorPartyAutoFill}
             />
           ) : null}
           {step === 3 ? <ActivityIncomeSection /> : null}
