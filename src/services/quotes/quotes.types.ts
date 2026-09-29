@@ -285,6 +285,15 @@ export interface QuoteListItem {
   productId: string;
   productName: string;
   financeAmount: number;
+  installmentNumbers: number;
+  installmentAmount: number | null;
+  /** Prêmio do seguro prestamista cotado na Caburé. Nulo quando o
+   * cliente não foi elegível ou a cotação falhou na simulação. */
+  insurancePremium: number | null;
+  /** Parcela COM seguro, já financiada com juros pela Celcoin —
+   * installmentAmount é sempre o valor SEM seguro. Nulo junto com
+   * insurancePremium. */
+  installmentAmountWithInsurance: number | null;
   consultant: QuoteConsultantSummary;
   completedSteps: QuoteDraftStep[];
   canEdit: boolean;
@@ -419,6 +428,13 @@ export interface QuoteDetail extends QuoteListItem {
   firstInstallmentDate: string;
   installmentAmount: number | null;
   totalAmountOwed: number | null;
+  /** Prêmio do seguro prestamista cotado na Caburé. Nulo quando o
+   * cliente não foi elegível ou a cotação falhou na simulação. */
+  insurancePremium: number | null;
+  /** Parcela COM seguro, já financiada com juros pela Celcoin —
+   * installmentAmount é sempre o valor SEM seguro. Nulo junto com
+   * insurancePremium. */
+  installmentAmountWithInsurance: number | null;
   registration: QuoteRegistrationDetail;
   income: QuoteIncomeDetail;
   address: QuoteAddressDetail;

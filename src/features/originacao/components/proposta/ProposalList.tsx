@@ -21,6 +21,7 @@ import {
 } from "@/features/originacao/data/quotes-list-query";
 import { nextWizardStepIndex } from "@/features/originacao/mappers/map-quote-detail-to-form";
 import { getBackofficeQuoteUrl } from "@/lib/backoffice";
+import { fmtBRL } from "@/lib/utils";
 import { quotesKeys, quotesService } from "@/services/quotes/quotes.service";
 import type { QuoteListItem } from "@/services/quotes/quotes.types";
 import {
@@ -50,6 +51,15 @@ function ProposalListItemCard({
   const action = getQuoteListAction(item.status);
   const step = nextWizardStepIndex(item.completedSteps);
   const busy = openingId === item.id;
+  // Seguro é opt-out (praticamente toda proposta elegível tem) — a parcela
+  // exibida já é a financiada com seguro quando disponível, sem indicação
+  // visual, mesmo padrão da lista de simulações.
+  const displayedInstallmentAmount =
+    item.installmentAmountWithInsurance ?? item.installmentAmount;
+  const subtitle =
+    displayedInstallmentAmount == null
+      ? item.productName
+      : `${item.productName} · ${item.installmentNumbers}x de ${fmtBRL(displayedInstallmentAmount)}`;
 
   return (
     <OriginacaoSnapshotCard
@@ -57,7 +67,7 @@ function ProposalListItemCard({
       timestamp={formatTimestamp(item.updatedAt)}
       name={item.name}
       amount={item.financeAmount}
-      subtitle={item.productName}
+      subtitle={subtitle}
       cpf={item.document}
     >
       {action === QuoteListAction.CONTINUE_DRAFT && item.canEdit ? (
