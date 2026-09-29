@@ -1,28 +1,35 @@
-import { useEffect } from "react";
-import type { UseFormSetValue } from "react-hook-form";
+import { useEffect, useRef } from "react";
+import type { UseFormGetValues, UseFormSetValue } from "react-hook-form";
 import { usePartyLookup } from "@/features/originacao/hooks/usePartyLookup";
-import { mapPartyToIdentityFill } from "@/features/originacao/mappers/map-party-to-guarantor";
+import {
+  PARTY_IDENTITY_FIELDS,
+  mapPartyToIdentityFill,
+  type PartyIdentityFill,
+} from "@/features/originacao/mappers/map-party-to-guarantor";
 import type { SimulationFormValues } from "@/features/originacao/schemas/simulation-form";
-import { isValidCpf } from "@/lib/validation/cpf";
+import { partyFillUpdates } from "@/features/originacao/utils/party-fill-updates";
 
 export function useSimulationPartyAutoFill(
+  getValues: UseFormGetValues<SimulationFormValues>,
   setValue: UseFormSetValue<SimulationFormValues>,
-  options?: { lookupOnMountCpf?: string },
+  initialCpf?: string,
 ) {
-  const { status, onCpfComplete, onCpfIncomplete } = usePartyLookup((party) => {
-    const fill = mapPartyToIdentityFill(party);
-    const fieldOptions = { shouldDirty: true, shouldValidate: true };
-    if (fill.name) setValue("name", fill.name, fieldOptions);
-    if (fill.birthDate) setValue("birthDate", fill.birthDate, fieldOptions);
-    if (fill.email) setValue("email", fill.email, fieldOptions);
-    if (fill.phone) setValue("phone", fill.phone, fieldOptions);
-  });
+  const { party, status, onCpfChange } = usePartyLookup(initialCpf);
+  const filledRef = useRef<PartyIdentityFill>({});
 
-  const mountCpf = options?.lookupOnMountCpf;
   useEffect(() => {
-    const digits = (mountCpf ?? "").replace(/\D/g, "");
-    if (isValidCpf(digits)) onCpfComplete(digits);
-  }, [mountCpf, onCpfComplete]);
+    const next = party ? mapPartyToIdentityFill(party) : {};
+    const updates = partyFillUpdates(
+      PARTY_IDENTITY_FIELDS,
+      filledRef.current,
+      next,
+      getValues,
+    );
+    for (const [field, value] of updates) {
+      setValue(field, value, { shouldDirty: true, shouldValidate: !!value });
+    }
+    filledRef.current = next;
+  }, [party, getValues, setValue]);
 
-  return { status, onCpfComplete, onCpfIncomplete };
+  return { status, onCpfChange };
 }

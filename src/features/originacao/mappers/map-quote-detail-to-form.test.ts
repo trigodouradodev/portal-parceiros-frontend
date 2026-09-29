@@ -47,6 +47,8 @@ function baseDetail(overrides: Partial<QuoteDetail> = {}): QuoteDetail {
     installmentNumbers: 12,
     firstInstallmentDate: "2026-10-01",
     installmentAmount: 150,
+    insurancePremium: null,
+    installmentAmountWithInsurance: null,
     totalAmountOwed: 1800,
     registration: {
       isRenegotiation: false,

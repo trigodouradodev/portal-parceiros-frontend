@@ -220,6 +220,62 @@ describe("SimulacaoForm", () => {
     expect(onStartProposal).not.toHaveBeenCalled();
   });
 
+  it("mostra a parcela financiada com seguro quando a simulação cotou o seguro", async () => {
+    const user = userEvent.setup();
+    const editing = snapshot();
+    const saved = snapshot({
+      insurancePremium: 189.9,
+      installmentAmountWithInsurance: 641.12,
+    });
+    simulate.mockResolvedValue({ eligible: true, simulation: saved });
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={editing}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitForReady();
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
+    });
+    // Seguro é opt-out (praticamente sempre incluso) — a parcela em
+    // destaque já é a financiada COM seguro, sem indicação visual disso,
+    // e não o installmentAmount "puro" (597,88).
+    expect(screen.getByText("10x de R$ 641,12")).toBeInTheDocument();
+    expect(screen.queryByText(/seguro/i)).not.toBeInTheDocument();
+  });
+
+  it("mostra a parcela sem seguro quando a simulação não cotou (cliente inelegível ou Caburé indisponível)", async () => {
+    const user = userEvent.setup();
+    const editing = snapshot();
+    simulate.mockResolvedValue({ eligible: true, simulation: snapshot() });
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={editing}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitForReady();
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Simulação concluída")).toBeInTheDocument();
+    });
+    expect(screen.getByText("10x de R$ 597,88")).toBeInTheDocument();
+  });
+
   it("starts a proposal from the latest persisted simulation", async () => {
     const user = userEvent.setup();
     const editing = snapshot();
@@ -407,6 +463,151 @@ describe("SimulacaoForm", () => {
     ).toBeInTheDocument();
   });
 
+  it("clears filled fields when the CPF changes to one without a record", async () => {
+    const user = userEvent.setup();
+    findFormDataByCpf.mockImplementation(async (digits) =>
+      digits === "52998224725"
+        ? {
+            name: "Maria Souza",
+            document: "52998224725",
+            birthDate: "1990-05-20",
+            email: "maria@email.com",
+            telephone: "11987654321",
+            address: null,
+          }
+        : null,
+    );
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={null}
+        hasList={false}
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    const cpf = await screen.findByPlaceholderText("000.000.000-00");
+    await user.type(cpf, "52998224725");
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue(
+        "Maria Souza",
+      );
+    });
+    expect(screen.getByText("20/05/1990")).toBeInTheDocument();
+
+    await user.clear(cpf);
+    await user.type(cpf, "11122233396");
+
+    await waitFor(() => {
+      expect(findFormDataByCpf).toHaveBeenCalledWith(
+        "11122233396",
+        expect.anything(),
+      );
+    });
+    expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue("");
+    expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue("");
+    expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue("");
+    expect(screen.queryByText("20/05/1990")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Cadastro encontrado e preenchido automaticamente"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps a filled field the user edited when the CPF changes", async () => {
+    const user = userEvent.setup();
+    findFormDataByCpf.mockImplementation(async (digits) =>
+      digits === "52998224725"
+        ? {
+            name: "Maria Souza",
+            document: "52998224725",
+            birthDate: "1990-05-20",
+            email: "maria@email.com",
+            telephone: "11987654321",
+            address: null,
+          }
+        : null,
+    );
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={null}
+        hasList={false}
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    const cpf = await screen.findByPlaceholderText("000.000.000-00");
+    await user.type(cpf, "52998224725");
+    const email = screen.getByPlaceholderText("cliente@email.com");
+    await waitFor(() => expect(email).toHaveValue("maria@email.com"));
+
+    await user.clear(email);
+    await user.type(email, "novo@email.com");
+    await user.clear(cpf);
+    await user.type(cpf, "11122233396");
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue("");
+    });
+    expect(email).toHaveValue("novo@email.com");
+  });
+
+  it("clears a field the next record does not have", async () => {
+    const user = userEvent.setup();
+    findFormDataByCpf.mockImplementation(async (digits) =>
+      digits === "52998224725"
+        ? {
+            name: "Maria Souza",
+            document: "52998224725",
+            birthDate: "1990-05-20",
+            email: "maria@email.com",
+            telephone: "11987654321",
+            address: null,
+          }
+        : {
+            name: "João Lima",
+            document: digits,
+            birthDate: null,
+            email: null,
+            telephone: null,
+            address: null,
+          },
+    );
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={null}
+        hasList={false}
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    const cpf = await screen.findByPlaceholderText("000.000.000-00");
+    await user.type(cpf, "52998224725");
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
+        "maria@email.com",
+      );
+    });
+
+    await user.clear(cpf);
+    await user.type(cpf, "11122233396");
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue(
+        "João Lima",
+      );
+    });
+    expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue("");
+    expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue("");
+  });
+
   it("does not look up an incomplete CPF", async () => {
     const user = userEvent.setup();
 
@@ -453,13 +654,13 @@ describe("SimulacaoForm", () => {
     );
 
     await waitFor(() => {
-      expect(findFormDataByCpf).toHaveBeenCalledWith(
-        "52998224725",
-        expect.anything(),
+      expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
+        "maria@email.com",
       );
     });
-    expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
-      "maria@email.com",
+    expect(findFormDataByCpf).toHaveBeenCalledWith(
+      "52998224725",
+      expect.anything(),
     );
     expect(screen.getByText("10/02/1985")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue(

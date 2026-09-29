@@ -3,22 +3,31 @@ import { formatCep } from "@/features/originacao/utils/format-cep";
 import { formatPhone } from "@/lib/format/phone";
 import type { PartyFormData } from "@/services/parties/parties.types";
 
-export interface PartyIdentityFill {
-  name?: string;
-  birthDate?: string;
-  email?: string;
-  phone?: string;
-}
+export const PARTY_IDENTITY_FIELDS = [
+  "name",
+  "birthDate",
+  "email",
+  "phone",
+] as const;
 
-export interface GuarantorPartyFill extends PartyIdentityFill {
-  zipCode?: string;
-  street?: string;
-  number?: string;
-  complement?: string;
-  neighborhood?: string;
-  city?: string;
-  state?: string;
-}
+export const GUARANTOR_PARTY_FIELDS = [
+  ...PARTY_IDENTITY_FIELDS,
+  "zipCode",
+  "street",
+  "number",
+  "complement",
+  "neighborhood",
+  "city",
+  "state",
+] as const;
+
+export type PartyIdentityFill = Partial<
+  Record<(typeof PARTY_IDENTITY_FIELDS)[number], string>
+>;
+
+export type GuarantorPartyFill = Partial<
+  Record<(typeof GUARANTOR_PARTY_FIELDS)[number], string>
+>;
 
 /** Telefone da party pode vir com DDI 55. */
 export function formatPartyTelephone(value: string): string {

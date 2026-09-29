@@ -4,13 +4,14 @@ import type {
   GeoPermissionState,
 } from "@/lib/geo/geo-position-error";
 import {
-  detectMobileBrowserOs,
+  browserPlatformLabel,
+  detectBrowserPlatform,
   geoFailureDescription,
   geoFailureTitle,
   locationPermissionIntro,
   locationPermissionSteps,
   permissionStillPromptable,
-  type MobileBrowserOs,
+  type BrowserPlatform,
 } from "@/lib/geo/geo-position-error";
 import type {
   ManualLocationContext,
@@ -45,7 +46,7 @@ interface NotFoundView {
   deviceFailure: boolean;
   permissionBlocked: boolean;
   manualFirst: boolean;
-  browserOs: MobileBrowserOs;
+  browserPlatform: BrowserPlatform;
   manualContext: ManualLocationContext;
 }
 
@@ -69,7 +70,7 @@ function resolveNotFoundView(input: {
     deviceFailure &&
     permissionDenied &&
     !permissionStillPromptable(input.geoPermissionState);
-  const browserOs = detectMobileBrowserOs();
+  const browserPlatform = detectBrowserPlatform();
   const manualFirst = unreliableDistance;
 
   let title = "Você não está no endereço";
@@ -110,7 +111,7 @@ function resolveNotFoundView(input: {
     deviceFailure,
     permissionBlocked,
     manualFirst,
-    browserOs,
+    browserPlatform,
     manualContext,
   };
 }
@@ -144,15 +145,20 @@ export function NotFoundStatus({
           <p className="mt-1 text-sm text-muted-foreground">
             {view.description}
           </p>
-          <ol className="mt-4 flex flex-col gap-3">
-            {locationPermissionSteps(view.browserOs).map((step, index) => (
-              <li key={step} className="flex items-start gap-3">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-semibold text-white">
-                  {index + 1}
-                </span>
-                <span className="pt-0.5 text-sm text-foreground">{step}</span>
-              </li>
-            ))}
+          <p className="mt-3 text-xs font-medium text-muted-foreground">
+            {browserPlatformLabel(view.browserPlatform)}
+          </p>
+          <ol className="mt-2 flex flex-col gap-3">
+            {locationPermissionSteps(view.browserPlatform).map(
+              (step, index) => (
+                <li key={step} className="flex items-start gap-3">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-semibold text-white">
+                    {index + 1}
+                  </span>
+                  <span className="pt-0.5 text-sm text-foreground">{step}</span>
+                </li>
+              ),
+            )}
           </ol>
         </div>
         {onRetry && (

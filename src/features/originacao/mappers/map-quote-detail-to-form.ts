@@ -321,6 +321,15 @@ export function mapQuoteDetailToProposal(
       installments: detail.installmentNumbers,
       firstInstallmentDate: detail.firstInstallmentDate,
       installmentAmount: detail.installmentAmount ?? 0,
+      ...(detail.insurancePremium == null
+        ? {}
+        : { insurancePremium: detail.insurancePremium }),
+      ...(detail.installmentAmountWithInsurance == null
+        ? {}
+        : {
+            installmentAmountWithInsurance:
+              detail.installmentAmountWithInsurance,
+          }),
     },
     step,
     stepValid: Array(PROPOSAL_STEPS.length).fill(false),

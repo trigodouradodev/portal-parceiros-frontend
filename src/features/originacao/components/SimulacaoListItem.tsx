@@ -29,6 +29,11 @@ export function SimulacaoListItem({
 }: SimulacaoListItemProps) {
   const converted = isSimulationConverted(item);
   const starting = startingId === item.id;
+  // Seguro é opt-out (praticamente toda simulação elegível tem) — a
+  // parcela exibida já é a financiada com seguro quando disponível, sem
+  // indicação visual, mesmo padrão do SimulationResultCard.
+  const displayedInstallmentAmount =
+    item.installmentAmountWithInsurance ?? item.installmentAmount;
 
   return (
     <OriginacaoSnapshotCard
@@ -40,7 +45,7 @@ export function SimulacaoListItem({
       timestamp={formatCreatedAtPtBr(item.createdAt)}
       name={item.name}
       amount={item.amount}
-      subtitle={`${item.installments}x de ${fmtBRL(item.installmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
+      subtitle={`${item.installments}x de ${fmtBRL(displayedInstallmentAmount)} · vencimento dia ${String(dueDayFromIsoDate(item.firstInstallmentDate)).padStart(2, "0")}`}
       cpf={item.document}
     >
       {converted ? null : (
