@@ -8,10 +8,13 @@ export function SimulationResultCard({
   simulation: SimulationSnapshot;
 }) {
   // Seguro prestamista é opt-out (vem incluído por padrão até o cliente
-  // desmarcar na assinatura) — praticamente toda simulação elegível tem
-  // seguro, então não é uma exceção que precise de rótulo: a parcela
-  // exibida já é a financiada COM seguro (com juros, mesmo mecanismo da
-  // TAC) quando disponível, sem nenhuma indicação visual disso.
+  // desmarcar na assinatura) — a parcela em destaque já é a financiada
+  // COM seguro (com juros, mesmo mecanismo da TAC) quando disponível. Na
+  // tela de simulação, mesmo assim, o consultor precisa ver os dois
+  // valores lado a lado (com e sem seguro) pra explicar a diferença pro
+  // cliente — só aqui; nas demais telas (lista, proposta) segue só o
+  // valor com seguro, sem indicação.
+  const hasInsurance = simulation.installmentAmountWithInsurance != null;
   const highlightedInstallment =
     simulation.installmentAmountWithInsurance ?? simulation.installmentAmount;
 
@@ -32,7 +35,18 @@ export function SimulationResultCard({
           <dt className="text-muted-foreground">Parcelas</dt>
           <dd className="font-semibold text-foreground">
             {simulation.installments}x de {fmtBRL(highlightedInstallment)}
+            {hasInsurance ? (
+              <span className="ml-1.5 font-normal text-muted-foreground">
+                (com seguro)
+              </span>
+            ) : null}
           </dd>
+          {hasInsurance ? (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Sem seguro: {simulation.installments}x de{" "}
+              {fmtBRL(simulation.installmentAmount)}
+            </p>
+          ) : null}
         </div>
       </dl>
     </div>
