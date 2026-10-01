@@ -24,6 +24,15 @@ export interface RegisterInteractionPayload {
   recipientContactId?: string;
   latitude?: number;
   longitude?: number;
+  locationConfirmation?: "exact" | "proximity" | "manual";
+  manualLocationReason?:
+    | "at_address_pin_wrong"
+    | "client_came_to_me"
+    | "visited_other_address"
+    | "registered_address_wrong"
+    | "device_unavailable"
+    | "permission_unavailable"
+    | "other";
 }
 
 export interface ActivityInteractionResponse {

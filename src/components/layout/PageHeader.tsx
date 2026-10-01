@@ -1,5 +1,6 @@
 import { CircleHelp } from "lucide-react";
 import { AureaLogo } from "@/components/brand/AureaLogo";
+import { LogoutAvatarButton } from "@/components/layout/LogoutAvatarButton";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getFirstName, getGreeting, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
@@ -57,16 +58,13 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
           >
             <CircleHelp size={20} />
           </a>
-          {onLogout && (
-            <button
-              type="button"
-              onClick={onLogout}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-navy text-sm font-bold text-brand-yellow md:hidden"
-              aria-label="Sair"
-            >
-              {getInitials(displayName)}
-            </button>
-          )}
+          {onLogout ? (
+            <LogoutAvatarButton
+              initials={getInitials(displayName)}
+              onLogout={onLogout}
+              tone="onYellow"
+            />
+          ) : null}
         </div>
       </div>
     </div>

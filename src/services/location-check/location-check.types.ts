@@ -9,18 +9,25 @@ export interface Coordinates {
   longitude: number;
 }
 
+export type LocationConfirmationLevel = "exact" | "proximity";
+
 export interface VerifyLocationPayload {
   contractId: string;
   installmentNumber: number;
   party?: FollowUpParty;
   latitude: number;
   longitude: number;
+  /** Margem de erro do GPS (metros), quando disponível. */
+  accuracyMeters?: number;
 }
 
 export interface LocationCheckResult {
   withinRadius: boolean;
   distanceMeters: number;
   radiusMeters: number;
+  effectiveRadiusMeters: number;
+  proximityRadiusMeters: number;
+  confirmationLevel: LocationConfirmationLevel | null;
   registeredCoordinates: Coordinates;
   providedCoordinates: Coordinates;
   matchedAddress: string;

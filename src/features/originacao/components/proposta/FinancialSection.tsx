@@ -1,20 +1,25 @@
+import { useMemo, type HTMLAttributes } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
-import { AlertTriangle, Plus, Trash2, Wallet } from "lucide-react";
+import { AlertTriangle, Wallet } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { FormField } from "@/components/ui/form";
-import { InputField } from "@/components/ui/input-field";
-import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/ui/select-field";
-import { toSelectOptions } from "@/components/ui/select-option";
+import { FormInput, FormSelect } from "@/components/ui/rhf-fields";
+import {
+  RepeatableGroup,
+  RemovableCard,
+} from "@/features/originacao/components/proposta/RepeatableGroup";
 import {
   AGIOTA_CREDITOR,
   CREDITOR_INSTITUTION_OPTIONS,
   EXPENSE_CATEGORY_OPTIONS,
   LOAN_CATEGORY_OPTIONS,
   LOAN_FREQUENCY_OPTIONS,
+  PAYMENT_PIX_OPTIONS,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
+import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
 import { formatMoneyBrl } from "@/lib/format/money";
+import { formatCpf } from "@/lib/format/tax-id";
+import { PaymentPixType } from "@/services/quotes/quotes.enums";
 
 const EMPTY_EXPENSE = {
   category: "",
@@ -30,9 +35,50 @@ const EMPTY_LOAN = {
   description: "",
 };
 
+const PIX_PLACEHOLDERS: Record<string, string> = {
+  [PaymentPixType.CPF]: "000.000.000-00",
+  [PaymentPixType.TELEPHONE]: "(11) 98888-7777",
+  [PaymentPixType.EMAIL]: "um@email.com",
+  [PaymentPixType.RANDOM_KEY]: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+};
+
+function formatPixInput(type: string, value: string): string {
+  if (type === PaymentPixType.CPF) return formatCpf(value);
+  if (type === PaymentPixType.TELEPHONE) return formatPartyTelephone(value);
+  return value;
+}
+
+function pixCodeInputMode(
+  type: string,
+): HTMLAttributes<HTMLInputElement>["inputMode"] {
+  if (type === PaymentPixType.CPF || type === PaymentPixType.TELEPHONE) {
+    return "numeric";
+  }
+  if (type === PaymentPixType.EMAIL) return "email";
+  return "text";
+}
+
+function pixCodeMaxLength(type: string): number | undefined {
+  if (type === PaymentPixType.CPF) return 14;
+  if (type === PaymentPixType.TELEPHONE) return 15;
+  if (type === PaymentPixType.RANDOM_KEY) return 36;
+  return undefined;
+}
+
+function pixCodeFieldProps(type: string) {
+  return {
+    placeholder: PIX_PLACEHOLDERS[type] ?? "Chave PIX",
+    transform: (value: string) => formatPixInput(type, value),
+    type: type === PaymentPixType.EMAIL ? "email" : "text",
+    inputMode: pixCodeInputMode(type),
+    maxLength: pixCodeMaxLength(type),
+  };
+}
+
 export function FinancialSection() {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
   const nextId = watch("financial.nextId");
+  const paymentPixType = watch("financial.paymentPixType");
   const {
     fields: expenses,
     append: appendExpense,
@@ -53,6 +99,10 @@ export function FinancialSection() {
   });
 
   const hasAgiota = loans.some((loan) => loan.institution === AGIOTA_CREDITOR);
+  const pixCodeProps = useMemo(
+    () => pixCodeFieldProps(paymentPixType),
+    [paymentPixType],
+  );
 
   function addExpense() {
     appendExpense({ id: nextId, ...EMPTY_EXPENSE });
@@ -64,202 +114,127 @@ export function FinancialSection() {
     setValue("financial.nextId", nextId + 1, { shouldDirty: true });
   }
 
+  function handlePixTypeChange(value: string) {
+    if (value === paymentPixType) return;
+    setValue("financial.paymentPixCode", "", {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <Label className="text-sm font-medium text-[#1A1D2E]">
-            Despesas pessoais
-          </Label>
-          <button
-            type="button"
-            onClick={addExpense}
-            className="flex items-center gap-1 text-sm font-semibold text-brand-navy"
-          >
-            <Plus size={14} />
-            Adicionar despesa
-          </button>
-        </div>
-        {expenses.length === 0 ? (
-          <p className="mb-1 text-xs text-[#9DA3B4]">
-            Nenhuma despesa adicionada.
-          </p>
-        ) : null}
-        <div className="flex flex-col gap-3">
-          {expenses.map((expense, index) => (
-            <div
-              key={expense.fieldId}
-              className="flex flex-col gap-3 rounded-2xl bg-[#F5F6FA] p-3"
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <FormField
-                    control={control}
-                    name={`financial.expenses.${index}.category`}
-                    render={({ field }) => (
-                      <SelectField
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Categoria"
-                        options={toSelectOptions(EXPENSE_CATEGORY_OPTIONS)}
-                      />
-                    )}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeExpense(index)}
-                  className="shrink-0 p-2 text-[#D84040]"
-                  aria-label="Remover despesa"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={control}
-                  name={`financial.expenses.${index}.amount`}
-                  render={({ field }) => (
-                    <InputField
-                      label="Valor"
-                      value={field.value}
-                      onChange={(value) =>
-                        field.onChange(formatMoneyBrl(value))
-                      }
-                      icon={<Wallet size={14} />}
-                      placeholder="R$ 0,00"
-                      inputMode="numeric"
-                    />
-                  )}
-                />
-                <FormField
-                  control={control}
-                  name={`financial.expenses.${index}.description`}
-                  render={({ field }) => (
-                    <InputField
-                      label="Descrição"
-                      value={field.value}
-                      onChange={field.onChange}
-                      icon={<Wallet size={14} />}
-                      placeholder="Opcional"
-                    />
-                  )}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2">
+        <FormSelect<ProposalFormData>
+          name="financial.paymentPixType"
+          label="Tipo de chave Pix"
+          placeholder="Selecione o tipo"
+          options={PAYMENT_PIX_OPTIONS}
+          required
+          onValueChange={handlePixTypeChange}
+        />
+        <FormInput<ProposalFormData>
+          name="financial.paymentPixCode"
+          label="Chave Pix"
+          required
+          {...pixCodeProps}
+        />
       </div>
 
-      <div className="border-t border-[#E2E4EC] pt-2">
-        <div className="mb-3 flex items-center justify-between">
-          <Label className="text-sm font-medium text-[#1A1D2E]">
-            Empréstimos
-          </Label>
-          <button
-            type="button"
-            onClick={addLoan}
-            className="flex items-center gap-1 text-sm font-semibold text-brand-navy"
+      <RepeatableGroup
+        title="Despesas pessoais"
+        hint="Despesas fixas mensais relevantes para avaliar a capacidade de pagamento."
+        addLabel="Adicionar despesa"
+        emptyLabel="Nenhuma despesa adicionada."
+        isEmpty={expenses.length === 0}
+        onAdd={addExpense}
+      >
+        {expenses.map((expense, index) => (
+          <RemovableCard
+            key={expense.fieldId}
+            removeLabel="Remover despesa"
+            onRemove={() => removeExpense(index)}
+            align="end"
+            header={
+              <FormSelect<ProposalFormData>
+                name={`financial.expenses.${index}.category`}
+                label="Categoria"
+                options={EXPENSE_CATEGORY_OPTIONS}
+              />
+            }
           >
-            <Plus size={14} />
-            Adicionar empréstimo
-          </button>
-        </div>
-        {loans.length === 0 ? (
-          <p className="mb-1 text-xs text-[#9DA3B4]">
-            Nenhum empréstimo adicionado.
-          </p>
-        ) : null}
-        <div className="flex flex-col gap-3">
-          {loans.map((loan, index) => (
-            <div
-              key={loan.fieldId}
-              className="flex flex-col gap-3 rounded-2xl bg-[#F5F6FA] p-3"
-            >
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <FormField
-                    control={control}
-                    name={`financial.loans.${index}.institution`}
-                    render={({ field }) => (
-                      <SelectField
-                        value={field.value}
-                        onChange={field.onChange}
-                        placeholder="Instituição/Credor"
-                        options={toSelectOptions(CREDITOR_INSTITUTION_OPTIONS)}
-                      />
-                    )}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeLoan(index)}
-                  className="shrink-0 p-2 text-[#D84040]"
-                  aria-label="Remover empréstimo"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={control}
-                  name={`financial.loans.${index}.installmentAmount`}
-                  render={({ field }) => (
-                    <InputField
-                      label="Valor da parcela"
-                      value={field.value}
-                      onChange={(value) =>
-                        field.onChange(formatMoneyBrl(value))
-                      }
-                      icon={<Wallet size={14} />}
-                      placeholder="R$ 0,00"
-                      inputMode="numeric"
-                    />
-                  )}
-                />
-                <FormField
-                  control={control}
-                  name={`financial.loans.${index}.frequency`}
-                  render={({ field }) => (
-                    <SelectField
-                      label="Frequência"
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={toSelectOptions(LOAN_FREQUENCY_OPTIONS)}
-                    />
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={control}
-                  name={`financial.loans.${index}.category`}
-                  render={({ field }) => (
-                    <SelectField
-                      label="Categoria"
-                      value={field.value}
-                      onChange={field.onChange}
-                      options={toSelectOptions(LOAN_CATEGORY_OPTIONS)}
-                    />
-                  )}
-                />
-                <FormField
-                  control={control}
-                  name={`financial.loans.${index}.description`}
-                  render={({ field }) => (
-                    <InputField
-                      label="Descrição"
-                      value={field.value}
-                      onChange={field.onChange}
-                      icon={<Wallet size={14} />}
-                      placeholder="Opcional"
-                    />
-                  )}
-                />
-              </div>
+            <div className="grid min-w-0 grid-cols-2 gap-2">
+              <FormInput<ProposalFormData>
+                name={`financial.expenses.${index}.amount`}
+                label="Valor"
+                transform={formatMoneyBrl}
+                icon={<Wallet size={14} />}
+                placeholder="R$ 0,00"
+                inputMode="numeric"
+              />
+              <FormInput<ProposalFormData>
+                name={`financial.expenses.${index}.description`}
+                label="Descrição"
+                placeholder="Opcional"
+              />
             </div>
+          </RemovableCard>
+        ))}
+      </RepeatableGroup>
+
+      <div className="border-t border-border pt-2">
+        <RepeatableGroup
+          title="Empréstimos"
+          hint="Empréstimos e financiamentos formais em aberto — diferente dos sinais de endividamento informal do Parecer do Parceiro."
+          addLabel="Adicionar empréstimo"
+          emptyLabel="Nenhum empréstimo adicionado."
+          isEmpty={loans.length === 0}
+          onAdd={addLoan}
+        >
+          {loans.map((loan, index) => (
+            <RemovableCard
+              key={loan.fieldId}
+              removeLabel="Remover empréstimo"
+              onRemove={() => removeLoan(index)}
+              align="end"
+              header={
+                <FormSelect<ProposalFormData>
+                  name={`financial.loans.${index}.institution`}
+                  label="Instituição/Credor"
+                  options={CREDITOR_INSTITUTION_OPTIONS}
+                />
+              }
+            >
+              <div className="grid min-w-0 grid-cols-2 gap-2">
+                <FormInput<ProposalFormData>
+                  name={`financial.loans.${index}.installmentAmount`}
+                  label="Valor da parcela"
+                  transform={formatMoneyBrl}
+                  icon={<Wallet size={14} />}
+                  placeholder="R$ 0,00"
+                  inputMode="numeric"
+                />
+                <FormSelect<ProposalFormData>
+                  name={`financial.loans.${index}.frequency`}
+                  label="Frequência"
+                  options={LOAN_FREQUENCY_OPTIONS}
+                />
+              </div>
+              <div className="grid min-w-0 grid-cols-2 gap-2">
+                <FormSelect<ProposalFormData>
+                  name={`financial.loans.${index}.category`}
+                  label="Categoria"
+                  options={LOAN_CATEGORY_OPTIONS}
+                />
+                <FormInput<ProposalFormData>
+                  name={`financial.loans.${index}.description`}
+                  label="Descrição"
+                  placeholder="Opcional"
+                />
+              </div>
+            </RemovableCard>
           ))}
-        </div>
+        </RepeatableGroup>
 
         {hasAgiota ? (
           <Alert variant="warning" className="mt-3">

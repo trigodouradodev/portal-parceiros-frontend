@@ -10,6 +10,7 @@ env:
   CLOUDFRONT_DISTRIBUTION_ID: E5BU0XCOMYHM6
   VITE_API_URL: https://portal-parceiros-api.trigodourado.com
   VITE_BACKOFFICE_URL: https://backoffice.souaurea.com
+  VITE_CLIENT_APP_URL: https://app.souaurea.com/
 
 permissions:
   id-token: write

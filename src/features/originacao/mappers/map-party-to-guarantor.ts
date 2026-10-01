@@ -1,0 +1,94 @@
+import { formatAddressNumber } from "@/features/originacao/utils/format-address-number";
+import { formatCep } from "@/features/originacao/utils/format-cep";
+import { formatPhone } from "@/lib/format/phone";
+import type { PartyFormData } from "@/services/parties/parties.types";
+
+export const PARTY_IDENTITY_FIELDS = [
+  "name",
+  "birthDate",
+  "email",
+  "phone",
+] as const;
+
+export const GUARANTOR_PARTY_FIELDS = [
+  ...PARTY_IDENTITY_FIELDS,
+  "zipCode",
+  "street",
+  "number",
+  "complement",
+  "neighborhood",
+  "city",
+  "state",
+] as const;
+
+export type PartyIdentityFill = Partial<
+  Record<(typeof PARTY_IDENTITY_FIELDS)[number], string>
+>;
+
+export type GuarantorPartyFill = Partial<
+  Record<(typeof GUARANTOR_PARTY_FIELDS)[number], string>
+>;
+
+/** Telefone da party pode vir com DDI 55. */
+export function formatPartyTelephone(value: string): string {
+  let digits = value.replace(/\D/g, "");
+  if (
+    digits.startsWith("55") &&
+    (digits.length === 12 || digits.length === 13)
+  ) {
+    digits = digits.slice(2);
+  }
+  return formatPhone(digits);
+}
+
+/** Identidade a partir do GET /parties/by-cpf, sem alterar o CPF consultado. */
+export function mapPartyToIdentityFill(
+  party: PartyFormData,
+): PartyIdentityFill {
+  const fill: PartyIdentityFill = {};
+  const name = party.name.trim();
+  if (name) fill.name = name;
+
+  const birthDate = party.birthDate?.trim();
+  if (birthDate) fill.birthDate = birthDate;
+
+  const email = party.email?.trim();
+  if (email) fill.email = email;
+
+  const phone = party.telephone?.trim();
+  if (phone) fill.phone = formatPartyTelephone(phone);
+
+  return fill;
+}
+
+/** Campos do avalista a partir do GET /parties/by-cpf. Não inclui CPF nem parentesco. */
+export function mapPartyToGuarantorFill(
+  party: PartyFormData,
+): GuarantorPartyFill {
+  const fill: GuarantorPartyFill = { ...mapPartyToIdentityFill(party) };
+
+  if (!party.address) return fill;
+
+  const zip = party.address.zipCode.replace(/\D/g, "");
+  if (zip.length === 8) fill.zipCode = formatCep(zip);
+
+  const street = party.address.streetName.trim();
+  if (street) fill.street = street;
+
+  const number = formatAddressNumber(party.address.streetNumber);
+  if (number) fill.number = number;
+
+  const complement = party.address.streetComplement.trim();
+  if (complement) fill.complement = complement;
+
+  const neighborhood = party.address.streetDistrict.trim();
+  if (neighborhood) fill.neighborhood = neighborhood;
+
+  const city = party.address.city.trim();
+  if (city) fill.city = city;
+
+  const state = party.address.state?.trim().toUpperCase() ?? "";
+  if (state) fill.state = state;
+
+  return fill;
+}

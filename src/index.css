@@ -22,6 +22,7 @@
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-skeleton: hsl(var(--skeleton));
   --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
   --color-destructive: hsl(var(--destructive));
@@ -69,6 +70,8 @@
 
   --muted: 228 20% 95%; /* #F0F1F5 */
   --muted-foreground: 226 9% 46%; /* #6B7080 */
+  /* AUREA-349: ~15 pontos mais escuro que --background (97%), para o pulse não sumir no fundo. */
+  --skeleton: 228 16% 82%; /* #CACDD8 */
 
   --accent: 48 100% 56%; /* #FFD320 */
   --accent-foreground: 240 73% 19%;

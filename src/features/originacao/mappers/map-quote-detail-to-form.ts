@@ -1,0 +1,338 @@
+import {
+  CHILDREN_COUNT_MAX,
+  HOUSEHOLD_SIZE_MAX,
+  HOUSEHOLD_SIZE_MIN,
+  PROPOSAL_STEPS,
+  clampCountSelect,
+  createEmptyProposalForm,
+  type ActivityIncomeData,
+  type AddressData,
+  type DocumentAttachmentItem,
+  type DocumentsData,
+  type ExpenseItem,
+  type FinancialData,
+  type GuarantorData,
+  type LoanItem,
+  type PartnerOpinionData,
+  type ProposalFormData,
+  type ProposalSnapshot,
+  type RegistrationData,
+} from "@/features/originacao/data/proposal";
+import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
+import { fmtBRL } from "@/lib/format/money";
+import { formatCpf } from "@/lib/format/tax-id";
+import { SimulationStatus } from "@/services/origination/origination.types";
+import {
+  GovernmentProgram,
+  PaymentPixType,
+  QuoteDraftStep,
+} from "@/services/quotes/quotes.enums";
+import type {
+  QuoteAttachmentListItem,
+  QuoteDetail,
+  QuoteDocumentationDetail,
+  QuoteFinancialDetail,
+  QuoteGuarantorDetail,
+} from "@/services/quotes/quotes.types";
+
+/** Ordem dos passos do wizard alinhada a `PROPOSAL_STEPS`. */
+export const QUOTE_WIZARD_STEPS: QuoteDraftStep[] = [
+  QuoteDraftStep.REGISTRATION,
+  QuoteDraftStep.ADDRESS,
+  QuoteDraftStep.GUARANTOR,
+  QuoteDraftStep.INCOME,
+  QuoteDraftStep.FINANCIAL,
+  QuoteDraftStep.DOCUMENTATION,
+  QuoteDraftStep.PARTNER_OPINION,
+];
+
+export function nextWizardStepIndex(completedSteps: QuoteDraftStep[]): number {
+  const done = new Set(completedSteps);
+  const index = QUOTE_WIZARD_STEPS.findIndex((step) => !done.has(step));
+  if (index === -1) return Math.max(0, QUOTE_WIZARD_STEPS.length - 1);
+  return index;
+}
+
+function formatTimestamp(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleString("pt-BR");
+}
+
+function moneyOrEmpty(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "";
+  return fmtBRL(value);
+}
+
+function mapRegistration(
+  registration: QuoteDetail["registration"],
+  identity: Pick<
+    QuoteDetail,
+    "name" | "document" | "birthDate" | "email" | "telephone"
+  >,
+): RegistrationData {
+  const empty = createEmptyProposalForm().registration;
+  return {
+    ...empty,
+    name: identity.name ?? "",
+    cpf: identity.document ? formatCpf(identity.document) : "",
+    birthDate: identity.birthDate ?? "",
+    email: identity.email ?? "",
+    phone: identity.telephone ? formatPartyTelephone(identity.telephone) : "",
+    isRenewal: registration.isRenegotiation,
+    gender: registration.gender ?? "",
+    rg: registration.secondaryDocument ?? "",
+    occupation: registration.profession ?? "",
+    businessActivityBranch: registration.businessActivityBranch ?? "",
+    businessActivitySubcategory: registration.businessActivitySubcategory ?? "",
+    activityCategories: registration.economicActivityCategories ?? [],
+    activityCategoryOther: registration.economicActivityOther ?? "",
+    maritalStatus: registration.maritalStatus ?? "",
+    spouseCpf: registration.spouseDocument
+      ? formatCpf(registration.spouseDocument)
+      : "",
+    childrenCount: clampCountSelect(
+      registration.childrenCount,
+      0,
+      CHILDREN_COUNT_MAX,
+    ),
+    householdSize: clampCountSelect(
+      registration.householdMembers,
+      HOUSEHOLD_SIZE_MIN,
+      HOUSEHOLD_SIZE_MAX,
+    ),
+    propertyStatus: registration.housingStatus ?? "",
+    residenceTime: registration.residenceDuration ?? "",
+    governmentPrograms: [GovernmentProgram.NONE],
+    hasVehicle: registration.ownsVehicle,
+    vehicleFinanced: registration.vehicleFinanced,
+    creditPurpose: registration.creditPurpose,
+  };
+}
+
+function mapIncome(detail: QuoteDetail["income"]): ActivityIncomeData {
+  const [primary, ...secondary] = detail.incomes;
+  const additionalIncomes = secondary.map((item, index) => ({
+    id: index + 1,
+    activityCategories: item.economicActivity ? [item.economicActivity] : [],
+    activityCategoryOther: item.economicActivityOther ?? "",
+    occupation: item.profession ?? "",
+    businessActivityBranch: item.businessActivityBranch ?? "",
+    businessActivitySubcategory: item.businessActivitySubcategory ?? "",
+    activityTime: item.activityDuration ?? "",
+    source: item.source ?? "",
+    amount: moneyOrEmpty(item.amount),
+    familyRelationship: item.familyRelationship ?? "",
+  }));
+  return {
+    activityTime: primary?.activityDuration ?? "",
+    monthlyIncome: moneyOrEmpty(primary?.amount),
+    incomeSource: primary?.source ?? "",
+    additionalIncomes,
+    nextAdditionalIncomeId: additionalIncomes.length + 1,
+  };
+}
+
+function mapAddress(detail: QuoteDetail["address"]): AddressData {
+  return {
+    zipCode: detail.zipCode ?? "",
+    street: detail.streetName ?? "",
+    number: detail.streetNumber ?? "",
+    complement: detail.streetComplement ?? "",
+    neighborhood: detail.streetDistrict ?? "",
+    city: detail.city ?? "",
+    state: detail.state ?? "",
+    landmark: detail.referencePoint ?? "",
+    geolocation: detail.geolocation
+      ? {
+          latitude: detail.geolocation.latitude,
+          longitude: detail.geolocation.longitude,
+          precision: detail.geolocation.precision,
+        }
+      : null,
+  };
+}
+
+function mapPartnerOpinion(
+  detail: QuoteDetail["partnerOpinion"],
+): PartnerOpinionData {
+  return {
+    relationshipTime: detail.relationshipDuration ?? "",
+    howKnows: detail.relationshipOrigin ?? "",
+    howKnowsOther: detail.relationshipOriginOther ?? "",
+    referrerCpf: detail.referrerDocument
+      ? formatCpf(detail.referrerDocument)
+      : "",
+    overallRating: detail.assessment ?? "",
+    informalDebtSigns: detail.hasInformalDebtSigns,
+    financialUrgencySigns: detail.hasFinancialUrgencySigns,
+    notes: detail.opinion ?? "",
+  };
+}
+
+function mapGuarantor(detail: QuoteGuarantorDetail | null): GuarantorData {
+  const empty = createEmptyProposalForm().guarantor;
+  if (!detail) return empty;
+  return {
+    name: detail.name,
+    cpf: formatCpf(detail.document),
+    birthDate: detail.birthDate,
+    email: detail.email,
+    phone: formatPartyTelephone(detail.telephone),
+    zipCode: detail.address.zipCode ?? "",
+    street: detail.address.streetName ?? "",
+    number: detail.address.streetNumber ?? "",
+    complement: detail.address.streetComplement ?? "",
+    neighborhood: detail.address.streetDistrict ?? "",
+    city: detail.address.city ?? "",
+    state: detail.address.state ?? "",
+    kinship: detail.relationship ?? "",
+  };
+}
+
+function formatPixCodeForForm(type: string, code: string): string {
+  if (!code.trim()) return "";
+  if (type === PaymentPixType.CPF) return formatCpf(code);
+  if (type === PaymentPixType.TELEPHONE) return formatPartyTelephone(code);
+  return code;
+}
+
+function mapFinancial(detail: QuoteFinancialDetail): FinancialData {
+  const expenses: ExpenseItem[] = detail.expenses.map((item, index) => ({
+    id: index + 1,
+    category: item.category,
+    amount: moneyOrEmpty(item.amount),
+    description: item.description ?? "",
+  }));
+  const loans: LoanItem[] = detail.loans.map((item, index) => ({
+    id: expenses.length + index + 1,
+    installmentAmount: moneyOrEmpty(item.installmentAmount),
+    frequency: item.frequency,
+    institution: item.institution,
+    category: item.category,
+    description: item.description ?? "",
+  }));
+  return {
+    expenses,
+    loans,
+    nextId: expenses.length + loans.length + 1,
+    paymentPixType: detail.paymentPixType ?? "",
+    paymentPixCode: formatPixCodeForForm(
+      detail.paymentPixType ?? "",
+      detail.paymentPixCode ?? "",
+    ),
+  };
+}
+
+function mapAttachment(item: QuoteAttachmentListItem): DocumentAttachmentItem {
+  return {
+    id: item.id,
+    filename: item.filename,
+    ...(item.incomeProofType ? { incomeProofType: item.incomeProofType } : {}),
+  };
+}
+
+function mapDocuments(detail: QuoteDocumentationDetail): DocumentsData {
+  const incomeTypes = [
+    ...new Set(
+      detail.proofOfIncome
+        .map((item) => item.incomeProofType)
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ];
+  return {
+    identification: detail.identificationDocuments.map(mapAttachment),
+    proofOfResidence: detail.proofOfResidence.map(mapAttachment),
+    activityPhotos: detail.activityPhotos.map(mapAttachment),
+    incomeProofTypes: incomeTypes,
+    incomeProofs: detail.proofOfIncome.map(mapAttachment),
+  };
+}
+
+export function mapQuoteDetailToForm(detail: QuoteDetail): ProposalFormData {
+  return {
+    registration: mapRegistration(detail.registration, detail),
+    activityIncome: mapIncome(detail.income),
+    address: mapAddress(detail.address),
+    partnerOpinion: mapPartnerOpinion(detail.partnerOpinion),
+    guarantor: mapGuarantor(detail.guarantor),
+    financial: mapFinancial(detail.financial),
+    documents: mapDocuments(detail.documentation),
+  };
+}
+
+/**
+ * Aplica somente os três blocos permitidos no prefill (Cadastro, Endereço e
+ * Atividade e Renda). Campos de dívida do cadastro e a geolocalização atual
+ * não fazem parte da cópia; os demais passos (Avalista, Financeiro,
+ * Documentação e Parecer) permanecem exatamente como estavam no formulário.
+ */
+export function mergeRenewalPrefillIntoForm(
+  current: ProposalFormData,
+  detail: QuoteDetail,
+): ProposalFormData {
+  const registration = mapRegistration(detail.registration, detail);
+  const address = mapAddress(detail.address);
+
+  return {
+    ...current,
+    registration: {
+      ...registration,
+      name: current.registration.name,
+      cpf: current.registration.cpf,
+      birthDate: current.registration.birthDate,
+      email: current.registration.email,
+      phone: current.registration.phone,
+      debtDescription: current.registration.debtDescription,
+      debtCreditor: current.registration.debtCreditor,
+    },
+    activityIncome: mapIncome(detail.income),
+    address: {
+      ...address,
+      geolocation: current.address.geolocation,
+    },
+  };
+}
+
+export function mapQuoteDetailToProposal(
+  detail: QuoteDetail,
+): ProposalSnapshot {
+  const step = nextWizardStepIndex(detail.completedSteps);
+  return {
+    id: detail.id,
+    createdAt: formatTimestamp(detail.createdAt),
+    updatedAt: formatTimestamp(detail.updatedAt),
+    status: detail.status,
+    canEdit: detail.canEdit,
+    simulation: {
+      id: detail.simulationId ?? detail.id,
+      createdAt: detail.createdAt ?? "",
+      status: SimulationStatus.CONVERTED,
+      name: detail.name,
+      birthDate: detail.birthDate ?? "",
+      email: detail.email,
+      telephone: detail.telephone,
+      document: detail.document,
+      productId: detail.productId,
+      productName: detail.productName,
+      interestRate: detail.interestRate ?? 0,
+      amount: detail.financeAmount,
+      installments: detail.installmentNumbers,
+      firstInstallmentDate: detail.firstInstallmentDate,
+      installmentAmount: detail.installmentAmount ?? 0,
+      ...(detail.insurancePremium == null
+        ? {}
+        : { insurancePremium: detail.insurancePremium }),
+      ...(detail.installmentAmountWithInsurance == null
+        ? {}
+        : {
+            installmentAmountWithInsurance:
+              detail.installmentAmountWithInsurance,
+          }),
+    },
+    step,
+    stepValid: Array(PROPOSAL_STEPS.length).fill(false),
+    data: mapQuoteDetailToForm(detail),
+  };
+}

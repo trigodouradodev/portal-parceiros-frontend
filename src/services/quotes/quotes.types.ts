@@ -1,0 +1,453 @@
+import type {
+  ActivityDuration,
+  AvailableIncomeProof,
+  BusinessActivityBranch,
+  BusinessActivitySubcategory,
+  CreditPurpose,
+  CustomerRelationshipDuration,
+  CustomerRelationshipOrigin,
+  EconomicActivityCategory,
+  ExpenseCategory,
+  FamilyRelationship,
+  Gender,
+  GovernmentProgram,
+  GuarantorRelationship,
+  HousingStatus,
+  IncomeProofType,
+  IncomeSource,
+  IncomeEntryRole,
+  LoanCategory,
+  LoanFrequency,
+  LoanInstitution,
+  MaritalStatus,
+  PartnerAssessment,
+  PaymentPixType,
+  QuoteAttachmentType,
+  QuoteDraftStep,
+  QuoteStatus,
+  ResidenceDuration,
+} from "./quotes.enums";
+
+/** Aliases usados pelo fluxo AUREA-429 (registration). */
+export type QuoteDraftStatus = typeof QuoteStatus.DRAFT;
+export type QuoteGender = Gender;
+export type QuoteEconomicActivityCategory = EconomicActivityCategory;
+export type QuoteMaritalStatus = MaritalStatus;
+export type QuoteHousingStatus = HousingStatus;
+export type QuoteResidenceDuration = ResidenceDuration;
+export type QuoteGovernmentProgram = GovernmentProgram;
+export type QuoteCreditPurpose = CreditPurpose;
+
+export interface CreateDraftQuotePayload {
+  simulationId: string;
+}
+
+export interface QuoteDraftAddressPrefill {
+  zipCode: string;
+  streetName: string;
+  streetNumber: string;
+  streetComplement: string;
+  streetDistrict: string;
+  city: string;
+  state: string;
+  referencePoint?: string | null;
+}
+
+/** Resposta de POST /quotes/draft */
+export interface QuoteDraftSnapshot {
+  id: string;
+  simulationId: string;
+  status: QuoteDraftStatus;
+  createdAt: string;
+  name: string;
+  document: string;
+  birthDate: string;
+  email: string;
+  telephone: string;
+  productId: string;
+  productName: string;
+  interestRate: number;
+  financeAmount: number;
+  installmentNumbers: number;
+  firstInstallmentDate: string;
+  installmentAmount: number;
+  totalAmountOwed?: number;
+  address?: QuoteDraftAddressPrefill;
+}
+
+export interface SaveQuoteRegistrationPayload {
+  name: string;
+  document: string;
+  birthDate: string;
+  email: string;
+  telephone: string;
+  isRenegotiation: boolean;
+  gender: Gender;
+  secondaryDocument: string;
+  maritalStatus: MaritalStatus;
+  spouseDocument?: string;
+  childrenCount: number;
+  householdMembers: number;
+  housingStatus: HousingStatus;
+  residenceDuration: ResidenceDuration;
+  governmentPrograms: GovernmentProgram[];
+  ownsVehicle: boolean;
+  vehicleFinanced?: boolean;
+  creditPurpose: CreditPurpose;
+}
+
+export interface QuoteRegistrationSnapshot extends SaveQuoteRegistrationPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.REGISTRATION | "registration";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteIncomeEntryPayload {
+  id: string;
+  role: IncomeEntryRole;
+  economicActivity: EconomicActivityCategory;
+  economicActivityOther?: string;
+  profession?: string;
+  businessActivityBranch?: BusinessActivityBranch;
+  businessActivitySubcategory?: BusinessActivitySubcategory;
+  activityDuration: ActivityDuration;
+  amount: number;
+  source: IncomeSource;
+  familyRelationship?: FamilyRelationship;
+}
+
+export interface SaveQuoteIncomePayload {
+  incomes: QuoteIncomeEntryPayload[];
+}
+
+export interface QuoteIncomeSnapshot extends SaveQuoteIncomePayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.INCOME | "income";
+  completedAt: string;
+  updatedAt: string;
+  incomeModelVersion: number;
+}
+
+export interface QuoteGeolocationPayload {
+  latitude: number;
+  longitude: number;
+  precision: string;
+}
+
+export interface SaveQuoteAddressPayload {
+  zipCode: string;
+  streetName: string;
+  streetNumber: string;
+  streetComplement?: string;
+  streetDistrict: string;
+  city: string;
+  state: string;
+  referencePoint: string;
+  geolocation?: QuoteGeolocationPayload | null;
+}
+
+export interface QuoteAddressSnapshot extends SaveQuoteAddressPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.ADDRESS | "address";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface SaveQuotePartnerOpinionPayload {
+  relationshipDuration: CustomerRelationshipDuration;
+  relationshipOrigin: CustomerRelationshipOrigin;
+  relationshipOriginOther?: string;
+  referrerDocument?: string;
+  assessment: PartnerAssessment;
+  hasInformalDebtSigns: boolean;
+  hasFinancialUrgencySigns: boolean;
+  opinion: string;
+}
+
+export interface QuotePartnerOpinionSnapshot extends SaveQuotePartnerOpinionPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.PARTNER_OPINION | "partner_opinion";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteGuarantorAddressPayload {
+  zipCode: string;
+  streetName: string;
+  streetNumber: string;
+  streetComplement?: string;
+  streetDistrict: string;
+  city: string;
+  state: string;
+}
+
+export interface SaveQuoteGuarantorPayload {
+  name: string;
+  document: string;
+  birthDate: string;
+  email: string;
+  telephone: string;
+  address: QuoteGuarantorAddressPayload;
+  relationship: GuarantorRelationship;
+}
+
+export interface QuoteGuarantorSnapshot extends SaveQuoteGuarantorPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.GUARANTOR | "guarantor";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteExpensePayload {
+  category: ExpenseCategory;
+  amount: number;
+  description?: string;
+}
+
+export interface QuoteLoanPayload {
+  installmentAmount: number;
+  frequency: LoanFrequency;
+  institution: LoanInstitution;
+  category: LoanCategory;
+  description?: string;
+}
+
+export interface SaveQuoteFinancialPayload {
+  expenses: QuoteExpensePayload[];
+  loans: QuoteLoanPayload[];
+  paymentPixType: PaymentPixType;
+  paymentPixCode: string;
+}
+
+export interface QuoteFinancialSnapshot extends SaveQuoteFinancialPayload {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.FINANCIAL | "financial";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface QuoteAttachmentSnapshot {
+  id: string;
+  attachmentType: QuoteAttachmentType;
+  filename: string;
+  mimetype: string;
+  size: number;
+  createdAt: string;
+  incomeProofType?: IncomeProofType;
+  signedUrl?: string;
+}
+
+export interface QuoteDocumentationAttachments {
+  identificationDocuments: QuoteAttachmentSnapshot[];
+  proofOfResidence: QuoteAttachmentSnapshot[];
+  activityPhotos: QuoteAttachmentSnapshot[];
+  proofOfIncome: QuoteAttachmentSnapshot[];
+}
+
+export interface QuoteDocumentationSnapshot extends QuoteDocumentationAttachments {
+  id: string;
+  status: QuoteDraftStatus;
+  step: typeof QuoteDraftStep.DOCUMENTATION | "documentation";
+  completedAt: string;
+  updatedAt: string;
+}
+
+export interface UploadQuoteAttachmentInput {
+  attachmentType: QuoteAttachmentType;
+  incomeProofType?: IncomeProofType;
+  file: File;
+}
+
+export interface QuoteStatusResponse {
+  id: string;
+  status: QuoteStatus;
+  updatedAt: string;
+}
+
+export interface QuoteConsultantSummary {
+  id: string;
+  name: string;
+}
+
+export interface QuoteListItem {
+  id: string;
+  simulationId: string | null;
+  status: QuoteStatus;
+  name: string;
+  document: string;
+  productId: string;
+  productName: string;
+  financeAmount: number;
+  installmentNumbers: number;
+  installmentAmount: number | null;
+  /** Prêmio do seguro prestamista cotado na Caburé. Nulo quando o
+   * cliente não foi elegível ou a cotação falhou na simulação. */
+  insurancePremium: number | null;
+  /** Parcela COM seguro, já financiada com juros pela Celcoin —
+   * installmentAmount é sempre o valor SEM seguro. Nulo junto com
+   * insurancePremium. */
+  installmentAmountWithInsurance: number | null;
+  consultant: QuoteConsultantSummary;
+  completedSteps: QuoteDraftStep[];
+  canEdit: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface QuotesPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+}
+
+export interface QuotesPage {
+  items: QuoteListItem[];
+  pagination: QuotesPagination;
+}
+
+export interface ListQuotesQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: QuoteStatus;
+}
+
+export interface QuoteRegistrationDetail {
+  isRenegotiation: boolean;
+  gender: Gender | null;
+  secondaryDocument: string | null;
+  profession: string | null;
+  businessActivityBranch: BusinessActivityBranch | null;
+  businessActivitySubcategory: BusinessActivitySubcategory | null;
+  economicActivityCategories: EconomicActivityCategory[];
+  economicActivityOther: string | null;
+  maritalStatus: MaritalStatus | null;
+  spouseDocument: string | null;
+  childrenCount: number | null;
+  householdMembers: number | null;
+  housingStatus: HousingStatus | null;
+  residenceDuration: ResidenceDuration | null;
+  governmentPrograms: GovernmentProgram[];
+  ownsVehicle: boolean | null;
+  vehicleFinanced: boolean | null;
+  creditPurpose: CreditPurpose | null;
+}
+
+export interface QuoteIncomeDetail {
+  incomeModelVersion: number;
+  incomes: QuoteIncomeEntryPayload[];
+  availableIncomeProof: AvailableIncomeProof | null;
+}
+
+export interface QuoteAddressDetail {
+  zipCode: string;
+  streetName: string;
+  streetNumber: string;
+  streetComplement: string;
+  streetDistrict: string;
+  city: string;
+  state: string | null;
+  referencePoint: string | null;
+  geolocation: {
+    latitude: number;
+    longitude: number;
+    precision: string;
+  } | null;
+}
+
+export interface QuotePartnerOpinionDetail {
+  relationshipDuration: CustomerRelationshipDuration | null;
+  relationshipOrigin: CustomerRelationshipOrigin | null;
+  relationshipOriginOther: string | null;
+  referrerDocument: string | null;
+  assessment: PartnerAssessment | null;
+  hasInformalDebtSigns: boolean | null;
+  hasFinancialUrgencySigns: boolean | null;
+  opinion: string | null;
+}
+
+export interface QuoteGuarantorDetail {
+  name: string;
+  document: string;
+  birthDate: string;
+  email: string;
+  telephone: string;
+  address: {
+    zipCode: string;
+    streetName: string;
+    streetNumber: string;
+    streetComplement: string;
+    streetDistrict: string;
+    city: string;
+    state: string | null;
+  };
+  relationship: GuarantorRelationship | null;
+}
+
+export interface QuoteFinancialDetail {
+  expenses: QuoteExpensePayload[];
+  loans: QuoteLoanPayload[];
+  paymentPixType: PaymentPixType | string;
+  paymentPixCode: string;
+}
+
+export interface QuoteAttachmentListItem {
+  id: string;
+  attachmentType: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  createdAt: string;
+  incomeProofType?: string;
+  signedUrl?: string;
+}
+
+export interface QuoteDocumentationDetail {
+  identificationDocuments: QuoteAttachmentListItem[];
+  proofOfResidence: QuoteAttachmentListItem[];
+  activityPhotos: QuoteAttachmentListItem[];
+  proofOfIncome: QuoteAttachmentListItem[];
+}
+
+export interface QuoteDetail extends QuoteListItem {
+  partyId: string | null;
+  birthDate: string | null;
+  email: string;
+  telephone: string;
+  interestRate: number | null;
+  installmentNumbers: number;
+  firstInstallmentDate: string;
+  installmentAmount: number | null;
+  totalAmountOwed: number | null;
+  /** Prêmio do seguro prestamista cotado na Caburé. Nulo quando o
+   * cliente não foi elegível ou a cotação falhou na simulação. */
+  insurancePremium: number | null;
+  /** Parcela COM seguro, já financiada com juros pela Celcoin —
+   * installmentAmount é sempre o valor SEM seguro. Nulo junto com
+   * insurancePremium. */
+  installmentAmountWithInsurance: number | null;
+  registration: QuoteRegistrationDetail;
+  income: QuoteIncomeDetail;
+  address: QuoteAddressDetail;
+  partnerOpinion: QuotePartnerOpinionDetail;
+  guarantor: QuoteGuarantorDetail | null;
+  financial: QuoteFinancialDetail;
+  documentation: QuoteDocumentationDetail;
+}
+
+export interface QuoteRenewalPrefillResponse {
+  /** True quando a cópia aconteceu nesta requisição. */
+  applied: boolean;
+  sourceContractId: string | null;
+  sourceQuoteId: string | null;
+  quote: QuoteDetail;
+}

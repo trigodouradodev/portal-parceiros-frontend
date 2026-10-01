@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { NotFound } from "@/components/NotFound";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PermissionRoute } from "@/components/PermissionRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 import { CarteiraPage } from "@/features/carteira";
 import { ContractListPage } from "@/features/carteira/ContractListPage";
@@ -18,6 +19,7 @@ import { OriginacaoPage } from "@/features/originacao";
 import { ProfilePage } from "@/features/profile";
 import { RegisterChargeActionPage } from "@/features/register-action/charge";
 import { RegisterPreventiveActionPage } from "@/features/register-action/preventive";
+import { PORTAL_PERMISSIONS } from "@/lib/permissions";
 
 export const router = createBrowserRouter([
   {
@@ -55,7 +57,16 @@ export const router = createBrowserRouter([
             path: "/activities/installments/:installmentId",
             element: <ActivityInstallmentDetailPage />,
           },
-          { path: "/originacao", element: <OriginacaoPage /> },
+          {
+            path: "/originacao",
+            element: (
+              <PermissionRoute
+                permission={PORTAL_PERMISSIONS.QUOTE_NEW_ORIGINATION_FLOW}
+              >
+                <OriginacaoPage />
+              </PermissionRoute>
+            ),
+          },
           // { path: "/performance", element: <PerformancePage /> },
           { path: "/profile", element: <ProfilePage /> },
           { path: "*", element: <NotFound /> },

@@ -1,125 +1,375 @@
-import { useFormContext } from "react-hook-form";
-import { Building2, Wallet } from "lucide-react";
-import { ChipField } from "@/components/ui/chip-field";
+import { useFieldArray, useFormContext } from "react-hook-form";
+import { Wallet } from "lucide-react";
 import { FormField } from "@/components/ui/form";
-import { InputField } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
-import { toSelectOptions } from "@/components/ui/select-option";
-import { YesNoField } from "@/components/ui/yes-no-field";
+import { FormInput, FormSelect } from "@/components/ui/rhf-fields";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
 import {
+  ACTIVITY_CATEGORY_OPTIONS,
   ACTIVITY_TIME_OPTIONS,
-  INCOME_PROOF_OPTIONS,
+  BUSINESS_ACTIVITY_BRANCH_OPTIONS,
+  BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH,
+  FAMILY_RELATIONSHIP_OPTIONS,
+  hasSpouse,
   INCOME_SOURCE_OPTIONS,
+  OTHER_OPTION,
+  PRIMARY_INCOME_SOURCE_OPTIONS,
+  requiresBusinessActivityBranch,
+  requiresProfession,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
-import { formatMoneyBrl } from "@/lib/format/money";
-import { formatCnpj } from "@/lib/format/tax-id";
+import { fmtBRL, formatMoneyBrl, parseMoneyBrl } from "@/lib/format/money";
+import { FormSection } from "@/features/originacao/components/proposta/FormSection";
+import {
+  RemovableCard,
+  RepeatableGroup,
+} from "@/features/originacao/components/proposta/RepeatableGroup";
+import {
+  FamilyRelationship,
+  IncomeSource,
+} from "@/services/quotes/quotes.enums";
 
 export function ActivityIncomeSection() {
   const { control, setValue, watch } = useFormContext<ProposalFormData>();
-  const hasMultipleSources = watch("activityIncome.hasMultipleSources");
+  const nextAdditionalIncomeId = watch("activityIncome.nextAdditionalIncomeId");
+  const primaryIncome = watch("activityIncome.monthlyIncome");
+  const additionalIncomeValues = watch("activityIncome.additionalIncomes");
+  const activityCategories = watch("registration.activityCategories");
+  const professionRequired = requiresProfession(activityCategories);
+  const businessActivityRequired =
+    requiresBusinessActivityBranch(activityCategories);
+  const businessActivityBranch = watch("registration.businessActivityBranch");
+  const businessActivitySubcategory = watch(
+    "registration.businessActivitySubcategory",
+  );
+  const primaryActivityTime = watch("activityIncome.activityTime");
+  const maritalStatus = watch("registration.maritalStatus");
+  const subcategoryOptions =
+    BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[businessActivityBranch] ??
+    [];
+  const branchLabel = BUSINESS_ACTIVITY_BRANCH_OPTIONS.find(
+    (option) => option.value === businessActivityBranch,
+  )?.label;
+  const totalDeclaredIncome =
+    parseMoneyBrl(primaryIncome) +
+    additionalIncomeValues.reduce(
+      (total, income) => total + parseMoneyBrl(income.amount),
+      0,
+    );
+  const {
+    fields: additionalIncomes,
+    append: appendAdditionalIncome,
+    remove: removeAdditionalIncome,
+  } = useFieldArray({
+    control,
+    name: "activityIncome.additionalIncomes",
+    keyName: "fieldId",
+  });
 
-  function handleMultipleSourcesChange(value: boolean) {
-    setValue("activityIncome.hasMultipleSources", value, { shouldDirty: true });
-    if (!value) {
-      setValue("activityIncome.secondaryIncome", "", { shouldDirty: true });
+  function handleBranchChange(nextBranch: string) {
+    const nextOptions =
+      BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[nextBranch] ?? [];
+    const currentSubcategory = watch(
+      "registration.businessActivitySubcategory",
+    );
+    const stillValid = nextOptions.some(
+      (option) => option.value === currentSubcategory,
+    );
+    if (!stillValid) {
+      setValue("registration.businessActivitySubcategory", "", {
+        shouldValidate: true,
+      });
+    }
+  }
+
+  function addAdditionalIncome() {
+    if (additionalIncomes.length >= 9) return;
+    appendAdditionalIncome({
+      id: nextAdditionalIncomeId,
+      activityCategories: [],
+      activityCategoryOther: "",
+      occupation: "",
+      // Pré-preenchidos com a atividade principal — é o caso mais comum
+      // (mesma atividade, outra fonte de valor) e continuam editáveis.
+      businessActivityBranch,
+      businessActivitySubcategory,
+      activityTime: primaryActivityTime,
+      source: "",
+      amount: "",
+      familyRelationship: "",
+    });
+    setValue(
+      "activityIncome.nextAdditionalIncomeId",
+      nextAdditionalIncomeId + 1,
+      { shouldDirty: true },
+    );
+  }
+
+  function handleAdditionalSourceChange(index: number, nextSource: string) {
+    if (nextSource !== IncomeSource.FAMILY_INCOME || !hasSpouse(maritalStatus))
+      return;
+    const currentRelationship = watch(
+      `activityIncome.additionalIncomes.${index}.familyRelationship`,
+    );
+    // Só assume Cônjuge quando o campo ainda não foi respondido — nunca
+    // sobrescreve uma escolha que o consultor já fez.
+    if (currentRelationship) return;
+    setValue(
+      `activityIncome.additionalIncomes.${index}.familyRelationship`,
+      FamilyRelationship.SPOUSE,
+      { shouldValidate: true },
+    );
+  }
+
+  function handleAdditionalBranchChange(index: number, nextBranch: string) {
+    const nextOptions =
+      BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[nextBranch] ?? [];
+    const currentSubcategory = watch(
+      `activityIncome.additionalIncomes.${index}.businessActivitySubcategory`,
+    );
+    if (!nextOptions.some((option) => option.value === currentSubcategory)) {
+      setValue(
+        `activityIncome.additionalIncomes.${index}.businessActivitySubcategory`,
+        "",
+        { shouldValidate: true },
+      );
     }
   }
 
   return (
     <div className="flex flex-col gap-5">
-      <FormField
-        control={control}
-        name="activityIncome.cnpj"
-        render={({ field }) => (
-          <InputField
-            label="CNPJ (opcional)"
-            value={field.value}
-            onChange={(value) => field.onChange(formatCnpj(value))}
-            icon={<Building2 size={16} />}
-            placeholder="00.000.000/0001-00"
-            inputMode="numeric"
-            maxLength={18}
-          />
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="activityIncome.activityTime"
-        render={({ field }) => (
-          <ChipField
-            label="Tempo na atividade"
-            value={field.value}
-            onChange={field.onChange}
-            options={toSelectOptions(ACTIVITY_TIME_OPTIONS)}
-          />
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="activityIncome.monthlyIncome"
-        render={({ field }) => (
-          <InputField
-            label="Renda mensal declarada"
-            value={field.value}
-            onChange={(value) => field.onChange(formatMoneyBrl(value))}
-            icon={<Wallet size={16} />}
-            placeholder="R$ 0,00"
-            inputMode="numeric"
-          />
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="activityIncome.incomeSource"
-        render={({ field }) => (
-          <SelectField
-            label="Fonte da renda"
-            value={field.value}
-            onChange={field.onChange}
-            options={toSelectOptions(INCOME_SOURCE_OPTIONS)}
-          />
-        )}
-      />
-
-      <YesNoField
-        label="Possui múltiplas fontes de renda?"
-        value={hasMultipleSources}
-        onChange={handleMultipleSourcesChange}
-      />
-
-      {hasMultipleSources ? (
+      <FormSection title="Renda e Atividade">
+        <FormSelect<ProposalFormData>
+          name="activityIncome.incomeSource"
+          label="Tipo de renda"
+          hint="Refere-se apenas à renda declarada neste bloco — outras rendas são informadas a seguir."
+          options={PRIMARY_INCOME_SOURCE_OPTIONS}
+          required
+        />
         <FormField
           control={control}
-          name="activityIncome.secondaryIncome"
-          render={({ field }) => (
-            <InputField
-              label="Renda secundária"
-              value={field.value}
-              onChange={(value) => field.onChange(formatMoneyBrl(value))}
-              icon={<Wallet size={16} />}
-              placeholder="R$ 0,00"
-              inputMode="numeric"
+          name="registration.activityCategories"
+          render={({ field, fieldState }) => (
+            <SelectDialogField
+              name={field.name}
+              label="Atividade econômica"
+              value={field.value[0] ?? ""}
+              onChange={(value) => {
+                const nextCategories = value ? [value] : [];
+                field.onChange(nextCategories);
+                if (!requiresBusinessActivityBranch(nextCategories)) {
+                  setValue("registration.businessActivityBranch", "", {
+                    shouldValidate: true,
+                  });
+                  setValue("registration.businessActivitySubcategory", "", {
+                    shouldValidate: true,
+                  });
+                }
+              }}
+              options={ACTIVITY_CATEGORY_OPTIONS}
+              required
+              error={fieldState.error?.message}
             />
           )}
         />
-      ) : null}
-
-      <FormField
-        control={control}
-        name="activityIncome.availableProof"
-        render={({ field }) => (
-          <SelectField
-            label="Comprovante disponível?"
-            value={field.value}
-            onChange={field.onChange}
-            options={toSelectOptions(INCOME_PROOF_OPTIONS)}
+        {activityCategories.includes(OTHER_OPTION) ? (
+          <FormInput<ProposalFormData>
+            name="registration.activityCategoryOther"
+            label="Qual?"
+            placeholder="Descreva a ocupação"
+            required
           />
-        )}
-      />
+        ) : null}
+        {professionRequired ? (
+          <FormInput<ProposalFormData>
+            name="registration.occupation"
+            label="Profissão"
+            placeholder="Informe a profissão"
+            required
+          />
+        ) : null}
+        {businessActivityRequired ? (
+          <FormSelect<ProposalFormData>
+            name="registration.businessActivityBranch"
+            label="Ramo de atividade"
+            options={BUSINESS_ACTIVITY_BRANCH_OPTIONS}
+            onValueChange={handleBranchChange}
+            required
+          />
+        ) : null}
+        {businessActivityRequired && businessActivityBranch ? (
+          <FormSelect<ProposalFormData>
+            name="registration.businessActivitySubcategory"
+            label={`Subcategoria de ${branchLabel}`}
+            options={subcategoryOptions}
+            required
+          />
+        ) : null}
+
+        <FormSelect<ProposalFormData>
+          name="activityIncome.activityTime"
+          label="Tempo na atividade"
+          options={ACTIVITY_TIME_OPTIONS}
+          required
+        />
+        <FormInput<ProposalFormData>
+          name="activityIncome.monthlyIncome"
+          label="Renda mensal"
+          hint="Renda da atividade principal informada neste bloco."
+          transform={formatMoneyBrl}
+          icon={<Wallet size={16} />}
+          placeholder="R$ 0,00"
+          inputMode="numeric"
+          required
+        />
+      </FormSection>
+
+      <RepeatableGroup
+        title="Outras rendas"
+        hint="Adicione somente quando houver outra fonte de renda."
+        addLabel="Adicionar outra renda"
+        emptyLabel="Nenhuma outra renda adicionada."
+        isEmpty={additionalIncomes.length === 0}
+        onAdd={addAdditionalIncome}
+      >
+        {additionalIncomes.map((income, index) => {
+          const categories = watch(
+            `activityIncome.additionalIncomes.${index}.activityCategories`,
+          );
+          const additionalBusinessActivityRequired =
+            requiresBusinessActivityBranch(categories);
+          const branch = watch(
+            `activityIncome.additionalIncomes.${index}.businessActivityBranch`,
+          );
+          const source = watch(
+            `activityIncome.additionalIncomes.${index}.source`,
+          );
+          const secondarySubcategories =
+            BUSINESS_ACTIVITY_SUBCATEGORY_OPTIONS_BY_BRANCH[branch] ?? [];
+          const secondaryBranchLabel = BUSINESS_ACTIVITY_BRANCH_OPTIONS.find(
+            (option) => option.value === branch,
+          )?.label;
+          return (
+            <RemovableCard
+              key={income.fieldId}
+              removeLabel="Remover outra renda"
+              onRemove={() => removeAdditionalIncome(index)}
+              header={<strong>Outra renda {index + 1}</strong>}
+            >
+              <FormSelect<ProposalFormData>
+                name={`activityIncome.additionalIncomes.${index}.source`}
+                label="Tipo de renda"
+                options={INCOME_SOURCE_OPTIONS}
+                onValueChange={(value) =>
+                  handleAdditionalSourceChange(index, value)
+                }
+                required
+              />
+              {source === IncomeSource.FAMILY_INCOME ? (
+                <FormSelect<ProposalFormData>
+                  name={`activityIncome.additionalIncomes.${index}.familyRelationship`}
+                  label="Grau de parentesco"
+                  options={FAMILY_RELATIONSHIP_OPTIONS}
+                  required
+                />
+              ) : null}
+              <FormField
+                control={control}
+                name={`activityIncome.additionalIncomes.${index}.activityCategories`}
+                render={({ field, fieldState }) => (
+                  <SelectDialogField
+                    name={field.name}
+                    label="Atividade econômica"
+                    value={field.value[0] ?? ""}
+                    onChange={(value) => {
+                      const nextCategories = value ? [value] : [];
+                      field.onChange(nextCategories);
+                      if (!requiresBusinessActivityBranch(nextCategories)) {
+                        setValue(
+                          `activityIncome.additionalIncomes.${index}.businessActivityBranch`,
+                          "",
+                          { shouldValidate: true },
+                        );
+                        setValue(
+                          `activityIncome.additionalIncomes.${index}.businessActivitySubcategory`,
+                          "",
+                          { shouldValidate: true },
+                        );
+                      }
+                    }}
+                    options={ACTIVITY_CATEGORY_OPTIONS}
+                    required
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+              {categories.includes(OTHER_OPTION) ? (
+                <FormInput<ProposalFormData>
+                  name={`activityIncome.additionalIncomes.${index}.activityCategoryOther`}
+                  label="Qual?"
+                  placeholder="Descreva a ocupação"
+                  required
+                />
+              ) : null}
+              {requiresProfession(categories) ? (
+                <FormInput<ProposalFormData>
+                  name={`activityIncome.additionalIncomes.${index}.occupation`}
+                  label="Profissão"
+                  placeholder="Informe a profissão"
+                  required
+                />
+              ) : null}
+              {additionalBusinessActivityRequired ? (
+                <FormSelect<ProposalFormData>
+                  name={`activityIncome.additionalIncomes.${index}.businessActivityBranch`}
+                  label="Ramo de atividade"
+                  options={BUSINESS_ACTIVITY_BRANCH_OPTIONS}
+                  onValueChange={(value) =>
+                    handleAdditionalBranchChange(index, value)
+                  }
+                  required
+                />
+              ) : null}
+              {additionalBusinessActivityRequired && branch ? (
+                <FormSelect<ProposalFormData>
+                  name={`activityIncome.additionalIncomes.${index}.businessActivitySubcategory`}
+                  label={`Subcategoria de ${secondaryBranchLabel}`}
+                  options={secondarySubcategories}
+                  required
+                />
+              ) : null}
+              <FormSelect<ProposalFormData>
+                name={`activityIncome.additionalIncomes.${index}.activityTime`}
+                label="Tempo na atividade"
+                options={ACTIVITY_TIME_OPTIONS}
+                required
+              />
+              <FormInput<ProposalFormData>
+                name={`activityIncome.additionalIncomes.${index}.amount`}
+                label="Renda mensal"
+                transform={formatMoneyBrl}
+                icon={<Wallet size={16} />}
+                placeholder="R$ 0,00"
+                inputMode="numeric"
+                required
+              />
+            </RemovableCard>
+          );
+        })}
+      </RepeatableGroup>
+
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-muted p-4">
+        <div>
+          <p className="text-sm font-semibold text-foreground">
+            Renda total declarada
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Soma de todas as rendas
+          </p>
+        </div>
+        <strong className="whitespace-nowrap text-base text-foreground">
+          {fmtBRL(totalDeclaredIncome)}
+        </strong>
+      </div>
     </div>
   );
 }

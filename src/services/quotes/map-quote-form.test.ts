@@ -1,0 +1,447 @@
+import { describe, expect, it } from "vitest";
+import { createEmptyProposalForm } from "@/features/originacao/data/proposal";
+import { formatMoneyBrl } from "@/lib/format/money";
+import {
+  ActivityDuration,
+  BusinessActivityBranch,
+  BusinessActivitySubcategory,
+  CreditPurpose,
+  CustomerRelationshipDuration,
+  CustomerRelationshipOrigin,
+  EconomicActivityCategory,
+  Gender,
+  GovernmentProgram,
+  GuarantorRelationship,
+  HousingStatus,
+  IncomeSource,
+  IncomeEntryRole,
+  MaritalStatus,
+  PartnerAssessment,
+  ResidenceDuration,
+} from "./quotes.enums";
+import {
+  mapAddressToPayload,
+  mapDraftAddressPrefillToForm,
+  mapGuarantorToPayload,
+  mapIncomeToPayload,
+  mapPartnerOpinionToPayload,
+  mapRegistrationToPayload,
+} from "./map-quote-form";
+
+describe("mapRegistrationToPayload", () => {
+  it("maps form fields to API names and stable codes", () => {
+    const form = createEmptyProposalForm().registration;
+    const payload = mapRegistrationToPayload({
+      ...form,
+      isRenewal: true,
+      name: "Maria Silva",
+      cpf: "111.444.777-35",
+      birthDate: "1990-01-01",
+      email: "maria@email.com",
+      phone: "(88) 99702-6551",
+      gender: Gender.FEMALE,
+      rg: "123456789",
+      occupation: "Vendedora",
+      businessActivityBranch: BusinessActivityBranch.ADMINISTRATIVE_OFFICE,
+      businessActivitySubcategory:
+        BusinessActivitySubcategory.ACCOUNTING_OFFICE,
+      activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
+      maritalStatus: MaritalStatus.SINGLE,
+      childrenCount: "2",
+      householdSize: "4",
+      propertyStatus: HousingStatus.RENTED,
+      residenceTime: ResidenceDuration.TWO_TO_5_YEARS,
+      governmentPrograms: [GovernmentProgram.NONE],
+      hasVehicle: false,
+      creditPurpose: CreditPurpose.PERSONAL_EXPENSE,
+    });
+
+    expect(payload).toEqual({
+      name: "Maria Silva",
+      document: "11144477735",
+      birthDate: "1990-01-01",
+      email: "maria@email.com",
+      telephone: "88997026551",
+      isRenegotiation: true,
+      gender: Gender.FEMALE,
+      secondaryDocument: "123456789",
+      maritalStatus: MaritalStatus.SINGLE,
+      childrenCount: 2,
+      householdMembers: 4,
+      housingStatus: HousingStatus.RENTED,
+      residenceDuration: ResidenceDuration.TWO_TO_5_YEARS,
+      governmentPrograms: [GovernmentProgram.NONE],
+      ownsVehicle: false,
+      creditPurpose: CreditPurpose.PERSONAL_EXPENSE,
+    });
+  });
+
+  it("includes conditional spouse, other activity and vehicle fields", () => {
+    const form = createEmptyProposalForm().registration;
+    const payload = mapRegistrationToPayload({
+      ...form,
+      isRenewal: false,
+      gender: Gender.MALE,
+      rg: "987654321",
+      occupation: "Feirante",
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+      businessActivitySubcategory: BusinessActivitySubcategory.STREET_VENDING,
+      activityCategories: [EconomicActivityCategory.OTHER],
+      activityCategoryOther: "Feira livre",
+      maritalStatus: MaritalStatus.MARRIED,
+      spouseCpf: "529.982.247-25",
+      childrenCount: "0",
+      householdSize: "",
+      propertyStatus: HousingStatus.OWNED_PAID_OFF,
+      residenceTime: ResidenceDuration.MORE_THAN_5_YEARS,
+      governmentPrograms: [GovernmentProgram.BOLSA_FAMILIA],
+      hasVehicle: true,
+      vehicleFinanced: true,
+      creditPurpose: CreditPurpose.DEBT_PAYOFF_OR_REFINANCING,
+      debtDescription: "Cartão",
+      debtCreditor: "Banco",
+    });
+
+    expect(payload).not.toHaveProperty("economicActivityCategories");
+    expect(payload).not.toHaveProperty("economicActivityOther");
+    expect(payload).not.toHaveProperty("profession");
+    expect(payload.spouseDocument).toBe("52998224725");
+    expect(payload.vehicleFinanced).toBe(true);
+    expect(payload.householdMembers).toBe(1);
+    expect(payload).not.toHaveProperty("debtDescription");
+  });
+});
+
+describe("mapIncomeToPayload", () => {
+  it("parses BRL masks and never sends CNPJ", () => {
+    const form = createEmptyProposalForm().activityIncome;
+    const registration = {
+      ...createEmptyProposalForm().registration,
+      occupation: "Vendedora",
+      activityCategories: [EconomicActivityCategory.CLT_EMPLOYEE],
+      businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+      businessActivitySubcategory: BusinessActivitySubcategory.GENERAL_COMMERCE,
+    };
+    const payload = mapIncomeToPayload(
+      {
+        ...form,
+        activityTime: ActivityDuration.ONE_TO_3_YEARS,
+        monthlyIncome: formatMoneyBrl("350000"),
+        incomeSource: IncomeSource.SALARY,
+        additionalIncomes: [
+          {
+            id: 1,
+            activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
+            activityCategoryOther: "",
+            occupation: "",
+            businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+            businessActivitySubcategory:
+              BusinessActivitySubcategory.GENERAL_COMMERCE,
+            activityTime: ActivityDuration.ONE_TO_3_YEARS,
+            source: IncomeSource.RENT,
+            amount: formatMoneyBrl("80000"),
+            familyRelationship: "",
+          },
+          {
+            id: 2,
+            activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
+            activityCategoryOther: "",
+            occupation: "",
+            businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+            businessActivitySubcategory:
+              BusinessActivitySubcategory.GENERAL_COMMERCE,
+            activityTime: ActivityDuration.ONE_TO_3_YEARS,
+            source: IncomeSource.OTHER,
+            amount: formatMoneyBrl("25000"),
+            familyRelationship: "",
+          },
+        ],
+      },
+      registration,
+    );
+
+    expect(payload).toEqual({
+      incomes: [
+        {
+          id: "primary",
+          role: IncomeEntryRole.PRIMARY,
+          economicActivity: EconomicActivityCategory.CLT_EMPLOYEE,
+          profession: "Vendedora",
+          // CLT não tem negócio próprio — sem ramo/subcategoria no payload,
+          // mesmo com valores preenchidos no form (registration acima).
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 3500,
+          source: IncomeSource.SALARY,
+        },
+        {
+          id: "secondary-1",
+          role: IncomeEntryRole.SECONDARY,
+          economicActivity: EconomicActivityCategory.BUSINESS_OWNER,
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 800,
+          source: IncomeSource.RENT,
+        },
+        {
+          id: "secondary-2",
+          role: IncomeEntryRole.SECONDARY,
+          economicActivity: EconomicActivityCategory.BUSINESS_OWNER,
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+          activityDuration: ActivityDuration.ONE_TO_3_YEARS,
+          amount: 250,
+          source: IncomeSource.OTHER,
+        },
+      ],
+    });
+  });
+
+  it("omits secondary income and CNPJ when empty", () => {
+    const form = createEmptyProposalForm().activityIncome;
+    const payload = mapIncomeToPayload(
+      {
+        ...form,
+        activityTime: ActivityDuration.LESS_THAN_6_MONTHS,
+        monthlyIncome: formatMoneyBrl("100000"),
+        incomeSource: IncomeSource.OWN_BUSINESS,
+      },
+      {
+        ...createEmptyProposalForm().registration,
+        activityCategories: [EconomicActivityCategory.BUSINESS_OWNER],
+        businessActivityBranch: BusinessActivityBranch.EDUCATION,
+        businessActivitySubcategory: BusinessActivitySubcategory.PRIVATE_TUTOR,
+      },
+    );
+
+    expect(payload).not.toHaveProperty("businessDocument");
+    expect(payload).not.toHaveProperty("availableIncomeProof");
+    expect(payload.incomes).toHaveLength(1);
+    expect(payload.incomes[0].amount).toBe(1000);
+  });
+
+  it("includes the description when the economic activity is Other", () => {
+    const payload = mapIncomeToPayload(
+      {
+        ...createEmptyProposalForm().activityIncome,
+        activityTime: ActivityDuration.ONE_TO_3_YEARS,
+        monthlyIncome: formatMoneyBrl("100000"),
+        incomeSource: IncomeSource.OWN_BUSINESS,
+      },
+      {
+        ...createEmptyProposalForm().registration,
+        activityCategories: [EconomicActivityCategory.OTHER],
+        activityCategoryOther: "Feira livre",
+        businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+        businessActivitySubcategory: BusinessActivitySubcategory.STREET_VENDING,
+      },
+    );
+
+    expect(payload.incomes[0].economicActivityOther).toBe("Feira livre");
+  });
+
+  it.each([
+    EconomicActivityCategory.CLT_EMPLOYEE,
+    EconomicActivityCategory.PUBLIC_SERVANT,
+    EconomicActivityCategory.RETIRED_OR_PENSIONER,
+    EconomicActivityCategory.UNEMPLOYED,
+  ])(
+    "omits businessActivityBranch/Subcategory for %s, even with values filled in",
+    (category) => {
+      const payload = mapIncomeToPayload(
+        {
+          ...createEmptyProposalForm().activityIncome,
+          activityTime: ActivityDuration.ONE_TO_3_YEARS,
+          monthlyIncome: formatMoneyBrl("350000"),
+          incomeSource: IncomeSource.SALARY,
+        },
+        {
+          ...createEmptyProposalForm().registration,
+          activityCategories: [category],
+          occupation: "Recepcionista",
+          businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+          businessActivitySubcategory:
+            BusinessActivitySubcategory.GENERAL_COMMERCE,
+        },
+      );
+
+      expect(payload.incomes[0]).not.toHaveProperty("businessActivityBranch");
+      expect(payload.incomes[0]).not.toHaveProperty(
+        "businessActivitySubcategory",
+      );
+    },
+  );
+
+  it.each([
+    EconomicActivityCategory.BUSINESS_OWNER,
+    EconomicActivityCategory.SELF_EMPLOYED_OR_INFORMAL,
+  ])("still sends businessActivityBranch/Subcategory for %s", (category) => {
+    const payload = mapIncomeToPayload(
+      {
+        ...createEmptyProposalForm().activityIncome,
+        activityTime: ActivityDuration.ONE_TO_3_YEARS,
+        monthlyIncome: formatMoneyBrl("350000"),
+        incomeSource: IncomeSource.OWN_BUSINESS,
+      },
+      {
+        ...createEmptyProposalForm().registration,
+        activityCategories: [category],
+        businessActivityBranch: BusinessActivityBranch.RETAIL_COMMERCE,
+        businessActivitySubcategory:
+          BusinessActivitySubcategory.GENERAL_COMMERCE,
+      },
+    );
+
+    expect(payload.incomes[0].businessActivityBranch).toBe(
+      BusinessActivityBranch.RETAIL_COMMERCE,
+    );
+    expect(payload.incomes[0].businessActivitySubcategory).toBe(
+      BusinessActivitySubcategory.GENERAL_COMMERCE,
+    );
+  });
+});
+
+describe("mapAddressToPayload", () => {
+  it("renames street fields for the connector shape", () => {
+    const form = createEmptyProposalForm().address;
+    expect(
+      mapAddressToPayload({
+        ...form,
+        zipCode: "01001-000",
+        street: "Praça da Sé",
+        number: "100",
+        complement: "Apto 12",
+        neighborhood: "Sé",
+        city: "São Paulo",
+        state: "SP",
+        landmark: "Próximo à estação",
+      }),
+    ).toEqual({
+      zipCode: "01001-000",
+      streetName: "Praça da Sé",
+      streetNumber: "100",
+      streetComplement: "Apto 12",
+      streetDistrict: "Sé",
+      city: "São Paulo",
+      state: "SP",
+      referencePoint: "Próximo à estação",
+    });
+  });
+
+  it("forwards geolocation when present", () => {
+    const form = createEmptyProposalForm().address;
+    expect(
+      mapAddressToPayload({
+        ...form,
+        zipCode: "01001-000",
+        street: "Praça da Sé",
+        number: "100",
+        neighborhood: "Sé",
+        city: "São Paulo",
+        state: "SP",
+        landmark: "Próximo à estação",
+        geolocation: {
+          latitude: -7.237684265483068,
+          longitude: -39.29954049920408,
+          precision: "12m",
+        },
+      }).geolocation,
+    ).toEqual({
+      latitude: -7.23768427,
+      longitude: -39.2995405,
+      precision: "12m",
+    });
+  });
+});
+
+describe("mapPartnerOpinionToPayload", () => {
+  it("maps notes to opinion and conditional referrer fields", () => {
+    const form = createEmptyProposalForm().partnerOpinion;
+    const payload = mapPartnerOpinionToPayload({
+      ...form,
+      relationshipTime: CustomerRelationshipDuration.ONE_TO_3_YEARS,
+      howKnows: CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL,
+      referrerCpf: "529.982.247-25",
+      overallRating: PartnerAssessment.RECOMMEND,
+      informalDebtSigns: false,
+      financialUrgencySigns: true,
+      notes: "Cliente estável.",
+    });
+
+    expect(payload).toEqual({
+      relationshipDuration: CustomerRelationshipDuration.ONE_TO_3_YEARS,
+      relationshipOrigin: CustomerRelationshipOrigin.AUREA_CUSTOMER_REFERRAL,
+      referrerDocument: "529.982.247-25",
+      assessment: PartnerAssessment.RECOMMEND,
+      hasInformalDebtSigns: false,
+      hasFinancialUrgencySigns: true,
+      opinion: "Cliente estável.",
+    });
+  });
+});
+
+describe("mapGuarantorToPayload", () => {
+  it("nests address and maps kinship to relationship", () => {
+    const form = createEmptyProposalForm().guarantor;
+    expect(
+      mapGuarantorToPayload({
+        ...form,
+        name: "João Souza",
+        cpf: "390.533.447-05",
+        birthDate: "1988-03-15",
+        email: "joao@email.com",
+        phone: "(11) 98765-4321",
+        zipCode: "01001-000",
+        street: "Praça da Sé",
+        number: "100",
+        neighborhood: "Sé",
+        city: "São Paulo",
+        state: "SP",
+        kinship: GuarantorRelationship.SPOUSE,
+      }),
+    ).toEqual({
+      name: "João Souza",
+      document: "390.533.447-05",
+      birthDate: "1988-03-15",
+      email: "joao@email.com",
+      telephone: "(11) 98765-4321",
+      address: {
+        zipCode: "01001-000",
+        streetName: "Praça da Sé",
+        streetNumber: "100",
+        streetDistrict: "Sé",
+        city: "São Paulo",
+        state: "SP",
+      },
+      relationship: GuarantorRelationship.SPOUSE,
+    });
+  });
+});
+
+describe("mapDraftAddressPrefillToForm", () => {
+  it("flattens draft address into form fields", () => {
+    expect(
+      mapDraftAddressPrefillToForm({
+        zipCode: "01001000",
+        streetName: "Praça da Sé",
+        streetNumber: "100",
+        streetComplement: "Apto 12",
+        streetDistrict: "Sé",
+        city: "São Paulo",
+        state: "SP",
+        referencePoint: "Estação",
+      }),
+    ).toEqual({
+      zipCode: "01001000",
+      street: "Praça da Sé",
+      number: "100",
+      complement: "Apto 12",
+      neighborhood: "Sé",
+      city: "São Paulo",
+      state: "SP",
+      landmark: "Estação",
+    });
+  });
+});
