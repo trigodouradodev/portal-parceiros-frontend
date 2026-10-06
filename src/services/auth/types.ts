@@ -27,6 +27,8 @@ export interface UserProfile {
   permissions: string[];
   canSimulateQuote: boolean;
   canCreateQuote: boolean;
+  /** Limite em reais retornado por /auth/me. */
+  quoteIncomeProofRequiredAbove?: number;
 }
 
 /**
