@@ -28,6 +28,26 @@ describe("createSimulationSchema", () => {
     expect(schema.safeParse(validValues()).success).toBe(true);
   });
 
+  it.each([500, 600, 2100, 30000])(
+    "accepts a multiple of 100 of %s reais",
+    (amount) => {
+      expect(schema.safeParse({ ...validValues(), amount }).success).toBe(true);
+    },
+  );
+
+  it.each([499, 30001, 500.5, 550, 2137, Number.NaN])(
+    "rejects invalid amount %s",
+    (amount) => {
+      const result = schema.safeParse({ ...validValues(), amount });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some((issue) => issue.path[0] === "amount"),
+        ).toBe(true);
+      }
+    },
+  );
+
   it("rejects a name shorter than 3 characters", () => {
     const result = schema.safeParse({ ...validValues(), name: "Jo" });
     expect(result.success).toBe(false);

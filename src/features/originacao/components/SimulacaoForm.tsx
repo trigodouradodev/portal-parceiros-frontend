@@ -14,7 +14,8 @@ import { startOfDay } from "date-fns";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ChipField } from "@/components/ui/chip-field";
-import { FieldLabel, FieldStatusMessage } from "@/components/ui/field-hint";
+import { FieldStatusMessage } from "@/components/ui/field-hint";
+import { InputField } from "@/components/ui/input-field";
 import { Form, FormField } from "@/components/ui/form";
 import { FormDate, FormInput } from "@/components/ui/rhf-fields";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
@@ -26,7 +27,6 @@ import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
   AMOUNT_MIN,
-  AMOUNT_STEP,
   installmentOptionsForProduct,
   isSimulationConverted,
   simulationFormDefaultsFromSnapshot,
@@ -48,7 +48,7 @@ import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { formatPhone, digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
-import { fmtBRL } from "@/lib/utils";
+import { fmtBRL, formatMoneyBrl, parseMoneyBrl } from "@/lib/format/money";
 import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 
@@ -348,28 +348,24 @@ export function SimulacaoForm({
           <FormField
             control={form.control}
             name="amount"
-            render={({ field }) => (
-              <div className="flex flex-col gap-1.5">
-                <FieldLabel required>Quanto o cliente precisa?</FieldLabel>
-                <p className="font-display text-3xl font-bold text-brand-navy">
-                  {fmtBRL(field.value)}
-                </p>
-                <input
-                  type="range"
-                  min={AMOUNT_MIN}
-                  max={AMOUNT_MAX}
-                  step={AMOUNT_STEP}
-                  value={field.value}
-                  onChange={(event) =>
-                    field.onChange(Number(event.target.value))
-                  }
-                  className="w-full accent-brand-navy"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>R$ 500</span>
-                  <span>R$ 30.000</span>
-                </div>
-              </div>
+            render={({ field, fieldState }) => (
+              <InputField
+                name={field.name}
+                label="Quanto o cliente precisa?"
+                inputMode="numeric"
+                placeholder="R$ 0,00"
+                required
+                value={Number.isFinite(field.value) ? fmtBRL(field.value) : ""}
+                onChange={(value) => {
+                  const masked = formatMoneyBrl(value);
+                  field.onChange(
+                    masked === "" ? Number.NaN : parseMoneyBrl(masked),
+                  );
+                }}
+                onBlur={field.onBlur}
+                error={fieldState.error?.message}
+                hint={`De ${fmtBRL(AMOUNT_MIN)} a ${fmtBRL(AMOUNT_MAX)}, em múltiplos de R$ 100,00.`}
+              />
             )}
           />
 
