@@ -441,10 +441,10 @@ describe("SimulacaoForm", () => {
   });
 
   it.each([
-    ["R$ 499,00", "O valor mínimo é R$ 500"],
-    ["R$ 2.137,00", "Informe um valor múltiplo de R$ 100"],
+    ["R$ 499,00", "O valor mínimo é R$ 500,00"],
+    ["R$ 2.137,00", "Informe um valor múltiplo de R$ 100,00"],
     ["R$ 2.100,50", "Informe um valor inteiro em reais, sem centavos"],
-    ["R$ 30.001,00", "O valor máximo é R$ 30.000"],
+    ["R$ 30.001,00", "O valor máximo é R$ 30.000,00"],
     ["", "Informe quanto o cliente precisa"],
   ])(
     "shows validation and prevents simulation for amount %s",

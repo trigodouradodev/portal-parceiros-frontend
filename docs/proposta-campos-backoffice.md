@@ -138,13 +138,13 @@ uma escolha real do parceiro.
 
 ## Passo 7 — Documentação
 
-| #   | Campo (label na tela)        | Nome técnico                   | Tipo                     | Obrigatório? | Múltiplos arquivos? | No Backoffice? | Observações                                                                                 |
-| --- | ---------------------------- | ------------------------------ | ------------------------ | ------------ | ------------------- | -------------- | ------------------------------------------------------------------------------------------- |
-| 1   | Documentos de Identificação  | `documents.identification[]`   | Upload                   | Sempre       | Sim                 | ☐              | PDF, JPG, JPEG ou PNG                                                                       |
-| 2   | Comprovante de Residência    | `documents.proofOfResidence[]` | Upload                   | Sempre       | Sim                 | ☐              | Até 90 dias; PDF/JPEG/PNG                                                                   |
-| 3   | Fotos da Atividade           | `documents.activityPhotos[]`   | Upload                   | Sempre       | Não                 | ☐              | Fachada/local/estoque; só JPEG/PNG                                                          |
-| 4   | Comprovantes de Renda (tipo) | `documents.incomeProofTypes[]` | Múltipla escolha (chips) | Sempre       | —                   | ☐              | Extrato bancário, Holerite, Benefício INSS, MEI / DAS                                       |
-| 5   | Comprovantes (arquivo)       | `documents.incomeProofs[]`     | Upload                   | Sempre       | Sim                 | ☐              | Só PDF, máx. 10MB; **sempre obrigatório agora**, independente de qualquer resposta anterior |
+| #   | Campo (label na tela)        | Nome técnico                   | Tipo                     | Obrigatório?                             | Múltiplos arquivos? | No Backoffice? | Observações                                                                                |
+| --- | ---------------------------- | ------------------------------ | ------------------------ | ---------------------------------------- | ------------------- | -------------- | ------------------------------------------------------------------------------------------ |
+| 1   | Documentos de Identificação  | `documents.identification[]`   | Upload                   | Sempre                                   | Sim                 | ☐              | PDF, JPG, JPEG ou PNG                                                                      |
+| 2   | Comprovante de Residência    | `documents.proofOfResidence[]` | Upload                   | Sempre                                   | Sim                 | ☐              | Até 90 dias; PDF/JPEG/PNG                                                                  |
+| 3   | Fotos da Atividade           | `documents.activityPhotos[]`   | Upload                   | Não                                      | Sim                 | ☐              | Fachada/local/estoque; só JPEG/PNG                                                         |
+| 4   | Comprovantes de Renda (tipo) | `documents.incomeProofTypes[]` | Múltipla escolha (chips) | Quando houver anexo ou renda obrigatória | —                   | ☐              | Extrato bancário, Holerite, Benefício INSS, MEI / DAS                                      |
+| 5   | Comprovantes (arquivo)       | `documents.incomeProofs[]`     | Upload                   | Acima do limite configurado              | Sim                 | ☐              | Até 10 MB; holerite: PDF/JPEG/PNG; demais tipos: PDF. Opcional até R$ 2.000,00 por padrão. |
 
 ---
 
