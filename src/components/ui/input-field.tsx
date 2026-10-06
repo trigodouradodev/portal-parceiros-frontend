@@ -17,6 +17,7 @@ interface InputFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   icon?: ReactNode;
   placeholder?: string;
   type?: string;
@@ -36,6 +37,7 @@ export function InputField({
   label,
   value,
   onChange,
+  onBlur,
   icon,
   placeholder,
   type = "text",
@@ -60,6 +62,7 @@ export function InputField({
       >
         {icon ? <span className={fieldIconClassName}>{icon}</span> : null}
         <input
+          aria-label={label}
           type={type}
           inputMode={inputMode}
           autoComplete={autoComplete}
@@ -70,6 +73,7 @@ export function InputField({
           required={required}
           aria-required={required || undefined}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           aria-invalid={error ? true : undefined}
           className={fieldValueClassName}

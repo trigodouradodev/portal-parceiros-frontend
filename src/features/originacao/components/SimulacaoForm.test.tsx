@@ -135,6 +135,10 @@ async function waitForReady(canCreateQuote = true) {
 
 describe("SimulacaoForm", () => {
   beforeEach(() => {
+    Object.defineProperty(document.documentElement, "scrollTo", {
+      configurable: true,
+      value: vi.fn(),
+    });
     getProfile.mockReset();
     getProducts.mockReset();
     findFormDataByCpf.mockReset();
@@ -378,6 +382,97 @@ describe("SimulacaoForm", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("allows typing a multiple of 100 with a numeric mobile keyboard", async () => {
+    const user = userEvent.setup();
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={snapshot()}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+    await waitForReady();
+    const input = screen.getByRole("textbox", {
+      name: "Quanto o cliente precisa?",
+    });
+    expect(input).toHaveAttribute("inputmode", "numeric");
+    expect(screen.queryByRole("slider")).not.toBeInTheDocument();
+    await user.clear(input);
+    await user.type(input, "210000");
+    expect(input).toHaveValue("R$ 2.100,00");
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+    await waitFor(() => {
+      expect(simulate).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: 2100 }),
+        expect.anything(),
+      );
+    });
+  });
+
+  it("shows the saved amount with a BRL mask and accepts pasting a masked amount", async () => {
+    const user = userEvent.setup();
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={snapshot()}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+    await waitForReady();
+    const input = screen.getByRole("textbox", {
+      name: "Quanto o cliente precisa?",
+    });
+    expect(input).toHaveValue("R$ 5.000,00");
+    await user.clear(input);
+    await user.click(input);
+    await user.paste("R$ 30.000,00");
+    expect(input).toHaveValue("R$ 30.000,00");
+    await user.click(screen.getByRole("button", { name: "Simular novamente" }));
+    await waitFor(() => {
+      expect(simulate).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: 30000 }),
+        expect.anything(),
+      );
+    });
+  });
+
+  it.each([
+    ["R$ 499,00", "O valor mínimo é R$ 500"],
+    ["R$ 2.137,00", "Informe um valor múltiplo de R$ 100"],
+    ["R$ 2.100,50", "Informe um valor inteiro em reais, sem centavos"],
+    ["R$ 30.001,00", "O valor máximo é R$ 30.000"],
+    ["", "Informe quanto o cliente precisa"],
+  ])(
+    "shows validation and prevents simulation for amount %s",
+    async (value, message) => {
+      const user = userEvent.setup();
+      renderForm(
+        <SimulacaoForm
+          prefill={null}
+          editing={snapshot()}
+          hasList
+          onViewList={vi.fn()}
+          onStartProposal={vi.fn()}
+        />,
+      );
+      await waitForReady();
+      const input = screen.getByRole("textbox", {
+        name: "Quanto o cliente precisa?",
+      });
+      fireEvent.change(input, { target: { value } });
+      await user.click(
+        screen.getByRole("button", { name: "Simular novamente" }),
+      );
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(input).toHaveAttribute("aria-invalid", "true");
+      expect(simulate).not.toHaveBeenCalled();
+    },
+  );
+
   it("invalidates the saved result after a form change", async () => {
     renderForm(
       <SimulacaoForm
@@ -390,9 +485,12 @@ describe("SimulacaoForm", () => {
     );
 
     await waitForReady();
-    fireEvent.change(screen.getByRole("slider"), {
-      target: { value: "6000" },
-    });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Quanto o cliente precisa?" }),
+      {
+        target: { value: "R$ 6.000,00" },
+      },
+    );
 
     expect(
       screen.getByText(
