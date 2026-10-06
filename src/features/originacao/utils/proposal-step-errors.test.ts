@@ -154,3 +154,48 @@ describe("getProposalStepFieldErrors", () => {
     expect(getProposalStepFieldErrors(4, empty)).toEqual([]);
   });
 });
+
+describe("validação dos comprovantes na Documentação", () => {
+  it("mostra o erro de renda junto dos outros documentos vazios quando obrigatório", () => {
+    const data = createEmptyProposalForm();
+    data.documents.incomeProofRequired = true;
+    expect(
+      getProposalStepFieldErrors(5, data).map((error) => error.name),
+    ).toEqual(
+      expect.arrayContaining([
+        "documents.identification",
+        "documents.proofOfResidence",
+        "documents.incomeProofTypes",
+        "documents.incomeProofs",
+      ]),
+    );
+  });
+  it("não exige arquivo nem tipo quando o backend informa comprovante opcional", () => {
+    const data = createEmptyProposalForm();
+    data.documents.incomeProofRequired = false;
+    const paths = getProposalStepFieldErrors(5, data).map(
+      (error) => error.name,
+    );
+    expect(paths).not.toContain("documents.incomeProofs");
+    expect(paths).not.toContain("documents.incomeProofTypes");
+    expect(paths).toContain("documents.identification");
+  });
+  it("exige classificação de cada anexo mesmo quando a renda é opcional", () => {
+    const data = createEmptyProposalForm();
+    data.documents.incomeProofRequired = false;
+    data.documents.incomeProofTypes = ["payslip"];
+    data.documents.incomeProofs = [{ id: "proof", filename: "holerite.png" }];
+    expect(getProposalStepFieldErrors(5, data)).toContainEqual({
+      name: "documents.incomeProofs.0.incomeProofType",
+      message: REQUIRED_FIELD_MESSAGE,
+    });
+  });
+});
+
+it("não aponta falta de fotos da atividade mesmo com os demais documentos vazios", () => {
+  expect(
+    getProposalStepFieldErrors(5, createEmptyProposalForm()).map(
+      (error) => error.name,
+    ),
+  ).not.toContain("documents.activityPhotos");
+});
