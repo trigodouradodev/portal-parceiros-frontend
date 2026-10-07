@@ -1,6 +1,7 @@
 import { FormField } from "@/components/ui/form";
 import { ChipField } from "@/components/ui/chip-field";
 import { DateFilterField } from "@/components/ui/date-filter-field";
+import { DateInputField } from "@/components/ui/date-input-field";
 import { FileUploadField } from "@/components/ui/file-upload-field";
 import { InputField } from "@/components/ui/input-field";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
@@ -10,10 +11,44 @@ import {
   useFormContext,
   type FieldPath,
   type FieldValues,
+  type UseFormClearErrors,
+  type UseFormSetError,
 } from "react-hook-form";
 import type { ComponentProps } from "react";
+import type { z } from "zod";
 
 type BoundName<T extends FieldValues> = { name: FieldPath<T> };
+
+function handleBoundDateChange<T extends FieldValues>({
+  name,
+  fieldOnChange,
+  validationSchema,
+  hasError,
+  setError,
+  clearErrors,
+}: {
+  name: FieldPath<T>;
+  fieldOnChange: (value: string) => void;
+  validationSchema: z.ZodType<string>;
+  hasError: boolean;
+  setError: UseFormSetError<T>;
+  clearErrors: UseFormClearErrors<T>;
+}) {
+  return (value: string) => {
+    fieldOnChange(value);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value) && !hasError) return;
+
+    const result = validationSchema.safeParse(value);
+    if (result.success) {
+      clearErrors(name);
+    } else {
+      setError(name, {
+        type: "manual",
+        message: result.error.issues[0]?.message,
+      });
+    }
+  };
+}
 
 function handleBoundInputChange(
   fieldOnChange: (value: string) => void,
@@ -96,6 +131,41 @@ export function FormSelect<T extends FieldValues>({
           name={field.name}
           value={field.value ?? ""}
           onChange={handleBoundSelectChange(field.onChange, onValueChange)}
+          error={fieldState.error?.message}
+        />
+      )}
+    />
+  );
+}
+
+export function FormDateInput<T extends FieldValues>({
+  name,
+  validationSchema,
+  ...props
+}: Omit<
+  ComponentProps<typeof DateInputField>,
+  "value" | "onChange" | "error" | "name"
+> &
+  BoundName<T> & { validationSchema: z.ZodType<string> }) {
+  const { control, setError, clearErrors } = useFormContext<T>();
+
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <DateInputField
+          {...props}
+          name={field.name}
+          value={field.value ?? ""}
+          onChange={handleBoundDateChange({
+            name,
+            fieldOnChange: field.onChange,
+            validationSchema,
+            hasError: Boolean(fieldState.error),
+            setError,
+            clearErrors,
+          })}
           error={fieldState.error?.message}
         />
       )}

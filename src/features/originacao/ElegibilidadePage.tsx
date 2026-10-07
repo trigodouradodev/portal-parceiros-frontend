@@ -1,3 +1,7 @@
+import {
+  birthDateSchema,
+  CLIENT_BIRTH_DATE_MESSAGE,
+} from "@/features/originacao/schemas/birth-date";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -5,14 +9,13 @@ import { CheckCircle2, CreditCard, Loader2, User, XCircle } from "lucide-react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { FormDate, FormInput } from "@/components/ui/rhf-fields";
+import { FormDateInput, FormInput } from "@/components/ui/rhf-fields";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import { useOriginacao } from "@/features/originacao/originacao-context";
 import {
   eligibilitySchema,
   type EligibilityFormValues,
 } from "@/features/originacao/schemas/eligibility-form";
-import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getApiErrorMessage } from "@/lib/api/errors";
@@ -20,8 +23,6 @@ import { formatCpf } from "@/lib/format/tax-id";
 import { eligibilityService } from "@/services/eligibility/eligibility.service";
 
 type Status = "idle" | "loading" | "valid" | "invalid";
-
-const MAX_BIRTH_ISO = maxAdultBirthIso();
 
 const EMPTY_VALUES: EligibilityFormValues = {
   name: "",
@@ -108,11 +109,10 @@ export function ElegibilidadePage() {
             required
             disabled={fieldsLocked}
           />
-          <FormDate<EligibilityFormValues>
+          <FormDateInput<EligibilityFormValues>
             name="birthDate"
             label="Data de nascimento"
-            max={MAX_BIRTH_ISO}
-            captionLayout="dropdown"
+            validationSchema={birthDateSchema(CLIENT_BIRTH_DATE_MESSAGE)}
             required
             disabled={fieldsLocked}
           />

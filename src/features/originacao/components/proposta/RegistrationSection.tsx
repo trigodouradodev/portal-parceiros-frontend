@@ -1,7 +1,11 @@
+import {
+  birthDateSchema,
+  CLIENT_BIRTH_DATE_MESSAGE,
+} from "@/features/originacao/schemas/birth-date";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import {
-  FormDate,
+  FormDateInput,
   FormInput,
   FormSelect,
   FormYesNo,
@@ -31,12 +35,9 @@ import {
   hasSpouse,
   type ProposalFormData,
 } from "@/features/originacao/data/proposal";
-import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatMonthlyRate } from "@/features/originacao/utils/format-monthly-rate";
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
-
-const MAX_BIRTH_ISO = maxAdultBirthIso();
 
 interface RegistrationSectionProps {
   product: string;
@@ -101,11 +102,10 @@ export function RegistrationSection({
         placeholder="Nome do cliente"
         required
       />
-      <FormDate<ProposalFormData>
+      <FormDateInput<ProposalFormData>
         name="registration.birthDate"
         label="Data de nascimento"
-        max={MAX_BIRTH_ISO}
-        captionLayout="dropdown"
+        validationSchema={birthDateSchema(CLIENT_BIRTH_DATE_MESSAGE)}
         required
       />
 
