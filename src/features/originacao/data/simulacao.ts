@@ -11,7 +11,6 @@ export const FIRST_INSTALLMENT_MAX_DAYS = 45;
 
 export const AMOUNT_MIN = 500;
 export const AMOUNT_MAX = 30_000;
-export const AMOUNT_STEP = 100;
 export const AMOUNT_DEFAULT = 5_000;
 
 const DEFAULT_MIN_INSTALLMENTS = 2;

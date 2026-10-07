@@ -58,7 +58,7 @@
 | 9.1 | ↳ Fonte da renda (por linha)      | `activityIncome.additionalIncomes[i].source` | Select                 | Sempre, por linha                                               | mesmas opções do campo 8                                                                                                                                                                                                                                | ☐              | Grupo repetível "Renda adicional", só aparece se o campo 9 = Sim              |
 | 9.2 | ↳ Valor (por linha)               | `activityIncome.additionalIncomes[i].amount` | Valor (R$)             | Sempre, por linha                                               | —                                                                                                                                                                                                                                                       | ☐              |                                                                               |
 
-**Removido nesta entrega**: o campo "Comprovante disponível?" existia antes neste passo e foi **eliminado** — o comprovante de renda passou a ser sempre obrigatório na Documentação (passo 7), independente de resposta aqui. Se o Backoffice ainda tiver esse campo, ele deve ser removido/ignorado.
+**Removido nesta entrega**: o campo "Comprovante disponível?" existia antes neste passo e foi **eliminado** — o comprovante de renda é obrigatório na Documentação apenas quando o valor solicitado supera o limite configurado em `QUOTE_INCOME_PROOF_REQUIRED_ABOVE` (padrão: R$ 2.000,00). Até esse limite, é opcional. Todo arquivo anexado exige o tipo; holerite aceita PDF, JPEG ou PNG e os demais tipos aceitam somente PDF. Se o Backoffice ainda tiver esse campo, ele deve ser removido/ignorado.
 
 ---
 
@@ -138,13 +138,13 @@ uma escolha real do parceiro.
 
 ## Passo 7 — Documentação
 
-| #   | Campo (label na tela)        | Nome técnico                   | Tipo                     | Obrigatório? | Múltiplos arquivos? | No Backoffice? | Observações                                                                                 |
-| --- | ---------------------------- | ------------------------------ | ------------------------ | ------------ | ------------------- | -------------- | ------------------------------------------------------------------------------------------- |
-| 1   | Documentos de Identificação  | `documents.identification[]`   | Upload                   | Sempre       | Sim                 | ☐              | PDF, JPG, JPEG ou PNG                                                                       |
-| 2   | Comprovante de Residência    | `documents.proofOfResidence[]` | Upload                   | Sempre       | Sim                 | ☐              | Até 90 dias; PDF/JPEG/PNG                                                                   |
-| 3   | Fotos da Atividade           | `documents.activityPhotos[]`   | Upload                   | Sempre       | Sim                 | ☐              | Fachada/local/estoque; só JPEG/PNG                                                          |
-| 4   | Comprovantes de Renda (tipo) | `documents.incomeProofTypes[]` | Múltipla escolha (chips) | Sempre       | —                   | ☐              | Extrato bancário, Holerite, Benefício INSS, MEI / DAS                                       |
-| 5   | Comprovantes (arquivo)       | `documents.incomeProofs[]`     | Upload                   | Sempre       | Sim                 | ☐              | Só PDF, máx. 10MB; **sempre obrigatório agora**, independente de qualquer resposta anterior |
+| #   | Campo (label na tela)        | Nome técnico                   | Tipo                     | Obrigatório?                             | Múltiplos arquivos? | No Backoffice? | Observações                                                                                |
+| --- | ---------------------------- | ------------------------------ | ------------------------ | ---------------------------------------- | ------------------- | -------------- | ------------------------------------------------------------------------------------------ |
+| 1   | Documentos de Identificação  | `documents.identification[]`   | Upload                   | Sempre                                   | Sim                 | ☐              | PDF, JPG, JPEG ou PNG                                                                      |
+| 2   | Comprovante de Residência    | `documents.proofOfResidence[]` | Upload                   | Sempre                                   | Sim                 | ☐              | Até 90 dias; PDF/JPEG/PNG                                                                  |
+| 3   | Fotos da Atividade           | `documents.activityPhotos[]`   | Upload                   | Não                                      | Sim                 | ☐              | Fachada/local/estoque; só JPEG/PNG                                                         |
+| 4   | Comprovantes de Renda (tipo) | `documents.incomeProofTypes[]` | Múltipla escolha (chips) | Quando houver anexo ou renda obrigatória | —                   | ☐              | Extrato bancário, Holerite, Benefício INSS, MEI / DAS                                      |
+| 5   | Comprovantes (arquivo)       | `documents.incomeProofs[]`     | Upload                   | Acima do limite configurado              | Sim                 | ☐              | Até 10 MB; holerite: PDF/JPEG/PNG; demais tipos: PDF. Opcional até R$ 2.000,00 por padrão. |
 
 ---
 

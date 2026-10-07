@@ -245,6 +245,7 @@ export interface QuoteAttachmentSnapshot {
 }
 
 export interface QuoteDocumentationAttachments {
+  incomeProofRequired?: boolean;
   identificationDocuments: QuoteAttachmentSnapshot[];
   proofOfResidence: QuoteAttachmentSnapshot[];
   activityPhotos: QuoteAttachmentSnapshot[];
