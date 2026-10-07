@@ -54,31 +54,34 @@ describe("fromIsoDate", () => {
 });
 
 describe("simulationFormDefaultsFromSnapshot", () => {
-  it("maps persisted fields onto the create form", () => {
-    expect(
-      simulationFormDefaultsFromSnapshot({
+  it.each(["11987654321", "+5511987654321", "5511987654321"])(
+    "maps persisted fields onto the create form (%s)",
+    (telephone) => {
+      expect(
+        simulationFormDefaultsFromSnapshot({
+          name: "Maria Souza",
+          document: "52998224725",
+          birthDate: "1990-05-20",
+          email: "maria@email.com",
+          telephone,
+          productId: "11111111-1111-4111-8111-111111111111",
+          amount: 8000,
+          installments: 12,
+          firstInstallmentDate: "2026-09-10",
+        }),
+      ).toEqual({
         name: "Maria Souza",
-        document: "52998224725",
+        cpf: "529.982.247-25",
         birthDate: "1990-05-20",
         email: "maria@email.com",
-        telephone: "11987654321",
-        productId: "11111111-1111-4111-8111-111111111111",
+        phone: "(11) 98765-4321",
+        product: "11111111-1111-4111-8111-111111111111",
         amount: 8000,
         installments: 12,
-        firstInstallmentDate: "2026-09-10",
-      }),
-    ).toEqual({
-      name: "Maria Souza",
-      cpf: "529.982.247-25",
-      birthDate: "1990-05-20",
-      email: "maria@email.com",
-      phone: "(11) 98765-4321",
-      product: "11111111-1111-4111-8111-111111111111",
-      amount: 8000,
-      installments: 12,
-      dueDate: new Date(2026, 8, 10),
-    });
-  });
+        dueDate: new Date(2026, 8, 10),
+      });
+    },
+  );
 });
 
 describe("installmentOptionsForProduct", () => {

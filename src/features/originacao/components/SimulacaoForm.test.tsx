@@ -556,7 +556,7 @@ describe("SimulacaoForm", () => {
     expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue(
       "Maria Souza",
     );
-    expect(screen.getByText("20/05/1990")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("20/05/1990")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue(
       "maria@email.com",
     );
@@ -600,7 +600,7 @@ describe("SimulacaoForm", () => {
         "Maria Souza",
       );
     });
-    expect(screen.getByText("20/05/1990")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("20/05/1990")).toBeInTheDocument();
 
     await user.clear(cpf);
     await user.type(cpf, "11122233396");
@@ -614,7 +614,7 @@ describe("SimulacaoForm", () => {
     expect(screen.getByPlaceholderText("Nome do cliente")).toHaveValue("");
     expect(screen.getByPlaceholderText("cliente@email.com")).toHaveValue("");
     expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue("");
-    expect(screen.queryByText("20/05/1990")).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue("20/05/1990")).not.toBeInTheDocument();
     expect(
       screen.queryByText("Cadastro encontrado e preenchido automaticamente"),
     ).not.toBeInTheDocument();
@@ -767,7 +767,7 @@ describe("SimulacaoForm", () => {
       "52998224725",
       expect.anything(),
     );
-    expect(screen.getByText("10/02/1985")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("10/02/1985")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("(11) 99999-0000")).toHaveValue(
       "(11) 98765-4321",
     );
