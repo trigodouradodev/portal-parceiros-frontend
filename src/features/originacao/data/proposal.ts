@@ -338,6 +338,7 @@ export interface DocumentAttachmentItem {
 }
 
 export interface DocumentsData {
+  incomeProofRequired?: boolean;
   identification: DocumentAttachmentItem[];
   proofOfResidence: DocumentAttachmentItem[];
   activityPhotos: DocumentAttachmentItem[];

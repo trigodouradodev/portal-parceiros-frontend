@@ -36,8 +36,10 @@ interface QuoteAttachmentUploadProps {
   attachmentType: QuoteAttachmentTypeValue;
   label: string;
   note?: string;
+  formatNote?: string;
   accept: string;
   required?: boolean;
+  optional?: boolean;
   /** Obrigatório para comprovante de renda. */
   incomeProofType?: IncomeProofType | null;
   disabled?: boolean;
@@ -49,8 +51,10 @@ export function QuoteAttachmentUpload({
   attachmentType,
   label,
   note,
+  formatNote,
   accept,
   required,
+  optional,
   incomeProofType = null,
   disabled = false,
 }: QuoteAttachmentUploadProps) {
@@ -82,6 +86,17 @@ export function QuoteAttachmentUpload({
     }
 
     for (const file of selected) {
+      if (
+        attachmentType === QuoteAttachmentType.PROOF_OF_INCOME &&
+        incomeProofType !== "payslip" &&
+        file.type !== "application/pdf"
+      ) {
+        showToast(
+          "Para esse tipo de comprovante, envie o arquivo em PDF. Só o holerite pode ser enviado como foto.",
+          { variant: "destructive" },
+        );
+        continue;
+      }
       setBusyName(file.name);
       try {
         const snapshot = await upload.mutateAsync({
@@ -138,7 +153,12 @@ export function QuoteAttachmentUpload({
 
   return (
     <div className="flex flex-col gap-1.5" {...fieldAnchorProps(name, error)}>
-      <FieldLabel required={required}>{label}</FieldLabel>
+      <FieldLabel required={required}>
+        {label}
+        {optional ? (
+          <span className="ml-2 text-xs text-muted-foreground">Opcional</span>
+        ) : null}
+      </FieldLabel>
       <input
         ref={fileRef}
         type="file"
@@ -196,6 +216,7 @@ export function QuoteAttachmentUpload({
         )}
       </button>
       {note ? <FieldHint>{note}</FieldHint> : null}
+      {formatNote ? <FieldHint>{formatNote}</FieldHint> : null}
       <FieldErrorMessage error={error} />
     </div>
   );
