@@ -37,7 +37,12 @@ export function createSimulationSchema(options: {
         "Informe um celular válido",
       ),
     product: z.string().uuid("Selecione o produto"),
-    amount: z.number().min(AMOUNT_MIN).max(AMOUNT_MAX),
+    amount: z
+      .number({ error: "Informe quanto o cliente precisa" })
+      .int("Informe um valor inteiro em reais, sem centavos")
+      .min(AMOUNT_MIN, "O valor mínimo é R$ 500,00")
+      .max(AMOUNT_MAX, "O valor máximo é R$ 30.000,00")
+      .multipleOf(100, "Informe um valor múltiplo de R$ 100,00"),
     installments: z
       .number({ error: "Informe as parcelas" })
       .int()

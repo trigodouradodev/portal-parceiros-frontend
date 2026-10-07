@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/auth/auth-context";
 import { useCallback, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { FormChips } from "@/components/ui/rhf-fields";
@@ -36,7 +37,13 @@ interface DocumentsSectionProps {
 export function DocumentsSection({ quoteId }: DocumentsSectionProps) {
   const { watch, setValue } = useFormContext<ProposalFormData>();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const attachmentsQuery = useQuoteAttachments(quoteId);
+  const incomeProofRequired =
+    attachmentsQuery.data?.incomeProofRequired ?? true;
+  const thresholdLabel = (
+    user?.quoteIncomeProofRequiredAbove ?? 2000
+  ).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const incomeProofTypes = watch("documents.incomeProofTypes");
   const selectedIncomeProofType =
     (incomeProofTypes[0] as IncomeProofType | undefined) ?? null;
@@ -44,6 +51,11 @@ export function DocumentsSection({ quoteId }: DocumentsSectionProps) {
 
   const syncAttachmentsToForm = useCallback(
     (groups: QuoteDocumentationAttachments) => {
+      setValue(
+        "documents.incomeProofRequired",
+        groups.incomeProofRequired ?? true,
+        { shouldValidate: true },
+      );
       setValue(
         "documents.identification",
         groups.identificationDocuments.map(toFormAttachment),
@@ -126,7 +138,7 @@ export function DocumentsSection({ quoteId }: DocumentsSectionProps) {
         label="Fotos da Atividade"
         note="Fachada, local de trabalho ou estoque · JPEG ou PNG"
         accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-        required
+        optional
         disabled={loading}
       />
       <FormChips<ProposalFormData>
@@ -135,18 +147,34 @@ export function DocumentsSection({ quoteId }: DocumentsSectionProps) {
         description="Selecione o(s) tipo(s). O primeiro selecionado será usado nos próximos anexos."
         multiple
         options={INCOME_DOCUMENT_TYPE_OPTIONS}
-        required
+        required={
+          incomeProofRequired || watch("documents.incomeProofs").length > 0
+        }
       />
       <QuoteAttachmentUpload
         quoteId={quoteId}
         name="documents.incomeProofs"
         attachmentType={QuoteAttachmentType.PROOF_OF_INCOME}
         label="Comprovantes"
-        note="Somente PDF · máx. 10 MB"
-        accept=".pdf,application/pdf"
-        required
+        note={
+          incomeProofRequired
+            ? `Obrigatório para propostas acima de ${thresholdLabel}.`
+            : `Opcional para propostas de até ${thresholdLabel}. Se o cliente tiver, anexe.`
+        }
+        accept={
+          selectedIncomeProofType === "payslip"
+            ? ".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+            : ".pdf,application/pdf"
+        }
+        required={incomeProofRequired}
+        optional={!incomeProofRequired}
+        formatNote={
+          selectedIncomeProofType == null
+            ? "Selecione o tipo de comprovante para habilitar o anexo."
+            : "Holerite: PDF, JPEG ou PNG · Demais tipos: PDF · Máx. 10 MB"
+        }
         incomeProofType={selectedIncomeProofType}
-        disabled={loading}
+        disabled={loading || selectedIncomeProofType == null}
       />
     </div>
   );

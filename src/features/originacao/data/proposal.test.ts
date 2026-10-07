@@ -355,7 +355,34 @@ describe("proposal validators", () => {
     ).toBe(false);
   });
 
-  it("requires all document groups, including comprovante de renda (sempre obrigatório)", () => {
+  it("allows optional proof without a type when no file is attached, but classifies every attached proof", () => {
+    const documents = {
+      identification: [{ id: "1", filename: "rg.pdf" }],
+      proofOfResidence: [{ id: "2", filename: "conta.pdf" }],
+      activityPhotos: [{ id: "3", filename: "fachada.jpg" }],
+      incomeProofRequired: false,
+      incomeProofTypes: [],
+      incomeProofs: [],
+    };
+    expect(isDocumentsValid(documents)).toBe(true);
+    expect(
+      isDocumentsValid({
+        ...documents,
+        incomeProofs: [{ id: "4", filename: "renda.pdf" }],
+      }),
+    ).toBe(false);
+    expect(
+      isDocumentsValid({
+        ...documents,
+        incomeProofTypes: ["payslip"],
+        incomeProofs: [
+          { id: "4", filename: "renda.pdf", incomeProofType: "payslip" },
+        ],
+      }),
+    ).toBe(true);
+  });
+
+  it("requires all document groups, including comprovante de renda quando obrigatório", () => {
     const empty = createEmptyProposalForm().documents;
     expect(isDocumentsValid(empty)).toBe(false);
     expect(
@@ -364,7 +391,9 @@ describe("proposal validators", () => {
         proofOfResidence: [{ id: "2", filename: "conta.pdf" }],
         activityPhotos: [{ id: "3", filename: "fachada.jpg" }],
         incomeProofTypes: ["payslip"],
-        incomeProofs: [{ id: "4", filename: "holerite.pdf" }],
+        incomeProofs: [
+          { id: "4", filename: "holerite.pdf", incomeProofType: "payslip" },
+        ],
       }),
     ).toBe(true);
     expect(
@@ -377,4 +406,19 @@ describe("proposal validators", () => {
       }),
     ).toBe(false);
   });
+});
+
+it("permite documentação sem fotos da atividade quando os documentos obrigatórios existem", () => {
+  expect(
+    isDocumentsValid({
+      identification: [{ id: "1", filename: "rg.pdf" }],
+      proofOfResidence: [{ id: "2", filename: "conta.pdf" }],
+      activityPhotos: [],
+      incomeProofRequired: true,
+      incomeProofTypes: ["payslip"],
+      incomeProofs: [
+        { id: "3", filename: "holerite.pdf", incomeProofType: "payslip" },
+      ],
+    }),
+  ).toBe(true);
 });

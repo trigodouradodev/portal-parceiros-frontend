@@ -1,3 +1,4 @@
+import { useQuoteAttachments } from "@/features/originacao/hooks/useQuoteDocumentation";
 import { useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import { useForm } from "react-hook-form";
@@ -158,6 +159,15 @@ function ProposalWizard({
     mode: "onSubmit",
     reValidateMode: "onChange",
   });
+  const documentationQuery = useQuoteAttachments(proposal.id);
+  useEffect(() => {
+    if (!documentationQuery.data) return;
+    form.setValue(
+      "documents.incomeProofRequired",
+      documentationQuery.data.incomeProofRequired ?? true,
+      { shouldValidate: true },
+    );
+  }, [documentationQuery.data, form]);
   const { showToast } = useToast();
   const { mutateAsync: saveRegistration, isPending: savingRegistration } =
     useSaveQuoteRegistration();

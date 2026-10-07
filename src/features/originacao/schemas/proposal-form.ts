@@ -26,7 +26,7 @@ import { parseMoneyBrl } from "@/lib/format/money";
 import { digitsOnlyPhone } from "@/lib/format/phone";
 import { isOptionalCpfValid, isValidCpf } from "@/lib/validation/cpf";
 import { addPaymentPixFormatIssues } from "@/features/originacao/schemas/pix-key-validation";
-import { IncomeSource } from "@/services/quotes/quotes.enums";
+import { IncomeProofType, IncomeSource } from "@/services/quotes/quotes.enums";
 
 export const REQUIRED_FIELD_MESSAGE = "Campo obrigatório";
 export const POSITIVE_MONEY_MESSAGE = "Informe um valor maior que zero";
@@ -335,33 +335,43 @@ export const documentsSchema: z.ZodType<DocumentsData> = z
         }),
       )
       .min(1, REQUIRED_FIELD_MESSAGE),
-    activityPhotos: z
-      .array(
-        z.object({
-          id: z.string().min(1),
-          filename: z.string().min(1),
-          incomeProofType: z.string().optional(),
-        }),
-      )
-      .min(1, REQUIRED_FIELD_MESSAGE),
-    incomeProofTypes: z.array(z.string()),
-    incomeProofs: z.array(
+    activityPhotos: z.array(
       z.object({
         id: z.string().min(1),
         filename: z.string().min(1),
         incomeProofType: z.string().optional(),
       }),
     ),
+    incomeProofRequired: z.boolean().optional(),
+    incomeProofTypes: z.array(z.string()),
+    incomeProofs: z.array(
+      z.object({
+        id: z.string().min(1),
+        filename: z.string().min(1),
+        incomeProofType: z.enum(IncomeProofType).optional(),
+      }),
+    ),
   })
   .superRefine((data, ctx) => {
-    if (data.incomeProofTypes.length === 0) {
+    data.incomeProofs.forEach((attachment, index) => {
+      if (!attachment.incomeProofType)
+        ctx.addIssue({
+          code: "custom",
+          path: ["incomeProofs", index, "incomeProofType"],
+          message: REQUIRED_FIELD_MESSAGE,
+        });
+    });
+    if (
+      ((data.incomeProofRequired ?? true) || data.incomeProofs.length > 0) &&
+      data.incomeProofTypes.length === 0
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["incomeProofTypes"],
         message: REQUIRED_FIELD_MESSAGE,
       });
     }
-    if (data.incomeProofs.length === 0) {
+    if ((data.incomeProofRequired ?? true) && data.incomeProofs.length === 0) {
       ctx.addIssue({
         code: "custom",
         path: ["incomeProofs"],
