@@ -1,7 +1,7 @@
 import type { ProductOption } from "@/services/products/products.types";
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import { SimulationStatus } from "@/services/origination/origination.types";
-import { formatPhone } from "@/lib/format/phone";
+import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
 import { formatCpf } from "@/lib/format/tax-id";
 
 export const ALLOWED_DUE_DAYS = [5, 10, 15, 20];
@@ -74,7 +74,7 @@ export function simulationFormDefaultsFromSnapshot(
     cpf: formatCpf(snapshot.document),
     birthDate: snapshot.birthDate,
     email: snapshot.email,
-    phone: formatPhone(snapshot.telephone),
+    phone: formatPartyTelephone(snapshot.telephone),
     product: snapshot.productId,
     amount: snapshot.amount,
     installments: snapshot.installments,

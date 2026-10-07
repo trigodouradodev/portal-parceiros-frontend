@@ -1,6 +1,14 @@
+import {
+  birthDateSchema,
+  GUARANTOR_BIRTH_DATE_MESSAGE,
+} from "@/features/originacao/schemas/birth-date";
 import { CreditCard, Mail, Phone, User } from "lucide-react";
 import { FieldStatusMessage } from "@/components/ui/field-hint";
-import { FormDate, FormInput, FormSelect } from "@/components/ui/rhf-fields";
+import {
+  FormDateInput,
+  FormInput,
+  FormSelect,
+} from "@/components/ui/rhf-fields";
 import { AddressFields } from "@/features/originacao/components/AddressFields";
 import { EmailDeliverabilityHint } from "@/features/originacao/components/proposta/EmailDeliverabilityHint";
 import { FormSection } from "@/features/originacao/components/proposta/FormSection";
@@ -10,11 +18,8 @@ import {
 } from "@/features/originacao/data/proposal";
 import type { GuarantorPartyAutoFill } from "@/features/originacao/hooks/useGuarantorPartyAutoFill";
 import type { EmailDeliverabilityStatus } from "@/features/originacao/hooks/useEmailDeliverability";
-import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { formatPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
-
-const MAX_BIRTH_ISO = maxAdultBirthIso();
 
 interface GuarantorSectionProps {
   emailDeliverabilityStatus: EmailDeliverabilityStatus;
@@ -57,11 +62,10 @@ export function GuarantorSection({
         placeholder="Nome completo"
         required
       />
-      <FormDate<ProposalFormData>
+      <FormDateInput<ProposalFormData>
         name="guarantor.birthDate"
         label="Data de nascimento"
-        max={MAX_BIRTH_ISO}
-        captionLayout="dropdown"
+        validationSchema={birthDateSchema(GUARANTOR_BIRTH_DATE_MESSAGE)}
         required
       />
       <FormInput<ProposalFormData>
