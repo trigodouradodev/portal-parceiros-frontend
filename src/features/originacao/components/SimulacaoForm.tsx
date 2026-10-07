@@ -1,3 +1,7 @@
+import {
+  birthDateSchema,
+  CLIENT_BIRTH_DATE_MESSAGE,
+} from "@/features/originacao/schemas/birth-date";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ChipField } from "@/components/ui/chip-field";
 import { FieldLabel, FieldStatusMessage } from "@/components/ui/field-hint";
 import { Form, FormField } from "@/components/ui/form";
-import { FormDate, FormInput } from "@/components/ui/rhf-fields";
+import { FormDateInput, FormInput } from "@/components/ui/rhf-fields";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import { SimulationDueDateField } from "@/features/originacao/components/simulacao/SimulationDueDateField";
 import { SimulationProductField } from "@/features/originacao/components/simulacao/SimulationProductField";
@@ -49,7 +53,6 @@ import { getApiErrorMessage } from "@/lib/api/errors";
 import { formatPhone, digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
 import { fmtBRL } from "@/lib/utils";
-import { maxAdultBirthIso } from "@/features/originacao/utils/calc-age";
 import { scrollToFirstError } from "@/features/originacao/utils/scroll-to-first-error";
 
 interface SimulacaoFormProps {
@@ -60,7 +63,6 @@ interface SimulacaoFormProps {
   onStartProposal: (snapshot: SimulationSnapshot) => void | Promise<void>;
 }
 
-const MAX_BIRTH_ISO = maxAdultBirthIso();
 const SIMULATE_BLOCKED_MESSAGE =
   "Você possui ações de cobrança pendentes que impedem a simulação de proposta.";
 
@@ -313,11 +315,10 @@ export function SimulacaoForm({
             placeholder="Nome do cliente"
             required
           />
-          <FormDate<SimulationFormValues>
+          <FormDateInput<SimulationFormValues>
             name="birthDate"
             label="Data de nascimento"
-            max={MAX_BIRTH_ISO}
-            captionLayout="dropdown"
+            validationSchema={birthDateSchema(CLIENT_BIRTH_DATE_MESSAGE)}
             required
           />
           <FormInput<SimulationFormValues>
