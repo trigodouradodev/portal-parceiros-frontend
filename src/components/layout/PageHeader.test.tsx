@@ -16,4 +16,29 @@ describe("PageHeader", () => {
 
     expect(screen.getByRole("button", { name: "Sair" })).toBeInTheDocument();
   });
+
+  it("o ícone de ajuda abre o manual Primeiros Passos por padrão", () => {
+    renderWithProviders(<PageHeader />);
+
+    const help = screen.getByRole("link", {
+      name: "Ajuda: primeiros passos no Portal",
+    });
+    expect(help).toHaveAttribute("href", "/ajuda/primeiros-passos.html");
+    expect(help).toHaveAttribute("target", "_blank");
+  });
+
+  it("o ícone de ajuda aponta para o destino informado (manual de originação)", () => {
+    renderWithProviders(
+      <PageHeader
+        helpHref="/ajuda/originacao"
+        helpLabel="Ajuda: manual de originação"
+      />,
+    );
+
+    const help = screen.getByRole("link", {
+      name: "Ajuda: manual de originação",
+    });
+    expect(help).toHaveAttribute("href", "/ajuda/originacao");
+    expect(help).toHaveAttribute("target", "_blank");
+  });
 });

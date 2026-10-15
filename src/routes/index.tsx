@@ -19,6 +19,7 @@ import { OriginacaoPage } from "@/features/originacao";
 import { ProfilePage } from "@/features/profile";
 import { RegisterChargeActionPage } from "@/features/register-action/charge";
 import { RegisterPreventiveActionPage } from "@/features/register-action/preventive";
+import { ORIGINACAO_MANUAL_URL } from "@/features/ajuda";
 import { PORTAL_PERMISSIONS } from "@/lib/permissions";
 
 export const router = createBrowserRouter([
@@ -30,6 +31,17 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      {
+        // Manual de Originação (ícone de ajuda do topo na tela de Originação).
+        // Fora do Layout: abre em outra aba, sem sidebar. Carregado sob demanda
+        // para não pesar o bundle principal com as 39 imagens do manual.
+        path: ORIGINACAO_MANUAL_URL,
+        lazy: async () => {
+          const { ManualOriginacaoPage } =
+            await import("@/features/ajuda/ManualOriginacaoPage");
+          return { Component: ManualOriginacaoPage };
+        },
+      },
       { path: "/register/charge", element: <RegisterChargeActionPage /> },
       {
         path: "/register/preventive",
