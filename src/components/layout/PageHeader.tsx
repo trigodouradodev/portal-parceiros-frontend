@@ -1,20 +1,28 @@
 import { CircleHelp } from "lucide-react";
 import { AureaLogo } from "@/components/brand/AureaLogo";
 import { LogoutAvatarButton } from "@/components/layout/LogoutAvatarButton";
+import { PRIMEIROS_PASSOS_URL } from "@/features/ajuda";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getFirstName, getGreeting, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
-/** Manual "Primeiros Passos no Portal", servido como asset estático (public/ajuda). */
-const HELP_MANUAL_URL = "/ajuda/primeiros-passos.html";
-
 interface PageHeaderProps {
   subtitle?: string;
+  /** Destino do ícone de ajuda. Padrão: manual "Primeiros Passos". */
+  helpHref?: string;
+  /** Rótulo acessível do ícone de ajuda (usado também no `title`). */
+  helpLabel?: string;
   onLogout?: () => void;
   className?: string;
 }
 
-export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
+export function PageHeader({
+  subtitle,
+  helpHref = PRIMEIROS_PASSOS_URL,
+  helpLabel = "Ajuda: primeiros passos no Portal",
+  onLogout,
+  className,
+}: PageHeaderProps) {
   const { user } = useAuth();
   const displayName = user?.full_name ?? "Parceiro";
   const firstName = getFirstName(displayName);
@@ -49,11 +57,11 @@ export function PageHeader({ subtitle, onLogout, className }: PageHeaderProps) {
         </div>
         <div className="mt-1 flex items-center gap-2">
           <a
-            href={HELP_MANUAL_URL}
+            href={helpHref}
             target="_blank"
             rel="noopener noreferrer"
             className="flex h-9 w-9 items-center justify-center rounded-full text-brand-navy/70 transition-colors hover:bg-brand-navy/10 hover:text-brand-navy"
-            aria-label="Ajuda: primeiros passos no Portal"
+            aria-label={helpLabel}
             title="Ajuda"
           >
             <CircleHelp size={20} />
