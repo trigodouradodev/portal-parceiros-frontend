@@ -23,7 +23,7 @@ describe("PageHeader", () => {
     const help = screen.getByRole("link", {
       name: "Ajuda: primeiros passos no Portal",
     });
-    expect(help).toHaveAttribute("href", "/ajuda/primeiros-passos.html");
+    expect(help).toHaveAttribute("href", "/ajuda/primeiros-passos");
     expect(help).toHaveAttribute("target", "_blank");
   });
 

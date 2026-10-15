@@ -1,12 +1,10 @@
 import { CircleHelp } from "lucide-react";
 import { AureaLogo } from "@/components/brand/AureaLogo";
 import { LogoutAvatarButton } from "@/components/layout/LogoutAvatarButton";
+import { PRIMEIROS_PASSOS_URL } from "@/features/ajuda";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { getFirstName, getGreeting, getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
-
-/** Manual "Primeiros Passos no Portal", servido como asset estático (public/ajuda). */
-const HELP_MANUAL_URL = "/ajuda/primeiros-passos.html";
 
 interface PageHeaderProps {
   subtitle?: string;
@@ -20,7 +18,7 @@ interface PageHeaderProps {
 
 export function PageHeader({
   subtitle,
-  helpHref = HELP_MANUAL_URL,
+  helpHref = PRIMEIROS_PASSOS_URL,
   helpLabel = "Ajuda: primeiros passos no Portal",
   onLogout,
   className,
