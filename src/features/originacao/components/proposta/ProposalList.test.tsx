@@ -120,6 +120,50 @@ describe("ProposalList", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
+  it("shows Enviar link Cliente beside Acompanhar proposta in client review", async () => {
+    const onOpen = vi.fn();
+    list.mockResolvedValue(
+      pageOf([
+        item({
+          id: "quote-review",
+          status: QuoteStatus.CLIENT_REVIEW,
+          canEdit: false,
+        }),
+      ]),
+    );
+
+    renderList(<ProposalList onOpen={onOpen} />);
+
+    const follow = await screen.findByRole("button", {
+      name: "Acompanhar proposta",
+    });
+    const send = screen.getByRole("button", { name: "Enviar link Cliente" });
+    expect(follow.parentElement).toBe(send.parentElement);
+    expect(follow.parentElement).toHaveClass("grid-cols-2");
+
+    await userEvent.click(send);
+
+    expect(onOpen).toHaveBeenCalledWith("quote-review");
+    expect(window.open).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    QuoteStatus.DRAFT,
+    QuoteStatus.PENDING,
+    QuoteStatus.IN_ANALYSIS,
+    QuoteStatus.APPROVED,
+    QuoteStatus.REJECTED,
+  ])("does not offer Enviar link Cliente for %s", async (status) => {
+    list.mockResolvedValue(pageOf([item({ status })]));
+
+    renderList(<ProposalList onOpen={vi.fn()} />);
+
+    await screen.findByText("Maria Silva");
+    expect(
+      screen.queryByRole("button", { name: "Enviar link Cliente" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("opens the backoffice when the proposal has left client review", async () => {
     const onOpen = vi.fn();
     list.mockResolvedValue(
