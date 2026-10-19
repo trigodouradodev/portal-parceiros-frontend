@@ -1,4 +1,10 @@
-import { Briefcase, Home, User, UserCheck } from "lucide-react";
+import {
+  Briefcase,
+  ChartNoAxesCombined,
+  Home,
+  User,
+  UserCheck,
+} from "lucide-react";
 import { hasPermission, PORTAL_PERMISSIONS } from "@/lib/permissions";
 
 export type NavTab =
@@ -27,8 +33,12 @@ export const NAV_ITEMS: {
     label: "Originação",
     path: "/originacao",
   },
-  // O módulo de desempenho está temporariamente fora da navegação enquanto
-  // passa por revisão técnica da área de produto.
+  {
+    key: "desempenho",
+    icon: <ChartNoAxesCombined size={20} />,
+    label: "Desempenho",
+    path: "/performance",
+  },
   {
     key: "perfil",
     icon: <User size={20} />,

@@ -1,110 +1,123 @@
+import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { LevelsComparisonTable } from "@/features/performance/components/LevelsComparisonTable";
-import { PartnerIdentityBar } from "@/features/performance/components/PartnerIdentityBar";
 import { PerformanceMessage } from "@/features/performance/components/PerformanceMessage";
-import { PerformanceSkeleton } from "@/features/performance/components/PerformanceSkeleton";
-import { RealPerformanceSection } from "@/features/performance/components/RealPerformanceSection";
-import { SimulatorSection } from "@/features/performance/components/SimulatorSection";
 import {
-  isNotFoundError,
-  useCurrentPerformance,
-  usePartnerProfile,
-  usePartnerProgram,
+  PerformanceSkeleton,
+  PerformanceDataSkeleton,
+} from "@/features/performance/components/PerformanceSkeleton";
+import { PerformanceMonthSelector } from "@/features/performance/components/PerformanceMonthSelector";
+import { PerformanceError } from "@/features/performance/components/PerformanceError";
+import { RealPerformanceSection } from "@/features/performance/components/RealPerformanceSection";
+import {
+  usePerformanceMonths,
+  usePerformanceData,
 } from "@/hooks/usePerformanceData";
-import { getApiErrorMessage } from "@/lib/api/errors";
+import { formatMonth } from "@/features/performance/utils/format";
+import type { PerformanceResponse } from "@/services/performance/performance.types";
 
-interface ShellContext {
-  onMobileLogout?: () => void;
+function PerformanceContent({
+  month,
+  currentMonth,
+  query,
+}: {
+  month: string;
+  currentMonth: string;
+  query: UseQueryResult<PerformanceResponse, Error>;
+}) {
+  if (query.isError)
+    return (
+      <PerformanceError
+        onRetry={() => {
+          void query.refetch();
+        }}
+        retrying={query.isFetching}
+      />
+    );
+  if (query.isPending || !query.data) return <PerformanceDataSkeleton />;
+  const response = query.data;
+  if (response.month !== month)
+    return (
+      <PerformanceError
+        onRetry={() => {
+          void query.refetch();
+        }}
+        retrying={query.isFetching}
+      />
+    );
+  if (response.availability === "NO_DATA")
+    return (
+      <div
+        role="status"
+        className="rounded-2xl border border-[#D6D9E3] bg-white p-5"
+      >
+        <p className="text-sm font-semibold text-brand-navy">
+          Dados ainda não disponíveis para esta competência
+        </p>
+        <p className="mt-2 text-sm text-[#6B7080]">
+          Ainda não há dados de {formatMonth(month)} para consulta. Você pode
+          selecionar outra competência disponível no histórico.
+        </p>
+      </div>
+    );
+  return (
+    <RealPerformanceSection
+      month={month}
+      currentMonth={currentMonth}
+      data={response.data}
+    />
+  );
 }
 
 export function PerformancePage() {
-  const { onMobileLogout } = useOutletContext<ShellContext>();
+  const { onMobileLogout } = useOutletContext<{
+    onMobileLogout?: () => void;
+  }>();
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const monthsQuery = usePerformanceMonths();
+  const month = selectedMonth ?? monthsQuery.data?.currentMonth;
+  const performanceQuery = usePerformanceData(month);
+  const response = performanceQuery.isSuccess
+    ? performanceQuery.data
+    : undefined;
+  const level =
+    response?.availability === "AVAILABLE" && response.month === month
+      ? response.data.level
+      : undefined;
 
-  const profileQuery = usePartnerProfile();
-  const enrolled = Boolean(profileQuery.data);
-  const programQuery = usePartnerProgram({ enabled: enrolled });
-  const currentQuery = useCurrentPerformance({ enabled: enrolled });
-
-  if (profileQuery.isPending) {
+  if (monthsQuery.isPending)
     return <PerformanceSkeleton onLogout={onMobileLogout} />;
-  }
-
-  if (profileQuery.isError) {
-    if (isNotFoundError(profileQuery.error)) {
-      return (
-        <PerformanceMessage onLogout={onMobileLogout}>
-          <p className="text-sm text-[#6B7080]">
-            Você ainda não participa do Programa de Parceiros Exclusivos.
-          </p>
-        </PerformanceMessage>
-      );
-    }
+  if (monthsQuery.isError || !monthsQuery.data || !month)
     return (
       <PerformanceMessage onLogout={onMobileLogout}>
-        <p className="text-sm text-[#A32D2D]">
-          {getApiErrorMessage(
-            profileQuery.error,
-            "Não foi possível carregar o desempenho.",
-          )}
-        </p>
+        <PerformanceError
+          onRetry={() => {
+            void monthsQuery.refetch();
+          }}
+          retrying={monthsQuery.isFetching}
+        />
       </PerformanceMessage>
     );
-  }
-
-  const profile = profileQuery.data;
-  if (!profile) {
-    return <PerformanceSkeleton onLogout={onMobileLogout} />;
-  }
-
-  const program = programQuery.data;
-  const current = currentQuery.data;
-
-  if (
-    programQuery.isPending ||
-    currentQuery.isPending ||
-    !program ||
-    !current
-  ) {
-    if (programQuery.isError || currentQuery.isError) {
-      return (
-        <PerformanceMessage onLogout={onMobileLogout}>
-          <p className="text-sm text-[#A32D2D]">
-            {getApiErrorMessage(
-              programQuery.error ?? currentQuery.error,
-              "Não foi possível carregar o desempenho.",
-            )}
-          </p>
-        </PerformanceMessage>
-      );
-    }
-    return <PerformanceSkeleton onLogout={onMobileLogout} />;
-  }
 
   return (
     <PageContainer>
       <PageHeader
-        subtitle="Acompanhe suas metas e a prévia de comissão"
+        subtitle="Acompanhe suas metas e sua remuneração"
         onLogout={onMobileLogout}
       />
-
-      <div className="flex flex-col gap-6 px-5 pt-6 md:px-8">
-        <PartnerIdentityBar profile={profile} />
-        <RealPerformanceSection
-          profile={profile}
-          current={current}
-          program={program}
+      <div className="flex flex-col gap-5 px-5 pt-6 md:gap-6 md:px-8">
+        <PerformanceMonthSelector
+          months={monthsQuery.data}
+          value={month}
+          onChange={setSelectedMonth}
+          level={level}
         />
-        <SimulatorSection
-          key={`${current.month}-${current.origination.amount}-${current.delinquency.rate}-${current.averageRate.rate}-${profile.partnership.monthNumber}`}
-          profile={profile}
-          current={current}
-          program={program}
-        />
-        <LevelsComparisonTable
-          program={program}
-          currentLevelKey={profile.level.key}
+        <PerformanceContent
+          month={month}
+          currentMonth={monthsQuery.data.currentMonth}
+          query={performanceQuery}
         />
       </div>
     </PageContainer>

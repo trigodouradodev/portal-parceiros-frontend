@@ -1,165 +1,98 @@
-import {
-  bandLabel,
-  bandsOf,
-  maxBonusPercent,
-} from "@/features/performance/data/commission";
-import { fmtPct } from "@/features/performance/utils/format";
 import { fmtBRL } from "@/lib/utils";
-import {
-  BonusPillar,
-  CommissionComponentKind,
-  type CurrentPerformance,
-  type PartnerProfile,
-  type PartnerProgram,
-} from "@/services/performance/performance.types";
-
-export type CommissionPillTone = "navy" | "yellow" | "green" | "amber";
+import type { PerformanceData } from "@/services/performance/performance.types";
+import { fmtPct } from "./format";
 
 export interface RealKpiCardView {
-  key: string;
+  key: "origination" | "interestRate" | "delinquency" | "reimbursement";
   label: string;
   value: string;
   sub: string;
-  bonus: number;
-  maxBonus: number;
+  targetAmount?: number | null;
+  targetPercent?: number | null;
 }
 
-export interface CommissionPillView {
-  key: string;
-  tone: CommissionPillTone;
-  label: string;
-}
-
-export interface RealPerformanceView {
-  periodLegend: string;
-  monthlyTarget: number;
-  monthlyFixed: number;
-  kpis: RealKpiCardView[];
-  commissionTotal: number;
-  pills: CommissionPillView[];
-}
-
-function formatPeriodLegend(periodStart: string, periodEnd: string): string {
-  const start = new Date(`${periodStart}T12:00:00`);
-  const end = new Date(`${periodEnd}T12:00:00`);
-  const dayStart = start.getDate();
-  const dayEnd = end.getDate();
-  const month = end.toLocaleDateString("pt-BR", { month: "long" });
-  if (dayStart === dayEnd) return `${dayEnd} de ${month}`;
-  return `${dayStart} a ${dayEnd} de ${month}`;
-}
-
-function componentAmount(
-  current: CurrentPerformance,
-  kind: CommissionComponentKind,
-): number {
-  return (
-    current.commission.components.find((c) => c.kind === kind)?.amount ?? 0
-  );
-}
-
-function buildPills(current: CurrentPerformance): CommissionPillView[] {
-  const entries: {
-    key: string;
-    kind: CommissionComponentKind;
-    tone: CommissionPillTone;
-    prefix: string;
-  }[] = [
-    {
-      key: "fixed",
-      kind: CommissionComponentKind.FIXED,
-      tone: "navy",
-      prefix: "Fixo",
-    },
-    {
-      key: "welcome",
-      kind: CommissionComponentKind.WELCOME,
-      tone: "yellow",
-      prefix: "Boas-vindas",
-    },
-    {
-      key: "disbursement",
-      kind: CommissionComponentKind.DISBURSEMENT_BONUS,
-      tone: "green",
-      prefix: "Desembolso +",
-    },
-    {
-      key: "risk",
-      kind: CommissionComponentKind.RISK_BONUS,
-      tone: "green",
-      prefix: "Risco +",
-    },
-    {
-      key: "rate",
-      kind: CommissionComponentKind.RATE_BONUS,
-      tone: "green",
-      prefix: "Taxa +",
-    },
-    {
-      key: "permanence",
-      kind: CommissionComponentKind.PERMANENCE_BONUS,
-      tone: "amber",
-      prefix: "Permanência +",
-    },
-  ];
-
-  return entries.flatMap(({ key, kind, tone, prefix }) => {
-    const amount = componentAmount(current, kind);
-    if (amount <= 0) return [];
-    const spacer = prefix.endsWith("+") ? "" : " ";
-    return [{ key, tone, label: `${prefix}${spacer}${fmtBRL(amount)}` }];
-  });
-}
-
+/** Apresenta valores oficiais; não calcula indicadores nem identifica faixas. */
 export function buildRealPerformanceView(
-  profile: PartnerProfile,
-  current: CurrentPerformance,
-  program: PartnerProgram,
-): RealPerformanceView {
-  const { level } = profile;
-  const dBands = bandsOf(program, BonusPillar.DISBURSEMENT);
-  const rBands = bandsOf(program, BonusPillar.RISK);
-  const tBands = bandsOf(program, BonusPillar.RATE);
-  const delinquencyRate = current.delinquency.rate;
-  const averageRate = current.averageRate.rate;
+  data: PerformanceData,
+): RealKpiCardView[] {
+  const { origination, interestRate, delinquency, reimbursement } =
+    data.indicators;
+  const unknown = data.level.key === "UNKNOWN";
+  const informational = data.level.key === "AUREA" || unknown;
+  const cards: RealKpiCardView[] = [];
 
-  return {
-    periodLegend: formatPeriodLegend(current.periodStart, current.periodEnd),
-    monthlyTarget: level.monthlyTarget,
-    monthlyFixed: level.monthlyFixed,
-    commissionTotal: current.commission.total,
-    kpis: [
-      {
-        key: "disbursement",
-        label: "Desembolso vs. meta",
-        value: `${Math.round(current.origination.targetPercent)}%`,
-        sub: `${fmtBRL(current.origination.amount)} de ${fmtBRL(level.monthlyTarget)}`,
-        bonus: current.origination.bonusPercent,
-        maxBonus: maxBonusPercent(dBands),
-      },
-      {
-        key: "delinquency",
-        label: "Inadimplência",
-        value: delinquencyRate !== null ? fmtPct(delinquencyRate) : "N/A",
-        sub:
-          delinquencyRate !== null
-            ? bandLabel(delinquencyRate, rBands, BonusPillar.RISK)
-            : "Sem carteira para medir",
-        bonus: current.delinquency.bonusPercent,
-        maxBonus: maxBonusPercent(rBands),
-      },
-      {
-        key: "rate",
-        label: "Taxa média",
-        value: averageRate !== null ? fmtPct(averageRate) : "N/A",
-        sub:
-          averageRate !== null
-            ? bandLabel(averageRate, tBands, BonusPillar.RATE)
-            : "Sem originação no mês",
-        bonus: current.averageRate.bonusPercent,
-        maxBonus: maxBonusPercent(tBands),
-      },
-    ],
-    pills: buildPills(current),
-  };
+  if (
+    origination.status !== "NOT_APPLICABLE" &&
+    (!unknown || origination.amount !== null)
+  ) {
+    const hasTarget = !informational && origination.targetAmount !== null;
+    cards.push({
+      key: "origination",
+      label: "Originação no mês",
+      value: origination.amount === null ? "N/A" : fmtBRL(origination.amount),
+      targetAmount: hasTarget ? origination.targetAmount : null,
+      targetPercent: hasTarget ? origination.targetPercent : null,
+      sub:
+        origination.amount === null
+          ? "Sem medição nesta competência"
+          : hasTarget
+            ? `Meta mensal de ${fmtBRL(origination.targetAmount!)}`
+            : informational
+              ? "Indicador informativo para sua modalidade"
+              : "Total originado na competência, sem meta mensal definida",
+    });
+  }
+  if (
+    interestRate.status !== "NOT_APPLICABLE" &&
+    (!unknown || interestRate.rate !== null)
+  ) {
+    cards.push({
+      key: "interestRate",
+      label: "Taxa média",
+      value: interestRate.rate === null ? "N/A" : fmtPct(interestRate.rate),
+      sub:
+        interestRate.rate === null
+          ? "Sem medição nesta competência"
+          : informational
+            ? "Indicador informativo para sua modalidade"
+            : "Taxa oficial utilizada no cálculo desta competência",
+    });
+  }
+  if (
+    delinquency.status !== "NOT_APPLICABLE" &&
+    (!unknown || delinquency.rate !== null)
+  ) {
+    const hasAdjustments =
+      (delinquency.disregardedOverdueAmount ?? 0) !== 0 ||
+      (delinquency.disregardedPortfolioAmount ?? 0) !== 0;
+    cards.push({
+      key: "delinquency",
+      label: "Inadimplência",
+      value: delinquency.rate === null ? "N/A" : fmtPct(delinquency.rate),
+      sub:
+        delinquency.rate === null
+          ? "Sem medição nesta competência"
+          : informational
+            ? "Indicador informativo para sua modalidade"
+            : hasAdjustments
+              ? "Indicador após as desconsiderações da competência"
+              : "Indicador oficial da carteira nesta competência",
+    });
+  }
+  if (
+    reimbursement.status !== "NOT_APPLICABLE" &&
+    (!unknown || reimbursement.amount !== null)
+  ) {
+    cards.push({
+      key: "reimbursement",
+      label: "Reembolso no mês",
+      value:
+        reimbursement.amount === null ? "N/A" : fmtBRL(reimbursement.amount),
+      sub:
+        reimbursement.amount === null
+          ? "Sem medição nesta competência"
+          : "Valor pago nas parcelas quitadas da carteira",
+    });
+  }
+  return cards;
 }

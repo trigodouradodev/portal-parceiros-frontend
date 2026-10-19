@@ -1,26 +1,26 @@
 import { api } from "@/lib/api/axios";
 import type {
-  CurrentPerformance,
-  PartnerProfile,
-  PartnerProgram,
+  PerformanceMonthsResponse,
+  PerformanceResponse,
 } from "./performance.types";
 
 export const performanceService = {
-  /** GET /performance/me */
-  async getMe(): Promise<PartnerProfile> {
-    const { data } = await api.get<PartnerProfile>("/performance/me");
+  async getMonths(signal?: AbortSignal): Promise<PerformanceMonthsResponse> {
+    const { data } = await api.get<PerformanceMonthsResponse>(
+      "/performance/months",
+      { signal },
+    );
     return data;
   },
 
-  /** GET /performance/program */
-  async getProgram(): Promise<PartnerProgram> {
-    const { data } = await api.get<PartnerProgram>("/performance/program");
-    return data;
-  },
-
-  /** GET /performance/current */
-  async getCurrent(): Promise<CurrentPerformance> {
-    const { data } = await api.get<CurrentPerformance>("/performance/current");
+  async getPerformance(
+    month?: string,
+    signal?: AbortSignal,
+  ): Promise<PerformanceResponse> {
+    const { data } = await api.get<PerformanceResponse>("/performance", {
+      params: { month },
+      signal,
+    });
     return data;
   },
 };

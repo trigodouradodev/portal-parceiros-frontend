@@ -1,47 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
+import { useAuth } from "@/contexts/auth/auth-context";
 import { performanceService } from "@/services/performance/performance.service";
 
 export const performanceKeys = {
   all: ["performance"] as const,
-  me: () => [...performanceKeys.all, "me"] as const,
-  program: () => [...performanceKeys.all, "program"] as const,
-  current: () => [...performanceKeys.all, "current"] as const,
+  months: (userId: string | undefined) =>
+    [...performanceKeys.all, userId, "months"] as const,
+  detail: (userId: string | undefined, month: string | undefined) =>
+    [...performanceKeys.all, userId, "detail", month] as const,
 };
 
-export function isNotFoundError(err: unknown): boolean {
-  return isAxiosError(err) && err.response?.status === 404;
-}
-
-/**
- * Perfil do parceiro no programa. 404 = não inscrito.
- */
-export function usePartnerProfile(options?: { enabled?: boolean }) {
+export function usePerformanceMonths() {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: performanceKeys.me(),
-    queryFn: performanceService.getMe,
+    queryKey: performanceKeys.months(user?.id),
+    queryFn: ({ signal }) => performanceService.getMonths(signal),
     staleTime: 60 * 1000,
     retry: false,
-    enabled: options?.enabled ?? true,
+    enabled: Boolean(user?.id),
   });
 }
 
-export function usePartnerProgram(options?: { enabled?: boolean }) {
+export function usePerformanceData(month: string | undefined) {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: performanceKeys.program(),
-    queryFn: performanceService.getProgram,
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-    enabled: options?.enabled ?? true,
-  });
-}
-
-export function useCurrentPerformance(options?: { enabled?: boolean }) {
-  return useQuery({
-    queryKey: performanceKeys.current(),
-    queryFn: performanceService.getCurrent,
+    queryKey: performanceKeys.detail(user?.id, month),
+    queryFn: ({ signal }) => performanceService.getPerformance(month, signal),
     staleTime: 60 * 1000,
     retry: false,
-    enabled: options?.enabled ?? true,
+    enabled: Boolean(user?.id && month),
   });
 }
