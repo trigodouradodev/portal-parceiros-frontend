@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import type { QuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
 import { getBackofficeUrl } from "@/lib/backoffice";
+import { PARTNER_ORIGINATION_RESTRICTED_MESSAGE } from "@/lib/partner-restrictions";
 
 type QuoteActivityPermissionsAlertProps = QuoteActivityPermissions;
 
@@ -59,10 +60,13 @@ function PermissionExplanation({
   label,
   allowed,
   blockers,
+  restrictedMessage,
 }: {
   label: string;
   allowed: boolean;
   blockers: string[];
+  /** Restrição do parceiro: o motivo não é fila de cobrança, então não há o que concluir. */
+  restrictedMessage?: string;
 }) {
   return (
     <div className="rounded-lg border border-border p-3">
@@ -81,6 +85,10 @@ function PermissionExplanation({
       {allowed ? (
         <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
           Não há ações pendentes que impeçam este acesso.
+        </p>
+      ) : restrictedMessage ? (
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          {restrictedMessage}
         </p>
       ) : (
         <>
@@ -102,6 +110,7 @@ function PermissionExplanation({
 export function QuoteActivityPermissionsAlert({
   canSimulateQuote,
   canCreateQuote,
+  originationRestricted,
 }: QuoteActivityPermissionsAlertProps) {
   return (
     <Dialog>
@@ -153,6 +162,11 @@ export function QuoteActivityPermissionsAlert({
               label="Criar proposta"
               allowed={canCreateQuote}
               blockers={proposalCreationBlockers}
+              restrictedMessage={
+                originationRestricted
+                  ? PARTNER_ORIGINATION_RESTRICTED_MESSAGE
+                  : undefined
+              }
             />
           </div>
           <DialogFooter>

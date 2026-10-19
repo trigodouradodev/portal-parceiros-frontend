@@ -496,6 +496,7 @@ function ProposalWizard({
       } catch (err) {
         if (getApiErrorCode(err) === PARTNER_ORIGINATION_RESTRICTED) {
           setSubmitBlockedByRestriction(true);
+          void permissionsQuery.refetch();
         }
         showToast(
           getApiErrorMessage(err, "Não foi possível enviar a proposta."),
