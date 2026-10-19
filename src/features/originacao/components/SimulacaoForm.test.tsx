@@ -337,6 +337,43 @@ describe("SimulacaoForm", () => {
     ).toBeDisabled();
   });
 
+  it("explains the origination restriction instead of the collection-task message", async () => {
+    getProfile.mockResolvedValue({
+      ...testUser,
+      canCreateQuote: false,
+      originationRestricted: true,
+    });
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={snapshot()}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Simular novamente" }),
+      ).toBeEnabled();
+    });
+    expect(
+      screen.getByText(
+        "Você está com a originação restrita. Fale com seu gerente.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Você possui ações de cobrança pendentes que impedem iniciar uma proposta.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Iniciar proposta" }),
+    ).toBeDisabled();
+  });
+
   it("hides start proposal when the simulation already originated a quote", async () => {
     renderForm(
       <SimulacaoForm

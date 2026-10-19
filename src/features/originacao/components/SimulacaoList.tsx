@@ -31,6 +31,8 @@ import { SimulationStatus } from "@/services/origination/origination.types";
 interface SimulacaoListProps {
   hasUnfilteredSimulations: boolean;
   canCreateQuote?: boolean;
+  /** Motivo exibido quando `canCreateQuote` é falso. */
+  createQuoteBlockedMessage?: string;
   onNewSimulation: () => void;
   onEdit: (snapshot: SimulationSnapshot) => void;
   onStartProposal: (
@@ -41,6 +43,7 @@ interface SimulacaoListProps {
 export function SimulacaoList({
   hasUnfilteredSimulations,
   canCreateQuote = true,
+  createQuoteBlockedMessage = CREATE_QUOTE_BLOCKED_MESSAGE,
   onNewSimulation,
   onEdit,
   onStartProposal,
@@ -159,7 +162,7 @@ export function SimulacaoList({
 
       {canCreateQuote ? null : (
         <p className="mb-4 rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
-          {CREATE_QUOTE_BLOCKED_MESSAGE}
+          {createQuoteBlockedMessage}
         </p>
       )}
 

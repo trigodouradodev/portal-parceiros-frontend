@@ -18,6 +18,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth/auth-context";
+import {
+  clearLogoutReason,
+  getApiErrorCode,
+  PARTNER_ACCESS_RESTRICTED,
+  PARTNER_ACCESS_RESTRICTED_MESSAGE,
+  readLogoutReasonMessage,
+} from "@/lib/partner-restrictions";
 
 const loginSchema = z.object({
   email: z
@@ -34,6 +41,11 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [showPwd, setShowPwd] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // Sessão encerrada por restrição de acesso (refresh recusado): explica o
+  // motivo até o usuário começar a digitar.
+  const [sessionNotice, setSessionNotice] = useState<string | null>(() =>
+    readLogoutReasonMessage(),
+  );
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -53,8 +65,17 @@ export function LoginPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- clear server error when user edits credentials
   }, [email, password]);
 
+  useEffect(() => {
+    if (sessionNotice && (email !== "" || password !== "")) {
+      setSessionNotice(null);
+      clearLogoutReason();
+    }
+  }, [email, password, sessionNotice]);
+
   const onSubmit = async (values: LoginFormValues) => {
     setFormError(null);
+    setSessionNotice(null);
+    clearLogoutReason();
 
     try {
       await login(values);
@@ -66,7 +87,13 @@ export function LoginPage() {
           return;
         }
         if (err.response?.status === 403) {
-          setFormError("Você não tem permissão para acessar o Portal.");
+          // O código separa o bloqueio de parceiro (suspenso, desligado ou
+          // restrição de acesso) do 403 de "sem permissão ao Portal".
+          setFormError(
+            getApiErrorCode(err) === PARTNER_ACCESS_RESTRICTED
+              ? PARTNER_ACCESS_RESTRICTED_MESSAGE
+              : "Você não tem permissão para acessar o Portal.",
+          );
           return;
         }
         if (!err.response) {
@@ -158,9 +185,9 @@ export function LoginPage() {
                 )}
               />
 
-              {formError && (
+              {(formError ?? sessionNotice) && (
                 <p role="alert" className="text-sm text-destructive">
-                  {formError}
+                  {formError ?? sessionNotice}
                 </p>
               )}
 
