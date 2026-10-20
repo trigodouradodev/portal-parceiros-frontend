@@ -12,9 +12,9 @@ describe("competence options", () => {
       "2026-09",
       "2026-08",
     ]);
-    expect(options[0]?.label).toBe("outubro - 2026");
-    expect(options[1]?.label).toBe("setembro - 2026");
-    expect(options[2]?.label).toBe("agosto - 2026");
+    expect(options[0]?.label).toBe("Outubro - 2026");
+    expect(options[1]?.label).toBe("Setembro - 2026");
+    expect(options[2]?.label).toBe("Agosto - 2026");
   });
   it("does not duplicate a current month already present in the source", () => {
     expect(
@@ -22,7 +22,7 @@ describe("competence options", () => {
         currentMonth: "2026-10",
         months: [{ month: "2026-10" }],
       }),
-    ).toEqual([{ value: "2026-10", label: "outubro - 2026" }]);
+    ).toEqual([{ value: "2026-10", label: "Outubro - 2026" }]);
   });
   it("does not label a future competence as a complete month", () => {
     expect(getPeriodLabel("2026-11", "2026-10")).toBe("Competência futura");

@@ -5,10 +5,13 @@ import type {
 } from "./performance.types";
 
 export const performanceService = {
-  async getMonths(signal?: AbortSignal): Promise<PerformanceMonthsResponse> {
+  async getMonths(
+    signal?: AbortSignal,
+    partnerId?: string,
+  ): Promise<PerformanceMonthsResponse> {
     const { data } = await api.get<PerformanceMonthsResponse>(
       "/performance/months",
-      { signal },
+      { signal, ...(partnerId ? { params: { partnerId } } : {}) },
     );
     return data;
   },
@@ -16,9 +19,10 @@ export const performanceService = {
   async getPerformance(
     month?: string,
     signal?: AbortSignal,
+    partnerId?: string,
   ): Promise<PerformanceResponse> {
     const { data } = await api.get<PerformanceResponse>("/performance", {
-      params: { month },
+      params: { month, ...(partnerId ? { partnerId } : {}) },
       signal,
     });
     return data;

@@ -2,12 +2,20 @@ import { useAuth } from "@/contexts/auth/auth-context";
 import { getRoleLabel } from "@/lib/user-display";
 import type { PerformanceLevel } from "@/services/performance/performance.types";
 
-export function PartnerIdentityBar({ level }: { level?: PerformanceLevel }) {
+export function PartnerIdentityBar({
+  level,
+  partnerName,
+}: {
+  level?: PerformanceLevel;
+  partnerName?: string;
+}) {
   const { user } = useAuth();
   return (
     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1.5">
-      <p className="text-xs text-[#697183]">{user?.full_name ?? "Parceiro"}</p>
-      {user?.role && (
+      <p className="text-xs text-[#697183]">
+        {partnerName ?? user?.full_name ?? "Parceiro"}
+      </p>
+      {!partnerName && user?.role && (
         <span className="text-xs text-[#697183]">
           · {getRoleLabel(user.role)}
         </span>

@@ -67,7 +67,14 @@ export const router = createBrowserRouter([
               </PermissionRoute>
             ),
           },
-          { path: "/performance", element: <PerformancePage /> },
+          {
+            path: "/performance",
+            element: (
+              <PermissionRoute permission={PORTAL_PERMISSIONS.PERFORMANCE_VIEW}>
+                <PerformancePage />
+              </PermissionRoute>
+            ),
+          },
           { path: "/profile", element: <ProfilePage /> },
           { path: "*", element: <NotFound /> },
         ],

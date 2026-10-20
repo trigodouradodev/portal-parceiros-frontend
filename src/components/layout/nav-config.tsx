@@ -57,7 +57,13 @@ export function getNavItemsForPermissions(permissions?: readonly string[]) {
     PORTAL_PERMISSIONS.QUOTE_NEW_ORIGINATION_FLOW,
   );
 
+  const canViewPerformance = hasPermission(
+    permissions,
+    PORTAL_PERMISSIONS.PERFORMANCE_VIEW,
+  );
+
   return NAV_ITEMS.filter((item) => {
+    if (item.key === "desempenho" && !canViewPerformance) return false;
     if (item.key === "carteira" && isCollectionAgent) return false;
     if (item.key === "originacao" && !hasNewOriginationFlow) return false;
     return true;

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PerformancePage } from "./PerformancePage";
+import { activitiesService } from "@/services/activities/activities.service";
 import { performanceService } from "@/services/performance/performance.service";
 import type { PerformanceResponse } from "@/services/performance/performance.types";
 import {
@@ -18,6 +19,9 @@ vi.mock("react-router-dom", async () => ({
 }));
 vi.mock("@/services/performance/performance.service", () => ({
   performanceService: { getMonths: vi.fn(), getPerformance: vi.fn() },
+}));
+vi.mock("@/services/activities/activities.service", () => ({
+  activitiesService: { getSubordinates: vi.fn() },
 }));
 const getMonths = vi.mocked(performanceService.getMonths);
 const getPerformance = vi.mocked(performanceService.getPerformance);
@@ -50,10 +54,18 @@ function card(label: string) {
     screen.getByRole("heading", { name: label }).closest("article")!,
   );
 }
+async function selectMonth(currentLabel: string, nextLabel: string) {
+  await userEvent.click(
+    await screen.findByRole("button", { name: currentLabel }),
+  );
+  await userEvent.click(
+    within(
+      screen.getByRole("dialog", { name: "Selecionar competência" }),
+    ).getByRole("button", { name: nextLabel }),
+  );
+}
 async function selectSeptember() {
-  const selector = await screen.findByRole("combobox", { name: "Competência" });
-  await userEvent.selectOptions(selector, "2026-09");
-  return selector;
+  await selectMonth("Outubro - 2026", "Setembro - 2026");
 }
 
 beforeEach(() => {
@@ -70,6 +82,7 @@ beforeEach(() => {
     removeEventListener: (_event: string, listener: () => void) =>
       layoutListeners.delete(listener),
   }));
+  vi.mocked(activitiesService.getSubordinates).mockResolvedValue([]);
   getMonths.mockResolvedValue(testPerformanceMonths);
   getPerformance.mockImplementation(async (month) =>
     month === "2026-09"
@@ -90,12 +103,13 @@ describe("PerformancePage view data", () => {
         "Dados ainda não disponíveis para esta competência",
       ),
     ).toBeVisible();
-    expect(screen.getByRole("combobox", { name: "Competência" })).toHaveValue(
-      "2026-10",
-    );
+    expect(
+      screen.getByRole("button", { name: "Outubro - 2026" }),
+    ).toBeVisible();
     expect(getPerformance).toHaveBeenCalledWith(
       "2026-10",
       expect.any(AbortSignal),
+      undefined,
     );
     expect(getPerformance).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(/não participa/)).not.toBeInTheDocument();
@@ -161,9 +175,9 @@ describe("PerformancePage view data", () => {
           }),
     );
     renderPage();
-    const selector = await selectSeptember();
+    await selectSeptember();
     expect(await screen.findByText("Nível Bronze")).toBeVisible();
-    await userEvent.selectOptions(selector, "2026-10");
+    await selectMonth("Setembro - 2026", "Outubro - 2026");
     expect(
       screen.getByRole("status", { name: "Carregando dados da competência" }),
     ).toBeVisible();
@@ -189,7 +203,9 @@ describe("PerformancePage view data", () => {
     expect(
       screen.queryByText("Dados ainda não disponíveis para esta competência"),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole("combobox")).toHaveValue("2026-10");
+    expect(
+      screen.getByRole("button", { name: "Outubro - 2026" }),
+    ).toBeVisible();
     await userEvent.click(
       screen.getByRole("button", { name: "Tentar novamente" }),
     );
@@ -207,7 +223,9 @@ describe("PerformancePage view data", () => {
     await userEvent.click(
       await screen.findByRole("button", { name: "Tentar novamente" }),
     );
-    expect(await screen.findByRole("combobox")).toHaveValue("2026-10");
+    expect(
+      await screen.findByRole("button", { name: "Outubro - 2026" }),
+    ).toBeVisible();
     expect(getMonths).toHaveBeenCalledTimes(2);
   });
 
@@ -219,7 +237,18 @@ describe("PerformancePage view data", () => {
         "Dados ainda não disponíveis para esta competência",
       ),
     ).toBeVisible();
-    expect(screen.getAllByRole("option")).toHaveLength(1);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Outubro - 2026" }),
+    );
+    const dialog = screen.getByRole("dialog", {
+      name: "Selecionar competência",
+    });
+    expect(
+      within(dialog).getByRole("button", { name: "Outubro - 2026" }),
+    ).toBeVisible();
+    expect(
+      within(dialog).queryByRole("button", { name: "Setembro - 2026" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the current month as a daily preview without inventing a reference date", async () => {
@@ -241,9 +270,8 @@ describe("PerformancePage view data", () => {
     expect(
       screen.queryByText(/Atualizado em|Referência da carteira/),
     ).not.toBeInTheDocument();
-    const selector = screen.getByRole("combobox");
     getPerformance.mockResolvedValue(testPerformanceData);
-    await userEvent.selectOptions(selector, "2026-09");
+    await selectSeptember();
     expect(
       await screen.findByText("Mês completo", { selector: "span" }),
     ).toBeVisible();
@@ -282,7 +310,7 @@ it("does not display a response belonging to another competence", async () => {
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Não foi possível carregar o desempenho",
   );
-  expect(screen.getByRole("combobox")).toHaveValue("2026-10");
+  expect(screen.getByRole("button", { name: "Outubro - 2026" })).toBeVisible();
   expect(screen.queryByText("Nível Bronze")).not.toBeInTheDocument();
 });
 
@@ -530,4 +558,129 @@ it("uses the official target percentage even when it differs from the amount rat
   expect(progress).toHaveAttribute("aria-valuenow", "100");
   expect(progress).toHaveAttribute("aria-valuetext", "180,12% da meta");
   expect(card("Originação no mês").getByText(/110\.000,00/)).toBeVisible();
+});
+
+const teammateId = "f630bd84-1425-423a-a533-5e5139abb9d5";
+async function choosePerson(trigger: string, person: string) {
+  await userEvent.click(await screen.findByRole("button", { name: trigger }));
+  await userEvent.click(
+    within(
+      screen.getByRole("dialog", { name: "Filtrar desempenho" }),
+    ).getByRole("button", { name: person }),
+  );
+}
+
+describe("Performance people filter", () => {
+  beforeEach(() => {
+    vi.mocked(activitiesService.getSubordinates).mockResolvedValue([
+      { id: teammateId, name: "Bruno Parceiro" },
+    ]);
+  });
+
+  it("uses Home's people and preserves the month when selecting a teammate and returning to self", async () => {
+    renderPage();
+    await selectSeptember();
+    expect(await screen.findByText("Nível Bronze")).toBeVisible();
+    await choosePerson("Meu desempenho", "Bruno Parceiro");
+    await waitFor(() =>
+      expect(getPerformance).toHaveBeenLastCalledWith(
+        "2026-09",
+        expect.any(AbortSignal),
+        teammateId,
+      ),
+    );
+    expect(getMonths).toHaveBeenLastCalledWith(
+      expect.any(AbortSignal),
+      teammateId,
+    );
+    expect(
+      screen.getByRole("button", { name: "Setembro - 2026" }),
+    ).toBeVisible();
+    expect(screen.queryByText("Ana Parceira")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Bruno Parceiro")).toHaveLength(2);
+    await choosePerson("Bruno Parceiro", "Meu desempenho");
+    expect(await screen.findByText("Ana Parceira")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Setembro - 2026" }),
+    ).toBeVisible();
+  });
+
+  it("removes previous person's indicators while the selected person loads and keeps the filter usable", async () => {
+    getMonths.mockImplementation((_signal, partnerId) =>
+      partnerId
+        ? new Promise(() => {})
+        : Promise.resolve(testPerformanceMonths),
+    );
+    getPerformance.mockImplementation((month, _signal, partnerId) =>
+      partnerId
+        ? new Promise(() => {})
+        : Promise.resolve(
+            month === "2026-09"
+              ? testPerformanceData
+              : { month: month!, availability: "NO_DATA", data: null },
+          ),
+    );
+    renderPage();
+    await selectSeptember();
+    expect(await screen.findByText("Nível Bronze")).toBeVisible();
+    await choosePerson("Meu desempenho", "Bruno Parceiro");
+    expect(screen.queryByText("Nível Bronze")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("region", { name: "Resumo da remuneração" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Carregando dados da competência" }),
+    ).toBeVisible();
+    await choosePerson("Bruno Parceiro", "Meu desempenho");
+    expect(await screen.findByText("Nível Bronze")).toBeVisible();
+  });
+
+  it("keeps the chosen month even if absent from the teammate's history", async () => {
+    getMonths.mockImplementation(async (_signal, partnerId) =>
+      partnerId
+        ? { currentMonth: "2026-10", months: [] }
+        : testPerformanceMonths,
+    );
+    getPerformance.mockImplementation(async (month, _signal, partnerId) =>
+      !partnerId && month === "2026-09"
+        ? testPerformanceData
+        : { month: month!, availability: "NO_DATA", data: null },
+    );
+    renderPage();
+    await selectSeptember();
+    expect(await screen.findByText("Nível Bronze")).toBeVisible();
+    await choosePerson("Meu desempenho", "Bruno Parceiro");
+    expect(
+      await screen.findByText(
+        "Dados ainda não disponíveis para esta competência",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Setembro - 2026" }),
+    ).toBeVisible();
+
+    expect(screen.queryByText("Nível Bronze")).not.toBeInTheDocument();
+  });
+
+  it("allows returning to self after the teammate's history fails", async () => {
+    getMonths.mockImplementation(async (_signal, partnerId) => {
+      if (partnerId) throw new Error("unavailable");
+      return testPerformanceMonths;
+    });
+    renderPage();
+    await selectSeptember();
+    await choosePerson("Meu desempenho", "Bruno Parceiro");
+    expect(await screen.findByRole("alert")).toBeVisible();
+    await choosePerson("Bruno Parceiro", "Meu desempenho");
+    expect(await screen.findByText("Nível Bronze")).toBeVisible();
+  });
+
+  it("hides the people filter when Home offers no teammates", async () => {
+    vi.mocked(activitiesService.getSubordinates).mockResolvedValue([]);
+    renderPage();
+    await selectSeptember();
+    expect(
+      screen.queryByRole("button", { name: "Meu desempenho" }),
+    ).not.toBeInTheDocument();
+  });
 });

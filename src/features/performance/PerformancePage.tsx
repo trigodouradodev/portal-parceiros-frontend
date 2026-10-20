@@ -3,11 +3,9 @@ import { useOutletContext } from "react-router-dom";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { PerformanceMessage } from "@/features/performance/components/PerformanceMessage";
-import {
-  PerformanceSkeleton,
-  PerformanceDataSkeleton,
-} from "@/features/performance/components/PerformanceSkeleton";
+import { SelectDialogField } from "@/components/ui/select-dialog-field";
+import { useSubordinates } from "@/hooks/useActivities";
+import { PerformanceDataSkeleton } from "@/features/performance/components/PerformanceSkeleton";
 import { PerformanceMonthSelector } from "@/features/performance/components/PerformanceMonthSelector";
 import { PerformanceError } from "@/features/performance/components/PerformanceError";
 import { RealPerformanceSection } from "@/features/performance/components/RealPerformanceSection";
@@ -76,9 +74,12 @@ export function PerformancePage() {
     onMobileLogout?: () => void;
   }>();
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const monthsQuery = usePerformanceMonths();
+  const [partnerId, setPartnerId] = useState<string | undefined>();
+  const { data: people = [] } = useSubordinates();
+  const partnerName = people.find((person) => person.id === partnerId)?.name;
+  const monthsQuery = usePerformanceMonths(partnerId);
   const month = selectedMonth ?? monthsQuery.data?.currentMonth;
-  const performanceQuery = usePerformanceData(month);
+  const performanceQuery = usePerformanceData(month, partnerId);
   const response = performanceQuery.isSuccess
     ? performanceQuery.data
     : undefined;
@@ -86,20 +87,6 @@ export function PerformancePage() {
     response?.availability === "AVAILABLE" && response.month === month
       ? response.data.level
       : undefined;
-
-  if (monthsQuery.isPending)
-    return <PerformanceSkeleton onLogout={onMobileLogout} />;
-  if (monthsQuery.isError || !monthsQuery.data || !month)
-    return (
-      <PerformanceMessage onLogout={onMobileLogout}>
-        <PerformanceError
-          onRetry={() => {
-            void monthsQuery.refetch();
-          }}
-          retrying={monthsQuery.isFetching}
-        />
-      </PerformanceMessage>
-    );
 
   return (
     <PageContainer>
@@ -113,12 +100,43 @@ export function PerformancePage() {
           value={month}
           onChange={setSelectedMonth}
           level={level}
+          partnerName={partnerName}
+          peopleFilter={
+            people.length > 0 ? (
+              <SelectDialogField
+                label="Pessoa"
+                dialogTitle="Filtrar desempenho"
+                value={partnerId ?? "mine"}
+                onChange={(value) =>
+                  setPartnerId(value === "mine" ? undefined : value)
+                }
+                options={[
+                  { value: "mine", label: "Meu desempenho" },
+                  ...people.map((person) => ({
+                    value: person.id,
+                    label: person.name,
+                  })),
+                ]}
+              />
+            ) : undefined
+          }
         />
-        <PerformanceContent
-          month={month}
-          currentMonth={monthsQuery.data.currentMonth}
-          query={performanceQuery}
-        />
+        {monthsQuery.isPending ? (
+          <PerformanceDataSkeleton />
+        ) : monthsQuery.isError || !monthsQuery.data || !month ? (
+          <PerformanceError
+            onRetry={() => {
+              void monthsQuery.refetch();
+            }}
+            retrying={monthsQuery.isFetching}
+          />
+        ) : (
+          <PerformanceContent
+            month={month}
+            currentMonth={monthsQuery.data.currentMonth}
+            query={performanceQuery}
+          />
+        )}
       </div>
     </PageContainer>
   );

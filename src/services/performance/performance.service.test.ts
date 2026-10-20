@@ -28,3 +28,19 @@ describe("performance view endpoints", () => {
     });
   });
 });
+
+it("sends the selected partner to both consultation endpoints", async () => {
+  const partnerId = "f630bd84-1425-423a-a533-5e5139abb9d5";
+  const signal = new AbortController().signal;
+  vi.mocked(api.get).mockResolvedValue({ data: testPerformanceMonths });
+  await performanceService.getMonths(signal, partnerId);
+  expect(api.get).toHaveBeenLastCalledWith("/performance/months", {
+    signal,
+    params: { partnerId },
+  });
+  await performanceService.getPerformance("2026-09", signal, partnerId);
+  expect(api.get).toHaveBeenLastCalledWith("/performance", {
+    signal,
+    params: { month: "2026-09", partnerId },
+  });
+});
