@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import api from "@/lib/api/axios";
 import {
-  PARTNER_ACCESS_RESTRICTED,
+  PartnerRestrictionCode,
   readLogoutReasonMessage,
 } from "@/lib/partner-restrictions";
 
@@ -56,7 +56,7 @@ describe("renovação de sessão recusada (AUREA-623)", () => {
     vi.spyOn(axios, "post").mockRejectedValue(
       axiosFailure(
         403,
-        { code: PARTNER_ACCESS_RESTRICTED },
+        { code: PartnerRestrictionCode.ACCESS_RESTRICTED },
         {} as InternalAxiosRequestConfig,
       ),
     );

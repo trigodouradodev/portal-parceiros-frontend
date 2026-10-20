@@ -8,8 +8,8 @@ import { useOriginacao } from "@/features/originacao/originacao-context";
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import { quoteActivityPermissionsKeys } from "@/hooks/useQuoteActivityPermissions";
 import {
-  PARTNER_ORIGINATION_RESTRICTED,
   PARTNER_ORIGINATION_RESTRICTED_MESSAGE,
+  PartnerRestrictionCode,
 } from "@/lib/partner-restrictions";
 import { originationService } from "@/services/origination/origination.service";
 import { quotesService } from "@/services/quotes/quotes.service";
@@ -113,7 +113,7 @@ describe("OriginacaoProvider.startProposal — restrição de originação (AURE
     createDraft.mockRejectedValue(
       apiError(403, {
         statusCode: 403,
-        code: PARTNER_ORIGINATION_RESTRICTED,
+        code: PartnerRestrictionCode.ORIGINATION_RESTRICTED,
         message: PARTNER_ORIGINATION_RESTRICTED_MESSAGE,
       }),
     );

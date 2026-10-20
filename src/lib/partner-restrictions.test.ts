@@ -1,8 +1,5 @@
-import { AxiosError } from "axios";
 import {
   clearLogoutReason,
-  getApiErrorCode,
-  PARTNER_ACCESS_RESTRICTED,
   PARTNER_ACCESS_RESTRICTED_MESSAGE,
   readLogoutReasonMessage,
   rememberAccessRestrictedLogout,
@@ -21,31 +18,6 @@ function memoryStorage(): Storage {
     setItem: (key, value) => void data.set(key, value),
   };
 }
-
-function forbidden(data: unknown) {
-  return new AxiosError("Forbidden", "ERR_BAD_REQUEST", undefined, undefined, {
-    status: 403,
-    data,
-    statusText: "Forbidden",
-    headers: {},
-    config: { headers: {} as never },
-  });
-}
-
-describe("getApiErrorCode", () => {
-  it("devolve o code do corpo do erro da API", () => {
-    expect(
-      getApiErrorCode(forbidden({ code: PARTNER_ACCESS_RESTRICTED })),
-    ).toBe(PARTNER_ACCESS_RESTRICTED);
-  });
-
-  it("devolve undefined sem code, com code que não é texto ou fora de um erro da API", () => {
-    expect(getApiErrorCode(forbidden({}))).toBeUndefined();
-    expect(getApiErrorCode(forbidden({ code: 403 }))).toBeUndefined();
-    expect(getApiErrorCode(new Error("x"))).toBeUndefined();
-    expect(getApiErrorCode(undefined)).toBeUndefined();
-  });
-});
 
 describe("motivo do encerramento da sessão", () => {
   beforeEach(() => {

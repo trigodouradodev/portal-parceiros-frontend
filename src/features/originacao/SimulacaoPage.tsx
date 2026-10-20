@@ -53,14 +53,16 @@ export function SimulacaoPage() {
     handleEdit(simulation);
   }
 
+  const createQuoteBlockedMessage = getCreateQuoteBlockedMessage(
+    permissionsQuery.data?.originationRestricted,
+  );
+
   if (!showForm) {
     return (
       <SimulacaoList
         hasUnfilteredSimulations={simulations.length > 0}
         canCreateQuote={permissionsQuery.data?.canCreateQuote !== false}
-        createQuoteBlockedMessage={getCreateQuoteBlockedMessage(
-          permissionsQuery.data?.originationRestricted,
-        )}
+        createQuoteBlockedMessage={createQuoteBlockedMessage}
         onNewSimulation={handleNewSimulation}
         onEdit={handleEdit}
         onStartProposal={startProposal}

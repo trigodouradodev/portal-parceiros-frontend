@@ -1,6 +1,6 @@
+import { getApiErrorCode } from "@/lib/api/errors";
 import {
-  getApiErrorCode,
-  PARTNER_ACCESS_RESTRICTED,
+  PartnerRestrictionCode,
   rememberAccessRestrictedLogout,
 } from "@/lib/partner-restrictions";
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
@@ -125,7 +125,10 @@ api.interceptors.response.use(
 
       // Parceiro bloqueado depois de logar: o refresh volta 403 com código
       // estável. Guarda o motivo para o login explicar por que a sessão caiu.
-      if (getApiErrorCode(refreshError) === PARTNER_ACCESS_RESTRICTED) {
+      if (
+        getApiErrorCode(refreshError) ===
+        PartnerRestrictionCode.ACCESS_RESTRICTED
+      ) {
         rememberAccessRestrictedLogout();
       }
 

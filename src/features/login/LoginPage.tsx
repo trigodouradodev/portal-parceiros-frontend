@@ -18,11 +18,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useAuth } from "@/contexts/auth/auth-context";
+import { getApiErrorCode } from "@/lib/api/errors";
 import {
   clearLogoutReason,
-  getApiErrorCode,
-  PARTNER_ACCESS_RESTRICTED,
   PARTNER_ACCESS_RESTRICTED_MESSAGE,
+  PartnerRestrictionCode,
   readLogoutReasonMessage,
 } from "@/lib/partner-restrictions";
 
@@ -90,7 +90,7 @@ export function LoginPage() {
           // O código separa o bloqueio de parceiro (suspenso, desligado ou
           // restrição de acesso) do 403 de "sem permissão ao Portal".
           setFormError(
-            getApiErrorCode(err) === PARTNER_ACCESS_RESTRICTED
+            getApiErrorCode(err) === PartnerRestrictionCode.ACCESS_RESTRICTED
               ? PARTNER_ACCESS_RESTRICTED_MESSAGE
               : "Você não tem permissão para acessar o Portal.",
           );
@@ -107,6 +107,8 @@ export function LoginPage() {
       setFormError("Erro inesperado. Tente novamente em alguns instantes.");
     }
   };
+
+  const visibleError = formError ?? sessionNotice;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-brand-yellow px-4">
@@ -185,9 +187,9 @@ export function LoginPage() {
                 )}
               />
 
-              {(formError ?? sessionNotice) && (
+              {visibleError && (
                 <p role="alert" className="text-sm text-destructive">
-                  {formError ?? sessionNotice}
+                  {visibleError}
                 </p>
               )}
 

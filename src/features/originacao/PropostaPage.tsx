@@ -1,15 +1,12 @@
-import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
-import {
-  getApiErrorCode,
-  PARTNER_ORIGINATION_RESTRICTED,
-  PARTNER_ORIGINATION_RESTRICTED_MESSAGE,
-} from "@/lib/partner-restrictions";
+import { PARTNER_ORIGINATION_RESTRICTED_MESSAGE } from "@/lib/partner-restrictions";
+import { useOriginationRestriction } from "@/features/originacao/hooks/useOriginationRestriction";
 import { useQuoteAttachments } from "@/features/originacao/hooks/useQuoteDocumentation";
 import { useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Form } from "@/components/ui/form";
@@ -197,14 +194,8 @@ function ProposalWizard({
   } = useCompleteQuoteDocumentation();
   const { mutateAsync: submitDraft, isPending: submittingDraft } =
     useSubmitQuoteDraft();
-  // Restrição de originação (AUREA-590): vem do perfil, ou do 403 do envio
-  // quando ela foi aplicada com a proposta já aberta.
-  const permissionsQuery = useQuoteActivityPermissions();
-  const [submitBlockedByRestriction, setSubmitBlockedByRestriction] =
-    useState(false);
-  const originationRestricted =
-    submitBlockedByRestriction ||
-    permissionsQuery.data?.originationRestricted === true;
+  const { originationRestricted, handleSubmitError } =
+    useOriginationRestriction();
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [renewalPrefillOpen, setRenewalPrefillOpen] = useState(false);
   const [blockedEmailField, setBlockedEmailField] = useState<
@@ -494,10 +485,7 @@ function ProposalWizard({
         });
         await submitDraft(proposal.id);
       } catch (err) {
-        if (getApiErrorCode(err) === PARTNER_ORIGINATION_RESTRICTED) {
-          setSubmitBlockedByRestriction(true);
-          void permissionsQuery.refetch();
-        }
+        handleSubmitError(err);
         showToast(
           getApiErrorMessage(err, "Não foi possível enviar a proposta."),
           { variant: "destructive" },
@@ -585,12 +573,11 @@ function ProposalWizard({
           {step === 5 ? <DocumentsSection quoteId={proposal.id} /> : null}
           {step === 6 ? <PartnerOpinionSection /> : null}
           {step === 6 && originationRestricted ? (
-            <p
-              role="alert"
-              className="mt-4 rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive"
-            >
-              {PARTNER_ORIGINATION_RESTRICTED_MESSAGE}
-            </p>
+            <Alert variant="destructive" className="mt-4">
+              <AlertDescription>
+                {PARTNER_ORIGINATION_RESTRICTED_MESSAGE}
+              </AlertDescription>
+            </Alert>
           ) : null}
 
           <div className="mt-6 flex gap-2">

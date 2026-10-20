@@ -18,8 +18,8 @@ import { useSaveQuotePartnerOpinion } from "@/features/originacao/hooks/useSaveQ
 import { useSubmitQuoteDraft } from "@/features/originacao/hooks/useQuoteDocumentation";
 import { useQuoteActivityPermissions } from "@/hooks/useQuoteActivityPermissions";
 import {
-  PARTNER_ORIGINATION_RESTRICTED,
   PARTNER_ORIGINATION_RESTRICTED_MESSAGE,
+  PartnerRestrictionCode,
 } from "@/lib/partner-restrictions";
 import { QuoteStatus } from "@/services/quotes/quotes.enums";
 import { renderWithProviders } from "@/test/render";
@@ -166,7 +166,7 @@ function restrictedError() {
       status: 403,
       data: {
         statusCode: 403,
-        code: PARTNER_ORIGINATION_RESTRICTED,
+        code: PartnerRestrictionCode.ORIGINATION_RESTRICTED,
         message: PARTNER_ORIGINATION_RESTRICTED_MESSAGE,
       },
     } as AxiosResponse,
