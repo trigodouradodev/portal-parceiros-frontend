@@ -11,20 +11,22 @@ function digitsOnly(phone: string): string {
 /**
  * Normalizes a phone string to digits with Brazilian country code, or null if invalid.
  */
+function isLocalPhone(digits: string): boolean {
+  return digits.length >= MIN_LOCAL_DIGITS && digits.length <= MAX_LOCAL_DIGITS;
+}
+
 export function normalizePhoneDigits(phone: string): string | null {
   const digits = digitsOnly(phone);
-  if (!digits) return null;
 
-  if (digits.startsWith(BRAZIL_COUNTRY_CODE)) {
-    const local = digits.slice(BRAZIL_COUNTRY_CODE.length);
-    if (local.length >= MIN_LOCAL_DIGITS && local.length <= MAX_LOCAL_DIGITS) {
-      return digits;
-    }
-    return null;
+  if (isLocalPhone(digits)) {
+    return `${BRAZIL_COUNTRY_CODE}${digits}`;
   }
 
-  if (digits.length >= MIN_LOCAL_DIGITS && digits.length <= MAX_LOCAL_DIGITS) {
-    return `${BRAZIL_COUNTRY_CODE}${digits}`;
+  if (
+    digits.startsWith(BRAZIL_COUNTRY_CODE) &&
+    isLocalPhone(digits.slice(BRAZIL_COUNTRY_CODE.length))
+  ) {
+    return digits;
   }
 
   return null;
