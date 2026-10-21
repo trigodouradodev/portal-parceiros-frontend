@@ -1,6 +1,7 @@
 import { AxiosError } from "axios";
 import { isNotFoundError } from "@/hooks/usePerformanceData";
-import { getApiErrorMessage } from "@/lib/api/errors";
+import { getApiErrorCode, getApiErrorMessage } from "@/lib/api/errors";
+import { PartnerRestrictionCode } from "@/lib/partner-restrictions";
 
 function axiosError(status: number, message?: string | string[]) {
   return new AxiosError("error", "ERR_BAD_REQUEST", undefined, undefined, {
@@ -33,5 +34,38 @@ describe("getApiErrorMessage", () => {
       "A, B",
     );
     expect(getApiErrorMessage(axiosError(400), "fallback")).toBe("fallback");
+  });
+});
+
+describe("getApiErrorCode", () => {
+  function errorWithBody(data: unknown) {
+    return new AxiosError(
+      "Forbidden",
+      "ERR_BAD_REQUEST",
+      undefined,
+      undefined,
+      {
+        status: 403,
+        data,
+        statusText: "Forbidden",
+        headers: {},
+        config: { headers: {} as never },
+      },
+    );
+  }
+
+  it("devolve o code do corpo do erro da API", () => {
+    expect(
+      getApiErrorCode(
+        errorWithBody({ code: PartnerRestrictionCode.ACCESS_RESTRICTED }),
+      ),
+    ).toBe(PartnerRestrictionCode.ACCESS_RESTRICTED);
+  });
+
+  it("devolve undefined sem code, com code que não é texto ou fora de um erro da API", () => {
+    expect(getApiErrorCode(errorWithBody({}))).toBeUndefined();
+    expect(getApiErrorCode(errorWithBody({ code: 403 }))).toBeUndefined();
+    expect(getApiErrorCode(new Error("x"))).toBeUndefined();
+    expect(getApiErrorCode(undefined)).toBeUndefined();
   });
 });
