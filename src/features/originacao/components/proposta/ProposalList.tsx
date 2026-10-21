@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { FileText, Loader2, Search } from "lucide-react";
+import { FileText, Loader2, MessageSquare, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
@@ -41,12 +41,14 @@ interface ProposalListItemCardProps {
   item: QuoteListItem;
   openingId: string | null;
   onOpen: (item: QuoteListItem) => void;
+  onSendClientLink: (item: QuoteListItem) => void;
 }
 
 function ProposalListItemCard({
   item,
   openingId,
   onOpen,
+  onSendClientLink,
 }: ProposalListItemCardProps) {
   const action = getQuoteListAction(item.status);
   const step = nextWizardStepIndex(item.completedSteps);
@@ -88,6 +90,32 @@ function ProposalListItemCard({
             Continuar preenchimento
           </Button>
         </>
+      ) : action === QuoteListAction.FOLLOW_CLIENT_REVIEW ? (
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="ghost"
+            size="pillSm"
+            className="min-w-0 border border-input px-2 text-xs md:text-sm"
+            disabled={openingId != null}
+            onClick={() => onOpen(item)}
+          >
+            Acompanhar proposta
+          </Button>
+          <Button
+            variant="outline"
+            size="pillSm"
+            className="min-w-0 border-success px-2 text-xs font-semibold text-success hover:bg-success-bg md:text-sm"
+            disabled={openingId != null}
+            onClick={() => onSendClientLink(item)}
+          >
+            {busy ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <MessageSquare />
+            )}
+            Enviar link Cliente
+          </Button>
+        </div>
       ) : (
         <Button
           variant="ghost"
@@ -96,9 +124,7 @@ function ProposalListItemCard({
           onClick={() => onOpen(item)}
         >
           {busy ? <Loader2 size={15} className="animate-spin" /> : null}
-          {action === QuoteListAction.FOLLOW_CLIENT_REVIEW
-            ? "Acompanhar proposta"
-            : "Ver proposta"}
+          Ver proposta
         </Button>
       )}
     </OriginacaoSnapshotCard>
@@ -156,6 +182,11 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
       );
       return;
     }
+    await onOpen(item.id);
+  }
+
+  async function handleSendClientLink(item: QuoteListItem) {
+    if (openingId != null) return;
     await onOpen(item.id);
   }
 
@@ -245,6 +276,7 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
             item={item}
             openingId={openingId}
             onOpen={handleOpen}
+            onSendClientLink={handleSendClientLink}
           />
         ))}
       </div>
