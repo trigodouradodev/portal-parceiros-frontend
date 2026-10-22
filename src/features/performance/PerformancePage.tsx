@@ -4,7 +4,7 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
-import { useSubordinates } from "@/hooks/useActivities";
+import { useAuth } from "@/contexts/auth/auth-context";
 import { PerformanceDataSkeleton } from "@/features/performance/components/PerformanceSkeleton";
 import { PerformanceMonthSelector } from "@/features/performance/components/PerformanceMonthSelector";
 import { PerformanceError } from "@/features/performance/components/PerformanceError";
@@ -12,6 +12,8 @@ import { RealPerformanceSection } from "@/features/performance/components/RealPe
 import {
   usePerformanceMonths,
   usePerformanceData,
+  usePerformancePartners,
+  usePerformanceTeam,
 } from "@/hooks/usePerformanceData";
 import { formatMonth } from "@/features/performance/utils/format";
 import type { PerformanceResponse } from "@/services/performance/performance.types";
@@ -65,6 +67,7 @@ function PerformanceContent({
       month={month}
       currentMonth={currentMonth}
       data={response.data}
+      view={response.view}
     />
   );
 }
@@ -73,20 +76,59 @@ export function PerformancePage() {
   const { onMobileLogout } = useOutletContext<{
     onMobileLogout?: () => void;
   }>();
+  const { user } = useAuth();
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const [partnerId, setPartnerId] = useState<string | undefined>();
-  const { data: people = [] } = useSubordinates();
-  const partnerName = people.find((person) => person.id === partnerId)?.name;
-  const monthsQuery = usePerformanceMonths(partnerId);
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string>();
+  const [selectedMemberId, setSelectedMemberId] = useState<string>();
+  const monthsQuery = usePerformanceMonths();
   const month = selectedMonth ?? monthsQuery.data?.currentMonth;
-  const performanceQuery = usePerformanceData(month, partnerId);
+  const partnersQuery = usePerformancePartners(month);
+  const partners = partnersQuery.data ?? [];
+  const partner =
+    partners.find((person) => person.id === selectedPartnerId) ??
+    partners.find((person) => person.id === user?.id) ??
+    (partners.length === 1 ? partners[0] : undefined);
+  const teamQuery = usePerformanceTeam(partner?.id, month);
+  const team = teamQuery.data ?? [];
+  const member = team.find((person) => person.id === selectedMemberId);
+  const performanceQuery = usePerformanceData(
+    month,
+    partner?.id,
+    member?.id,
+    Boolean(partner && (!selectedMemberId || teamQuery.isSuccess)),
+  );
   const response = performanceQuery.isSuccess
     ? performanceQuery.data
     : undefined;
   const level =
-    response?.availability === "AVAILABLE" && response.month === month
+    response?.availability === "AVAILABLE" &&
+    response.month === month &&
+    !member
       ? response.data.level
       : undefined;
+  const showPartners =
+    partners.length > 1 || (partners.length === 1 && partner?.id !== user?.id);
+  const showTeam = team.some((person) => person.id !== partner?.id);
+  const selectionError = monthsQuery.isError
+    ? monthsQuery
+    : partnersQuery.isError
+      ? partnersQuery
+      : teamQuery.isError
+        ? teamQuery
+        : undefined;
+  const loading =
+    monthsQuery.isPending ||
+    (Boolean(month) && partnersQuery.isPending) ||
+    (Boolean(partner) && teamQuery.isPending);
+
+  function changeMonth(value: string) {
+    setSelectedMonth(value);
+    setSelectedMemberId(undefined);
+  }
+  function changePartner(value: string) {
+    setSelectedPartnerId(value);
+    setSelectedMemberId(undefined);
+  }
 
   return (
     <PageContainer>
@@ -98,45 +140,76 @@ export function PerformancePage() {
         <PerformanceMonthSelector
           months={monthsQuery.data}
           value={month}
-          onChange={setSelectedMonth}
+          onChange={changeMonth}
           level={level}
-          partnerName={partnerName}
+          partnerName={member?.name ?? partner?.name}
           peopleFilter={
-            people.length > 0 ? (
-              <SelectDialogField
-                label="Pessoa"
-                dialogTitle="Filtrar desempenho"
-                value={partnerId ?? "mine"}
-                onChange={(value) =>
-                  setPartnerId(value === "mine" ? undefined : value)
-                }
-                options={[
-                  { value: "mine", label: "Meu desempenho" },
-                  ...people.map((person) => ({
-                    value: person.id,
-                    label: person.name,
-                  })),
-                ]}
-              />
+            showPartners || showTeam ? (
+              <>
+                {showPartners && (
+                  <SelectDialogField
+                    label="Parceiro"
+                    dialogTitle="Selecionar parceiro"
+                    value={partner?.id ?? ""}
+                    onChange={changePartner}
+                    options={partners.map((person) => ({
+                      value: person.id,
+                      label: person.name,
+                    }))}
+                    placeholder="Selecione o parceiro"
+                  />
+                )}
+                {showTeam && (
+                  <SelectDialogField
+                    label="Visualização"
+                    dialogTitle="Selecionar visualização"
+                    value={member?.id ?? "consolidated"}
+                    onChange={(value) =>
+                      setSelectedMemberId(
+                        value === "consolidated" ? undefined : value,
+                      )
+                    }
+                    options={[
+                      { value: "consolidated", label: "Consolidado" },
+                      ...team.map((person) => ({
+                        value: person.id,
+                        label:
+                          person.id === partner?.id
+                            ? `${person.name} — próprio`
+                            : person.name,
+                      })),
+                    ]}
+                  />
+                )}
+              </>
             ) : undefined
           }
         />
-        {monthsQuery.isPending ? (
-          <PerformanceDataSkeleton />
-        ) : monthsQuery.isError || !monthsQuery.data || !month ? (
+        {selectionError ? (
           <PerformanceError
             onRetry={() => {
-              void monthsQuery.refetch();
+              void selectionError.refetch();
             }}
-            retrying={monthsQuery.isFetching}
+            retrying={selectionError.isFetching}
           />
-        ) : (
+        ) : loading ? (
+          <PerformanceDataSkeleton />
+        ) : !partner ? (
+          <div
+            role="status"
+            className="rounded-2xl border border-[#D6D9E3] bg-white p-5 text-sm text-[#6B7080]"
+          >
+            {partners.length > 0
+              ? "Selecione um parceiro para acompanhar o desempenho."
+              : "Dados ainda não disponíveis para esta competência"}
+          </div>
+        ) : month && monthsQuery.data ? (
           <PerformanceContent
             month={month}
             currentMonth={monthsQuery.data.currentMonth}
             query={performanceQuery}
           />
-        )}
+        ) : null}
       </div>
     </PageContainer>
   );

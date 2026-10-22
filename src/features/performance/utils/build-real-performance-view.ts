@@ -14,6 +14,7 @@ export interface RealKpiCardView {
 /** Apresenta valores oficiais; não calcula indicadores nem identifica faixas. */
 export function buildRealPerformanceView(
   data: PerformanceData,
+  individual = false,
 ): RealKpiCardView[] {
   const { origination, interestRate, delinquency, reimbursement } =
     data.indicators;
@@ -26,6 +27,10 @@ export function buildRealPerformanceView(
     (!unknown || origination.amount !== null)
   ) {
     const hasTarget = !informational && origination.targetAmount !== null;
+    const contractsCaption =
+      data.contractsCount == null
+        ? ""
+        : `${data.contractsCount} contratos na competência`;
     cards.push({
       key: "origination",
       label: "Originação no mês",
@@ -35,11 +40,13 @@ export function buildRealPerformanceView(
       sub:
         origination.amount === null
           ? "Sem medição nesta competência"
-          : hasTarget
-            ? `Meta mensal de ${fmtBRL(origination.targetAmount!)}`
-            : informational
-              ? "Indicador informativo para sua modalidade"
-              : "Total originado na competência, sem meta mensal definida",
+          : individual
+            ? contractsCaption
+            : hasTarget
+              ? `Meta mensal de ${fmtBRL(origination.targetAmount!)}`
+              : informational
+                ? "Indicador informativo para sua modalidade"
+                : "Total originado na competência, sem meta mensal definida",
     });
   }
   if (
@@ -53,9 +60,11 @@ export function buildRealPerformanceView(
       sub:
         interestRate.rate === null
           ? "Sem medição nesta competência"
-          : informational
-            ? "Indicador informativo para sua modalidade"
-            : "Taxa oficial utilizada no cálculo desta competência",
+          : individual
+            ? "Média informada para esta pessoa"
+            : informational
+              ? "Indicador informativo para sua modalidade"
+              : "Taxa oficial utilizada no cálculo desta competência",
     });
   }
   if (

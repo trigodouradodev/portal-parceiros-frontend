@@ -2,7 +2,13 @@ import { fmtBRL } from "@/lib/utils";
 import { fmtPct } from "@/features/performance/utils/format";
 import type { PerformanceData } from "@/services/performance/performance.types";
 
-export function IndicatorDetails({ data }: { data: PerformanceData }) {
+export function IndicatorDetails({
+  data,
+  individual = false,
+}: {
+  data: PerformanceData;
+  individual?: boolean;
+}) {
   const { interestRate, delinquency } = data.indicators;
   const rows = [
     ...(interestRate.status === "NOT_APPLICABLE"
@@ -46,8 +52,9 @@ export function IndicatorDetails({ data }: { data: PerformanceData }) {
         Detalhes dos indicadores
       </summary>
       <p className="pb-3 text-xs leading-relaxed text-[#697183]">
-        As médias e a carteira total são referências. Os cards mostram os
-        indicadores considerados nas regras da competência.
+        {individual
+          ? "Valores informados no detalhamento da pessoa nesta competência."
+          : "As médias e a carteira total são referências. Os cards mostram os indicadores considerados nas regras da competência."}
       </p>
       <dl className="grid gap-4 pb-5 text-xs sm:grid-cols-2">
         {rows.map(({ label, value, format }) => (

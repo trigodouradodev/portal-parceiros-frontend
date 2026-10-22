@@ -5,6 +5,7 @@ export function OriginationCard({
   label,
   value,
   sub,
+  targetAmount,
   targetPercent,
 }: Omit<RealKpiCardView, "key">) {
   const progress =
@@ -22,7 +23,13 @@ export function OriginationCard({
       <p className="mt-4 break-words text-3xl font-bold leading-tight tracking-tight tabular-nums text-brand-navy sm:text-[34px]">
         {value}
       </p>
-      <p className="mt-1 text-xs leading-relaxed text-[#697183]">{sub}</p>
+      {sub && (
+        <p
+          className={`mt-1 text-xs leading-relaxed ${targetAmount != null ? "text-black" : "text-[#697183]"}`}
+        >
+          {sub}
+        </p>
+      )}
       {progress !== null && targetPercent != null && (
         <>
           <div

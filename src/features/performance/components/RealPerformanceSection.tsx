@@ -4,18 +4,24 @@ import { PortfolioSummary } from "@/features/performance/components/PortfolioSum
 import { RemunerationSummary } from "@/features/performance/components/RemunerationSummary";
 import { IndicatorDetails } from "@/features/performance/components/IndicatorDetails";
 import { buildRealPerformanceView } from "@/features/performance/utils/build-real-performance-view";
-import type { PerformanceData } from "@/services/performance/performance.types";
+import type {
+  PerformanceData,
+  PerformanceView,
+} from "@/services/performance/performance.types";
 
 export function RealPerformanceSection({
   month,
   currentMonth,
   data,
+  view,
 }: {
   month: string;
   currentMonth: string;
   data: PerformanceData;
+  view?: PerformanceView;
 }) {
-  const cards = buildRealPerformanceView(data);
+  const individual = view?.mode === "INDIVIDUAL";
+  const cards = buildRealPerformanceView(data, individual);
   const origination = cards.find((card) => card.key === "origination");
   const metrics = cards.filter((card) => card.key !== "origination");
 
@@ -24,24 +30,45 @@ export function RealPerformanceSection({
       aria-label="Desempenho da competência"
       className="min-w-0 space-y-4"
     >
-      {month === currentMonth && (
+      {view?.missingDetails && (
+        <p className="text-xs leading-relaxed text-[#697183]">
+          Detalhamento ainda não disponível nesta competência. Os valores
+          individuais são exibidos zerados.
+        </p>
+      )}
+      {view?.portfolioReference && (
+        <p className="text-xs leading-relaxed text-[#697183]">
+          Referência da carteira:{" "}
+          {new Date(`${view.portfolioReference}T12:00:00Z`).toLocaleDateString(
+            "pt-BR",
+            { timeZone: "UTC" },
+          )}
+          .
+        </p>
+      )}
+      {!view?.portfolioReference && !individual && month === currentMonth && (
         <p className="text-xs leading-relaxed text-[#697183]">
           Posição diária com base em D-1. Os indicadores podem mudar durante a
           competência.
         </p>
       )}
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(17rem,1fr)] lg:items-start">
-        <RemunerationSummary
-          key={month}
-          remuneration={data.remuneration}
-          month={month}
-        />
+      <div
+        className={`grid min-w-0 gap-4 lg:items-start ${individual ? "" : "lg:grid-cols-[minmax(0,1.65fr)_minmax(17rem,1fr)]"}`}
+      >
+        {!individual && (
+          <RemunerationSummary
+            key={month}
+            remuneration={data.remuneration}
+            month={month}
+          />
+        )}
         <div className="min-w-0 space-y-4 lg:col-start-1 lg:row-start-1">
           {origination && (
             <OriginationCard
               label={origination.label}
               value={origination.value}
               sub={origination.sub}
+              targetAmount={origination.targetAmount}
               targetPercent={origination.targetPercent}
             />
           )}
@@ -61,7 +88,7 @@ export function RealPerformanceSection({
             </p>
           )}
           <PortfolioSummary delinquency={data.indicators.delinquency} />
-          <IndicatorDetails data={data} />
+          <IndicatorDetails data={data} individual={individual} />
         </div>
       </div>
     </section>

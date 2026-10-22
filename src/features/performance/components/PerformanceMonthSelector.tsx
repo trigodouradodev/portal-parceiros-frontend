@@ -30,12 +30,16 @@ export function PerformanceMonthSelector({
       <div
         className={
           peopleFilter
-            ? "grid w-full min-w-0 gap-3 sm:w-[28rem] sm:max-w-full sm:grid-cols-[minmax(0,1fr)_12rem]"
-            : "w-full sm:w-48"
+            ? "flex min-w-0 flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-6"
+            : "flex min-w-0 justify-end"
         }
       >
-        {peopleFilter}
-        <div className="min-w-0">
+        {peopleFilter && (
+          <div className="grid min-w-0 gap-3 sm:grid-flow-col sm:auto-cols-fr md:flex-1 lg:max-w-[34rem]">
+            {peopleFilter}
+          </div>
+        )}
+        <div className="w-full min-w-0 sm:w-48 md:ml-auto md:shrink-0">
           <SelectDialogField
             name="performance-month"
             label="Competência"

@@ -2,7 +2,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PerformancePage } from "./PerformancePage";
-import { activitiesService } from "@/services/activities/activities.service";
 import { performanceService } from "@/services/performance/performance.service";
 import type { PerformanceResponse } from "@/services/performance/performance.types";
 import {
@@ -18,10 +17,12 @@ vi.mock("react-router-dom", async () => ({
   useOutletContext: () => ({ onMobileLogout: vi.fn() }),
 }));
 vi.mock("@/services/performance/performance.service", () => ({
-  performanceService: { getMonths: vi.fn(), getPerformance: vi.fn() },
-}));
-vi.mock("@/services/activities/activities.service", () => ({
-  activitiesService: { getSubordinates: vi.fn() },
+  performanceService: {
+    getMonths: vi.fn(),
+    getPerformance: vi.fn(),
+    getPartners: vi.fn(),
+    getTeam: vi.fn(),
+  },
 }));
 const getMonths = vi.mocked(performanceService.getMonths);
 const getPerformance = vi.mocked(performanceService.getPerformance);
@@ -82,7 +83,17 @@ beforeEach(() => {
     removeEventListener: (_event: string, listener: () => void) =>
       layoutListeners.delete(listener),
   }));
-  vi.mocked(activitiesService.getSubordinates).mockResolvedValue([]);
+  vi.mocked(performanceService.getPartners).mockResolvedValue([
+    { id: testUser.id, name: testUser.full_name },
+  ]);
+  vi.mocked(performanceService.getTeam).mockImplementation(
+    async (partnerId) => [
+      {
+        id: partnerId,
+        name: partnerId === testUser.id ? testUser.full_name : "Bruno Parceiro",
+      },
+    ],
+  );
   getMonths.mockResolvedValue(testPerformanceMonths);
   getPerformance.mockImplementation(async (month) =>
     month === "2026-09"
@@ -109,6 +120,7 @@ describe("PerformancePage view data", () => {
     expect(getPerformance).toHaveBeenCalledWith(
       "2026-10",
       expect.any(AbortSignal),
+      testUser.id,
       undefined,
     );
     expect(getPerformance).toHaveBeenCalledTimes(1);
@@ -289,6 +301,9 @@ describe("PerformancePage view data", () => {
       availability: "NO_DATA",
       data: null,
     });
+    vi.mocked(performanceService.getPartners).mockResolvedValue([
+      { id: "user-2", name: "Outro Parceiro" },
+    ]);
     renderPage(client, {
       ...testUser,
       id: "user-2",
@@ -560,127 +575,239 @@ it("uses the official target percentage even when it differs from the amount rat
   expect(card("Originação no mês").getByText(/110\.000,00/)).toBeVisible();
 });
 
-const teammateId = "f630bd84-1425-423a-a533-5e5139abb9d5";
-async function choosePerson(trigger: string, person: string) {
+const ownerId = "f630bd84-1425-423a-a533-5e5139abb9d5";
+const memberId = "adb77ae3-7fda-4b87-856e-9583f4d90d0c";
+const otherOwnerId = "3a49631e-73ae-4b1e-acbe-d41ab05755eb";
+async function chooseOption(trigger: string, dialog: string, option: string) {
   await userEvent.click(await screen.findByRole("button", { name: trigger }));
   await userEvent.click(
-    within(
-      screen.getByRole("dialog", { name: "Filtrar desempenho" }),
-    ).getByRole("button", { name: person }),
+    within(screen.getByRole("dialog", { name: dialog })).getByRole("button", {
+      name: option,
+    }),
   );
 }
+function individualResponse(missingDetails = false): PerformanceResponse {
+  const response = structuredClone(testPerformanceData);
+  response.month = "2026-10";
+  response.view = {
+    mode: "INDIVIDUAL",
+    portfolioReference: missingDetails ? null : "2026-10-20",
+    missingDetails,
+  };
+  response.data.level = { key: "UNKNOWN", label: null };
+  response.data.contractsCount = missingDetails ? 0 : 7;
+  response.data.indicators.origination = {
+    status: "AVAILABLE",
+    amount: missingDetails ? 0 : 19200,
+    targetAmount: null,
+    targetPercent: null,
+    appliedBand: null,
+  };
+  response.data.indicators.interestRate = {
+    status: "AVAILABLE",
+    rate: missingDetails ? 0 : 10.67,
+    simpleRate: null,
+    weightedRate: null,
+    appliedBand: null,
+  };
+  response.data.indicators.delinquency = {
+    status: "AVAILABLE",
+    rate: null,
+    portfolioRate: null,
+    overdueAmount: missingDetails ? 0 : 61035.16,
+    portfolioAmount: missingDetails ? 0 : 222058.82,
+    disregardedOverdueAmount: null,
+    disregardedPortfolioAmount: null,
+    appliedBand: null,
+  };
+  response.data.indicators.reimbursement = {
+    status: "AVAILABLE",
+    amount: missingDetails ? 0 : 22832.11,
+  };
+  return response;
+}
 
-describe("Performance people filter", () => {
+describe("partner and team selection", () => {
   beforeEach(() => {
-    vi.mocked(activitiesService.getSubordinates).mockResolvedValue([
-      { id: teammateId, name: "Bruno Parceiro" },
+    vi.mocked(performanceService.getPartners).mockResolvedValue([
+      { id: ownerId, name: "Valter" },
+      { id: otherOwnerId, name: "Vanderlan" },
     ]);
+    vi.mocked(performanceService.getTeam).mockImplementation(
+      async (partnerId) =>
+        partnerId === ownerId
+          ? [
+              { id: ownerId, name: "Valter" },
+              { id: memberId, name: "Arlete" },
+            ]
+          : [{ id: otherOwnerId, name: "Vanderlan" }],
+    );
+    getPerformance.mockImplementation(
+      async (month, _signal, _partner, member) =>
+        member
+          ? individualResponse()
+          : { ...testPerformanceData, month: month! },
+    );
   });
 
-  it("uses Home's people and preserves the month when selecting a teammate and returning to self", async () => {
+  it("manager chooses a partner before any numbers load, then selects consolidated, owner or member", async () => {
     renderPage();
-    await selectSeptember();
-    expect(await screen.findByText("Nível Bronze")).toBeVisible();
-    await choosePerson("Meu desempenho", "Bruno Parceiro");
+    expect(
+      await screen.findByText(
+        "Selecione um parceiro para acompanhar o desempenho.",
+      ),
+    ).toBeVisible();
+    expect(getPerformance).not.toHaveBeenCalled();
+    await chooseOption("Selecione o parceiro", "Selecionar parceiro", "Valter");
+    expect(
+      await screen.findByRole("region", { name: "Resumo da remuneração" }),
+    ).toBeVisible();
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Consolidado" }),
+    );
+    const dialog = screen.getByRole("dialog", {
+      name: "Selecionar visualização",
+    });
+    expect(
+      within(dialog).getByRole("button", { name: "Valter — próprio" }),
+    ).toBeVisible();
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: "Arlete" }),
+    );
     await waitFor(() =>
       expect(getPerformance).toHaveBeenLastCalledWith(
-        "2026-09",
+        "2026-10",
         expect.any(AbortSignal),
-        teammateId,
+        ownerId,
+        memberId,
       ),
     );
-    expect(getMonths).toHaveBeenLastCalledWith(
-      expect.any(AbortSignal),
-      teammateId,
-    );
+    expect(await screen.findByText("7 contratos na competência")).toBeVisible();
+    expect(card("Originação no mês").getByText(/19.200,00/)).toBeVisible();
+    expect(card("Taxa média").getByText("10,67%")).toBeVisible();
+    expect(card("Reembolso no mês").getByText(/22.832,11/)).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Setembro - 2026" }),
+      screen.queryByRole("region", { name: "Resumo da remuneração" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    expect(screen.queryByText("Nível Bronze")).not.toBeInTheDocument();
+    expect(
+      screen.getByText("Referência da carteira: 20/10/2026."),
     ).toBeVisible();
-    expect(screen.queryByText("Ana Parceira")).not.toBeInTheDocument();
-    expect(screen.getAllByText("Bruno Parceiro")).toHaveLength(2);
-    await choosePerson("Bruno Parceiro", "Meu desempenho");
-    expect(await screen.findByText("Ana Parceira")).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Setembro - 2026" }),
+      screen.queryByText(/Posição diária com base em D-1/),
+    ).not.toBeInTheDocument();
+    await chooseOption("Arlete", "Selecionar visualização", "Consolidado");
+    expect(
+      await screen.findByRole("region", { name: "Resumo da remuneração" }),
     ).toBeVisible();
   });
 
-  it("removes previous person's indicators while the selected person loads and keeps the filter usable", async () => {
-    getMonths.mockImplementation((_signal, partnerId) =>
-      partnerId
-        ? new Promise(() => {})
-        : Promise.resolve(testPerformanceMonths),
+  it.each([null, undefined, 0])(
+    "preserves the individual contract count %s without replacing missing counts with zero",
+    async (count) => {
+      const response = individualResponse();
+      if (response.availability !== "AVAILABLE") throw new Error("fixture");
+      response.data.contractsCount = count;
+      getPerformance.mockImplementation(
+        async (month, _signal, _partner, member) =>
+          member ? response : { ...testPerformanceData, month: month! },
+      );
+      renderPage();
+      await chooseOption(
+        "Selecione o parceiro",
+        "Selecionar parceiro",
+        "Valter",
+      );
+      await chooseOption("Consolidado", "Selecionar visualização", "Arlete");
+      expect(
+        await screen.findByText("19.200,00", { exact: false }),
+      ).toBeVisible();
+      const origination = card("Originação no mês");
+      if (count == null) {
+        expect(
+          origination.queryByText(/contratos na competência/),
+        ).not.toBeInTheDocument();
+      } else {
+        expect(
+          origination.getByText("0 contratos na competência"),
+        ).toBeVisible();
+      }
+    },
+  );
+
+  it("resets the individual view when switching partner and hides the team selector without a team", async () => {
+    renderPage();
+    await chooseOption("Selecione o parceiro", "Selecionar parceiro", "Valter");
+    await chooseOption("Consolidado", "Selecionar visualização", "Arlete");
+    expect(await screen.findByText("7 contratos na competência")).toBeVisible();
+    await chooseOption("Valter", "Selecionar parceiro", "Vanderlan");
+    expect(
+      await screen.findByRole("region", { name: "Resumo da remuneração" }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Consolidado" }),
+    ).not.toBeInTheDocument();
+    expect(getPerformance).toHaveBeenLastCalledWith(
+      "2026-10",
+      expect.any(AbortSignal),
+      otherOwnerId,
+      undefined,
     );
-    getPerformance.mockImplementation((month, _signal, partnerId) =>
-      partnerId
+  });
+
+  it("shows zeros and explains missing individual details instead of showing the owner's remuneration", async () => {
+    getPerformance.mockResolvedValue(individualResponse(true));
+    renderPage();
+    await chooseOption("Selecione o parceiro", "Selecionar parceiro", "Valter");
+    await chooseOption("Consolidado", "Selecionar visualização", "Arlete");
+    expect(
+      await screen.findByText(/Detalhamento ainda não disponível/),
+    ).toBeVisible();
+    expect(card("Originação no mês").getByText(/0,00/)).toBeVisible();
+    expect(
+      card("Originação no mês").getByText("0 contratos na competência"),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("region", { name: "Resumo da remuneração" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the previous person's values off screen while another member is loading", async () => {
+    getPerformance.mockImplementation((month, _signal, _partner, member) =>
+      member
         ? new Promise(() => {})
-        : Promise.resolve(
-            month === "2026-09"
-              ? testPerformanceData
-              : { month: month!, availability: "NO_DATA", data: null },
-          ),
+        : Promise.resolve({ ...testPerformanceData, month: month! }),
     );
     renderPage();
-    await selectSeptember();
+    await chooseOption("Selecione o parceiro", "Selecionar parceiro", "Valter");
     expect(await screen.findByText("Nível Bronze")).toBeVisible();
-    await choosePerson("Meu desempenho", "Bruno Parceiro");
+    await chooseOption("Consolidado", "Selecionar visualização", "Arlete");
+    expect(
+      screen.getByRole("status", { name: "Carregando dados da competência" }),
+    ).toBeVisible();
     expect(screen.queryByText("Nível Bronze")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("region", { name: "Resumo da remuneração" }),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("status", { name: "Carregando dados da competência" }),
-    ).toBeVisible();
-    await choosePerson("Bruno Parceiro", "Meu desempenho");
-    expect(await screen.findByText("Nível Bronze")).toBeVisible();
   });
 
-  it("keeps the chosen month even if absent from the teammate's history", async () => {
-    getMonths.mockImplementation(async (_signal, partnerId) =>
-      partnerId
-        ? { currentMonth: "2026-10", months: [] }
-        : testPerformanceMonths,
-    );
-    getPerformance.mockImplementation(async (month, _signal, partnerId) =>
-      !partnerId && month === "2026-09"
-        ? testPerformanceData
-        : { month: month!, availability: "NO_DATA", data: null },
-    );
+  it("hides both people selectors for the authenticated partner without a team", async () => {
+    vi.mocked(performanceService.getPartners).mockResolvedValue([
+      { id: testUser.id, name: testUser.full_name },
+    ]);
+    vi.mocked(performanceService.getTeam).mockResolvedValue([
+      { id: testUser.id, name: testUser.full_name },
+    ]);
     renderPage();
-    await selectSeptember();
-    expect(await screen.findByText("Nível Bronze")).toBeVisible();
-    await choosePerson("Meu desempenho", "Bruno Parceiro");
     expect(
-      await screen.findByText(
-        "Dados ainda não disponíveis para esta competência",
-      ),
+      await screen.findByRole("region", { name: "Resumo da remuneração" }),
     ).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Setembro - 2026" }),
-    ).toBeVisible();
-
-    expect(screen.queryByText("Nível Bronze")).not.toBeInTheDocument();
-  });
-
-  it("allows returning to self after the teammate's history fails", async () => {
-    getMonths.mockImplementation(async (_signal, partnerId) => {
-      if (partnerId) throw new Error("unavailable");
-      return testPerformanceMonths;
-    });
-    renderPage();
-    await selectSeptember();
-    await choosePerson("Meu desempenho", "Bruno Parceiro");
-    expect(await screen.findByRole("alert")).toBeVisible();
-    await choosePerson("Bruno Parceiro", "Meu desempenho");
-    expect(await screen.findByText("Nível Bronze")).toBeVisible();
-  });
-
-  it("hides the people filter when Home offers no teammates", async () => {
-    vi.mocked(activitiesService.getSubordinates).mockResolvedValue([]);
-    renderPage();
-    await selectSeptember();
+      screen.queryByText("Parceiro", { selector: "label" }),
+    ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Meu desempenho" }),
+      screen.queryByRole("button", { name: "Consolidado" }),
     ).not.toBeInTheDocument();
   });
 });

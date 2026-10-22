@@ -75,6 +75,7 @@ export interface PerformanceRemuneration {
 }
 
 export interface PerformanceData {
+  contractsCount?: number | null;
   level: PerformanceLevel;
   remuneration: PerformanceRemuneration;
   indicators: {
@@ -88,6 +89,26 @@ export interface PerformanceData {
   };
 }
 
+export interface PerformancePerson {
+  id: string;
+  name: string;
+}
+export interface PerformanceView {
+  mode: "CONSOLIDATED" | "INDIVIDUAL";
+  portfolioReference: string | null;
+  missingDetails: boolean;
+}
+
 export type PerformanceResponse =
-  | { month: string; availability: "AVAILABLE"; data: PerformanceData }
-  | { month: string; availability: "NO_DATA"; data: null };
+  | {
+      month: string;
+      availability: "AVAILABLE";
+      data: PerformanceData;
+      view?: PerformanceView;
+    }
+  | {
+      month: string;
+      availability: "NO_DATA";
+      data: null;
+      view?: PerformanceView;
+    };
