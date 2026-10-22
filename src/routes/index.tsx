@@ -15,7 +15,7 @@ import {
   PortfolioInstallmentDetailPage,
 } from "@/features/contract-detail";
 import { OriginacaoPage } from "@/features/originacao";
-// import { PerformancePage } from "@/features/performance";
+import { PerformancePage } from "@/features/performance";
 import { ProfilePage } from "@/features/profile";
 import { RegisterChargeActionPage } from "@/features/register-action/charge";
 import { RegisterPreventiveActionPage } from "@/features/register-action/preventive";
@@ -99,7 +99,14 @@ export const router = createBrowserRouter([
               </PermissionRoute>
             ),
           },
-          // { path: "/performance", element: <PerformancePage /> },
+          {
+            path: "/performance",
+            element: (
+              <PermissionRoute permission={PORTAL_PERMISSIONS.PERFORMANCE_VIEW}>
+                <PerformancePage />
+              </PermissionRoute>
+            ),
+          },
           { path: "/profile", element: <ProfilePage /> },
           { path: "*", element: <NotFound /> },
         ],
