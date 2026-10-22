@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { NotFound } from "@/components/NotFound";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -19,6 +19,11 @@ import { PerformancePage } from "@/features/performance";
 import { ProfilePage } from "@/features/profile";
 import { RegisterChargeActionPage } from "@/features/register-action/charge";
 import { RegisterPreventiveActionPage } from "@/features/register-action/preventive";
+import {
+  ORIGINACAO_MANUAL_URL,
+  PRIMEIROS_PASSOS_LEGACY_URL,
+  PRIMEIROS_PASSOS_URL,
+} from "@/features/ajuda";
 import { PORTAL_PERMISSIONS } from "@/lib/permissions";
 
 export const router = createBrowserRouter([
@@ -30,6 +35,33 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      {
+        // Primeiros Passos (ícone de ajuda do topo nas demais telas). Fora do
+        // Layout: abre em outra aba, sem sidebar, e exige login.
+        path: PRIMEIROS_PASSOS_URL,
+        lazy: async () => {
+          const { PrimeirosPassosPage } =
+            await import("@/features/ajuda/PrimeirosPassosPage");
+          return { Component: PrimeirosPassosPage };
+        },
+      },
+      {
+        // Endereço antigo (arquivo estático público, já divulgado a parceiros):
+        // mantém o link funcionando, agora atrás do login.
+        path: PRIMEIROS_PASSOS_LEGACY_URL,
+        element: <Navigate to={PRIMEIROS_PASSOS_URL} replace />,
+      },
+      {
+        // Manual de Originação (ícone de ajuda do topo na tela de Originação).
+        // Fora do Layout: abre em outra aba, sem sidebar. Carregado sob demanda
+        // para não pesar o bundle principal com as 39 imagens do manual.
+        path: ORIGINACAO_MANUAL_URL,
+        lazy: async () => {
+          const { ManualOriginacaoPage } =
+            await import("@/features/ajuda/ManualOriginacaoPage");
+          return { Component: ManualOriginacaoPage };
+        },
+      },
       { path: "/register/charge", element: <RegisterChargeActionPage /> },
       {
         path: "/register/preventive",
