@@ -154,6 +154,35 @@ describe("ProposalSimulationEdit (AUREA-701)", () => {
     ).toBeInTheDocument();
   });
 
+  it("não mostra nem envia dados do cliente: só produto, valor, prazo e primeira parcela", async () => {
+    const user = userEvent.setup();
+    updateDraftSimulation.mockResolvedValue(updated);
+    renderEdit({});
+
+    for (const label of [
+      /CPF/,
+      /Nome completo/,
+      /Data de nascimento/,
+      /E-mail/,
+      /Celular/,
+    ]) {
+      expect(screen.queryByLabelText(label)).not.toBeInTheDocument();
+    }
+
+    await user.click(
+      screen.getByRole("button", { name: "Salvar e recalcular" }),
+    );
+
+    await waitFor(() => expect(updateDraftSimulation).toHaveBeenCalled());
+    const [, payload] = updateDraftSimulation.mock.calls[0];
+    expect(Object.keys(payload).sort()).toEqual([
+      "amount",
+      "firstInstallmentDate",
+      "installments",
+      "productId",
+    ]);
+  });
+
   it("salva as novas condições e devolve o resultado recalculado", async () => {
     const user = userEvent.setup();
     updateDraftSimulation.mockResolvedValue(updated);
