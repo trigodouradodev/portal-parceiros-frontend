@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
+import type { QuoteDraftSimulationSnapshot } from "@/services/quotes/quotes.types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Form } from "@/components/ui/form";
@@ -17,6 +18,7 @@ import { FinancialSection } from "@/features/originacao/components/proposta/Fina
 import { GuarantorSection } from "@/features/originacao/components/proposta/GuarantorSection";
 import { PartnerOpinionSection } from "@/features/originacao/components/proposta/PartnerOpinionSection";
 import { ProposalList } from "@/features/originacao/components/proposta/ProposalList";
+import { ProposalSimulationEdit } from "@/features/originacao/components/proposta/ProposalSimulationEdit";
 import { ProposalSuccess } from "@/features/originacao/components/proposta/ProposalSuccess";
 import { RegistrationSection } from "@/features/originacao/components/proposta/RegistrationSection";
 import { useSaveQuoteAddress } from "@/features/originacao/hooks/useSaveQuoteAddress";
@@ -37,6 +39,7 @@ import { productRatePercent } from "@/features/originacao/data/simulacao";
 import {
   OTHER_OPTION,
   PROPOSAL_STEPS,
+  applyDraftSimulationUpdate,
   applyRegistrationIdentityToSimulation,
   requiresBusinessActivityBranch,
   requiresProfession,
@@ -77,6 +80,8 @@ export function PropostaPage() {
     updateProposal,
   } = useOriginacao();
 
+  const [editingSimulation, setEditingSimulation] = useState(false);
+
   const proposal = openProposalId
     ? (proposals.find((item) => item.id === openProposalId) ?? null)
     : null;
@@ -109,12 +114,39 @@ export function PropostaPage() {
     );
   }
 
+  const draftProposal = proposal;
+
+  function handleSimulationEditOpen() {
+    setEditingSimulation(true);
+  }
+
+  function handleSimulationEditCancel() {
+    setEditingSimulation(false);
+  }
+
+  function handleSimulationSaved(update: QuoteDraftSimulationSnapshot) {
+    updateProposal(applyDraftSimulationUpdate(draftProposal, update));
+    setEditingSimulation(false);
+  }
+
+  if (editingSimulation) {
+    return (
+      <ProposalSimulationEdit
+        key={proposal.id}
+        proposal={proposal}
+        onCancel={handleSimulationEditCancel}
+        onSaved={handleSimulationSaved}
+      />
+    );
+  }
+
   return (
     <ProposalWizard
       key={proposal.id}
       proposal={proposal}
       onUpdate={updateProposal}
       onClose={closeProposal}
+      onEditSimulation={handleSimulationEditOpen}
       onLogout={onMobileLogout}
     />
   );
@@ -147,11 +179,13 @@ function ProposalWizard({
   proposal,
   onUpdate,
   onClose,
+  onEditSimulation,
   onLogout,
 }: {
   proposal: ProposalSnapshot;
   onUpdate: (proposal: ProposalSnapshot) => void;
   onClose: () => void;
+  onEditSimulation: () => void;
   onLogout?: () => void;
 }) {
   const form = useForm<ProposalFormData>({
@@ -507,6 +541,16 @@ function ProposalWizard({
     onClose();
   }
 
+  // Guarda o que já foi digitado no passo atual antes de sair para a simulação.
+  function handleEditSimulation() {
+    persist();
+    onEditSimulation();
+  }
+
+  const editSimulationAction = proposal.canEdit
+    ? { label: "Editar simulação", onClick: handleEditSimulation }
+    : undefined;
+
   function handleBlockedEmailOpenChange(open: boolean) {
     if (!open) setBlockedEmailField(null);
   }
@@ -529,6 +573,7 @@ function ProposalWizard({
             simulation.installmentAmountWithInsurance ??
               simulation.installmentAmount,
           )} · ${simulation.productName}`}
+          subtitleAction={editSimulationAction}
           progress={((step + 1) / PROPOSAL_STEPS.length) * 100}
           backLabel="Salvar rascunho e ver todas as propostas"
           onBack={handleClose}
