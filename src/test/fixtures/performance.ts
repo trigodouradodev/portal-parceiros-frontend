@@ -1,67 +1,57 @@
-import {
-  BonusPillar,
-  type BonusBand,
-  type PartnerLevel,
-  type PartnerProgram,
+import type {
+  PerformanceMonthsResponse,
+  PerformanceResponse,
 } from "@/services/performance/performance.types";
 
-export const testLevel: PartnerLevel = {
-  key: "ouro",
-  label: "Ouro",
-  monthlyTarget: 100_000,
-  monthlyFixed: 2_000,
+export const testPerformanceMonths: PerformanceMonthsResponse = {
+  currentMonth: "2026-10",
+  months: [{ month: "2026-09" }],
 };
 
-function band(
-  minValue: number,
-  maxValue: number | null,
-  bonusPercent: number,
-  opts: Partial<BonusBand> = {},
-): BonusBand {
-  return {
-    minValue,
-    maxValue,
-    bonusPercent,
-    minInclusive: true,
-    maxInclusive: false,
-    ...opts,
-  };
-}
-
-/** Programa mínimo realista para testes de performance. */
-export const testProgram: PartnerProgram = {
-  welcomeBonusAmount: 500,
-  levels: [testLevel],
-  permanenceMilestones: [
-    { month: 6, multiplier: 1 },
-    { month: 12, multiplier: 2 },
-    { month: 18, multiplier: 3 },
-  ],
-  bonusPillars: [
-    {
-      pillar: BonusPillar.DISBURSEMENT,
-      bands: [
-        band(0, 80, 0),
-        band(80, 100, 10),
-        band(100, 120, 20),
-        band(120, null, 30, { maxInclusive: true }),
-      ],
+export const testPerformanceData: Extract<
+  PerformanceResponse,
+  { availability: "AVAILABLE" }
+> = {
+  month: "2026-09",
+  availability: "AVAILABLE",
+  data: {
+    level: { key: "BRONZE", label: "Bronze" },
+    remuneration: {
+      fixedAmount: 4000,
+      disbursementBonusAmount: 400,
+      rateBonusAmount: 400,
+      riskBonusAmount: 1320,
+      agreementAmount: 0,
+      productionBonusAmount: null,
+      reimbursementBonusAmount: null,
+      totalAmount: 6120,
     },
-    {
-      pillar: BonusPillar.RISK,
-      bands: [
-        band(0, 2, 20, { maxInclusive: true }),
-        band(2, 3.5, 10, { minInclusive: false, maxInclusive: true }),
-        band(3.5, null, 0, { minInclusive: false }),
-      ],
+    indicators: {
+      origination: {
+        status: "AVAILABLE",
+        amount: 110000,
+        targetAmount: 100000,
+        targetPercent: 110,
+        appliedBand: null,
+      },
+      interestRate: {
+        status: "AVAILABLE",
+        rate: 9.5,
+        simpleRate: 9.5,
+        weightedRate: 9.7,
+        appliedBand: null,
+      },
+      delinquency: {
+        status: "AVAILABLE",
+        rate: 3.33,
+        portfolioRate: 6,
+        overdueAmount: 6000,
+        portfolioAmount: 100000,
+        disregardedOverdueAmount: 3000,
+        disregardedPortfolioAmount: 10000,
+        appliedBand: null,
+      },
+      reimbursement: { status: "NOT_APPLICABLE", amount: null },
     },
-    {
-      pillar: BonusPillar.RATE,
-      bands: [
-        band(0, 9, 0),
-        band(9, 10, 10),
-        band(10, null, 20, { maxInclusive: true }),
-      ],
-    },
-  ],
+  },
 };

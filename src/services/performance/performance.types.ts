@@ -1,62 +1,34 @@
-/**
- * Types matching portal-parceiros-backend/src/performance/interfaces/
- */
+/** Contrato de consulta de Desempenho V2 do backend. */
+export type PerformanceIndicatorStatus =
+  | "AVAILABLE"
+  | "NO_MEASUREMENT"
+  | "NOT_APPLICABLE";
+export type PerformanceLevelKey =
+  | "BRONZE"
+  | "SILVER"
+  | "GOLD"
+  | "PLATINUM"
+  | "AUREA"
+  | "HYBRID"
+  | "REIMBURSEMENT"
+  | "COLLECTION_AGENT"
+  | "UNKNOWN";
 
-export const BonusPillar = {
-  DISBURSEMENT: "DISBURSEMENT",
-  RISK: "RISK",
-  RATE: "RATE",
-} as const;
-
-export type BonusPillar = (typeof BonusPillar)[keyof typeof BonusPillar];
-
-export const CommissionComponentKind = {
-  FIXED: "FIXED",
-  WELCOME: "WELCOME",
-  DISBURSEMENT_BONUS: "DISBURSEMENT_BONUS",
-  RISK_BONUS: "RISK_BONUS",
-  RATE_BONUS: "RATE_BONUS",
-  PERMANENCE_BONUS: "PERMANENCE_BONUS",
-} as const;
-
-export type CommissionComponentKind =
-  (typeof CommissionComponentKind)[keyof typeof CommissionComponentKind];
-
-export interface PartnerIdentity {
-  id: string;
-  fullName: string;
-  roleLabel: string | null;
+export interface PerformanceMonth {
+  month: string;
 }
 
-export interface PartnerLevel {
-  key: string;
-  label: string;
-  monthlyTarget: number;
-  monthlyFixed: number;
+export interface PerformanceMonthsResponse {
+  currentMonth: string;
+  months: PerformanceMonth[];
 }
 
-export interface NextPermanenceMilestone {
-  month: number;
-  multiplier: number;
-  amount: number;
-  monthsRemaining: number;
+export interface PerformanceLevel {
+  key: PerformanceLevelKey;
+  label: string | null;
 }
 
-export interface PartnershipStatus {
-  startedAt: string;
-  monthNumber: number;
-  isFirstMonth: boolean;
-  nextMilestone: NextPermanenceMilestone | null;
-}
-
-/** GET /performance/me */
-export interface PartnerProfile {
-  partner: PartnerIdentity;
-  level: PartnerLevel;
-  partnership: PartnershipStatus;
-}
-
-export interface BonusBand {
+export interface AppliedPerformanceBand {
   minValue: number;
   minInclusive: boolean;
   maxValue: number | null;
@@ -64,60 +36,79 @@ export interface BonusBand {
   bonusPercent: number;
 }
 
-export interface BonusPillarBands {
-  pillar: BonusPillar;
-  bands: BonusBand[];
+export interface PerformanceOrigination {
+  status: PerformanceIndicatorStatus;
+  amount: number | null;
+  targetAmount: number | null;
+  targetPercent: number | null;
+  appliedBand: AppliedPerformanceBand | null;
 }
 
-export interface ProgramMilestone {
-  month: number;
-  multiplier: number;
-}
-
-/** GET /performance/program */
-export interface PartnerProgram {
-  welcomeBonusAmount: number;
-  levels: PartnerLevel[];
-  bonusPillars: BonusPillarBands[];
-  permanenceMilestones: ProgramMilestone[];
-}
-
-export interface OriginationPerformance {
-  count: number;
-  amount: number;
-  targetPercent: number;
-  bonusPercent: number;
-}
-
-export interface DelinquencyPerformance {
+export interface PerformanceInterestRate {
+  status: PerformanceIndicatorStatus;
   rate: number | null;
-  overdueAmount: number;
-  portfolioOpenAmount: number;
-  bonusPercent: number;
+  simpleRate: number | null;
+  weightedRate: number | null;
+  appliedBand: AppliedPerformanceBand | null;
 }
 
-export interface AverageRatePerformance {
+export interface PerformanceDelinquency {
+  status: PerformanceIndicatorStatus;
   rate: number | null;
-  bonusPercent: number;
+  portfolioRate: number | null;
+  overdueAmount: number | null;
+  portfolioAmount: number | null;
+  disregardedOverdueAmount: number | null;
+  disregardedPortfolioAmount: number | null;
+  appliedBand: AppliedPerformanceBand | null;
 }
 
-export interface CommissionComponent {
-  kind: CommissionComponentKind;
-  amount: number;
+export interface PerformanceRemuneration {
+  fixedAmount: number | null;
+  disbursementBonusAmount: number | null;
+  rateBonusAmount: number | null;
+  riskBonusAmount: number | null;
+  agreementAmount: number | null;
+  productionBonusAmount: number | null;
+  reimbursementBonusAmount: number | null;
+  totalAmount: number | null;
 }
 
-export interface CommissionSummary {
-  total: number;
-  components: CommissionComponent[];
+export interface PerformanceData {
+  contractsCount?: number | null;
+  level: PerformanceLevel;
+  remuneration: PerformanceRemuneration;
+  indicators: {
+    origination: PerformanceOrigination;
+    interestRate: PerformanceInterestRate;
+    delinquency: PerformanceDelinquency;
+    reimbursement: {
+      status: PerformanceIndicatorStatus;
+      amount: number | null;
+    };
+  };
 }
 
-/** GET /performance/current */
-export interface CurrentPerformance {
-  month: string;
-  periodStart: string;
-  periodEnd: string;
-  origination: OriginationPerformance;
-  delinquency: DelinquencyPerformance;
-  averageRate: AverageRatePerformance;
-  commission: CommissionSummary;
+export interface PerformancePerson {
+  id: string;
+  name: string;
 }
+export interface PerformanceView {
+  mode: "CONSOLIDATED" | "INDIVIDUAL";
+  portfolioReference: string | null;
+  missingDetails: boolean;
+}
+
+export type PerformanceResponse =
+  | {
+      month: string;
+      availability: "AVAILABLE";
+      data: PerformanceData;
+      view?: PerformanceView;
+    }
+  | {
+      month: string;
+      availability: "NO_DATA";
+      data: null;
+      view?: PerformanceView;
+    };

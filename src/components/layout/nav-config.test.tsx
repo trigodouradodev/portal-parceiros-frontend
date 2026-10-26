@@ -31,3 +31,36 @@ describe("getNavItemsForPermissions", () => {
     );
   });
 });
+
+describe("Desempenho rollout", () => {
+  it.each(
+    [
+      undefined,
+      [],
+      ["ROLE_MANAGER"],
+      ["ROLE_ADMIN"],
+      ["QUOTE_ACTIVITY_GATES"],
+      ["ROLE_CONSULTANT"],
+      ["ROLE_COLLECTION_AGENT"],
+    ].map((permissions) => ({ permissions })),
+  )(
+    "hides Desempenho without its explicit permission: $permissions",
+    ({ permissions }) => {
+      expect(
+        getNavItemsForPermissions(permissions).map((item) => item.key),
+      ).not.toContain("desempenho");
+    },
+  );
+  it.each([
+    "ROLE_MANAGER",
+    "ROLE_CONSULTANT",
+    "ROLE_COLLECTION_AGENT",
+    "ROLE_ADMIN",
+  ])("shows Desempenho for %s when granted PERFORMANCE_VIEW", (role) => {
+    expect(
+      getNavItemsForPermissions([role, "PERFORMANCE_VIEW"]).map(
+        (item) => item.key,
+      ),
+    ).toContain("desempenho");
+  });
+});
