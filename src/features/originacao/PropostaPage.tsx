@@ -1,9 +1,12 @@
+import { PARTNER_ORIGINATION_RESTRICTED_MESSAGE } from "@/lib/partner-restrictions";
+import { useOriginationRestriction } from "@/features/originacao/hooks/useOriginationRestriction";
 import { useQuoteAttachments } from "@/features/originacao/hooks/useQuoteDocumentation";
 import { useEffect, useState } from "react";
 import { isAxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Form } from "@/components/ui/form";
@@ -191,6 +194,8 @@ function ProposalWizard({
   } = useCompleteQuoteDocumentation();
   const { mutateAsync: submitDraft, isPending: submittingDraft } =
     useSubmitQuoteDraft();
+  const { originationRestricted, handleSubmitError } =
+    useOriginationRestriction();
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [renewalPrefillOpen, setRenewalPrefillOpen] = useState(false);
   const [blockedEmailField, setBlockedEmailField] = useState<
@@ -480,6 +485,7 @@ function ProposalWizard({
         });
         await submitDraft(proposal.id);
       } catch (err) {
+        handleSubmitError(err);
         showToast(
           getApiErrorMessage(err, "Não foi possível enviar a proposta."),
           { variant: "destructive" },
@@ -566,6 +572,13 @@ function ProposalWizard({
           {step === 4 ? <FinancialSection /> : null}
           {step === 5 ? <DocumentsSection quoteId={proposal.id} /> : null}
           {step === 6 ? <PartnerOpinionSection /> : null}
+          {step === 6 && originationRestricted ? (
+            <Alert variant="destructive" className="mt-4">
+              <AlertDescription>
+                {PARTNER_ORIGINATION_RESTRICTED_MESSAGE}
+              </AlertDescription>
+            </Alert>
+          ) : null}
 
           <div className="mt-6 flex gap-2">
             {step > 0 ? (

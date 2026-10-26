@@ -26,7 +26,7 @@ import { OriginacaoPageFrame } from "@/features/originacao/components/Originacao
 import { SimulationDueDateField } from "@/features/originacao/components/simulacao/SimulationDueDateField";
 import { SimulationProductField } from "@/features/originacao/components/simulacao/SimulationProductField";
 import { SimulationResultCard } from "@/features/originacao/components/simulacao/SimulationResultCard";
-import { CREATE_QUOTE_BLOCKED_MESSAGE } from "@/features/originacao/constants/simulacao-list";
+import { getCreateQuoteBlockedMessage } from "@/features/originacao/constants/simulacao-list";
 import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
@@ -100,6 +100,9 @@ export function SimulacaoForm({
   const simulateBlocked = permissionsQuery.data?.canSimulateQuote === false;
   const canCreateQuote = permissionsQuery.data?.canCreateQuote === true;
   const createQuoteBlocked = permissionsQuery.data?.canCreateQuote === false;
+  const createQuoteBlockedMessage = getCreateQuoteBlockedMessage(
+    permissionsQuery.data?.originationRestricted,
+  );
   const [persistedSimulation, setPersistedSimulation] =
     useState<SimulationSnapshot | null>(editing);
   const [ineligibleAttemptKey, setIneligibleAttemptKey] = useState<
@@ -228,7 +231,7 @@ export function SimulacaoForm({
   async function handleStartProposal() {
     if (!canStartProposal || !freshSimulation) {
       if (createQuoteBlocked) {
-        showToast(CREATE_QUOTE_BLOCKED_MESSAGE, { variant: "destructive" });
+        showToast(createQuoteBlockedMessage, { variant: "destructive" });
       }
       return;
     }
@@ -414,7 +417,7 @@ export function SimulacaoForm({
 
           {createQuoteBlocked && !simulateBlocked && !converted ? (
             <p className="rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
-              {CREATE_QUOTE_BLOCKED_MESSAGE}
+              {createQuoteBlockedMessage}
             </p>
           ) : null}
 
