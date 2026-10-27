@@ -61,6 +61,17 @@ describe("quote status presentation", () => {
     );
   });
 
+  it("shows On Hold with the same label and tone as the backoffice", () => {
+    const info = getQuoteStatusPresentation(QuoteStatus.ON_HOLD);
+    expect(info.label).toBe("On Hold");
+    expect(info.tone).toBe("warning");
+    expect(info.badgeClassName).toBe(QUOTE_STATUS_TONE_CLASS.warning);
+    expect(getQuoteListAction(QuoteStatus.ON_HOLD)).toBe(
+      QuoteListAction.OPEN_BACKOFFICE,
+    );
+    expect(isQuoteInBackoffice(QuoteStatus.ON_HOLD)).toBe(true);
+  });
+
   it("uses the same badge palette as the backoffice quote list", () => {
     expect(getQuoteStatusPresentation(QuoteStatus.DRAFT).badgeClassName).toBe(
       QUOTE_STATUS_TONE_CLASS.muted,
