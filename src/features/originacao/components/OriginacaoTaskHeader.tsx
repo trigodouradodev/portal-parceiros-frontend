@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { LogoutAvatarButton } from "@/components/layout/LogoutAvatarButton";
 import { useAuth } from "@/contexts/auth/auth-context";
 import { OriginacaoProgress } from "@/features/originacao/components/OriginacaoProgress";
@@ -7,6 +7,8 @@ import { getInitials } from "@/lib/user-display";
 interface OriginacaoTaskHeaderProps {
   title: string;
   subtitle?: string;
+  /** Ação textual ao lado do subtítulo (ex.: "Editar simulação"). */
+  subtitleAction?: { label: string; onClick: () => void };
   progress?: number;
   backLabel: string;
   onBack: () => void;
@@ -16,6 +18,7 @@ interface OriginacaoTaskHeaderProps {
 export function OriginacaoTaskHeader({
   title,
   subtitle,
+  subtitleAction,
   progress,
   backLabel,
   onBack,
@@ -42,6 +45,16 @@ export function OriginacaoTaskHeader({
             </h2>
             {subtitle ? (
               <p className="truncate text-xs text-white/60">{subtitle}</p>
+            ) : null}
+            {subtitleAction ? (
+              <button
+                type="button"
+                onClick={subtitleAction.onClick}
+                className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-brand-yellow underline-offset-2 hover:underline"
+              >
+                <Pencil size={11} />
+                {subtitleAction.label}
+              </button>
             ) : null}
           </div>
           {onLogout ? (
