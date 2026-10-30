@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   clampCountSelect,
+  DOCUMENTS_STEP_INDEX,
+  FINANCIAL_STEP_INDEX,
   PROPOSAL_STEPS,
+  applyDraftSimulationUpdate,
   applyRegistrationIdentityToSimulation,
   createEmptyProposalForm,
   createProposalFromSimulation,
@@ -421,4 +424,92 @@ it("permite documentação sem fotos da atividade quando os documentos obrigató
       ],
     }),
   ).toBe(true);
+});
+
+describe("applyDraftSimulationUpdate (AUREA-701)", () => {
+  const simulation: ProposalSimulationSnapshot = {
+    id: "sim-1",
+    createdAt: "2026-10-19T12:00:00.000Z",
+    status: "converted",
+    name: "Maria Souza",
+    birthDate: "1990-05-20",
+    email: "maria@email.com",
+    telephone: "11987654321",
+    document: "52998224725",
+    productId: "produto-antigo",
+    productName: "PRODUTO ANTIGO",
+    amount: 5000,
+    installments: 10,
+    firstInstallmentDate: "2026-11-10",
+    installmentAmount: 597.88,
+    insurancePremium: 150,
+    installmentAmountWithInsurance: 620,
+    interestRate: 0.03,
+  };
+  const update = {
+    id: "quote-1",
+    simulationId: "sim-1",
+    productId: "produto-novo",
+    productName: "PRODUTO NOVO",
+    interestRate: 0.0339,
+    financeAmount: 8000,
+    installmentNumbers: 12,
+    firstInstallmentDate: "2026-12-15",
+    installmentAmount: 780.5,
+    installmentAmountWithInsurance: 805.7,
+    insurancePremium: 240,
+    totalAmountOwed: 9366,
+  };
+
+  function proposalAtStep(step: number) {
+    return {
+      ...createProposalFromSimulation(simulation, {
+        id: "quote-1",
+        createdAt: "2026-10-19T12:01:00.000Z",
+      }),
+      step,
+      stepValid: Array(PROPOSAL_STEPS.length).fill(true) as boolean[],
+    };
+  }
+
+  it("troca produto, valor, prazo, primeira parcela, taxa e seguro da simulação da proposta", () => {
+    const result = applyDraftSimulationUpdate(proposalAtStep(2), update);
+
+    expect(result.simulation).toMatchObject({
+      id: "sim-1",
+      name: "Maria Souza",
+      productId: "produto-novo",
+      productName: "PRODUTO NOVO",
+      amount: 8000,
+      installments: 12,
+      firstInstallmentDate: "2026-12-15",
+      installmentAmount: 780.5,
+      installmentAmountWithInsurance: 805.7,
+      insurancePremium: 240,
+      interestRate: 0.0339,
+    });
+  });
+
+  it("marca Financeiro e Documentação como não concluídos e preserva os demais passos", () => {
+    const { stepValid } = applyDraftSimulationUpdate(proposalAtStep(2), update);
+
+    expect(stepValid[FINANCIAL_STEP_INDEX]).toBe(false);
+    expect(stepValid[DOCUMENTS_STEP_INDEX]).toBe(false);
+    expect(stepValid.filter(Boolean)).toHaveLength(PROPOSAL_STEPS.length - 2);
+  });
+
+  it("quem estava depois do Financeiro volta a ele; quem estava antes continua onde estava", () => {
+    expect(applyDraftSimulationUpdate(proposalAtStep(6), update).step).toBe(
+      FINANCIAL_STEP_INDEX,
+    );
+    expect(applyDraftSimulationUpdate(proposalAtStep(5), update).step).toBe(
+      FINANCIAL_STEP_INDEX,
+    );
+    expect(applyDraftSimulationUpdate(proposalAtStep(1), update).step).toBe(1);
+  });
+
+  it("os índices dos passos apontam para Financeiro e Documentação", () => {
+    expect(PROPOSAL_STEPS[FINANCIAL_STEP_INDEX]).toBe("Financeiro");
+    expect(PROPOSAL_STEPS[DOCUMENTS_STEP_INDEX]).toBe("Documentação");
+  });
 });

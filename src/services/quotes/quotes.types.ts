@@ -75,6 +75,30 @@ export interface QuoteDraftSnapshot {
   address?: QuoteDraftAddressPrefill;
 }
 
+/** Payload de PUT /quotes/draft/:quoteId/simulation (AUREA-701). */
+export interface UpdateDraftSimulationPayload {
+  productId: string;
+  amount: number;
+  installments: number;
+  firstInstallmentDate: string;
+}
+
+/** Resposta de PUT /quotes/draft/:quoteId/simulation: condições já recalculadas. */
+export interface QuoteDraftSimulationSnapshot {
+  id: string;
+  simulationId: string;
+  productId: string;
+  productName: string;
+  interestRate: number;
+  financeAmount: number;
+  installmentNumbers: number;
+  firstInstallmentDate: string;
+  installmentAmount: number;
+  installmentAmountWithInsurance: number;
+  insurancePremium: number;
+  totalAmountOwed: number;
+}
+
 export interface SaveQuoteRegistrationPayload {
   name: string;
   document: string;
