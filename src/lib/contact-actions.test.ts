@@ -29,10 +29,25 @@ describe("normalizePhoneDigits", () => {
     expect(normalizePhoneDigits("5511987654321")).toBe("5511987654321");
   });
 
+  it("treats area code 55 as a local number, not as the country code", () => {
+    expect(normalizePhoneDigits("(55) 99302-5095")).toBe("5555993025095");
+    expect(normalizePhoneDigits("55993025095")).toBe("5555993025095");
+    expect(normalizePhoneDigits("(55) 3222-1234")).toBe("555532221234");
+  });
+
+  it("keeps area code 55 numbers that already include country code", () => {
+    expect(normalizePhoneDigits("+55 (55) 99302-5095")).toBe("5555993025095");
+    expect(normalizePhoneDigits("+55 (55) 3222-1234")).toBe("555532221234");
+    expect(normalizePhoneDigits("+55 11 98765-4321")).toBe("5511987654321");
+  });
+
   it("returns null for invalid lengths", () => {
     expect(normalizePhoneDigits("123")).toBeNull();
     expect(normalizePhoneDigits("")).toBeNull();
     expect(normalizePhoneDigits("55123")).toBeNull();
+    expect(normalizePhoneDigits("993025095")).toBeNull();
+    expect(normalizePhoneDigits("55993025095123")).toBeNull();
+    expect(normalizePhoneDigits("44987654321123")).toBeNull();
   });
 });
 
@@ -49,6 +64,14 @@ describe("hasCallablePhone", () => {
 });
 
 describe("toTelUrl / toWhatsAppUrl", () => {
+  it("builds tel and WhatsApp URLs for area code 55 without country code", () => {
+    expect(toTelUrl("(55) 99302-5095")).toBe("tel:+5555993025095");
+    expect(toWhatsAppUrl("(55) 99302-5095")).toBe(
+      "https://wa.me/5555993025095",
+    );
+    expect(hasCallablePhone("(55) 99302-5095")).toBe(true);
+  });
+
   it("builds tel and WhatsApp URLs", () => {
     expect(toTelUrl("11987654321")).toBe("tel:+5511987654321");
     expect(toWhatsAppUrl("11987654321")).toBe("https://wa.me/5511987654321");
