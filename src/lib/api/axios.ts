@@ -1,3 +1,8 @@
+import { getApiErrorCode } from "@/lib/api/errors";
+import {
+  PartnerRestrictionCode,
+  rememberAccessRestrictedLogout,
+} from "@/lib/partner-restrictions";
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { emitAuthLogout, emitTokenRefreshed } from "@/lib/api/auth-events";
 
@@ -117,6 +122,15 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
+
+      // Parceiro bloqueado depois de logar: o refresh volta 403 com código
+      // estável. Guarda o motivo para o login explicar por que a sessão caiu.
+      if (
+        getApiErrorCode(refreshError) ===
+        PartnerRestrictionCode.ACCESS_RESTRICTED
+      ) {
+        rememberAccessRestrictedLogout();
+      }
 
       // Se o refresh falhar, limpa tokens e notifica o AuthContext para
       // encerrar a sessão (a navegação para /login fica a cargo do Router).

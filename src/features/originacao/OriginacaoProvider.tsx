@@ -1,3 +1,5 @@
+import { quoteActivityPermissionsKeys } from "@/hooks/useQuoteActivityPermissions";
+import { PartnerRestrictionCode } from "@/lib/partner-restrictions";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/contexts/toast/toast-context";
@@ -16,7 +18,7 @@ import type {
   OriginacaoTab,
   SimulationSnapshot,
 } from "@/features/originacao/types";
-import { getApiErrorMessage } from "@/lib/api/errors";
+import { getApiErrorCode, getApiErrorMessage } from "@/lib/api/errors";
 import {
   originationKeys,
   originationService,
@@ -94,6 +96,15 @@ export function OriginacaoProvider({ children }: { children: ReactNode }) {
         void queryClient.invalidateQueries({ queryKey: quotesKeys.listRoot() });
         return true;
       } catch (err) {
+        // Restrição aplicada depois que o perfil foi lido: atualiza as
+        // permissões para o botão já vir desabilitado, com o motivo certo.
+        if (
+          getApiErrorCode(err) === PartnerRestrictionCode.ORIGINATION_RESTRICTED
+        ) {
+          void queryClient.invalidateQueries({
+            queryKey: quoteActivityPermissionsKeys.all,
+          });
+        }
         showToast(
           getApiErrorMessage(err, "Não foi possível iniciar a proposta."),
           { variant: "destructive" },

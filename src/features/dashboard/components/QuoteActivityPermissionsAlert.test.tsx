@@ -64,4 +64,55 @@ describe("QuoteActivityPermissionsAlert", () => {
       "Não há ações pendentes que impeçam este acesso.",
     );
   });
+
+  it("explains the origination restriction instead of the pending-task blockers", async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(
+      <QuoteActivityPermissionsAlert
+        canSimulateQuote
+        canCreateQuote={false}
+        originationRestricted
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Criar proposta" }),
+    ).toBeDisabled();
+    await user.click(
+      screen.getByRole("button", {
+        name: "Entenda como liberar propostas",
+      }),
+    );
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Como liberar os acessos a propostas",
+    });
+    expect(dialog).toHaveTextContent(
+      "Você está com a originação restrita. Fale com seu gerente.",
+    );
+    // não manda "concluir ações pendentes", que não resolve restrição
+    expect(dialog).not.toHaveTextContent("conclua ou reagende");
+    expect(dialog).not.toHaveTextContent("Pós carta D+15");
+  });
+
+  it("keeps the pending-task explanation when the block is not a restriction", async () => {
+    const user = userEvent.setup();
+
+    renderWithProviders(
+      <QuoteActivityPermissionsAlert canSimulateQuote canCreateQuote={false} />,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Entenda como liberar propostas",
+      }),
+    );
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Como liberar os acessos a propostas",
+    });
+    expect(dialog).toHaveTextContent("conclua ou reagende");
+    expect(dialog).not.toHaveTextContent("originação restrita");
+  });
 });

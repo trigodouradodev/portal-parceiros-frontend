@@ -1,3 +1,4 @@
+import { getCreateQuoteBlockedMessage } from "@/features/originacao/constants/simulacao-list";
 import { useState } from "react";
 import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import { SimulacaoList } from "@/features/originacao/components/SimulacaoList";
@@ -52,11 +53,16 @@ export function SimulacaoPage() {
     handleEdit(simulation);
   }
 
+  const createQuoteBlockedMessage = getCreateQuoteBlockedMessage(
+    permissionsQuery.data?.originationRestricted,
+  );
+
   if (!showForm) {
     return (
       <SimulacaoList
         hasUnfilteredSimulations={simulations.length > 0}
         canCreateQuote={permissionsQuery.data?.canCreateQuote !== false}
+        createQuoteBlockedMessage={createQuoteBlockedMessage}
         onNewSimulation={handleNewSimulation}
         onEdit={handleEdit}
         onStartProposal={startProposal}

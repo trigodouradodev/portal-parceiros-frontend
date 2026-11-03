@@ -313,4 +313,34 @@ describe("SimulacaoList", () => {
     ).toBeDisabled();
     expect(screen.getByRole("button", { name: "Editar" })).toBeEnabled();
   });
+
+  it("mostra o motivo de restrição de originação, não o de pendência de cobrança", async () => {
+    listSimulations.mockResolvedValue([snapshot]);
+
+    renderList(
+      <SimulacaoList
+        hasUnfilteredSimulations
+        canCreateQuote={false}
+        createQuoteBlockedMessage="Você está com a originação restrita. Fale com seu gerente."
+        onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
+        onStartProposal={vi.fn()}
+      />,
+    );
+
+    expect(await screen.findByText("Maria Souza")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "Você está com a originação restrita. Fale com seu gerente.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Você possui ações de cobrança pendentes que impedem iniciar uma proposta.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Iniciar proposta" }),
+    ).toBeDisabled();
+  });
 });

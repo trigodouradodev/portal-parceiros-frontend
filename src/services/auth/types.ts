@@ -27,6 +27,8 @@ export interface UserProfile {
   permissions: string[];
   canSimulateQuote: boolean;
   canCreateQuote: boolean;
+  /** Restrição de originação ativa (AUREA-590): `canCreateQuote` vem falso. */
+  originationRestricted?: boolean;
   /** Limite em reais retornado por /auth/me. */
   quoteIncomeProofRequiredAbove?: number;
 }

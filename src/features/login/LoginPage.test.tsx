@@ -143,4 +143,74 @@ describe("LoginPage", () => {
       "Sem conexão. Verifique sua internet e tente novamente.",
     );
   });
+
+  it("mostra 'Acesso bloqueado' quando o 403 traz o código de restrição de parceiro", async () => {
+    const user = userEvent.setup();
+    const login = vi.fn().mockRejectedValue(
+      new AxiosError("Forbidden", "ERR_BAD_REQUEST", undefined, undefined, {
+        status: 403,
+        data: {
+          statusCode: 403,
+          code: "PARTNER_ACCESS_RESTRICTED",
+          message: "Acesso bloqueado. Fale com seu gerente.",
+        },
+        statusText: "Forbidden",
+        headers: {},
+        config: { headers: {} as never },
+      }),
+    );
+    renderLogin(login);
+
+    await user.type(emailInput(), "ana@test.com");
+    await user.type(passwordInput(), "senha123");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Acesso bloqueado. Fale com seu gerente.",
+    );
+    expect(
+      screen.queryByText("Você não tem permissão para acessar o Portal."),
+    ).not.toBeInTheDocument();
+  });
+
+  describe("sessão encerrada por restrição de acesso", () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    function stubSessionStorage(reason: string | null) {
+      const data = new Map<string, string>();
+      if (reason) data.set("auth_logout_reason", reason);
+      vi.stubGlobal("sessionStorage", {
+        getItem: (key: string) => data.get(key) ?? null,
+        setItem: (key: string, value: string) => void data.set(key, value),
+        removeItem: (key: string) => void data.delete(key),
+      });
+      return data;
+    }
+
+    it("explica o motivo ao chegar no login e some quando o usuário começa a digitar", async () => {
+      const user = userEvent.setup();
+      const stored = stubSessionStorage("PARTNER_ACCESS_RESTRICTED");
+      renderLogin();
+
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Acesso bloqueado. Fale com seu gerente.",
+      );
+
+      await user.type(emailInput(), "a");
+
+      await waitFor(() => {
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      });
+      expect(stored.has("auth_logout_reason")).toBe(false);
+    });
+
+    it("sem motivo registrado, o login abre sem aviso", () => {
+      stubSessionStorage(null);
+      renderLogin();
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+  });
 });

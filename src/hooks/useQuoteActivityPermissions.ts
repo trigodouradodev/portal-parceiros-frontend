@@ -4,6 +4,8 @@ import { authService } from "@/services/auth/auth.service";
 export interface QuoteActivityPermissions {
   canSimulateQuote: boolean;
   canCreateQuote: boolean;
+  /** Restrição de originação do parceiro (módulo de Gestão de Parceiros). */
+  originationRestricted?: boolean;
 }
 
 export const quoteActivityPermissionsKeys = {
@@ -18,6 +20,7 @@ export function useQuoteActivityPermissions(options?: { enabled?: boolean }) {
       return {
         canSimulateQuote: profile.canSimulateQuote,
         canCreateQuote: profile.canCreateQuote,
+        originationRestricted: profile.originationRestricted === true,
       };
     },
     staleTime: 30 * 1000,
