@@ -1,7 +1,8 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Copy } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
+import { useToast } from "@/contexts/toast/toast-context";
 import { OriginacaoTaskHeader } from "@/features/originacao/components/OriginacaoTaskHeader";
 import { originacaoCardClassName } from "@/features/originacao/components/OriginacaoPageFrame";
 import type { ProposalSnapshot } from "@/features/originacao/data/proposal";
@@ -26,6 +27,16 @@ export function ProposalSuccess({
   const { simulation } = proposal;
   const phone = simulation.telephone;
   const canSendWhatsApp = hasCallablePhone(phone);
+  const { showToast } = useToast();
+
+  async function copyClientAppLink() {
+    try {
+      await navigator.clipboard.writeText(getClientAppUrl());
+      showToast("Link copiado");
+    } catch {
+      showToast("Não foi possível copiar o link.", { variant: "destructive" });
+    }
+  }
 
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto">
@@ -66,6 +77,16 @@ export function ProposalSuccess({
             >
               Enviar link pelo WhatsApp
             </WhatsAppButton>
+
+            <Button
+              variant="outline"
+              size="pill"
+              className="w-full"
+              onClick={copyClientAppLink}
+            >
+              <Copy />
+              Copiar link
+            </Button>
 
             <Button variant="ghost" size="pill" onClick={onBackToList}>
               Ver todas as propostas
