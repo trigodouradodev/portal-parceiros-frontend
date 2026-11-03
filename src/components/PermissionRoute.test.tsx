@@ -7,7 +7,10 @@ import {
 } from "@/contexts/auth/auth-context";
 import { testUser } from "@/test/render";
 
-function renderRoute(permissions: string[]) {
+function renderRoute(
+  permissions: string[],
+  permission = "QUOTE_NEW_ORIGINATION_FLOW",
+) {
   const auth: AuthContextType = {
     user: { ...testUser, permissions },
     accessToken: "token",
@@ -27,7 +30,7 @@ function renderRoute(permissions: string[]) {
           <Route
             path="/originacao"
             element={
-              <PermissionRoute permission="QUOTE_NEW_ORIGINATION_FLOW">
+              <PermissionRoute permission={permission}>
                 <div>Nova originação</div>
               </PermissionRoute>
             }
@@ -50,5 +53,23 @@ describe("PermissionRoute", () => {
 
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.queryByText("Nova originação")).not.toBeInTheDocument();
+  });
+});
+
+describe("Desempenho permission route", () => {
+  it.each([
+    "ROLE_MANAGER",
+    "ROLE_ADMIN",
+    "ROLE_CONSULTANT",
+    "ROLE_COLLECTION_AGENT",
+    "QUOTE_ACTIVITY_GATES",
+  ])("redirects %s without PERFORMANCE_VIEW", (role) => {
+    renderRoute([role], "PERFORMANCE_VIEW");
+    expect(screen.getByText("Home")).toBeInTheDocument();
+    expect(screen.queryByText("Nova originação")).not.toBeInTheDocument();
+  });
+  it("allows access with PERFORMANCE_VIEW", () => {
+    renderRoute(["ROLE_MANAGER", "PERFORMANCE_VIEW"], "PERFORMANCE_VIEW");
+    expect(screen.getByText("Nova originação")).toBeInTheDocument();
   });
 });

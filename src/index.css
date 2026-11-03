@@ -49,6 +49,31 @@
 
   --shadow-card: var(--shadow-card-value);
   --shadow-elevated: var(--shadow-elevated-value);
+
+  /*
+   * Escala tipográfica do Manual de Originação (copiada do aurea-website,
+   * mesmo nome de utilitário: text-p-*, text-h*). Usada só em
+   * src/features/ajuda; os títulos são fluidos entre 400px e 1280px.
+   */
+  --text-h2: clamp(28px, 22.55px + 1.36vw, 40px);
+  --text-h2--line-height: 1.2;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 600;
+  --text-h3: clamp(24px, 20.36px + 0.91vw, 32px);
+  --text-h3--line-height: 1.25;
+  --text-h3--font-weight: 600;
+  --text-h5: clamp(20px, 18.18px + 0.45vw, 24px);
+  --text-h5--line-height: 1.333;
+  --text-h5--font-weight: 600;
+  --text-h6: clamp(18px, 17.09px + 0.23vw, 20px);
+  --text-h6--line-height: 1.4;
+  --text-h6--font-weight: 600;
+  --text-p-lg: 16px;
+  --text-p-lg--line-height: 24px;
+  --text-p-md: 14px;
+  --text-p-md--line-height: 20px;
+  --text-p-sm: 12px;
+  --text-p-sm--line-height: 18px;
 }
 
 :root {

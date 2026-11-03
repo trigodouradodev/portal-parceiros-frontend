@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/auth/auth-context";
 import {
   useInfiniteQuery,
   useMutation,
@@ -19,7 +20,8 @@ import type {
 
 export const activitiesKeys = {
   all: ["activities"] as const,
-  subordinates: () => [...activitiesKeys.all, "subordinates"] as const,
+  subordinates: (userId?: string) =>
+    [...activitiesKeys.all, "subordinates", userId] as const,
   todayQueueInfinite: (limit: number, assignedToId?: string) =>
     [
       ...activitiesKeys.all,
@@ -73,8 +75,9 @@ export function buildSegmentCountsFromApi(
  * Fila "Ações de hoje" (Cobrança v2) com scroll infinito no bloco `locked`.
  */
 export function useSubordinates() {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: activitiesKeys.subordinates(),
+    queryKey: activitiesKeys.subordinates(user?.id),
     queryFn: () => activitiesService.getSubordinates(),
     staleTime: 5 * 60 * 1000,
   });

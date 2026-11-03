@@ -7,6 +7,7 @@ import type {
   QuoteDetail,
   QuoteDocumentationAttachments,
   QuoteDocumentationSnapshot,
+  QuoteDraftSimulationSnapshot,
   QuoteDraftSnapshot,
   QuoteFinancialSnapshot,
   QuoteGuarantorSnapshot,
@@ -22,6 +23,7 @@ import type {
   SaveQuoteIncomePayload,
   SaveQuotePartnerOpinionPayload,
   SaveQuoteRegistrationPayload,
+  UpdateDraftSimulationPayload,
   UploadQuoteAttachmentInput,
 } from "./quotes.types";
 
@@ -73,6 +75,18 @@ export const quotesService = {
   ): Promise<QuoteDraftSnapshot> {
     const { data } = await api.post<QuoteDraftSnapshot>(
       "/quotes/draft",
+      payload,
+    );
+    return data;
+  },
+
+  /** PUT /quotes/draft/:quoteId/simulation */
+  async updateDraftSimulation(
+    quoteId: string,
+    payload: UpdateDraftSimulationPayload,
+  ): Promise<QuoteDraftSimulationSnapshot> {
+    const { data } = await api.put<QuoteDraftSimulationSnapshot>(
+      `/quotes/draft/${quoteId}/simulation`,
       payload,
     );
     return data;

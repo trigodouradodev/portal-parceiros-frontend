@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { ORIGINACAO_MANUAL_URL } from "@/features/ajuda";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OriginacaoProvider } from "@/features/originacao/OriginacaoProvider";
 import { useOriginacao } from "@/features/originacao/originacao-context";
@@ -32,7 +33,13 @@ function OriginacaoLayout() {
         focusedProposal ? "min-h-0 min-w-0 overflow-hidden" : undefined
       }
     >
-      {focusedProposal ? null : <PageHeader onLogout={onMobileLogout} />}
+      {focusedProposal ? null : (
+        <PageHeader
+          onLogout={onMobileLogout}
+          helpHref={ORIGINACAO_MANUAL_URL}
+          helpLabel="Ajuda: manual de originação"
+        />
+      )}
       <Tabs
         value={activeTab}
         onValueChange={goTo}

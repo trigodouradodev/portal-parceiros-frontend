@@ -1,26 +1,57 @@
 import { api } from "@/lib/api/axios";
 import type {
-  CurrentPerformance,
-  PartnerProfile,
-  PartnerProgram,
+  PerformanceMonthsResponse,
+  PerformanceResponse,
+  PerformancePerson,
 } from "./performance.types";
 
 export const performanceService = {
-  /** GET /performance/me */
-  async getMe(): Promise<PartnerProfile> {
-    const { data } = await api.get<PartnerProfile>("/performance/me");
+  async getPartners(
+    month?: string,
+    signal?: AbortSignal,
+  ): Promise<PerformancePerson[]> {
+    const { data } = await api.get<PerformancePerson[]>(
+      "/performance/partners",
+      { params: { month }, signal },
+    );
+    return data;
+  },
+  async getTeam(
+    partnerId: string,
+    month?: string,
+    signal?: AbortSignal,
+  ): Promise<PerformancePerson[]> {
+    const { data } = await api.get<PerformancePerson[]>("/performance/team", {
+      params: { partnerId, month },
+      signal,
+    });
+    return data;
+  },
+  async getMonths(
+    signal?: AbortSignal,
+    partnerId?: string,
+  ): Promise<PerformanceMonthsResponse> {
+    const { data } = await api.get<PerformanceMonthsResponse>(
+      "/performance/months",
+      { signal, ...(partnerId ? { params: { partnerId } } : {}) },
+    );
     return data;
   },
 
-  /** GET /performance/program */
-  async getProgram(): Promise<PartnerProgram> {
-    const { data } = await api.get<PartnerProgram>("/performance/program");
-    return data;
-  },
-
-  /** GET /performance/current */
-  async getCurrent(): Promise<CurrentPerformance> {
-    const { data } = await api.get<CurrentPerformance>("/performance/current");
+  async getPerformance(
+    month?: string,
+    signal?: AbortSignal,
+    partnerId?: string,
+    memberId?: string,
+  ): Promise<PerformanceResponse> {
+    const { data } = await api.get<PerformanceResponse>("/performance", {
+      params: {
+        month,
+        ...(partnerId ? { partnerId } : {}),
+        ...(memberId ? { memberId } : {}),
+      },
+      signal,
+    });
     return data;
   },
 };

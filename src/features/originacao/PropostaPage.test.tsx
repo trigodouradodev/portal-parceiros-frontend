@@ -8,6 +8,7 @@ import { PropostaPage } from "@/features/originacao/PropostaPage";
 import {
   createEmptyProposalForm,
   createProposalFromSimulation,
+  FINANCIAL_STEP_INDEX,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
 import {
@@ -21,6 +22,7 @@ import {
   PARTNER_ORIGINATION_RESTRICTED_MESSAGE,
   PartnerRestrictionCode,
 } from "@/lib/partner-restrictions";
+import type { QuoteDraftSimulationSnapshot } from "@/services/quotes/quotes.types";
 import { QuoteStatus } from "@/services/quotes/quotes.enums";
 import { renderWithProviders } from "@/test/render";
 
@@ -92,12 +94,57 @@ const refetchPermissions = vi.fn();
 
 const LAST_STEP = 6;
 
-function lastStepProposal(): ProposalSnapshot {
+vi.mock("@/features/originacao/components/proposta/FinancialSection", () => ({
+  FinancialSection: () => <div>Seção financeira</div>,
+}));
+vi.mock("@/features/originacao/components/proposta/DocumentsSection", () => ({
+  DocumentsSection: () => <div>Seção de documentos</div>,
+}));
+
+// A tela de edição tem testes próprios: aqui só interessa a integração.
+const updateResult: QuoteDraftSimulationSnapshot = {
+  id: "quote-1",
+  simulationId: "sim-1",
+  productId: "produto-novo",
+  productName: "PRODUTO NOVO",
+  interestRate: 0.0339,
+  financeAmount: 8000,
+  installmentNumbers: 12,
+  firstInstallmentDate: "2026-12-15",
+  installmentAmount: 780.5,
+  installmentAmountWithInsurance: 805.7,
+  insurancePremium: 240,
+  totalAmountOwed: 9366,
+};
+vi.mock(
+  "@/features/originacao/components/proposta/ProposalSimulationEdit",
+  () => ({
+    ProposalSimulationEdit: ({
+      onCancel,
+      onSaved,
+    }: {
+      onCancel: () => void;
+      onSaved: (update: QuoteDraftSimulationSnapshot) => void;
+    }) => (
+      <div>
+        <p>Tela de edição da simulação</p>
+        <button type="button" onClick={onCancel}>
+          Cancelar edição
+        </button>
+        <button type="button" onClick={() => onSaved(updateResult)}>
+          Salvar edição
+        </button>
+      </div>
+    ),
+  }),
+);
+
+function lastStepProposal(overrides: Partial<ProposalSnapshot> = {}) {
   const base = createProposalFromSimulation(
     {
       id: "sim-1",
       createdAt: "2026-10-19T12:00:00.000Z",
-      status: "available",
+      status: "converted",
       name: "Maria Souza",
       birthDate: "1990-05-20",
       email: "maria@email.com",
@@ -128,6 +175,7 @@ function lastStepProposal(): ProposalSnapshot {
         notes: "Cliente conhecido, sem observações.",
       },
     },
+    ...overrides,
   };
 }
 
@@ -195,23 +243,26 @@ function renderPage(value: OriginacaoContextValue) {
   );
 }
 
+function mockPartnerHooks() {
+  vi.clearAllMocks();
+  permissions.mockReturnValue({
+    data: { canCreateQuote: true, canSimulateQuote: true },
+    dataUpdatedAt: 0,
+    isPending: false,
+    refetch: refetchPermissions,
+  } as unknown as ReturnType<typeof useQuoteActivityPermissions>);
+  savePartnerOpinion.mockReturnValue({
+    mutateAsync: vi.fn().mockResolvedValue(undefined),
+    isPending: false,
+  } as unknown as ReturnType<typeof useSaveQuotePartnerOpinion>);
+  submitDraftHook.mockReturnValue({
+    mutateAsync: submitDraft,
+    isPending: false,
+  } as unknown as ReturnType<typeof useSubmitQuoteDraft>);
+}
+
 describe("PropostaPage — restrição de originação (AUREA-624)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    permissions.mockReturnValue({
-      data: { canCreateQuote: true, canSimulateQuote: true },
-      isPending: false,
-      refetch: refetchPermissions,
-    } as unknown as ReturnType<typeof useQuoteActivityPermissions>);
-    savePartnerOpinion.mockReturnValue({
-      mutateAsync: vi.fn().mockResolvedValue(undefined),
-      isPending: false,
-    } as unknown as ReturnType<typeof useSaveQuotePartnerOpinion>);
-    submitDraftHook.mockReturnValue({
-      mutateAsync: submitDraft,
-      isPending: false,
-    } as unknown as ReturnType<typeof useSubmitQuoteDraft>);
-  });
+  beforeEach(mockPartnerHooks);
 
   it("envio recusado por restrição: mostra a mensagem, mantém o rascunho e não vai para Revisão do cliente", async () => {
     const user = userEvent.setup();
@@ -258,6 +309,7 @@ describe("PropostaPage — restrição de originação (AUREA-624)", () => {
         canSimulateQuote: true,
         originationRestricted: true,
       },
+      dataUpdatedAt: 0,
       isPending: false,
       refetch: refetchPermissions,
     } as unknown as ReturnType<typeof useQuoteActivityPermissions>);
@@ -284,6 +336,79 @@ describe("PropostaPage — restrição de originação (AUREA-624)", () => {
     );
     expect(
       screen.queryByText(PARTNER_ORIGINATION_RESTRICTED_MESSAGE),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("PropostaPage — editar simulação (AUREA-701)", () => {
+  beforeEach(mockPartnerHooks);
+
+  it("mostra o link no header, ao lado do valor e do produto", () => {
+    renderPage(originacaoValue());
+
+    expect(
+      screen.getByRole("button", { name: /Editar simulação/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/CRÉDITO PESSOAL/)).toBeInTheDocument();
+  });
+
+  it("não mostra o link quando o usuário não pode editar a proposta", () => {
+    const proposal = lastStepProposal({ canEdit: false });
+    renderPage(
+      originacaoValue({ proposals: [proposal], openProposalId: proposal.id }),
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /Editar simulação/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("abre a edição e guarda o que já foi preenchido antes de sair do passo", async () => {
+    const user = userEvent.setup();
+    const updateProposal = vi.fn();
+    renderPage(originacaoValue({ updateProposal }));
+
+    await user.click(screen.getByRole("button", { name: /Editar simulação/ }));
+
+    expect(screen.getByText("Tela de edição da simulação")).toBeInTheDocument();
+    expect(updateProposal).toHaveBeenCalledTimes(1);
+  });
+
+  it("cancelar volta para a proposta, no mesmo passo", async () => {
+    const user = userEvent.setup();
+    renderPage(originacaoValue());
+
+    await user.click(screen.getByRole("button", { name: /Editar simulação/ }));
+    await user.click(screen.getByRole("button", { name: "Cancelar edição" }));
+
+    expect(
+      screen.queryByText("Tela de edição da simulação"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Parecer do parceiro")).toBeInTheDocument();
+  });
+
+  it("salvar atualiza as condições da proposta, volta ao Financeiro e fecha a edição", async () => {
+    const user = userEvent.setup();
+    const updateProposal = vi.fn();
+    renderPage(originacaoValue({ updateProposal }));
+
+    await user.click(screen.getByRole("button", { name: /Editar simulação/ }));
+    updateProposal.mockClear();
+    await user.click(screen.getByRole("button", { name: "Salvar edição" }));
+
+    expect(updateProposal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        step: FINANCIAL_STEP_INDEX,
+        simulation: expect.objectContaining({
+          amount: 8000,
+          installments: 12,
+          productName: "PRODUTO NOVO",
+          installmentAmountWithInsurance: 805.7,
+        }) as unknown,
+      }),
+    );
+    expect(
+      screen.queryByText("Tela de edição da simulação"),
     ).not.toBeInTheDocument();
   });
 });

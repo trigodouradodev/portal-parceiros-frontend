@@ -44,6 +44,7 @@ const QUOTE_STATUS_PRESENTATION: Record<
   },
   [QuoteStatus.PENDING]: { label: "Pendente de análise", tone: "warning" },
   [QuoteStatus.IN_ANALYSIS]: { label: "Em análise", tone: "info" },
+  [QuoteStatus.ON_HOLD]: { label: "On Hold", tone: "warning" },
   [QuoteStatus.PENDING_CORRECTION]: {
     label: "Pendente com o parceiro",
     tone: "warning",

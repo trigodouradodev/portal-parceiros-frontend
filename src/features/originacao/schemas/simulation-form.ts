@@ -91,6 +91,23 @@ export function createSimulationSchema(options: {
   });
 }
 
+/** Campos comerciais editáveis de uma proposta em rascunho (AUREA-701). */
+export function createDraftSimulationSchema(options: {
+  installmentOptions: number[];
+  today: Date;
+}) {
+  return createSimulationSchema(options).pick({
+    product: true,
+    amount: true,
+    installments: true,
+    dueDate: true,
+  });
+}
+
+export type DraftSimulationFormValues = z.infer<
+  ReturnType<typeof createDraftSimulationSchema>
+>;
+
 export type SimulationFormValues = z.infer<
   ReturnType<typeof createSimulationSchema>
 >;

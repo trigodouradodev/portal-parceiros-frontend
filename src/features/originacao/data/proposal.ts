@@ -3,6 +3,7 @@ import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import { digitsOnlyPhone } from "@/lib/format/phone";
 import { formatCpf } from "@/lib/format/tax-id";
+import type { QuoteDraftSimulationSnapshot } from "@/services/quotes/quotes.types";
 import {
   BusinessActivityBranch,
   CreditPurpose,
@@ -49,6 +50,13 @@ export const PROPOSAL_STEPS = [
   "Documentação",
   "Parecer do Parceiro",
 ] as const;
+
+/**
+ * Passos (índices de `PROPOSAL_STEPS`) cuja conferência depende do valor e da
+ * parcela da simulação: mudar as condições obriga a confirmá-los de novo.
+ */
+export const FINANCIAL_STEP_INDEX = 4;
+export const DOCUMENTS_STEP_INDEX = 5;
 
 export const UF_LIST = [
   "AC",
@@ -508,6 +516,39 @@ export function createProposalFromSimulation(
         ...registrationIdentityFromSimulation(simulation),
       },
     },
+  };
+}
+
+/**
+ * Aplica à proposta as condições recalculadas pelo backend (AUREA-701). Os
+ * passos Financeiro e Documentação voltam a não concluídos (o backend também os
+ * invalida) e quem estava depois do Financeiro volta a ele.
+ */
+export function applyDraftSimulationUpdate(
+  proposal: ProposalSnapshot,
+  update: QuoteDraftSimulationSnapshot,
+): ProposalSnapshot {
+  const stepValid = [...proposal.stepValid];
+  stepValid[FINANCIAL_STEP_INDEX] = false;
+  stepValid[DOCUMENTS_STEP_INDEX] = false;
+
+  return {
+    ...proposal,
+    simulation: {
+      ...proposal.simulation,
+      productId: update.productId,
+      productName: update.productName,
+      amount: update.financeAmount,
+      installments: update.installmentNumbers,
+      firstInstallmentDate: update.firstInstallmentDate,
+      installmentAmount: update.installmentAmount,
+      installmentAmountWithInsurance: update.installmentAmountWithInsurance,
+      insurancePremium: update.insurancePremium,
+      interestRate: update.interestRate,
+    },
+    step: Math.min(proposal.step, FINANCIAL_STEP_INDEX),
+    stepValid,
+    updatedAt: new Date().toLocaleString("pt-BR"),
   };
 }
 

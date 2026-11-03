@@ -1,93 +1,113 @@
-import { buildRealPerformanceView } from "@/features/performance/utils/build-real-performance-view";
-import { testLevel, testProgram } from "@/test/fixtures/performance";
-import {
-  CommissionComponentKind,
-  type CurrentPerformance,
-  type PartnerProfile,
-} from "@/services/performance/performance.types";
+import { buildRealPerformanceView } from "./build-real-performance-view";
+import { testPerformanceData } from "@/test/fixtures/performance";
+import type { PerformanceLevelKey } from "@/services/performance/performance.types";
 
-const profile: PartnerProfile = {
-  partner: {
-    id: "p1",
-    fullName: "Ana Parceira",
-    roleLabel: "Consultor",
-  },
-  level: testLevel,
-  partnership: {
-    startedAt: "2025-01-01",
-    monthNumber: 3,
-    isFirstMonth: false,
-    nextMilestone: null,
-  },
-};
+function performanceData() {
+  return structuredClone(testPerformanceData.data);
+}
 
-const current: CurrentPerformance = {
-  month: "2026-03",
-  periodStart: "2026-03-01",
-  periodEnd: "2026-03-31",
-  origination: {
-    count: 10,
-    amount: 90_000,
-    targetPercent: 90,
-    bonusPercent: 10,
-  },
-  delinquency: {
-    rate: 1.5,
-    overdueAmount: 1000,
-    portfolioOpenAmount: 50_000,
-    bonusPercent: 20,
-  },
-  averageRate: {
-    rate: 9.5,
-    bonusPercent: 10,
-  },
-  commission: {
-    total: 2800,
-    components: [
-      { kind: CommissionComponentKind.FIXED, amount: 2000 },
-      { kind: CommissionComponentKind.DISBURSEMENT_BONUS, amount: 200 },
-      { kind: CommissionComponentKind.RISK_BONUS, amount: 400 },
-      { kind: CommissionComponentKind.RATE_BONUS, amount: 200 },
-      { kind: CommissionComponentKind.WELCOME, amount: 0 },
-    ],
-  },
-};
+describe("official indicator presentation", () => {
+  it("preserves official target percentage and selected rates without recalculating", () => {
+    const data = performanceData();
+    data.indicators.origination.targetPercent = 180.1234;
+    data.indicators.interestRate.rate = 9.4996;
+    const cards = buildRealPerformanceView(data);
+    expect(cards[0]).toMatchObject({
+      targetPercent: 180.1234,
+      targetAmount: 100000,
+    });
+    expect(cards[0]?.value).toContain("110.000,00");
+    expect(cards[1]).toMatchObject({ value: "9,50%" });
+    expect(cards[2]).toMatchObject({
+      value: "3,33%",
+      sub: "Indicador após as desconsiderações da competência",
+    });
+  });
 
-describe("buildRealPerformanceView", () => {
-  it("maps KPIs, period legend and positive pills", () => {
-    const view = buildRealPerformanceView(profile, current, testProgram);
+  it("distinguishes unmeasured values from measured zero", () => {
+    const data = performanceData();
+    data.indicators.interestRate = {
+      ...data.indicators.interestRate,
+      rate: null,
+      status: "NO_MEASUREMENT",
+    };
+    data.indicators.delinquency.rate = 0;
+    const cards = buildRealPerformanceView(data);
+    expect(cards[1]).toMatchObject({
+      value: "N/A",
+      sub: "Sem medição nesta competência",
+    });
+    expect(cards[2]?.value).toBe("0,00%");
+  });
 
-    expect(view.periodLegend).toBe("1 a 31 de março");
-    expect(view.monthlyTarget).toBe(100_000);
-    expect(view.commissionTotal).toBe(2800);
-    expect(view.kpis.map((k) => k.key)).toEqual([
-      "disbursement",
-      "delinquency",
-      "rate",
-    ]);
-    expect(view.kpis[0]?.value).toBe("90%");
-    expect(view.pills.map((p) => p.key)).toEqual([
-      "fixed",
-      "disbursement",
-      "risk",
-      "rate",
+  it("does not infer a missing percentage from origination and target amounts", () => {
+    const data = performanceData();
+    data.indicators.origination.targetPercent = null;
+    const card = buildRealPerformanceView(data)[0];
+    expect(card?.value).toContain("110.000,00");
+    expect(card?.targetPercent).toBeNull();
+  });
+
+  it.each<PerformanceLevelKey>(["HYBRID", "REIMBURSEMENT"])(
+    "shows only origination and reimbursement for %s",
+    (key) => {
+      const data = performanceData();
+      data.level.key = key;
+      data.indicators.origination.targetAmount = null;
+      data.indicators.origination.targetPercent = null;
+      data.indicators.interestRate.status = "NOT_APPLICABLE";
+      data.indicators.delinquency.status = "NOT_APPLICABLE";
+      data.indicators.reimbursement = { status: "AVAILABLE", amount: 0 };
+      const cards = buildRealPerformanceView(data);
+      expect(cards.map((card) => card.key)).toEqual([
+        "origination",
+        "reimbursement",
+      ]);
+      expect(cards[0]?.label).toBe("Originação no mês");
+      expect(cards[0]?.targetPercent).toBeNull();
+      expect(cards[0]?.targetAmount).toBeNull();
+      expect(cards[1]?.value).toContain("0,00");
+    },
+  );
+
+  it("shows reimbursement only for a collection agent", () => {
+    const data = performanceData();
+    data.level.key = "COLLECTION_AGENT";
+    data.indicators.origination.status = "NOT_APPLICABLE";
+    data.indicators.interestRate.status = "NOT_APPLICABLE";
+    data.indicators.delinquency.status = "NOT_APPLICABLE";
+    data.indicators.reimbursement = { status: "AVAILABLE", amount: 5000 };
+    expect(buildRealPerformanceView(data).map((card) => card.key)).toEqual([
+      "reimbursement",
     ]);
   });
 
-  it("handles missing delinquency and rate", () => {
-    const view = buildRealPerformanceView(
-      profile,
-      {
-        ...current,
-        delinquency: { ...current.delinquency, rate: null },
-        averageRate: { ...current.averageRate, rate: null },
-      },
-      testProgram,
-    );
+  it.each<PerformanceLevelKey>(["AUREA", "UNKNOWN"])(
+    "keeps indicators informational for %s",
+    (key) => {
+      const data = performanceData();
+      data.level.key = key;
+      const cards = buildRealPerformanceView(data);
+      expect(cards.map((card) => card.label).join(" ")).not.toMatch(
+        /meta|bônus/,
+      );
+      expect(
+        cards.every(
+          (card) => card.sub === "Indicador informativo para sua modalidade",
+        ),
+      ).toBe(true);
+    },
+  );
+});
 
-    expect(view.kpis[1]?.value).toBe("N/A");
-    expect(view.kpis[1]?.sub).toBe("Sem carteira para medir");
-    expect(view.kpis[2]?.value).toBe("N/A");
-    expect(view.kpis[2]?.sub).toBe("Sem originação no mês");
-  });
+it("shows only measured indicators for an unknown category", () => {
+  const data = performanceData();
+  data.level.key = "UNKNOWN";
+  data.indicators.origination.amount = null;
+  data.indicators.interestRate.rate = null;
+  data.indicators.delinquency.rate = 0;
+  data.indicators.reimbursement.status = "NO_MEASUREMENT";
+  expect(buildRealPerformanceView(data).map((card) => card.key)).toEqual([
+    "delinquency",
+  ]);
 });

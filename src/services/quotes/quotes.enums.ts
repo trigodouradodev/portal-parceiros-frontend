@@ -9,6 +9,7 @@ export const QuoteStatus = {
   KYC_ANALYSIS: "kyc_analysis",
   PENDING: "pending",
   IN_ANALYSIS: "em_analise",
+  ON_HOLD: "on_hold",
   PENDING_CORRECTION: "pending_correction",
   PRE_APPROVED: "pre_approved",
   APPROVED: "approved",
