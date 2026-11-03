@@ -8,9 +8,13 @@ import { PartnerRestrictionCode } from "@/lib/partner-restrictions";
  * ou do 403 do envio, quando a restrição foi aplicada com a proposta já aberta.
  */
 export function useOriginationRestriction() {
-  const { data, refetch } = useQuoteActivityPermissions();
-  const [blockedBySubmit, setBlockedBySubmit] = useState(false);
+  const { data, dataUpdatedAt, refetch } = useQuoteActivityPermissions();
+  const [submitBlockedAt, setSubmitBlockedAt] = useState<number | null>(null);
 
+  // O 403 vale só até o perfil ser consultado de novo: a resposta mais recente
+  // do servidor é a que manda, inclusive quando o Backoffice liberou o parceiro.
+  const blockedBySubmit =
+    submitBlockedAt !== null && dataUpdatedAt <= submitBlockedAt;
   const originationRestricted =
     blockedBySubmit || data?.originationRestricted === true;
 
@@ -21,7 +25,7 @@ export function useOriginationRestriction() {
       ) {
         return;
       }
-      setBlockedBySubmit(true);
+      setSubmitBlockedAt(Date.now());
       // Atualiza o perfil para o restante do Portal já refletir a restrição.
       void refetch();
     },

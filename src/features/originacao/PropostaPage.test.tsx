@@ -288,6 +288,45 @@ describe("PropostaPage — restrição de originação (AUREA-624)", () => {
     ).toBeInTheDocument();
   });
 
+  it("restrição liberada pelo Backoffice: a nova consulta do perfil tira o aviso mantido pelo envio recusado", async () => {
+    const user = userEvent.setup();
+    submitDraft.mockRejectedValue(restrictedError());
+    // O refetch do perfil volta sem restrição, com data posterior ao 403.
+    refetchPermissions.mockImplementation(() => {
+      permissions.mockReturnValue({
+        data: { canCreateQuote: true, canSimulateQuote: true },
+        dataUpdatedAt: Date.now() + 60_000,
+        isPending: false,
+        refetch: refetchPermissions,
+      } as unknown as ReturnType<typeof useQuoteActivityPermissions>);
+      return Promise.resolve();
+    });
+    renderPage(originacaoValue());
+
+    await user.click(screen.getByRole("button", { name: "Concluir proposta" }));
+
+    await waitFor(() => expect(refetchPermissions).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(
+        screen.queryByText(PARTNER_ORIGINATION_RESTRICTED_MESSAGE),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("consulta do perfil que falha não libera o aviso do envio recusado", async () => {
+    const user = userEvent.setup();
+    submitDraft.mockRejectedValue(restrictedError());
+    // O react-query não rejeita: a consulta falha e `dataUpdatedAt` não muda.
+    refetchPermissions.mockResolvedValue(undefined);
+    renderPage(originacaoValue());
+
+    await user.click(screen.getByRole("button", { name: "Concluir proposta" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      PARTNER_ORIGINATION_RESTRICTED_MESSAGE,
+    );
+  });
+
   it("erro de envio que não é de restrição não mostra o aviso de restrição", async () => {
     const user = userEvent.setup();
     submitDraft.mockRejectedValue(new Error("falha qualquer"));
