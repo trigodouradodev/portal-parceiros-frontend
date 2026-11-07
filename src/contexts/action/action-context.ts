@@ -12,6 +12,7 @@ export type ActionMode = TaskTab;
 export type PreventiveContactType = "phone" | "visit" | "whatsapp";
 
 export interface ActionParty {
+  isDeceased?: boolean;
   name: string;
   taxId?: string;
   phone?: string;
@@ -20,6 +21,7 @@ export interface ActionParty {
 }
 
 export interface ActionClient {
+  isDeceased?: boolean;
   /** contractId */
   id: string;
   installmentNumber: number;
@@ -34,6 +36,7 @@ export interface ActionClient {
 }
 
 export interface ActionResult {
+  message?: string;
   nextStage?: ChargeStage;
   channel?: string;
   outcome?: string;

@@ -54,6 +54,7 @@ export function normalizeInstallmentDetail(
     ...detail,
     tasks: detail.tasks.map((task) => ({
       ...task,
+      isCollectible: task.isCollectible === true,
       segmentCode: parseQueueSegmentCode(task.segmentCode),
       tone: parseQueueTone(task.tone),
       taskType: parseActivityTaskType(task.taskType),

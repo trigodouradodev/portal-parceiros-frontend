@@ -1,4 +1,4 @@
-import { PromiseDateModal } from "@/features/register-action/charge/components";
+import { OutcomeDateModal } from "@/features/register-action/charge/components";
 import { RegisterChargeFooterActions } from "@/features/register-action/charge/components/RegisterChargeFooterActions";
 import { RegisterChargeStepContent } from "@/features/register-action/charge/components/RegisterChargeStepContent";
 import { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
@@ -33,14 +33,15 @@ export function RegisterChargeActionPage() {
         <RegisterChargeStepContent flow={flow} />
       </RegisterFormCard>
 
-      <PromiseDateModal
-        open={flow.promiseModalOpen}
-        onOpenChange={flow.handlePromiseModalOpenChange}
-        draftDate={flow.draftPromiseDate}
-        onDraftDateChange={flow.setDraftPromiseDate}
-        onConfirm={flow.confirmPromiseDate}
-        minDate={flow.promiseDateMin}
-        maxDate={flow.promiseDateMax}
+      <OutcomeDateModal
+        kind={flow.dateKind ?? "promise"}
+        open={flow.dateModalOpen}
+        onOpenChange={flow.handleDateModalOpenChange}
+        draftDate={flow.draftDate}
+        onDraftDateChange={flow.setDraftDate}
+        onConfirm={flow.confirmOutcomeDate}
+        minDate={flow.dateMin}
+        maxDate={flow.dateMax}
       />
     </RegisterActionLayout>
   );

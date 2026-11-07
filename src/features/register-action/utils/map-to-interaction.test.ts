@@ -61,6 +61,24 @@ describe("mapTaskChannelToActivityTaskType", () => {
 });
 
 describe("buildV2RegisterInteractionPayload", () => {
+  it("envia a data prevista para acordo somente em renegociação", () => {
+    const data = {
+      recipientType: ActivityRecipientType.CLIENT,
+      expectedAgreementDate: "2026-11-10",
+    };
+    expect(
+      buildV2RegisterInteractionPayload({
+        ...data,
+        result: ActivityInteractionResult.RENEGOTIATION,
+      }).expectedAgreementDate,
+    ).toBe("2026-11-10");
+    expect(
+      buildV2RegisterInteractionPayload({
+        ...data,
+        result: ActivityInteractionResult.DISPUTE,
+      }).expectedAgreementDate,
+    ).toBeUndefined();
+  });
   it("builds base payload without optional fields", () => {
     expect(
       buildV2RegisterInteractionPayload({
