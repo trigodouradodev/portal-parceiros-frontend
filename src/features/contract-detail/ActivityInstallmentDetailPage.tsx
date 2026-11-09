@@ -13,6 +13,7 @@ import { mapInstallmentDetailToView } from "@/features/contract-detail/mappers/m
 import type { ActivityInstallmentLocationState } from "@/features/contract-detail/types";
 import {
   buildChargeActionPayloadFromInstallmentDetail,
+  getPendingTaskFromInstallmentDetail,
   getChargeRegisterPath,
 } from "@/features/dashboard/utils/launch-action";
 import { useInstallmentDetail } from "@/hooks/useInstallmentDetail";
@@ -67,9 +68,16 @@ export function ActivityInstallmentDetailPage() {
     ? locationState.item
     : undefined;
   const isEarlyScheduledExecution = canExecuteScheduledEarly(sourceItem);
-  const canRegisterAction =
-    canInteractWithTask(sourceItem) || isEarlyScheduledExecution;
   const installmentDetailQuery = useInstallmentDetail(installmentId);
+  const currentPending = installmentDetailQuery.data
+    ? getPendingTaskFromInstallmentDetail(
+        installmentDetailQuery.data,
+        sourceItem?.task?.id,
+      )
+    : undefined;
+  const canRegisterAction =
+    Boolean(currentPending) &&
+    (canInteractWithTask(sourceItem) || isEarlyScheduledExecution);
 
   const detail = installmentDetailQuery.data
     ? mapInstallmentDetailToView(installmentDetailQuery.data, {
@@ -98,7 +106,7 @@ export function ActivityInstallmentDetailPage() {
 
     const payload = buildChargeActionPayloadFromInstallmentDetail(
       installmentDetailQuery.data,
-      () => showToast("Ação registrada."),
+      (result) => showToast(result.message ?? "Ação registrada."),
       { preferredTaskId: sourceItem?.task?.id },
     );
 

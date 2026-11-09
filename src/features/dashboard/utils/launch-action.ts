@@ -55,6 +55,7 @@ function mapDetailParty(
     phone: party.phone,
     email: party.email,
     address: party.address,
+    isDeceased: party.isDeceased,
   };
 }
 
@@ -67,7 +68,7 @@ export function getPendingTaskFromInstallmentDetail(
   preferredTaskId?: string,
 ): TaskHistoryItem | undefined {
   const pending = detail.tasks.filter(
-    (task) => task.status === ActivityTaskStatus.PENDING,
+    (task) => task.status === ActivityTaskStatus.PENDING && task.isCollectible,
   );
   if (preferredTaskId) {
     const preferred = pending.find((task) => task.id === preferredTaskId);
@@ -151,6 +152,7 @@ export function buildChargeActionPayloadFromInstallmentDetail(
     contactType: options?.contactType,
     queueTone: pendingTask.tone,
     client: {
+      isDeceased: client.isDeceased,
       id: contract.id,
       installmentNumber: installment.number,
       name: client.name,

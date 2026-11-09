@@ -44,6 +44,7 @@ export function buildV2RegisterInteractionPayload(params: {
   taskChannel?: ActivityChannel;
   note?: string;
   promiseDate?: string;
+  expectedAgreementDate?: string;
   latitude?: number;
   longitude?: number;
   locationConfirmation?: "exact" | "proximity" | "manual";
@@ -64,6 +65,13 @@ export function buildV2RegisterInteractionPayload(params: {
     params.promiseDate
   ) {
     payload.promiseDate = `${params.promiseDate}T12:00:00.000Z`;
+  }
+
+  if (
+    params.result === ActivityInteractionResult.RENEGOTIATION &&
+    params.expectedAgreementDate
+  ) {
+    payload.expectedAgreementDate = params.expectedAgreementDate;
   }
 
   if (
