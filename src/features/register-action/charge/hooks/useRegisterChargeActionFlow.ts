@@ -36,10 +36,14 @@ import { useVisitLocationCheck } from "@/features/register-action/preventive/hoo
 import { appendManualLocationAuditNote } from "@/features/register-action/preventive/constants/manual-location-reason";
 import { useRegisterInteraction } from "@/hooks/useRegisterInteraction";
 import { useToast } from "@/contexts/toast/toast-context";
-import { getApiErrorMessage } from "@/lib/api/errors";
+import {
+  getTaskActionErrorMessage,
+  isStaleTaskError,
+} from "@/lib/api/task-action-errors";
 import { hasCallablePhone, hasValidAddress } from "@/lib/contact-actions";
 import { getFirstName } from "@/lib/user-display";
-import { addDays, startOfDay } from "date-fns";
+import { addDays } from "date-fns";
+import { collectionToday, getOutcomeDateKind } from "../utils/outcome-date";
 import { buildCompletedHighlightNavigationState } from "@/features/dashboard/utils/queue-highlight-navigation";
 
 export type { FlowStep };
@@ -70,18 +74,19 @@ export function useRegisterChargeActionFlow() {
   } = useActionContext();
 
   const [step, setStep] = useState<FlowStep>("recipient");
-  const [recipientType, setRecipientType] = useState<ActivityRecipientType>(
+  const [selectedRecipient, setRecipientType] = useState<ActivityRecipientType>(
     ActivityRecipientType.CLIENT,
   );
   const [outcome, setOutcome] = useState<ActivityInteractionResult | null>(
     null,
   );
   const [note, setNote] = useState("");
-  const [promiseDate, setPromiseDate] = useState<Date | undefined>(undefined);
-  const [promiseModalOpen, setPromiseModalOpen] = useState(false);
-  const [draftPromiseDate, setDraftPromiseDate] = useState<Date | undefined>(
-    undefined,
-  );
+  const recipientType = client?.isDeceased
+    ? ActivityRecipientType.GUARANTOR
+    : selectedRecipient;
+  const [outcomeDate, setOutcomeDate] = useState<Date | undefined>(undefined);
+  const [dateModalOpen, setDateModalOpen] = useState(false);
+  const [draftDate, setDraftDate] = useState<Date | undefined>(undefined);
 
   const location = useVisitLocationCheck({
     contractId: client?.id ?? "",
@@ -118,22 +123,23 @@ export function useRegisterChargeActionFlow() {
     [activityTaskType],
   );
 
-  const useGuarantor =
-    recipientType === ActivityRecipientType.GUARANTOR && Boolean(guarantor);
-
-  const activeParty = useGuarantor
-    ? guarantor
-    : client
-      ? {
-          name: client.name,
-          phone: client.phone,
-          address: client.address,
-        }
-      : null;
+  const activeParty =
+    recipientType === ActivityRecipientType.GUARANTOR
+      ? (guarantor ?? null)
+      : client
+        ? {
+            name: client.name,
+            phone: client.phone,
+            address: client.address,
+          }
+        : null;
 
   const contactPhone = activeParty?.phone ?? "";
   const contactFirstName = activeParty ? getFirstName(activeParty.name) : "";
-  const contactAddress = useGuarantor ? guarantor?.address : client?.address;
+  const contactAddress =
+    recipientType === ActivityRecipientType.GUARANTOR
+      ? guarantor?.address
+      : client?.address;
   const callScript = getCallScript(queueTone, {
     contract: client?.contract,
     contactFirstName,
@@ -160,11 +166,17 @@ export function useRegisterChargeActionFlow() {
   const noteRequired =
     outcome !== null && requiresInteractionObservation(outcome);
   const showNoteValidation = noteRequired && note.trim().length === 0;
-  const needsPromiseDate =
-    outcome === ActivityInteractionResult.PAYMENT_PROMISE && !promiseDate;
+  const dateKind = getOutcomeDateKind(outcome);
+  const today = collectionToday();
+  const dateMin = dateKind === "agreement" ? addDays(today, 1) : today;
+  const dateMax = addDays(today, PROMISE_MAX_DAYS);
+  const needsOutcomeDate =
+    Boolean(dateKind) &&
+    (!outcomeDate || outcomeDate < dateMin || outcomeDate > dateMax);
 
   const guarantorSelectable = Boolean(
     guarantor?.name &&
+    !guarantor.isDeceased &&
     (isVisitTask
       ? hasValidAddress(guarantor.address)
       : hasCallablePhone(guarantor.phone) ||
@@ -172,50 +184,52 @@ export function useRegisterChargeActionFlow() {
   );
 
   const canContinueRecipient =
-    recipientType === ActivityRecipientType.CLIENT ||
+    (recipientType === ActivityRecipientType.CLIENT && !client?.isDeceased) ||
     (recipientType === ActivityRecipientType.GUARANTOR && guarantorSelectable);
   const canContinueContact = visitLocationReady;
   const canSaveOutcome =
     step === "outcome" &&
     outcome !== null &&
-    !needsPromiseDate &&
+    canContinueRecipient &&
+    !needsOutcomeDate &&
     (!noteRequired || note.trim().length > 0);
 
-  const promiseDateMin = startOfDay(new Date());
-  const promiseDateMax = addDays(promiseDateMin, PROMISE_MAX_DAYS);
-
   function selectOutcome(value: ActivityInteractionResult) {
+    const kind = getOutcomeDateKind(value);
+    const sameKind = kind === dateKind;
     setOutcome(value);
-    if (value === ActivityInteractionResult.PAYMENT_PROMISE) {
-      setDraftPromiseDate(promiseDate);
-      setPromiseModalOpen(true);
+    if (kind) {
+      setDraftDate(sameKind ? outcomeDate : undefined);
+      if (!sameKind) setOutcomeDate(undefined);
+      setDateModalOpen(true);
       return;
     }
-    setPromiseDate(undefined);
+    setOutcomeDate(undefined);
+    setDraftDate(undefined);
+    setDateModalOpen(false);
   }
 
-  function handlePromiseModalOpenChange(open: boolean) {
-    if (!open && !promiseDate) {
-      setOutcome((current) =>
-        current === ActivityInteractionResult.PAYMENT_PROMISE ? null : current,
-      );
+  function handleDateModalOpenChange(open: boolean) {
+    if (!open && !outcomeDate) {
+      setOutcome((current) => (getOutcomeDateKind(current) ? null : current));
     }
-    setPromiseModalOpen(open);
+    setDateModalOpen(open);
   }
 
-  function confirmPromiseDate() {
-    setPromiseDate(draftPromiseDate);
-    setPromiseModalOpen(false);
+  function confirmOutcomeDate() {
+    if (!draftDate || draftDate < dateMin || draftDate > dateMax) return;
+    setOutcomeDate(draftDate);
+    setDateModalOpen(false);
   }
 
-  function openPromiseDateEditor() {
-    setDraftPromiseDate(promiseDate);
-    setPromiseModalOpen(true);
+  function openOutcomeDateEditor() {
+    setDraftDate(outcomeDate);
+    setDateModalOpen(true);
   }
 
   async function submitInteraction(
     result: ActivityInteractionResult,
-    promiseDateValue?: string,
+    selectedDate?: string,
   ) {
     if (!client || !taskId) return;
 
@@ -238,7 +252,14 @@ export function useRegisterChargeActionFlow() {
         contactType,
         taskChannel,
         note: noteWithAudit,
-        promiseDate: promiseDateValue,
+        promiseDate:
+          result === ActivityInteractionResult.PAYMENT_PROMISE
+            ? selectedDate
+            : undefined,
+        expectedAgreementDate:
+          result === ActivityInteractionResult.RENEGOTIATION
+            ? selectedDate
+            : undefined,
         latitude: includeGeo ? coords.latitude : undefined,
         longitude: includeGeo ? coords.longitude : undefined,
         locationConfirmation:
@@ -252,29 +273,34 @@ export function useRegisterChargeActionFlow() {
             ? (location.manualReason ?? undefined)
             : undefined,
       });
-      await registerInteraction.mutateAsync({
+      const response = await registerInteraction.mutateAsync({
         taskId,
         payload,
         contractId: client.id,
         installmentNumber: client.installmentNumber,
         installmentId,
       });
-      onComplete({ note: noteWithAudit, outcome: result });
+      onComplete({
+        note: noteWithAudit,
+        outcome: result,
+        message: response.message,
+      });
       navigate("/", {
         replace: true,
         state: buildCompletedHighlightNavigationState(installmentId),
       });
     } catch (err) {
-      showToast(getApiErrorMessage(err, "Erro ao registrar ação."), {
+      showToast(getTaskActionErrorMessage(err, "Erro ao registrar ação."), {
         variant: "destructive",
       });
+      if (isStaleTaskError(err)) navigate("/", { replace: true });
     }
   }
 
   async function handleSave() {
     if (step !== "outcome" || !outcome) return;
     if (noteRequired && !note.trim()) return;
-    if (needsPromiseDate) return;
+    if (needsOutcomeDate || !canContinueRecipient) return;
     if (isVisitTask && !location.locationOk) {
       showToast("Confirme a localização da visita antes de registrar.", {
         variant: "destructive",
@@ -282,12 +308,9 @@ export function useRegisterChargeActionFlow() {
       return;
     }
 
-    let promiseDateValue: string | undefined;
-    if (outcome === ActivityInteractionResult.PAYMENT_PROMISE && promiseDate) {
-      promiseDateValue = format(promiseDate, "yyyy-MM-dd");
-    }
-
-    await submitInteraction(outcome, promiseDateValue);
+    const selectedDate =
+      dateKind && outcomeDate ? format(outcomeDate, "yyyy-MM-dd") : undefined;
+    await submitInteraction(outcome, selectedDate);
   }
 
   function goToContactStep() {
@@ -330,10 +353,11 @@ export function useRegisterChargeActionFlow() {
     outcome,
     note,
     setNote,
-    promiseDate,
-    promiseModalOpen,
-    draftPromiseDate,
-    setDraftPromiseDate,
+    outcomeDate,
+    dateModalOpen,
+    draftDate,
+    setDraftDate,
+    dateKind,
     outcomeOptions,
     contactPhone,
     contactFirstName,
@@ -345,16 +369,16 @@ export function useRegisterChargeActionFlow() {
     location,
     noteRequired,
     showNoteValidation,
-    needsPromiseDate,
+    needsOutcomeDate,
     canContinueRecipient,
     canContinueContact,
     canSaveOutcome,
-    promiseDateMin,
-    promiseDateMax,
+    dateMin,
+    dateMax,
     selectOutcome,
-    handlePromiseModalOpenChange,
-    confirmPromiseDate,
-    openPromiseDateEditor,
+    handleDateModalOpenChange,
+    confirmOutcomeDate,
+    openOutcomeDateEditor,
     handleSave,
     goToContactStep,
     goBackToRecipientStep,

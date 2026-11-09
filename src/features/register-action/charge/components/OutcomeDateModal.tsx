@@ -9,8 +9,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PROMISE_MAX_DAYS } from "@/services/activities/activity.enums";
+import type { OutcomeDateKind } from "../utils/outcome-date";
 
-interface PromiseDateModalProps {
+interface OutcomeDateModalProps {
+  kind: OutcomeDateKind;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   draftDate?: Date;
@@ -20,7 +22,8 @@ interface PromiseDateModalProps {
   maxDate: Date;
 }
 
-export function PromiseDateModal({
+export function OutcomeDateModal({
+  kind,
   open,
   onOpenChange,
   draftDate,
@@ -28,20 +31,26 @@ export function PromiseDateModal({
   onConfirm,
   minDate,
   maxDate,
-}: PromiseDateModalProps) {
+}: OutcomeDateModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[340px]">
         <DialogHeader>
-          <DialogTitle>Data prometida para pagamento</DialogTitle>
+          <DialogTitle>
+            {kind === "agreement"
+              ? "Data prevista para o acordo"
+              : "Data prometida para pagamento"}
+          </DialogTitle>
           <DialogDescription>
-            Selecione até quando o cliente se comprometeu a pagar (prazo máximo
-            de {PROMISE_MAX_DAYS} dias).
+            {kind === "agreement"
+              ? `Selecione a data prevista para fechar a negociação, entre amanhã e os próximos ${PROMISE_MAX_DAYS} dias.`
+              : `Selecione até quando o cliente se comprometeu a pagar (prazo máximo de ${PROMISE_MAX_DAYS} dias).`}
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center">
           <Calendar
             mode="single"
+            defaultMonth={draftDate ?? minDate}
             selected={draftDate}
             onSelect={onDraftDateChange}
             disabled={{ before: minDate, after: maxDate }}
@@ -58,7 +67,7 @@ export function PromiseDateModal({
           </Button>
           <Button
             className="h-10 rounded-xl bg-brand-navy font-semibold text-white"
-            disabled={!draftDate}
+            disabled={!draftDate || draftDate < minDate || draftDate > maxDate}
             onClick={onConfirm}
           >
             Confirmar

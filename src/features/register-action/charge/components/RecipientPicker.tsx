@@ -9,6 +9,7 @@ interface RecipientPickerProps {
   value: ActivityRecipientType;
   onChange: (value: ActivityRecipientType) => void;
   clientName: string;
+  clientIsDeceased?: boolean;
   clientPhone?: string;
   guarantor?: ActionParty | null;
   /** Quando true, avalista precisa de endereço (visita). */
@@ -48,6 +49,7 @@ function buildRecipientOptions(
   clientPhone: string | undefined,
   guarantor: ActionParty | null | undefined,
   requireAddressForGuarantor: boolean,
+  clientIsDeceased: boolean,
 ): RecipientOption[] {
   const formattedPhone =
     clientPhone && hasCallablePhone(clientPhone) ? clientPhone : undefined;
@@ -57,6 +59,7 @@ function buildRecipientOptions(
   const guarantorAddressOk = hasValidAddress(guarantor?.address);
   const guarantorDisabled =
     !hasGuarantor ||
+    guarantor?.isDeceased === true ||
     (requireAddressForGuarantor
       ? !guarantorAddressOk
       : !guarantorPhoneOk && !guarantorAddressOk);
@@ -73,14 +76,15 @@ function buildRecipientOptions(
       guarantorDetail = "Telefone não cadastrado";
     }
   }
+  if (guarantor?.isDeceased) guarantorDetail = "Avalista falecido";
 
   return [
     {
       type: ActivityRecipientType.CLIENT,
       title: "Cliente / Tomador",
       subtitle: clientName,
-      detail: formattedPhone,
-      disabled: false,
+      detail: clientIsDeceased ? "Cliente falecido" : formattedPhone,
+      disabled: clientIsDeceased,
       icon: <User size={18} />,
       iconClassName: "bg-[#E8EEF9] text-[#3B6FBF]",
     },
@@ -152,6 +156,7 @@ export function RecipientPicker({
   value,
   onChange,
   clientName,
+  clientIsDeceased = false,
   clientPhone,
   guarantor,
   requireAddressForGuarantor = false,
@@ -161,6 +166,7 @@ export function RecipientPicker({
     clientPhone,
     guarantor,
     requireAddressForGuarantor,
+    clientIsDeceased,
   );
 
   return (
