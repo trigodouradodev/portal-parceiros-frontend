@@ -151,6 +151,7 @@ export interface OverdueCollectionItem {
   queuePosition?: number;
   correctedAmount?: number;
   lastInteraction?: {
+    noForecastReason?: string;
     result: ActivityInteractionResult;
     channel: ActivityInteractionChannel;
     createdAt: string;
@@ -227,6 +228,7 @@ export interface Geolocation {
 }
 
 export interface FollowUpHistoryItem {
+  noForecastReason?: string;
   id: string;
   status: string;
   note?: string;
@@ -242,6 +244,7 @@ export interface FollowUpHistoryItem {
 }
 
 export interface ActivityInteractionHistoryItem {
+  noForecastReason?: string;
   id: string;
   channel: string;
   result: string;

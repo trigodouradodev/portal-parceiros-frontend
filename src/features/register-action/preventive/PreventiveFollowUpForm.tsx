@@ -1,4 +1,6 @@
 import { useState } from "react";
+import type { NoForecastReason } from "@/lib/no-forecast-reasons";
+import { NoForecastReasonField } from "@/features/register-action/components/NoForecastReasonField";
 import { format } from "date-fns";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,7 +33,7 @@ import { getWaTemplates } from "@/features/register-action/preventive/utils/wa-t
 import { buildPreventiveFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
-import { getApiErrorMessage } from "@/lib/api/errors";
+import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { getFirstName } from "@/lib/user-display";
 import { FollowUpParty } from "@/services/followup/followup.types";
 
@@ -79,6 +81,7 @@ export function PreventiveFollowUpForm({
   const [channel, setChannel] = useState<Channel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [noForecastReason, setNoForecastReason] = useState<NoForecastReason>();
   const [paymentForecast, setPaymentForecast] = useState<Date | undefined>();
   const {
     status: locationStatus,
@@ -119,13 +122,18 @@ export function PreventiveFollowUpForm({
   const saving = createFollowUp.isPending;
   const requiresForecast = outcome === "delay";
   const requiresNote = outcome === "other";
+  const requiresReason = outcome === "no_forecast";
   const canSaveOutcome = !requiresForecast || Boolean(paymentForecast);
-  const canSave = canSaveOutcome && (!requiresNote || note.trim().length > 0);
+  const canSave =
+    canSaveOutcome &&
+    (!requiresReason || Boolean(noForecastReason)) &&
+    (!requiresNote || note.trim().length > 0);
 
   function handleRecipientChange(party: FollowUpParty) {
     setRecipient(party);
     setChannel(null);
     setOutcome(null);
+    setNoForecastReason(undefined);
     setNote("");
     setPaymentForecast(undefined);
     resetLocationCheck();
@@ -134,11 +142,13 @@ export function PreventiveFollowUpForm({
   function handleChannelChange(nextChannel: Channel) {
     setChannel(nextChannel);
     setOutcome(null);
+    setNoForecastReason(undefined);
     setPaymentForecast(undefined);
     resetLocationCheck();
   }
 
   function handleOutcomeChange(nextOutcome: string) {
+    if (nextOutcome !== outcome) setNoForecastReason(undefined);
     setOutcome(nextOutcome);
     if (nextOutcome !== "delay") setPaymentForecast(undefined);
   }
@@ -178,6 +188,7 @@ export function PreventiveFollowUpForm({
         channel,
         party: recipient,
         outcome,
+        noForecastReason,
         note: noteWithAudit,
         paymentForecast:
           outcome === "delay" && paymentForecast
@@ -194,7 +205,7 @@ export function PreventiveFollowUpForm({
         status: outcome ?? undefined,
       });
     } catch (err) {
-      showToast(getApiErrorMessage(err, "Erro ao registrar contato."), {
+      showToast(getTaskActionErrorMessage(err, "Erro ao registrar contato."), {
         variant: "destructive",
       });
     }
@@ -337,13 +348,21 @@ export function PreventiveFollowUpForm({
                 : "Qual foi o resultado do contato?"
             }
             afterOptions={
-              requiresForecast ? (
-                <PaymentForecastField
-                  value={paymentForecast}
-                  onChange={setPaymentForecast}
-                  invalid={!paymentForecast}
-                />
-              ) : undefined
+              <>
+                {requiresForecast && (
+                  <PaymentForecastField
+                    value={paymentForecast}
+                    onChange={setPaymentForecast}
+                    invalid={!paymentForecast}
+                  />
+                )}
+                {requiresReason && (
+                  <NoForecastReasonField
+                    value={noForecastReason}
+                    onChange={setNoForecastReason}
+                  />
+                )}
+              </>
             }
             note={{
               value: note,

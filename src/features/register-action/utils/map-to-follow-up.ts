@@ -1,3 +1,4 @@
+import type { NoForecastReason } from "@/lib/no-forecast-reasons";
 import {
   FollowUpExpectedResult,
   FollowUpParty,
@@ -51,6 +52,7 @@ export function buildPreventiveFollowUpPayload(params: {
   channel: "whatsapp" | "phone" | "visit";
   party: FollowUpParty;
   outcome?: string | null;
+  noForecastReason?: NoForecastReason;
   note?: string;
   paymentForecast?: string;
   latitude?: number;
@@ -65,6 +67,10 @@ export function buildPreventiveFollowUpPayload(params: {
     expectedResult: mapPreventiveOutcomeToExpectedResult(params.outcome),
     paymentForecast: params.paymentForecast,
   };
+
+  if (params.outcome === "no_forecast" && params.noForecastReason) {
+    payload.noForecastReason = params.noForecastReason;
+  }
 
   if (
     params.channel === "visit" &&

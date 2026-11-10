@@ -1,4 +1,5 @@
 import { ActivityInteractionResult } from "./activity.enums";
+import { getNoForecastReasonLabel } from "@/lib/no-forecast-reasons";
 
 const ACTIVITY_INTERACTION_RESULT_LABELS: Record<
   ActivityInteractionResult,
@@ -49,8 +50,14 @@ function normalizeInteractionResult(
   return LEGACY_RESULT_ALIASES[normalized] ?? null;
 }
 
-export function getActivityInteractionResultLabel(result: string): string {
+export function getActivityInteractionResultLabel(
+  result: string,
+  noForecastReason?: string,
+): string {
   const canonical = normalizeInteractionResult(result);
+  if (canonical === ActivityInteractionResult.NO_FORECAST && noForecastReason) {
+    return `${ACTIVITY_INTERACTION_RESULT_LABELS[canonical]} — ${getNoForecastReasonLabel(noForecastReason)}`;
+  }
   if (canonical) {
     return ACTIVITY_INTERACTION_RESULT_LABELS[canonical];
   }

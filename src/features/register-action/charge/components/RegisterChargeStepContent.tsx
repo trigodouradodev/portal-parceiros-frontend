@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { OutcomeOptionList } from "@/features/register-action";
 import type { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
 import { WhatsAppPanel } from "@/features/register-action/preventive/components";
-import type { ActivityInteractionResult } from "@/services/activities/activity.enums";
+import { ActivityInteractionResult } from "@/services/activities/activity.enums";
+import { NoForecastReasonField } from "@/features/register-action/components/NoForecastReasonField";
 import { ChargePhoneStep } from "./ChargePhoneStep";
 import { ChargeVisitStep } from "./ChargeVisitStep";
 import { ContactToneBadges } from "./ContactToneBadges";
@@ -28,6 +29,8 @@ export function RegisterChargeStepContent({
     recipientType,
     setRecipientType,
     outcome,
+    noForecastReason,
+    setNoForecastReason,
     note,
     setNote,
     outcomeDate,
@@ -114,7 +117,14 @@ export function RegisterChargeStepContent({
     }
 
     let afterOptions: ReactNode;
-    if (dateKind && outcomeDate) {
+    if (outcome === ActivityInteractionResult.NO_FORECAST) {
+      afterOptions = (
+        <NoForecastReasonField
+          value={noForecastReason}
+          onChange={setNoForecastReason}
+        />
+      );
+    } else if (dateKind && outcomeDate) {
       afterOptions = (
         <OutcomeDateSummary
           kind={dateKind}

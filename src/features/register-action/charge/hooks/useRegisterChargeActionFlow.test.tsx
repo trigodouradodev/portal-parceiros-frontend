@@ -70,6 +70,53 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("negociação e promessa no registro da cobrança", () => {
+  it.each(["phone", "whatsapp", "visit"] as const)(
+    "exige motivo em %s e envia Outro sem exigir observação",
+    async (contactType) => {
+      state.context.contactType = contactType;
+      const { result } = renderHook(useRegisterChargeActionFlow);
+      act(() => {
+        result.current.setStep("outcome");
+        result.current.selectOutcome(ActivityInteractionResult.NO_FORECAST);
+      });
+      expect(result.current.canSaveOutcome).toBe(false);
+      await act(() => result.current.handleSave());
+      expect(state.mutate).not.toHaveBeenCalled();
+      act(() => result.current.setNoForecastReason("other"));
+      expect(result.current.canSaveOutcome).toBe(true);
+      await act(() => result.current.handleSave());
+      expect(state.mutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            result: "no_forecast",
+            noForecastReason: "other",
+          }),
+        }),
+      );
+      expect(state.mutate.mock.calls[0][0].payload.observation).toBeUndefined();
+    },
+  );
+
+  it("limpa o motivo ao trocar resultado e exige nova escolha ao voltar", async () => {
+    const { result } = renderHook(useRegisterChargeActionFlow);
+    act(() => {
+      result.current.setStep("outcome");
+      result.current.selectOutcome(ActivityInteractionResult.NO_FORECAST);
+    });
+    act(() => result.current.setNoForecastReason("job_loss"));
+    act(() =>
+      result.current.selectOutcome(ActivityInteractionResult.NO_RESPONSE),
+    );
+    expect(result.current.noForecastReason).toBeUndefined();
+    await act(() => result.current.handleSave());
+    expect(
+      state.mutate.mock.calls[0][0].payload.noForecastReason,
+    ).toBeUndefined();
+    act(() =>
+      result.current.selectOutcome(ActivityInteractionResult.NO_FORECAST),
+    );
+    expect(result.current.canSaveOutcome).toBe(false);
+  });
   it("exige confirmação da data da negociação entre amanhã e D+10", () => {
     const { result } = renderHook(useRegisterChargeActionFlow);
     act(() => {

@@ -1,3 +1,4 @@
+import type { NoForecastReason } from "@/lib/no-forecast-reasons";
 import type {
   ActivityInteractionChannel,
   ActivityInteractionResult,
@@ -16,6 +17,7 @@ export interface InteractionGeolocation {
 }
 
 export interface RegisterInteractionPayload {
+  noForecastReason?: NoForecastReason;
   channel: ActivityInteractionChannel;
   recipientType: ActivityRecipientType;
   result: ActivityInteractionResult;
@@ -37,6 +39,7 @@ export interface RegisterInteractionPayload {
 }
 
 export interface ActivityInteractionResponse {
+  noForecastReason?: string;
   id: string;
   taskId: string;
   installmentId: string;
@@ -97,6 +100,7 @@ export interface QueueInstallment {
 }
 
 export interface QueueLastInteraction {
+  noForecastReason?: string;
   result: ActivityInteractionResult;
   channel: ActivityInteractionChannel;
   createdAt: string;

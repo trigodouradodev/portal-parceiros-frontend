@@ -5,6 +5,7 @@ import {
   ActivityTaskType,
 } from "@/services/activities/activity.enums";
 import type { RegisterInteractionPayload } from "@/services/activities/activities.types";
+import type { NoForecastReason } from "@/lib/no-forecast-reasons";
 import type { PreventiveContactType } from "@/contexts/action/action-context";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
@@ -39,6 +40,7 @@ export function mapTaskChannelToActivityTaskType(
 
 export function buildV2RegisterInteractionPayload(params: {
   result: ActivityInteractionResult;
+  noForecastReason?: NoForecastReason;
   recipientType: ActivityRecipientType;
   contactType?: PreventiveContactType;
   taskChannel?: ActivityChannel;
@@ -59,6 +61,13 @@ export function buildV2RegisterInteractionPayload(params: {
     result: params.result,
     observation: params.note || undefined,
   };
+
+  if (
+    params.result === ActivityInteractionResult.NO_FORECAST &&
+    params.noForecastReason
+  ) {
+    payload.noForecastReason = params.noForecastReason;
+  }
 
   if (
     params.result === ActivityInteractionResult.PAYMENT_PROMISE &&
