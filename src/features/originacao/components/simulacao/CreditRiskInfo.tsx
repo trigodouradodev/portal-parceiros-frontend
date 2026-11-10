@@ -10,18 +10,20 @@ import {
 } from "@/components/ui/dialog";
 import { CreditRiskBand } from "@/services/origination/origination.types";
 
+// Os limites (400 e 700) espelham o padrão de `CREDIT_RISK_BANDS` no backend.
+// Se o backend passar a usar outros limites em `system_configs`, atualize aqui.
 const BAND_EXPLANATIONS: { band: CreditRiskBand; text: string }[] = [
   {
     band: CreditRiskBand.LOW,
-    text: "Score Serasa alto: o cliente tem um bom histórico de crédito.",
+    text: "Score Serasa acima de 700: o cliente tem um bom histórico de crédito.",
   },
   {
     band: CreditRiskBand.MEDIUM,
-    text: "Score Serasa intermediário: pede atenção na análise.",
+    text: "Score Serasa de 400 a 700: pede atenção na análise.",
   },
   {
     band: CreditRiskBand.HIGH,
-    text: "Score Serasa baixo: o histórico de crédito do cliente é frágil.",
+    text: "Score Serasa abaixo de 400: o histórico de crédito do cliente é frágil.",
   },
 ];
 

@@ -126,7 +126,17 @@ describe("SimulationResultCard — risco de crédito", () => {
         /não é a única forma de analisar a capacidade de crédito/,
       ),
     ).toBeInTheDocument();
-    expect(dialog).not.toHaveTextContent(/\d/);
+    expect(
+      within(dialog).getByText(/Score Serasa acima de 700/),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/Score Serasa de 400 a 700/),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/Score Serasa abaixo de 400/),
+    ).toBeInTheDocument();
+    // Os limites das faixas aparecem; o score do cliente, nunca.
+    expect(dialog).not.toHaveTextContent("450");
   });
 
   it("fecha a explicação", async () => {
