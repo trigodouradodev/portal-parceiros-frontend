@@ -52,7 +52,7 @@ export function SimulationResultCard({
         </div>
       </dl>
       {simulation.creditRiskBand ? (
-        <div className="mt-3 flex items-center gap-2 border-t border-success/20 pt-3">
+        <div className="mt-3 flex items-center justify-center gap-2 border-t border-success/20 pt-3">
           <CreditRiskBadge band={simulation.creditRiskBand} />
           <CreditRiskInfo />
         </div>
