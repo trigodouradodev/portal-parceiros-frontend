@@ -1,3 +1,5 @@
+import type { OverdueReason } from "@/lib/overdue-reasons";
+import { requiresOverdueReason } from "@/lib/overdue-reasons";
 import {
   FollowUpExpectedResult,
   FollowUpParty,
@@ -51,6 +53,7 @@ export function buildPreventiveFollowUpPayload(params: {
   channel: "whatsapp" | "phone" | "visit";
   party: FollowUpParty;
   outcome?: string | null;
+  overdueReason?: OverdueReason;
   note?: string;
   paymentForecast?: string;
   latitude?: number;
@@ -65,6 +68,10 @@ export function buildPreventiveFollowUpPayload(params: {
     expectedResult: mapPreventiveOutcomeToExpectedResult(params.outcome),
     paymentForecast: params.paymentForecast,
   };
+
+  if (requiresOverdueReason(payload.expectedResult) && params.overdueReason) {
+    payload.overdueReason = params.overdueReason;
+  }
 
   if (
     params.channel === "visit" &&

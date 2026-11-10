@@ -15,6 +15,18 @@ function axiosError(message: string, reason?: string) {
 }
 
 describe("getTaskActionErrorMessage", () => {
+  it.each([
+    ["overdue_reason_required", "Selecione o motivo do atraso."],
+    ["overdue_reason_invalid", "Selecione um motivo válido para o atraso."],
+    [
+      "overdue_reason_not_allowed",
+      "O motivo do atraso não se aplica a este resultado.",
+    ],
+  ])("traduz %s sem tratar como tarefa desatualizada", (code, message) => {
+    const error = axiosError(code);
+    expect(getTaskActionErrorMessage(error, "fallback")).toBe(message);
+    expect(isStaleTaskError(error)).toBe(false);
+  });
   it("traduz o motivo de inelegibilidade e sinaliza atualização da fila", () => {
     const error = axiosError("task_not_collectible", "open_pending_action");
     expect(getTaskActionErrorMessage(error, "fallback")).toContain(
