@@ -60,7 +60,7 @@ it("Follow-up manual exige o motivo e envia Outro sem exigir observação extra"
     expect(state.mutate).toHaveBeenCalledWith(
       expect.objectContaining({
         expectedResult: "no_forecast",
-        noForecastReason: "other",
+        overdueReason: "other",
       }),
     ),
   );
@@ -81,12 +81,30 @@ it("não reaproveita o motivo ao mudar o resultado do Follow-up", async () => {
   await user.click(screen.getByRole("button", { name: "Selecione o motivo" }));
   await user.click(screen.getByRole("button", { name: "Perda de emprego" }));
   await user.click(screen.getByRole("button", { name: /Sem retorno/ }));
+  expect(screen.getByText("Motivo do atraso")).toBeInTheDocument();
   expect(
-    screen.queryByText("Motivo da falta de previsão"),
-  ).not.toBeInTheDocument();
+    screen.getByRole("button", { name: "Selecione o motivo" }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Registrar" })).toBeDisabled();
   await user.click(screen.getByRole("button", { name: /Sem previsão/ }));
   expect(
     screen.getByRole("button", { name: "Selecione o motivo" }),
   ).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Registrar" })).toBeDisabled();
+});
+
+it.each(["Falecido", "Outro"])("oculta o motivo para %s", async (label) => {
+  const user = userEvent.setup();
+  render(
+    <PreventiveFollowUpForm
+      client={client}
+      onBack={vi.fn()}
+      onSaved={vi.fn()}
+    />,
+  );
+  await openOutcome(user);
+  await user.click(
+    screen.getByRole("button", { name: new RegExp(`^${label}`) }),
+  );
+  expect(screen.queryByText("Motivo do atraso")).not.toBeInTheDocument();
 });

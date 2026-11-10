@@ -47,7 +47,7 @@ function mapInteractionToStep(
     day: `#${index + 1}`,
     label: getActivityInteractionResultLabel(
       interaction.result,
-      interaction.noForecastReason,
+      interaction.overdueReason,
     ),
     status: "done",
     date: formatDateTime(interaction.createdAt),

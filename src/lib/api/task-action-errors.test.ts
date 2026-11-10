@@ -16,14 +16,11 @@ function axiosError(message: string, reason?: string) {
 
 describe("getTaskActionErrorMessage", () => {
   it.each([
-    ["no_forecast_reason_required", "Selecione o motivo da falta de previsão."],
+    ["overdue_reason_required", "Selecione o motivo do atraso."],
+    ["overdue_reason_invalid", "Selecione um motivo válido para o atraso."],
     [
-      "no_forecast_reason_invalid",
-      "Selecione um motivo válido para a falta de previsão.",
-    ],
-    [
-      "no_forecast_reason_not_allowed",
-      "O motivo só se aplica ao resultado Sem previsão.",
+      "overdue_reason_not_allowed",
+      "O motivo do atraso não se aplica a este resultado.",
     ],
   ])("traduz %s sem tratar como tarefa desatualizada", (code, message) => {
     const error = axiosError(code);

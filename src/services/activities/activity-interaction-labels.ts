@@ -1,5 +1,8 @@
 import { ActivityInteractionResult } from "./activity.enums";
-import { getNoForecastReasonLabel } from "@/lib/no-forecast-reasons";
+import {
+  getOverdueReasonLabel,
+  requiresOverdueReason,
+} from "@/lib/overdue-reasons";
 
 const ACTIVITY_INTERACTION_RESULT_LABELS: Record<
   ActivityInteractionResult,
@@ -52,11 +55,11 @@ function normalizeInteractionResult(
 
 export function getActivityInteractionResultLabel(
   result: string,
-  noForecastReason?: string,
+  overdueReason?: string,
 ): string {
   const canonical = normalizeInteractionResult(result);
-  if (canonical === ActivityInteractionResult.NO_FORECAST && noForecastReason) {
-    return `${ACTIVITY_INTERACTION_RESULT_LABELS[canonical]} — ${getNoForecastReasonLabel(noForecastReason)}`;
+  if (canonical && requiresOverdueReason(canonical) && overdueReason) {
+    return `${ACTIVITY_INTERACTION_RESULT_LABELS[canonical]} — ${getOverdueReasonLabel(overdueReason)}`;
   }
   if (canonical) {
     return ACTIVITY_INTERACTION_RESULT_LABELS[canonical];

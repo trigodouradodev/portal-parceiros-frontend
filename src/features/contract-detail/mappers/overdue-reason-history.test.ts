@@ -24,7 +24,7 @@ const task: TaskHistoryItem = {
     channel: "call",
     recipientType: "client",
     result: "no_forecast",
-    noForecastReason: "job_loss",
+    overdueReason: "job_loss",
     observation: "Detalhes do contato",
     createdAt: "2026-11-10T14:00:00Z",
     author: { id: "u1", name: "Maria" },
@@ -41,7 +41,7 @@ it("exibe a classificação nos históricos de tarefa e interação sem modifica
   ).toBe("Sem previsão — Perda de emprego");
   const legacy = {
     ...task,
-    interaction: { ...task.interaction!, noForecastReason: undefined },
+    interaction: { ...task.interaction!, overdueReason: undefined },
   };
   expect(buildTaskHistoryTimeline([legacy])[1].outcome).toBe("Sem previsão");
 });
@@ -51,48 +51,73 @@ it("exibe o motivo no Follow-up e mantém registros antigos sem classificação"
     id: "f1",
     status: "client_call",
     expectedResult: "no_forecast",
-    noForecastReason: "other",
+    overdueReason: "other",
     note: "Observação original",
     createdAt: "2026-11-10T14:00:00Z",
     author: { id: "u1", name: "Maria" },
   };
   expect(buildFollowUpTimeline([followup])[0].note).toBe(
-    "Observação original · Resultado: Sem previsão · Motivo: Outro",
+    "Observação original · Resultado: Sem previsão · Motivo do atraso: Outro",
   );
   expect(
-    buildFollowUpTimeline([{ ...followup, noForecastReason: undefined }])[0]
-      .note,
+    buildFollowUpTimeline([{ ...followup, overdueReason: undefined }])[0].note,
   ).toBe("Observação original · Resultado: Sem previsão");
 });
 
-it("os payloads enviam o motivo somente para Sem previsão", () => {
+it("os payloads enviam o motivo para resultados aplicáveis", () => {
   expect(
     buildV2RegisterInteractionPayload({
       result: "no_forecast",
       recipientType: "client",
-      noForecastReason: "other",
-    }).noForecastReason,
+      overdueReason: "other",
+    }).overdueReason,
   ).toBe("other");
   expect(
     buildV2RegisterInteractionPayload({
-      result: "no_response",
+      result: "other",
       recipientType: "client",
-      noForecastReason: "other",
-    }).noForecastReason,
+      overdueReason: "other",
+    }).overdueReason,
   ).toBeUndefined();
   const base = {
     contractId: "c1",
     installmentNumber: 1,
     channel: "phone" as const,
     party: "client" as const,
-    noForecastReason: "job_loss" as const,
+    overdueReason: "job_loss" as const,
   };
   expect(
     buildPreventiveFollowUpPayload({ ...base, outcome: "no_forecast" })
-      .noForecastReason,
+      .overdueReason,
   ).toBe("job_loss");
   expect(
-    buildPreventiveFollowUpPayload({ ...base, outcome: "no_return" })
-      .noForecastReason,
+    buildPreventiveFollowUpPayload({ ...base, outcome: "other" }).overdueReason,
   ).toBeUndefined();
+});
+
+it("mantém Falecimento legível no histórico sem disponibilizá-lo para novos registros", () => {
+  expect(
+    buildTaskHistoryTimeline([
+      {
+        ...task,
+        interaction: { ...task.interaction!, overdueReason: "death" },
+      },
+    ])[1].outcome,
+  ).toBe("Sem previsão — Falecimento");
+});
+it.each([
+  "no_response",
+  "payment_promise",
+  "dispute",
+  "renegotiation",
+  "no_forecast",
+  "not_located",
+] as const)("inclui o motivo no resultado %s", (result) => {
+  expect(
+    buildV2RegisterInteractionPayload({
+      result,
+      recipientType: "client",
+      overdueReason: "other",
+    }).overdueReason,
+  ).toBe("other");
 });

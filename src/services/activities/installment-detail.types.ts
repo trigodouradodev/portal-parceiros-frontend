@@ -21,7 +21,7 @@ export interface DetailGeolocation {
 }
 
 export interface TaskInteraction {
-  noForecastReason?: string;
+  overdueReason?: string;
   id: string;
   channel: ActivityInteractionChannel;
   recipientType: ActivityRecipientType;

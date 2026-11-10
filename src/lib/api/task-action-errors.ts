@@ -2,11 +2,10 @@ import { getApiErrorMessage } from "@/lib/api/errors";
 import { isAxiosError } from "axios";
 
 const TASK_ACTION_ERROR_MESSAGES: Record<string, string> = {
-  no_forecast_reason_required: "Selecione o motivo da falta de previsão.",
-  no_forecast_reason_invalid:
-    "Selecione um motivo válido para a falta de previsão.",
-  no_forecast_reason_not_allowed:
-    "O motivo só se aplica ao resultado Sem previsão.",
+  overdue_reason_required: "Selecione o motivo do atraso.",
+  overdue_reason_invalid: "Selecione um motivo válido para o atraso.",
+  overdue_reason_not_allowed:
+    "O motivo do atraso não se aplica a este resultado.",
   already_postponed: "Esta tarefa já foi postergada.",
   already_rescheduled: "Esta visita já foi reagendada.",
   reschedule_visit_only: "Só é possível reagendar tarefas de visita.",

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import type { NoForecastReason } from "@/lib/no-forecast-reasons";
+import type { OverdueReason } from "@/lib/overdue-reasons";
+import { requiresOverdueReason } from "@/lib/overdue-reasons";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { useActionContext } from "@/contexts/action";
@@ -82,7 +83,7 @@ export function useRegisterChargeActionFlow() {
     null,
   );
   const [note, setNote] = useState("");
-  const [noForecastReason, setNoForecastReason] = useState<NoForecastReason>();
+  const [overdueReason, setOverdueReason] = useState<OverdueReason>();
   const recipientType = client?.isDeceased
     ? ActivityRecipientType.GUARANTOR
     : selectedRecipient;
@@ -168,8 +169,7 @@ export function useRegisterChargeActionFlow() {
   const noteRequired =
     outcome !== null && requiresInteractionObservation(outcome);
   const showNoteValidation = noteRequired && note.trim().length === 0;
-  const needsNoForecastReason =
-    outcome === ActivityInteractionResult.NO_FORECAST && !noForecastReason;
+  const needsOverdueReason = requiresOverdueReason(outcome) && !overdueReason;
   const dateKind = getOutcomeDateKind(outcome);
   const today = collectionToday();
   const dateMin = dateKind === "agreement" ? addDays(today, 1) : today;
@@ -196,11 +196,11 @@ export function useRegisterChargeActionFlow() {
     outcome !== null &&
     canContinueRecipient &&
     !needsOutcomeDate &&
-    !needsNoForecastReason &&
+    !needsOverdueReason &&
     (!noteRequired || note.trim().length > 0);
 
   function selectOutcome(value: ActivityInteractionResult) {
-    if (value !== outcome) setNoForecastReason(undefined);
+    if (value !== outcome) setOverdueReason(undefined);
     const kind = getOutcomeDateKind(value);
     const sameKind = kind === dateKind;
     setOutcome(value);
@@ -254,7 +254,7 @@ export function useRegisterChargeActionFlow() {
     try {
       const payload = buildV2RegisterInteractionPayload({
         result,
-        noForecastReason,
+        overdueReason,
         recipientType,
         contactType,
         taskChannel,
@@ -307,8 +307,7 @@ export function useRegisterChargeActionFlow() {
   async function handleSave() {
     if (step !== "outcome" || !outcome) return;
     if (noteRequired && !note.trim()) return;
-    if (needsOutcomeDate || needsNoForecastReason || !canContinueRecipient)
-      return;
+    if (needsOutcomeDate || needsOverdueReason || !canContinueRecipient) return;
     if (isVisitTask && !location.locationOk) {
       showToast("Confirme a localização da visita antes de registrar.", {
         variant: "destructive",
@@ -359,8 +358,8 @@ export function useRegisterChargeActionFlow() {
     recipientType,
     setRecipientType,
     outcome,
-    noForecastReason,
-    setNoForecastReason,
+    overdueReason,
+    setOverdueReason,
     note,
     setNote,
     outcomeDate,

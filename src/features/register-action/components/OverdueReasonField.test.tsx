@@ -1,25 +1,29 @@
 import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NoForecastReasonField } from "./NoForecastReasonField";
+import { OverdueReasonField } from "./OverdueReasonField";
 import {
-  NO_FORECAST_REASON_OPTIONS,
-  type NoForecastReason,
-} from "@/lib/no-forecast-reasons";
+  OVERDUE_REASON_OPTIONS,
+  type OverdueReason,
+} from "@/lib/overdue-reasons";
 
 function Harness() {
-  const [value, setValue] = useState<NoForecastReason>();
-  return <NoForecastReasonField value={value} onChange={setValue} />;
+  const [value, setValue] = useState<OverdueReason>();
+  return <OverdueReasonField value={value} onChange={setValue} />;
 }
 
-it("usa o seletor padrão com os 25 motivos e busca sem acentos", async () => {
+it("usa o seletor padrão com os 24 motivos e busca sem acentos", async () => {
   const user = userEvent.setup();
   render(<Harness />);
   expect(
     screen.getByText("Selecione o motivo para continuar."),
   ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Selecione o motivo" }));
-  for (const { label } of NO_FORECAST_REASON_OPTIONS)
+  expect(OVERDUE_REASON_OPTIONS).toHaveLength(24);
+  expect(
+    screen.queryByRole("button", { name: "Falecimento" }),
+  ).not.toBeInTheDocument();
+  for (const { label } of OVERDUE_REASON_OPTIONS)
     expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
   await user.type(screen.getByPlaceholderText("Buscar..."), "vitima");
   expect(

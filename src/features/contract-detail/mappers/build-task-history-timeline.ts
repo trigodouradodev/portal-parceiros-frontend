@@ -107,7 +107,7 @@ function mapTaskToStep(task: TaskHistoryItem): TimelineStep {
     outcome: interaction?.result
       ? getActivityInteractionResultLabel(
           interaction.result,
-          interaction.noForecastReason,
+          interaction.overdueReason,
         )
       : undefined,
   };

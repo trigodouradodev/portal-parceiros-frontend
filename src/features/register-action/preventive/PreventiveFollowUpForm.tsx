@@ -1,6 +1,7 @@
 import { useState } from "react";
-import type { NoForecastReason } from "@/lib/no-forecast-reasons";
-import { NoForecastReasonField } from "@/features/register-action/components/NoForecastReasonField";
+import type { OverdueReason } from "@/lib/overdue-reasons";
+import { requiresOverdueReason } from "@/lib/overdue-reasons";
+import { OverdueReasonField } from "@/features/register-action/components/OverdueReasonField";
 import { format } from "date-fns";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,10 @@ import { getPreventiveOutcomes } from "@/features/register-action/preventive/con
 import { appendManualLocationAuditNote } from "@/features/register-action/preventive/constants/manual-location-reason";
 import { useVisitLocationCheck } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
 import { getWaTemplates } from "@/features/register-action/preventive/utils/wa-templates";
-import { buildPreventiveFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
+import {
+  buildPreventiveFollowUpPayload,
+  mapPreventiveOutcomeToExpectedResult,
+} from "@/features/register-action/utils/map-to-follow-up";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
 import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
@@ -81,7 +85,7 @@ export function PreventiveFollowUpForm({
   const [channel, setChannel] = useState<Channel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
   const [note, setNote] = useState("");
-  const [noForecastReason, setNoForecastReason] = useState<NoForecastReason>();
+  const [overdueReason, setOverdueReason] = useState<OverdueReason>();
   const [paymentForecast, setPaymentForecast] = useState<Date | undefined>();
   const {
     status: locationStatus,
@@ -122,18 +126,20 @@ export function PreventiveFollowUpForm({
   const saving = createFollowUp.isPending;
   const requiresForecast = outcome === "delay";
   const requiresNote = outcome === "other";
-  const requiresReason = outcome === "no_forecast";
+  const requiresReason = requiresOverdueReason(
+    mapPreventiveOutcomeToExpectedResult(outcome),
+  );
   const canSaveOutcome = !requiresForecast || Boolean(paymentForecast);
   const canSave =
     canSaveOutcome &&
-    (!requiresReason || Boolean(noForecastReason)) &&
+    (!requiresReason || Boolean(overdueReason)) &&
     (!requiresNote || note.trim().length > 0);
 
   function handleRecipientChange(party: FollowUpParty) {
     setRecipient(party);
     setChannel(null);
     setOutcome(null);
-    setNoForecastReason(undefined);
+    setOverdueReason(undefined);
     setNote("");
     setPaymentForecast(undefined);
     resetLocationCheck();
@@ -142,13 +148,13 @@ export function PreventiveFollowUpForm({
   function handleChannelChange(nextChannel: Channel) {
     setChannel(nextChannel);
     setOutcome(null);
-    setNoForecastReason(undefined);
+    setOverdueReason(undefined);
     setPaymentForecast(undefined);
     resetLocationCheck();
   }
 
   function handleOutcomeChange(nextOutcome: string) {
-    if (nextOutcome !== outcome) setNoForecastReason(undefined);
+    if (nextOutcome !== outcome) setOverdueReason(undefined);
     setOutcome(nextOutcome);
     if (nextOutcome !== "delay") setPaymentForecast(undefined);
   }
@@ -188,7 +194,7 @@ export function PreventiveFollowUpForm({
         channel,
         party: recipient,
         outcome,
-        noForecastReason,
+        overdueReason,
         note: noteWithAudit,
         paymentForecast:
           outcome === "delay" && paymentForecast
@@ -357,9 +363,9 @@ export function PreventiveFollowUpForm({
                   />
                 )}
                 {requiresReason && (
-                  <NoForecastReasonField
-                    value={noForecastReason}
-                    onChange={setNoForecastReason}
+                  <OverdueReasonField
+                    value={overdueReason}
+                    onChange={setOverdueReason}
                   />
                 )}
               </>

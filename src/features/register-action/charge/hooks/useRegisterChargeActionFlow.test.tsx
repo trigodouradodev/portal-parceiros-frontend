@@ -1,10 +1,11 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, render, screen, renderHook } from "@testing-library/react";
 import type { ActionContextType } from "@/contexts/action/action-context";
 import { TaskTab } from "@/features/dashboard/constants/task-tab";
 import {
   ActivityInteractionResult,
   ActivityRecipientType,
 } from "@/services/activities/activity.enums";
+import { RegisterChargeStepContent } from "../components/RegisterChargeStepContent";
 import { useRegisterChargeActionFlow } from "./useRegisterChargeActionFlow";
 
 const state = vi.hoisted(() => ({
@@ -82,14 +83,14 @@ describe("negociação e promessa no registro da cobrança", () => {
       expect(result.current.canSaveOutcome).toBe(false);
       await act(() => result.current.handleSave());
       expect(state.mutate).not.toHaveBeenCalled();
-      act(() => result.current.setNoForecastReason("other"));
+      act(() => result.current.setOverdueReason("other"));
       expect(result.current.canSaveOutcome).toBe(true);
       await act(() => result.current.handleSave());
       expect(state.mutate).toHaveBeenCalledWith(
         expect.objectContaining({
           payload: expect.objectContaining({
             result: "no_forecast",
-            noForecastReason: "other",
+            overdueReason: "other",
           }),
         }),
       );
@@ -103,15 +104,14 @@ describe("negociação e promessa no registro da cobrança", () => {
       result.current.setStep("outcome");
       result.current.selectOutcome(ActivityInteractionResult.NO_FORECAST);
     });
-    act(() => result.current.setNoForecastReason("job_loss"));
+    act(() => result.current.setOverdueReason("job_loss"));
     act(() =>
       result.current.selectOutcome(ActivityInteractionResult.NO_RESPONSE),
     );
-    expect(result.current.noForecastReason).toBeUndefined();
+    expect(result.current.overdueReason).toBeUndefined();
     await act(() => result.current.handleSave());
-    expect(
-      state.mutate.mock.calls[0][0].payload.noForecastReason,
-    ).toBeUndefined();
+    expect(state.mutate).not.toHaveBeenCalled();
+    expect(result.current.canSaveOutcome).toBe(false);
     act(() =>
       result.current.selectOutcome(ActivityInteractionResult.NO_FORECAST),
     );
@@ -138,6 +138,8 @@ describe("negociação e promessa no registro da cobrança", () => {
     });
     act(() => result.current.setDraftDate(new Date(2026, 10, 10)));
     act(() => result.current.confirmOutcomeDate());
+    expect(result.current.canSaveOutcome).toBe(false);
+    act(() => result.current.setOverdueReason("other"));
     expect(result.current.canSaveOutcome).toBe(true);
     await act(() => result.current.handleSave());
     expect(state.mutate).toHaveBeenCalledWith(
@@ -181,6 +183,8 @@ describe("negociação e promessa no registro da cobrança", () => {
     expect(result.current.dateMin).toEqual(new Date(2026, 10, 5));
     act(() => result.current.setDraftDate(new Date(2026, 10, 5)));
     act(() => result.current.confirmOutcomeDate());
+    expect(result.current.canSaveOutcome).toBe(false);
+    act(() => result.current.setOverdueReason("other"));
     expect(result.current.canSaveOutcome).toBe(true);
     act(() =>
       result.current.selectOutcome(ActivityInteractionResult.RENEGOTIATION),
@@ -226,4 +230,62 @@ describe("destinatário com óbito confirmado", () => {
       if (condition === "ausente") expect(result.current.contactPhone).toBe("");
     },
   );
+});
+
+it.each([
+  ActivityInteractionResult.NO_RESPONSE,
+  ActivityInteractionResult.DISPUTE,
+  ActivityInteractionResult.NO_FORECAST,
+])("bloqueia o salvamento de %s sem motivo", async (outcome) => {
+  const { result } = renderHook(useRegisterChargeActionFlow);
+  act(() => {
+    result.current.setStep("outcome");
+    result.current.selectOutcome(outcome);
+  });
+  expect(result.current.canSaveOutcome).toBe(false);
+  await act(() => result.current.handleSave());
+  expect(state.mutate).not.toHaveBeenCalled();
+  act(() => result.current.setOverdueReason("other"));
+  expect(result.current.canSaveOutcome).toBe(true);
+});
+it.each([ActivityInteractionResult.DECEASED, ActivityInteractionResult.OTHER])(
+  "não exige motivo para %s e não envia a seleção anterior",
+  async (outcome) => {
+    const { result } = renderHook(useRegisterChargeActionFlow);
+    act(() => {
+      result.current.setStep("outcome");
+      result.current.selectOutcome(ActivityInteractionResult.NO_FORECAST);
+    });
+    act(() => result.current.setOverdueReason("job_loss"));
+    act(() => {
+      result.current.selectOutcome(outcome);
+      result.current.setNote("Observação do contato");
+    });
+    expect(result.current.canSaveOutcome).toBe(true);
+    await act(() => result.current.handleSave());
+    expect(state.mutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.not.objectContaining({
+          overdueReason: expect.anything(),
+        }),
+      }),
+    );
+  },
+);
+
+it.each([
+  [ActivityInteractionResult.PAYMENT_PROMISE, "Data prometida para pagamento"],
+  [ActivityInteractionResult.RENEGOTIATION, "Data prevista para o acordo"],
+] as const)("mostra data e motivo juntos para %s", (outcome, dateLabel) => {
+  const { result } = renderHook(useRegisterChargeActionFlow);
+  act(() => {
+    result.current.setStep("outcome");
+    result.current.selectOutcome(outcome);
+  });
+  act(() => result.current.setDraftDate(new Date(2026, 10, 10)));
+  act(() => result.current.confirmOutcomeDate());
+  render(<RegisterChargeStepContent flow={result.current} />);
+  expect(screen.getByText(dateLabel)).toBeInTheDocument();
+  expect(screen.getByText("Motivo do atraso")).toBeInTheDocument();
+  expect(result.current.canSaveOutcome).toBe(false);
 });
