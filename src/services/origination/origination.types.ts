@@ -6,6 +6,16 @@ export const SimulationStatus = {
 export type SimulationStatus =
   (typeof SimulationStatus)[keyof typeof SimulationStatus];
 
+/** Indicativo de risco de crédito do cliente (faixa do score do Serasa). */
+export const CreditRiskBand = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+} as const;
+
+export type CreditRiskBand =
+  (typeof CreditRiskBand)[keyof typeof CreditRiskBand];
+
 /** Snapshot persistido retornado pela listagem e pelo comando de simulação. */
 export interface SimulationSnapshot {
   id: string;
@@ -30,6 +40,9 @@ export interface SimulationSnapshot {
    * alternativo a `installmentAmount` (que é sempre o valor SEM seguro)
    * quando o seguro está incluso. Ausente junto com `insurancePremium`. */
   installmentAmountWithInsurance?: number;
+  /** Faixa de risco de crédito do cliente. Ausente quando a consulta não
+   * trouxe dado. O backend nunca envia o score, só a faixa. */
+  creditRiskBand?: CreditRiskBand;
 }
 
 export interface SimulatePayload {
