@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SimulationResultCard } from "@/features/originacao/components/simulacao/SimulationResultCard";
 import type { SimulationSnapshot } from "@/features/originacao/types";
@@ -55,5 +56,81 @@ describe("SimulationResultCard — risco de crédito", () => {
     );
 
     expect(container).not.toHaveTextContent("450");
+  });
+
+  it("não mostra o rótulo 'Risco' ao lado do badge", () => {
+    render(
+      <SimulationResultCard
+        simulation={snapshot({ creditRiskBand: "medium" })}
+      />,
+    );
+
+    expect(screen.queryByText("Risco")).not.toBeInTheDocument();
+  });
+
+  it("não mostra o ícone de informação sem faixa", () => {
+    render(<SimulationResultCard simulation={snapshot()} />);
+
+    expect(
+      screen.queryByRole("button", { name: "Entenda o risco de crédito" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("abre a explicação do critério pelo ícone de informação, sem mostrar score", async () => {
+    const user = userEvent.setup();
+    render(
+      <SimulationResultCard
+        simulation={
+          {
+            ...snapshot({ creditRiskBand: "medium" }),
+            serasaScore: 450,
+          } as SimulationSnapshot
+        }
+      />,
+    );
+
+    expect(
+      screen.queryByText("Como o risco de crédito é definido"),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Entenda o risco de crédito" }),
+    );
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Como o risco de crédito é definido",
+    });
+    expect(
+      within(dialog).getByText(/consultamos o Serasa/),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("Crédito de baixo risco"),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("Crédito de médio risco"),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("Crédito de alto risco"),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/O score em si não é mostrado/),
+    ).toBeInTheDocument();
+    expect(dialog).not.toHaveTextContent(/\d/);
+  });
+
+  it("fecha a explicação", async () => {
+    const user = userEvent.setup();
+    render(
+      <SimulationResultCard
+        simulation={snapshot({ creditRiskBand: "high" })}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Entenda o risco de crédito" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Fechar" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

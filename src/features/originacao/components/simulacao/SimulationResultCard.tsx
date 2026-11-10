@@ -1,6 +1,7 @@
 import { CheckCircle2 } from "lucide-react";
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import { CreditRiskBadge } from "@/features/originacao/components/simulacao/CreditRiskBadge";
+import { CreditRiskInfo } from "@/features/originacao/components/simulacao/CreditRiskInfo";
 import { fmtBRL } from "@/lib/utils";
 
 export function SimulationResultCard({
@@ -52,8 +53,8 @@ export function SimulationResultCard({
       </dl>
       {simulation.creditRiskBand ? (
         <div className="mt-3 flex items-center gap-2 border-t border-success/20 pt-3">
-          <span className="text-sm text-muted-foreground">Risco</span>
           <CreditRiskBadge band={simulation.creditRiskBand} />
+          <CreditRiskInfo />
         </div>
       ) : null}
     </div>
