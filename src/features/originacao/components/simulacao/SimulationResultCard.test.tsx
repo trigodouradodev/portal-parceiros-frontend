@@ -115,6 +115,17 @@ describe("SimulationResultCard — risco de crédito", () => {
     expect(
       within(dialog).getByText(/O score em si não é mostrado/),
     ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("Este indicativo é exclusivamente do Serasa."),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/Ele não é o Score Aurea/),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        /não é a única forma de analisar a capacidade de crédito/,
+      ),
+    ).toBeInTheDocument();
     expect(dialog).not.toHaveTextContent(/\d/);
   });
 

@@ -13,15 +13,15 @@ import { CreditRiskBand } from "@/services/origination/origination.types";
 const BAND_EXPLANATIONS: { band: CreditRiskBand; text: string }[] = [
   {
     band: CreditRiskBand.LOW,
-    text: "Score alto: o cliente tem um bom histórico de crédito.",
+    text: "Score Serasa alto: o cliente tem um bom histórico de crédito.",
   },
   {
     band: CreditRiskBand.MEDIUM,
-    text: "Score intermediário: pede atenção na análise.",
+    text: "Score Serasa intermediário: pede atenção na análise.",
   },
   {
     band: CreditRiskBand.HIGH,
-    text: "Score baixo: o histórico de crédito do cliente é frágil.",
+    text: "Score Serasa baixo: o histórico de crédito do cliente é frágil.",
   },
 ];
 
@@ -46,13 +46,14 @@ export function CreditRiskInfo() {
         <DialogHeader>
           <DialogTitle>Como o risco de crédito é definido</DialogTitle>
           <DialogDescription>
-            Um indicativo para apoiar a conversa com o cliente.
+            Um indicativo do Serasa para apoiar a conversa com o cliente.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 text-sm text-foreground">
           <p>
             Ao simular, consultamos o Serasa pelo CPF do cliente. Com base no
-            score de crédito dele, o cliente entra em uma de três faixas:
+            score de crédito dele no Serasa, o cliente entra em uma de três
+            faixas:
           </p>
           <ul className="space-y-3">
             {BAND_EXPLANATIONS.map(({ band, text }) => (
@@ -63,10 +64,20 @@ export function CreditRiskInfo() {
             ))}
           </ul>
           <p className="text-muted-foreground">
-            O score em si não é mostrado. A faixa é só uma referência e não
-            substitui a análise de crédito. Se o Serasa não tiver informação
-            sobre o CPF, nenhuma faixa aparece.
+            O score em si não é mostrado. Se o Serasa não tiver informação sobre
+            o CPF, nenhuma faixa aparece.
           </p>
+          <div className="rounded-lg bg-muted p-3 text-muted-foreground">
+            <p className="font-medium text-foreground">
+              Este indicativo é exclusivamente do Serasa.
+            </p>
+            <p className="mt-1">
+              Ele não é o Score Aurea, que é a nossa própria avaliação do
+              cliente, e não é a única forma de analisar a capacidade de crédito
+              dele. A faixa é só uma referência e não substitui a análise de
+              crédito.
+            </p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
