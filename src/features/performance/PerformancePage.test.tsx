@@ -263,7 +263,7 @@ describe("PerformancePage view data", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("shows the current month as a daily preview without inventing a reference date", async () => {
+  it("shows the current month as a preview without a portfolio reference or D-1 message", async () => {
     getMonths.mockResolvedValue({
       currentMonth: "2026-10",
       months: [{ month: "2026-10" }, { month: "2026-09" }],
@@ -277,8 +277,8 @@ describe("PerformancePage view data", () => {
       await screen.findByText("Prévia", { selector: "span" }),
     ).toBeVisible();
     expect(
-      await screen.findByText(/Posição diária com base em D-1/),
-    ).toBeVisible();
+      screen.queryByText(/Posição diária com base em D-1/),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Atualizado em|Referência da carteira/),
     ).not.toBeInTheDocument();
@@ -591,7 +591,6 @@ function individualResponse(missingDetails = false): PerformanceResponse {
   response.month = "2026-10";
   response.view = {
     mode: "INDIVIDUAL",
-    portfolioReference: missingDetails ? null : "2026-10-20",
     missingDetails,
   };
   response.data.level = { key: "UNKNOWN", label: null };
@@ -692,8 +691,8 @@ describe("partner and team selection", () => {
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     expect(screen.queryByText("Nível Bronze")).not.toBeInTheDocument();
     expect(
-      screen.getByText("Referência da carteira: 20/10/2026."),
-    ).toBeVisible();
+      screen.queryByText(/Referência da carteira/),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/Posição diária com base em D-1/),
     ).not.toBeInTheDocument();

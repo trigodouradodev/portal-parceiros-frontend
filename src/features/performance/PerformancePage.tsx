@@ -20,11 +20,9 @@ import type { PerformanceResponse } from "@/services/performance/performance.typ
 
 function PerformanceContent({
   month,
-  currentMonth,
   query,
 }: {
   month: string;
-  currentMonth: string;
   query: UseQueryResult<PerformanceResponse, Error>;
 }) {
   if (query.isError)
@@ -65,7 +63,6 @@ function PerformanceContent({
   return (
     <RealPerformanceSection
       month={month}
-      currentMonth={currentMonth}
       data={response.data}
       view={response.view}
     />
@@ -204,11 +201,7 @@ export function PerformancePage() {
               : "Dados ainda não disponíveis para esta competência"}
           </div>
         ) : month && monthsQuery.data ? (
-          <PerformanceContent
-            month={month}
-            currentMonth={monthsQuery.data.currentMonth}
-            query={performanceQuery}
-          />
+          <PerformanceContent month={month} query={performanceQuery} />
         ) : null}
       </div>
     </PageContainer>
