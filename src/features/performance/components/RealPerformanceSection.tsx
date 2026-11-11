@@ -11,12 +11,10 @@ import type {
 
 export function RealPerformanceSection({
   month,
-  currentMonth,
   data,
   view,
 }: {
   month: string;
-  currentMonth: string;
   data: PerformanceData;
   view?: PerformanceView;
 }) {
@@ -34,22 +32,6 @@ export function RealPerformanceSection({
         <p className="text-xs leading-relaxed text-[#697183]">
           Detalhamento ainda não disponível nesta competência. Os valores
           individuais são exibidos zerados.
-        </p>
-      )}
-      {view?.portfolioReference && (
-        <p className="text-xs leading-relaxed text-[#697183]">
-          Referência da carteira:{" "}
-          {new Date(`${view.portfolioReference}T12:00:00Z`).toLocaleDateString(
-            "pt-BR",
-            { timeZone: "UTC" },
-          )}
-          .
-        </p>
-      )}
-      {!view?.portfolioReference && !individual && month === currentMonth && (
-        <p className="text-xs leading-relaxed text-[#697183]">
-          Posição diária com base em D-1. Os indicadores podem mudar durante a
-          competência.
         </p>
       )}
       <div
