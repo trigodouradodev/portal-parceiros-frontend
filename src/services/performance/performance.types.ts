@@ -95,7 +95,6 @@ export interface PerformancePerson {
 }
 export interface PerformanceView {
   mode: "CONSOLIDATED" | "INDIVIDUAL";
-  portfolioReference: string | null;
   missingDetails: boolean;
 }
 

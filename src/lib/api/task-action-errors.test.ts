@@ -1,10 +1,13 @@
 import { AxiosError } from "axios";
-import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
+import {
+  getTaskActionErrorMessage,
+  isStaleTaskError,
+} from "@/lib/api/task-action-errors";
 
-function axiosError(message: string) {
+function axiosError(message: string, reason?: string) {
   return new AxiosError("error", "ERR_BAD_REQUEST", undefined, undefined, {
     status: 400,
-    data: { message },
+    data: { message, reason },
     statusText: "Bad Request",
     headers: {},
     config: { headers: {} as never },
@@ -12,6 +15,16 @@ function axiosError(message: string) {
 }
 
 describe("getTaskActionErrorMessage", () => {
+  it("traduz o motivo de inelegibilidade e sinaliza atualização da fila", () => {
+    const error = axiosError("task_not_collectible", "open_pending_action");
+    expect(getTaskActionErrorMessage(error, "fallback")).toContain(
+      "backoffice",
+    );
+    expect(isStaleTaskError(error)).toBe(true);
+    expect(
+      isStaleTaskError(axiosError("expected_agreement_date_required")),
+    ).toBe(false);
+  });
   it("maps known task action codes", () => {
     expect(
       getTaskActionErrorMessage(axiosError("already_postponed"), "fallback"),

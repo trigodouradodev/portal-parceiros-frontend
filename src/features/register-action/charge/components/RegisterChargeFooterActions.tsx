@@ -13,13 +13,13 @@ interface RegisterChargeFooterActionsProps {
   flow: Flow;
 }
 
-function getSaveButtonLabel(needsPromiseDate: boolean): string {
-  if (needsPromiseDate) return "Informe a data prometida";
+function getSaveButtonLabel(needsDate: boolean): string {
+  if (needsDate) return "Informe a data";
   return "Registrar";
 }
 
-function getSaveButtonIcon(needsPromiseDate: boolean): ReactNode | undefined {
-  if (!needsPromiseDate) return undefined;
+function getSaveButtonIcon(needsDate: boolean): ReactNode | undefined {
+  if (!needsDate) return undefined;
   return <CalendarDays size={15} />;
 }
 
@@ -34,7 +34,7 @@ export function RegisterChargeFooterActions({
     canContinueRecipient,
     canContinueContact,
     canSaveOutcome,
-    needsPromiseDate,
+    needsOutcomeDate,
     saving,
     handleSave,
     goToContactStep,
@@ -42,7 +42,7 @@ export function RegisterChargeFooterActions({
   } = flow;
 
   const needsLocationConfirm = isVisitTask && !location.locationOk;
-  const saveButtonIcon = getSaveButtonIcon(needsPromiseDate);
+  const saveButtonIcon = getSaveButtonIcon(needsOutcomeDate);
 
   return (
     <RegisterActionFooter>
@@ -90,7 +90,7 @@ export function RegisterChargeFooterActions({
             saving={saving}
             disabled={!canSaveOutcome}
             onClick={handleSave}
-            label={getSaveButtonLabel(needsPromiseDate)}
+            label={getSaveButtonLabel(needsOutcomeDate)}
             icon={saveButtonIcon}
           />
         </>

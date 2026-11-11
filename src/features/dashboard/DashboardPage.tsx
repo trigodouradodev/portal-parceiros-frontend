@@ -295,8 +295,8 @@ export function DashboardPage() {
     try {
       const payload = await resolveChargeActionPayload(
         item,
-        () => {
-          showToast("Ação registrada.");
+        (result) => {
+          showToast(result.message ?? "Ação registrada.");
         },
         { contactType },
       );

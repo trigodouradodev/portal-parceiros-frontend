@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 import { OutcomeOptionList } from "@/features/register-action";
 import type { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
 import { WhatsAppPanel } from "@/features/register-action/preventive/components";
-import { ActivityInteractionResult } from "@/services/activities/activity.enums";
+import type { ActivityInteractionResult } from "@/services/activities/activity.enums";
 import { ChargePhoneStep } from "./ChargePhoneStep";
 import { ChargeVisitStep } from "./ChargeVisitStep";
 import { ContactToneBadges } from "./ContactToneBadges";
-import { PromiseDateSummary } from "./PromiseDateSummary";
+import { OutcomeDateSummary } from "./OutcomeDateSummary";
 import { RecipientPicker } from "./RecipientPicker";
 
 type Flow = ReturnType<typeof useRegisterChargeActionFlow>;
@@ -30,7 +30,8 @@ export function RegisterChargeStepContent({
     outcome,
     note,
     setNote,
-    promiseDate,
+    outcomeDate,
+    dateKind,
     outcomeOptions,
     contactPhone,
     contactFirstName,
@@ -45,7 +46,7 @@ export function RegisterChargeStepContent({
     noteRequired,
     showNoteValidation,
     selectOutcome,
-    openPromiseDateEditor,
+    openOutcomeDateEditor,
   } = flow;
 
   if (!client) return null;
@@ -56,6 +57,7 @@ export function RegisterChargeStepContent({
         value={recipientType}
         onChange={setRecipientType}
         clientName={client.name}
+        clientIsDeceased={client.isDeceased}
         clientPhone={client.phone}
         guarantor={guarantor}
         requireAddressForGuarantor={isVisitTask}
@@ -106,21 +108,18 @@ export function RegisterChargeStepContent({
   }
 
   if (step === "outcome") {
-    const showPromiseSummary =
-      outcome === ActivityInteractionResult.PAYMENT_PROMISE &&
-      Boolean(promiseDate);
-
     let noteHint: string | undefined;
     if (showNoteValidation) {
       noteHint = "Descreva o motivo nas observações para poder registrar.";
     }
 
     let afterOptions: ReactNode;
-    if (showPromiseSummary && promiseDate) {
+    if (dateKind && outcomeDate) {
       afterOptions = (
-        <PromiseDateSummary
-          date={promiseDate}
-          onChange={openPromiseDateEditor}
+        <OutcomeDateSummary
+          kind={dateKind}
+          date={outcomeDate}
+          onChange={openOutcomeDateEditor}
         />
       );
     }

@@ -33,6 +33,7 @@ export interface TaskInteraction {
 }
 
 export interface TaskHistoryItem {
+  isCollectible: boolean;
   id: string;
   segmentCode: QueueSegmentCode;
   segmentBadgeLabel?: string;
@@ -75,6 +76,7 @@ export interface DetailInstallment {
 }
 
 export interface DetailClient {
+  isDeceased?: boolean;
   name: string;
   taxId: string;
   phone?: string;

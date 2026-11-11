@@ -21,6 +21,7 @@ export interface RegisterInteractionPayload {
   result: ActivityInteractionResult;
   observation?: string;
   promiseDate?: string;
+  expectedAgreementDate?: string;
   recipientContactId?: string;
   latitude?: number;
   longitude?: number;
@@ -53,6 +54,11 @@ export interface ActivityInteractionResponse {
 }
 
 export interface RegisterInteractionResponse {
+  message?: string;
+  pendingAction?: {
+    id: string;
+    type: "renegotiation" | "death_registration" | "dispute";
+  };
   interaction: ActivityInteractionResponse;
 }
 
