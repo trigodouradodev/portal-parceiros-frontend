@@ -11,6 +11,8 @@ export const CreditRiskBand = {
   LOW: "low",
   MEDIUM: "medium",
   HIGH: "high",
+  /** Abaixo do mínimo: não elegível (reprovação automática). */
+  INELIGIBLE: "ineligible",
 } as const;
 
 export type CreditRiskBand =

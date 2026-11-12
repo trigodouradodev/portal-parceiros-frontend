@@ -1,4 +1,5 @@
 import {
+  Ban,
   ShieldAlert,
   ShieldCheck,
   ShieldX,
@@ -9,7 +10,11 @@ import type { CreditRiskBand } from "@/features/originacao/types";
 
 const CREDIT_RISK_PRESENTATION: Record<
   CreditRiskBand,
-  { label: string; variant: "green" | "amber" | "red"; Icon: LucideIcon }
+  {
+    label: string;
+    variant: "green" | "amber" | "red" | "red-dark";
+    Icon: LucideIcon;
+  }
 > = {
   low: { label: "Crédito de baixo risco", variant: "green", Icon: ShieldCheck },
   medium: {
@@ -18,6 +23,11 @@ const CREDIT_RISK_PRESENTATION: Record<
     Icon: ShieldAlert,
   },
   high: { label: "Crédito de alto risco", variant: "red", Icon: ShieldX },
+  ineligible: {
+    label: "Crédito não elegível",
+    variant: "red-dark",
+    Icon: Ban,
+  },
 };
 
 /**

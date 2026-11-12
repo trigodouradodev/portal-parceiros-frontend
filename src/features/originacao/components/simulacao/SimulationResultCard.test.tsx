@@ -31,6 +31,7 @@ describe("SimulationResultCard — risco de crédito", () => {
     ["low", "Crédito de baixo risco"],
     ["medium", "Crédito de médio risco"],
     ["high", "Crédito de alto risco"],
+    ["ineligible", "Crédito não elegível"],
   ] as const)("mostra a faixa %s com o texto %s", (band, label) => {
     render(
       <SimulationResultCard simulation={snapshot({ creditRiskBand: band })} />,
@@ -127,10 +128,13 @@ describe("SimulationResultCard — risco de crédito", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByText(/Score Serasa acima de 700/),
+      within(dialog).getByText(/Score Serasa acima de 650/),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByText(/Score Serasa de 400 a 700/),
+      within(dialog).getByText(/Score Serasa de 500 a 650/),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/Score Serasa de 400 a 500/),
     ).toBeInTheDocument();
     expect(
       within(dialog).getByText(/Score Serasa abaixo de 400/),
