@@ -58,9 +58,20 @@ export function DeclineProposalDialog({
     setSubmitted(false);
   }
 
+  // Quem fecha o diálogo depois de uma recusa bem-sucedida é o pai, trocando
+  // `open` direto, sem passar por `handleOpenChange`. Limpar só ali deixava o
+  // motivo e a observação da proposta anterior preenchidos na próxima, e eles
+  // podiam ser gravados no histórico errado. Por isso o reset acompanha o
+  // fechamento, seja qual for o caminho (ajuste de estado na renderização, o
+  // padrão do React para reagir a uma mudança de prop).
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (!open) reset();
+  }
+
   function handleOpenChange(nextOpen: boolean) {
     if (pending) return;
-    if (!nextOpen) reset();
     onOpenChange(nextOpen);
   }
 

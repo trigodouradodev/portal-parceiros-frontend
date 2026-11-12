@@ -133,6 +133,74 @@ describe("DeclineProposalDialog", () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
+  it("depois de uma recusa bem-sucedida, o diálogo reaberto para outra proposta vem vazio", async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    const props = { onOpenChange: vi.fn(), onConfirm };
+    const { rerender } = render(
+      <DeclineProposalDialog open clientName="Maria Silva" {...props} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Cliente desistiu" }));
+    await user.type(screen.getByRole("textbox"), "Falou com o gerente hoje");
+    await user.click(screen.getByRole("button", { name: "Recusar proposta" }));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
+
+    // Quem fecha é o pai (a lista), depois do sucesso: o diálogo não passa
+    // pelo próprio onOpenChange.
+    rerender(
+      <DeclineProposalDialog
+        open={false}
+        clientName="Maria Silva"
+        {...props}
+      />,
+    );
+    rerender(<DeclineProposalDialog open clientName="João Souza" {...props} />);
+
+    expect(screen.getByText(/proposta de João Souza/)).toBeInTheDocument();
+    expect(screen.getByRole("textbox")).toHaveValue("");
+    await user.click(screen.getByRole("button", { name: "Recusar proposta" }));
+    expect(
+      await screen.findByText("Selecione o motivo da recusa."),
+    ).toBeInTheDocument();
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("fechado pelo pai sem recusar (por exemplo, ao trocar de proposta), também reabre vazio", async () => {
+    const user = userEvent.setup();
+    const props = { onOpenChange: vi.fn(), onConfirm: vi.fn() };
+    const { rerender } = render(
+      <DeclineProposalDialog open clientName="Maria Silva" {...props} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Outro motivo" }));
+    await user.type(screen.getByRole("textbox"), "Mudou de cidade");
+    rerender(
+      <DeclineProposalDialog
+        open={false}
+        clientName="Maria Silva"
+        {...props}
+      />,
+    );
+    rerender(<DeclineProposalDialog open clientName="João Souza" {...props} />);
+
+    expect(screen.getByRole("textbox")).toHaveValue("");
+    expect(screen.getByText("Observação (opcional)")).toBeInTheDocument();
+  });
+
+  it("erro ao recusar mantém o que foi digitado, para tentar de novo", async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn().mockRejectedValue(new Error("falhou"));
+    renderDialog({ onConfirm });
+
+    await user.click(screen.getByRole("button", { name: "Cliente desistiu" }));
+    await user.type(screen.getByRole("textbox"), "Falou com o gerente");
+    await user.click(screen.getByRole("button", { name: "Recusar proposta" }));
+    await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
+
+    expect(screen.getByRole("textbox")).toHaveValue("Falou com o gerente");
+  });
+
   it("cancelar fecha o diálogo", async () => {
     const user = userEvent.setup();
     const { onOpenChange } = renderDialog();
