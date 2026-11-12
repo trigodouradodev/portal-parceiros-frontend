@@ -128,19 +128,23 @@ describe("SimulationResultCard — risco de crédito", () => {
       ),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByText(/Score Serasa acima de 650/),
+      within(dialog).getByText("O cliente tem um bom histórico de crédito."),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByText(/Score Serasa de 500 a 650/),
+      within(dialog).getByText("Pede atenção na análise."),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByText(/Score Serasa de 400 a 500/),
+      within(dialog).getByText("O histórico de crédito do cliente é frágil."),
     ).toBeInTheDocument();
     expect(
-      within(dialog).getByText(/Score Serasa abaixo de 400/),
+      within(dialog).getByText(
+        /Cliente não elegível, com reprovação automática/,
+      ),
     ).toBeInTheDocument();
-    // Os limites das faixas aparecem; o score do cliente, nunca.
-    expect(dialog).not.toHaveTextContent("450");
+    // Nem o score do cliente nem os limites das faixas aparecem.
+    for (const limit of ["350", "400", "450", "500", "650", "700"]) {
+      expect(dialog).not.toHaveTextContent(limit);
+    }
   });
 
   it("fecha a explicação", async () => {
