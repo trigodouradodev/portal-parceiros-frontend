@@ -4,6 +4,9 @@ import type { ListSimulationsQuery } from "@/services/origination/origination.ty
 export const CREATE_QUOTE_BLOCKED_MESSAGE =
   "Você possui ações de cobrança pendentes que impedem iniciar uma proposta.";
 
+export const CREDIT_INELIGIBLE_MESSAGE =
+  "Cliente não elegível pelo score de crédito (reprovação automática): não é possível gerar proposta.";
+
 export const SEARCH_FIELD_ICON = <Search size={16} />;
 export const NEW_SIMULATION_ICON = <Plus size={15} />;
 export const EMPTY_PLUS_ICON = <Plus size={22} />;

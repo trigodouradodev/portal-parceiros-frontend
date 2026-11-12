@@ -15,7 +15,10 @@ import {
   NEW_SIMULATION_ICON,
   SEARCH_FIELD_ICON,
 } from "@/features/originacao/constants/simulacao-list";
-import { isSimulationConverted } from "@/features/originacao/data/simulacao";
+import {
+  isSimulationConverted,
+  isSimulationCreditIneligible,
+} from "@/features/originacao/data/simulacao";
 import {
   SIMULATIONS_SEARCH_DEBOUNCE_MS,
   buildSimulationsListQuery,
@@ -96,7 +99,12 @@ export function SimulacaoList({
   }
 
   async function handleStartProposal(item: SimulationSnapshot) {
-    if (!canCreateQuote || isSimulationConverted(item) || startingId != null) {
+    if (
+      !canCreateQuote ||
+      isSimulationConverted(item) ||
+      isSimulationCreditIneligible(item) ||
+      startingId != null
+    ) {
       return;
     }
     setStartingId(item.id);

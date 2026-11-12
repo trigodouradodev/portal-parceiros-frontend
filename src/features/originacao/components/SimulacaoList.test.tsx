@@ -196,6 +196,31 @@ describe("SimulacaoList", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("disables start and explains why when the simulation is credit-ineligible", async () => {
+    listSimulations.mockResolvedValue([
+      { ...snapshot, creditRiskBand: "ineligible" },
+    ]);
+    const onStartProposal = vi.fn();
+
+    renderList(
+      <SimulacaoList
+        hasUnfilteredSimulations
+        onNewSimulation={vi.fn()}
+        onEdit={vi.fn()}
+        onStartProposal={onStartProposal}
+      />,
+    );
+
+    expect(
+      await screen.findByText(/Cliente não elegível pelo score de crédito/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Iniciar proposta" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Editar" })).toBeEnabled();
+    expect(onStartProposal).not.toHaveBeenCalled();
+  });
+
   it("filters by status on the client, without refetching the API", async () => {
     const converted: SimulationSnapshot = {
       ...snapshot,

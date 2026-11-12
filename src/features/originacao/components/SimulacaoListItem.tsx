@@ -3,11 +3,15 @@ import {
   OriginacaoSnapshotCard,
   OriginacaoToneBadge,
 } from "@/features/originacao/components/OriginacaoSnapshotCard";
-import { STARTING_ICON } from "@/features/originacao/constants/simulacao-list";
+import {
+  CREDIT_INELIGIBLE_MESSAGE,
+  STARTING_ICON,
+} from "@/features/originacao/constants/simulacao-list";
 import {
   dueDayFromIsoDate,
   formatCreatedAtPtBr,
   isSimulationConverted,
+  isSimulationCreditIneligible,
 } from "@/features/originacao/data/simulacao";
 import type { SimulationSnapshot } from "@/features/originacao/types";
 import { fmtBRL } from "@/lib/utils";
@@ -29,6 +33,7 @@ export function SimulacaoListItem({
 }: SimulacaoListItemProps) {
   const converted = isSimulationConverted(item);
   const starting = startingId === item.id;
+  const creditIneligible = isSimulationCreditIneligible(item);
   // Seguro é opt-out (praticamente toda simulação elegível tem) — a
   // parcela exibida já é a financiada com seguro quando disponível, sem
   // indicação visual, mesmo padrão do SimulationResultCard.
@@ -61,7 +66,8 @@ export function SimulacaoListItem({
           <Button
             variant="outline"
             size="pillSm"
-            disabled={!canCreateQuote || startingId != null}
+            disabled={!canCreateQuote || creditIneligible || startingId != null}
+            title={creditIneligible ? CREDIT_INELIGIBLE_MESSAGE : undefined}
             onClick={() => onStartProposal(item)}
           >
             {starting ? (
@@ -75,6 +81,11 @@ export function SimulacaoListItem({
           </Button>
         </div>
       )}
+      {!converted && creditIneligible ? (
+        <p className="mt-2 text-xs text-destructive">
+          {CREDIT_INELIGIBLE_MESSAGE}
+        </p>
+      ) : null}
     </OriginacaoSnapshotCard>
   );
 }
