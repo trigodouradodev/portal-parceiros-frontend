@@ -24,6 +24,8 @@ export const QuoteListAction = {
   CONTINUE_DRAFT: "continue_draft",
   FOLLOW_CLIENT_REVIEW: "follow_client_review",
   OPEN_BACKOFFICE: "open_backoffice",
+  /** Sem ação: a proposta foi recusada e não segue em lugar nenhum. */
+  NONE: "none",
 } as const;
 
 export type QuoteListAction =
@@ -60,6 +62,7 @@ const QUOTE_STATUS_PRESENTATION: Record<
   },
   [QuoteStatus.REJECTED]: { label: "Rejeitada", tone: "destructive" },
   [QuoteStatus.FAILED]: { label: "Falhou", tone: "destructive" },
+  [QuoteStatus.DECLINED]: { label: "Recusada", tone: "destructive" },
 };
 
 export function getQuoteStatusPresentation(status: string): {
@@ -82,13 +85,22 @@ export function isQuoteClientReview(status: string): boolean {
 }
 
 /** Já saiu da revisão do cliente — o parceiro vê a proposta no backoffice. */
+export function isQuoteDeclined(status: string): boolean {
+  return status === QuoteStatus.DECLINED;
+}
+
 export function isQuoteInBackoffice(status: string): boolean {
-  return !isQuoteDraft(status) && !isQuoteClientReview(status);
+  return (
+    !isQuoteDraft(status) &&
+    !isQuoteClientReview(status) &&
+    !isQuoteDeclined(status)
+  );
 }
 
 export function getQuoteListAction(status: string): QuoteListAction {
   if (isQuoteDraft(status)) return QuoteListAction.CONTINUE_DRAFT;
   if (isQuoteClientReview(status)) return QuoteListAction.FOLLOW_CLIENT_REVIEW;
+  if (isQuoteDeclined(status)) return QuoteListAction.NONE;
   return QuoteListAction.OPEN_BACKOFFICE;
 }
 

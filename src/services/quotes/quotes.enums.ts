@@ -16,8 +16,28 @@ export const QuoteStatus = {
   AUTO_REJECTED: "auto_rejected",
   REJECTED: "rejected",
   FAILED: "failed",
+  /** Rascunho da Canal Digital recusado pelo parceiro responsável. */
+  DECLINED: "declined",
 } as const;
 export type QuoteStatus = (typeof QuoteStatus)[keyof typeof QuoteStatus];
+
+/** De onde a proposta nasceu (`quotes.origin`). */
+export const QuoteOrigin = {
+  COMMERCIAL_TEAM: "time_comercial",
+  DIGITAL_CHANNEL: "canal_digital",
+} as const;
+export type QuoteOrigin = (typeof QuoteOrigin)[keyof typeof QuoteOrigin];
+
+/** Motivo da recusa de um rascunho da Canal Digital. */
+export const QuoteDeclineReason = {
+  CLIENT_GAVE_UP: "client_gave_up",
+  NO_CONTACT: "no_contact",
+  OUT_OF_PROFILE: "out_of_profile",
+  DUPLICATE: "duplicate",
+  OTHER: "other",
+} as const;
+export type QuoteDeclineReason =
+  (typeof QuoteDeclineReason)[keyof typeof QuoteDeclineReason];
 
 const QUOTE_STATUS_VALUES = new Set<string>(Object.values(QuoteStatus));
 

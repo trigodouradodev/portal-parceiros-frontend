@@ -1,14 +1,25 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { FileText, Loader2, MessageSquare, Search } from "lucide-react";
+import {
+  FileText,
+  Loader2,
+  MessageSquare,
+  Search,
+  XCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { SelectDialogField } from "@/components/ui/select-dialog-field";
+import { useToast } from "@/contexts/toast/toast-context";
+import { DeclineProposalDialog } from "@/features/originacao/components/proposta/DeclineProposalDialog";
+import { useDeclineQuoteDraft } from "@/features/originacao/hooks/useDeclineQuoteDraft";
+import { getApiErrorMessage } from "@/lib/api/errors";
 import { OriginacaoEmptyState } from "@/features/originacao/components/OriginacaoEmptyState";
 import { OriginacaoPageFrame } from "@/features/originacao/components/OriginacaoPageFrame";
 import { OriginacaoProgress } from "@/features/originacao/components/OriginacaoProgress";
 import {
   OriginacaoSnapshotCard,
+  QuoteOriginBadge,
   QuoteStatusBadge,
 } from "@/features/originacao/components/OriginacaoSnapshotCard";
 import { PROPOSAL_STEPS } from "@/features/originacao/data/proposal";
@@ -23,7 +34,10 @@ import { nextWizardStepIndex } from "@/features/originacao/mappers/map-quote-det
 import { getBackofficeQuoteUrl } from "@/lib/backoffice";
 import { fmtBRL } from "@/lib/utils";
 import { quotesKeys, quotesService } from "@/services/quotes/quotes.service";
-import type { QuoteListItem } from "@/services/quotes/quotes.types";
+import type {
+  DeclineQuotePayload,
+  QuoteListItem,
+} from "@/services/quotes/quotes.types";
 import {
   QuoteListAction,
   getQuoteListAction,
@@ -42,6 +56,7 @@ interface ProposalListItemCardProps {
   openingId: string | null;
   onOpen: (item: QuoteListItem) => void;
   onSendClientLink: (item: QuoteListItem) => void;
+  onDecline: (item: QuoteListItem) => void;
 }
 
 function ProposalListItemCard({
@@ -49,6 +64,7 @@ function ProposalListItemCard({
   openingId,
   onOpen,
   onSendClientLink,
+  onDecline,
 }: ProposalListItemCardProps) {
   const action = getQuoteListAction(item.status);
   const step = nextWizardStepIndex(item.completedSteps);
@@ -65,7 +81,12 @@ function ProposalListItemCard({
 
   return (
     <OriginacaoSnapshotCard
-      badge={<QuoteStatusBadge status={item.status} />}
+      badge={
+        <div className="flex flex-wrap items-center gap-1.5">
+          <QuoteStatusBadge status={item.status} />
+          <QuoteOriginBadge origin={item.origin} />
+        </div>
+      }
       timestamp={formatTimestamp(item.updatedAt)}
       name={item.name}
       amount={item.financeAmount}
@@ -89,6 +110,18 @@ function ProposalListItemCard({
             {busy ? <Loader2 size={15} className="animate-spin" /> : null}
             Continuar preenchimento
           </Button>
+          {item.canDecline ? (
+            <Button
+              variant="ghost"
+              size="pillSm"
+              className="text-destructive hover:bg-destructive-bg hover:text-destructive"
+              disabled={openingId != null}
+              onClick={() => onDecline(item)}
+            >
+              <XCircle />
+              Recusar proposta
+            </Button>
+          ) : null}
         </>
       ) : action === QuoteListAction.FOLLOW_CLIENT_REVIEW ? (
         <div className="grid grid-cols-2 gap-2">
@@ -116,7 +149,7 @@ function ProposalListItemCard({
             Enviar link Cliente
           </Button>
         </div>
-      ) : (
+      ) : action === QuoteListAction.NONE ? null : (
         <Button
           variant="ghost"
           size="pillSm"
@@ -137,6 +170,11 @@ interface ProposalListProps {
 }
 
 export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
+  const { showToast } = useToast();
+  const declineQuote = useDeclineQuoteDraft();
+  const [decliningItem, setDecliningItem] = useState<QuoteListItem | null>(
+    null,
+  );
   const [searchInput, setSearchInput] = useState("");
   const [filters, setFilters] = useState(() => buildQuotesListQuery(""));
 
@@ -188,6 +226,22 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
   async function handleSendClientLink(item: QuoteListItem) {
     if (openingId != null) return;
     await onOpen(item.id);
+  }
+
+  async function handleDeclineConfirm(payload: DeclineQuotePayload) {
+    if (!decliningItem) return;
+    try {
+      await declineQuote.mutateAsync({ quoteId: decliningItem.id, payload });
+      showToast("Proposta recusada.");
+      setDecliningItem(null);
+    } catch (err) {
+      showToast(
+        getApiErrorMessage(err, "Não foi possível recusar a proposta."),
+        {
+          variant: "destructive",
+        },
+      );
+    }
   }
 
   return (
@@ -277,9 +331,20 @@ export function ProposalList({ onOpen, openingId = null }: ProposalListProps) {
             openingId={openingId}
             onOpen={handleOpen}
             onSendClientLink={handleSendClientLink}
+            onDecline={setDecliningItem}
           />
         ))}
       </div>
+
+      <DeclineProposalDialog
+        open={decliningItem !== null}
+        onOpenChange={(open) => {
+          if (!open) setDecliningItem(null);
+        }}
+        clientName={decliningItem?.name ?? ""}
+        pending={declineQuote.isPending}
+        onConfirm={handleDeclineConfirm}
+      />
 
       {page && page.pagination.totalPages > 1 ? (
         <div className="mt-4 flex items-center justify-between gap-2 text-sm">

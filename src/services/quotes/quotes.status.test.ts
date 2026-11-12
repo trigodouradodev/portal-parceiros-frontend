@@ -131,4 +131,13 @@ describe("quote status presentation", () => {
       expect(info.label, status).not.toBe(status);
     }
   });
+
+  it("labels a declined proposal as Recusada, with no list action and outside the backoffice", () => {
+    const info = getQuoteStatusPresentation(QuoteStatus.DECLINED);
+    expect(info.label).toBe("Recusada");
+    expect(info.tone).toBe("destructive");
+    expect(getQuoteListAction(QuoteStatus.DECLINED)).toBe(QuoteListAction.NONE);
+    expect(isQuoteInBackoffice(QuoteStatus.DECLINED)).toBe(false);
+    expect(opensQuoteInBackoffice(QuoteListAction.NONE)).toBe(false);
+  });
 });

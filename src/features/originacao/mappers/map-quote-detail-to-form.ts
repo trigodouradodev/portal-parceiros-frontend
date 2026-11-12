@@ -305,6 +305,7 @@ export function mapQuoteDetailToProposal(
     updatedAt: formatTimestamp(detail.updatedAt),
     status: detail.status,
     canEdit: detail.canEdit,
+    canDecline: detail.canDecline,
     simulation: {
       id: detail.simulationId ?? detail.id,
       createdAt: detail.createdAt ?? "",
