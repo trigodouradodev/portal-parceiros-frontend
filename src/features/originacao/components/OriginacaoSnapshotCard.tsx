@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { formatCpf } from "@/lib/format/tax-id";
 import { cn, fmtBRL } from "@/lib/utils";
+import { QuoteOrigin } from "@/services/quotes/quotes.enums";
 import { getQuoteStatusPresentation } from "@/services/quotes/quotes.status";
 
 export type OriginacaoTone =
@@ -49,6 +50,12 @@ export function QuoteStatusBadge({ status }: { status: string }) {
       {label}
     </span>
   );
+}
+
+/** Selo "Canal Digital": só a origem digital é sinalizada; o resto é o padrão. */
+export function QuoteOriginBadge({ origin }: { origin: string }) {
+  if (origin !== QuoteOrigin.DIGITAL_CHANNEL) return null;
+  return <OriginacaoToneBadge tone="info">Canal Digital</OriginacaoToneBadge>;
 }
 
 interface OriginacaoSnapshotCardProps {
