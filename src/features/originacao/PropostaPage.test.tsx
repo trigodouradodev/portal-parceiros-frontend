@@ -319,7 +319,7 @@ describe("PropostaPage — recusar proposta da Canal Digital", () => {
       name: "Recusar proposta",
     });
     await user.click(
-      within(dialog).getByRole("button", { name: "Proposta duplicada" }),
+      within(dialog).getByRole("radio", { name: "Cadastro duplicado" }),
     );
     await user.click(
       within(dialog).getByRole("button", { name: "Recusar proposta" }),
@@ -328,7 +328,7 @@ describe("PropostaPage — recusar proposta da Canal Digital", () => {
     await waitFor(() =>
       expect(declineDraft).toHaveBeenCalledWith({
         quoteId: proposal.id,
-        payload: { reason: "duplicate" },
+        payload: { reason: "duplicate_registration" },
       }),
     );
     await waitFor(() => expect(closeProposal).toHaveBeenCalled());
@@ -353,7 +353,9 @@ describe("PropostaPage — recusar proposta da Canal Digital", () => {
     await user.click(screen.getByRole("button", { name: "Recusar proposta" }));
     const dialog = await screen.findByRole("dialog");
     await user.click(
-      within(dialog).getByRole("button", { name: "Cliente desistiu" }),
+      within(dialog).getByRole("radio", {
+        name: "Desistiu sem informar o motivo",
+      }),
     );
     await user.type(within(dialog).getByRole("textbox"), "Falou com o gerente");
     await user.click(
@@ -380,11 +382,11 @@ describe("PropostaPage — recusar proposta da Canal Digital", () => {
     expect(declineDraft).toHaveBeenCalledTimes(2);
     expect(declineDraft).toHaveBeenNthCalledWith(1, {
       quoteId: proposal.id,
-      payload: { reason: "client_gave_up", note: "Falou com o gerente" },
+      payload: { reason: "gave_up_no_reason", note: "Falou com o gerente" },
     });
     expect(declineDraft).toHaveBeenNthCalledWith(2, {
       quoteId: proposal.id,
-      payload: { reason: "client_gave_up", note: "Falou com o gerente" },
+      payload: { reason: "gave_up_no_reason", note: "Falou com o gerente" },
     });
     expect(showToast).toHaveBeenCalledWith("Proposta recusada.");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

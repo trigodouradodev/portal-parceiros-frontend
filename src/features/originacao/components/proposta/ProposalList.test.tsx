@@ -408,7 +408,7 @@ describe("ProposalList", () => {
         name: "Recusar proposta",
       });
       await user.click(
-        within(dialog).getByRole("button", { name: "Cliente fora do perfil" }),
+        within(dialog).getByRole("radio", { name: "Fora da região atendida" }),
       );
       await user.click(
         within(dialog).getByRole("button", { name: "Recusar proposta" }),
@@ -416,7 +416,7 @@ describe("ProposalList", () => {
 
       await waitFor(() =>
         expect(declineDraft).toHaveBeenCalledWith("quote-1", {
-          reason: "out_of_profile",
+          reason: "outside_service_area",
         }),
       );
       await waitFor(() =>
@@ -439,7 +439,9 @@ describe("ProposalList", () => {
       );
       const dialog = await screen.findByRole("dialog");
       await user.click(
-        within(dialog).getByRole("button", { name: "Cliente desistiu" }),
+        within(dialog).getByRole("radio", {
+          name: "Desistiu sem informar o motivo",
+        }),
       );
       await user.click(
         within(dialog).getByRole("button", { name: "Recusar proposta" }),

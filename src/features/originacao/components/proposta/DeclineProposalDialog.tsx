@@ -1,7 +1,6 @@
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChipField } from "@/components/ui/chip-field";
 import {
   Dialog,
   DialogContent,
@@ -11,12 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { TextareaField } from "@/components/ui/textarea-field";
+import { DeclineReasonPicker } from "@/features/originacao/components/proposta/DeclineReasonPicker";
 import {
   DECLINE_NOTE_MAX_LENGTH,
-  DECLINE_OTHER_NOTE_MIN_LENGTH,
-  DECLINE_REASON_OPTIONS,
+  DECLINE_NOTE_MIN_LENGTH,
+  findDeclineReason,
 } from "@/features/originacao/data/decline-reasons";
-import { QuoteDeclineReason } from "@/services/quotes/quotes.enums";
+import type { QuoteDeclineReason } from "@/services/quotes/quotes.enums";
 import type { DeclineQuotePayload } from "@/services/quotes/quotes.types";
 
 interface DeclineProposalDialogProps {
@@ -30,7 +30,8 @@ interface DeclineProposalDialogProps {
 
 /**
  * Recusa de um rascunho da Canal Digital: o parceiro escolhe o motivo e, se
- * quiser, complementa. "Outro motivo" exige a observação.
+ * quiser, complementa. "Outro motivo" e "Não atende aos critérios do produto"
+ * exigem a observação.
  */
 export function DeclineProposalDialog({
   open,
@@ -39,17 +40,21 @@ export function DeclineProposalDialog({
   pending = false,
   onConfirm,
 }: DeclineProposalDialogProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
   const [reason, setReason] = useState("");
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const trimmedNote = note.trim();
-  const isOther = reason === QuoteDeclineReason.OTHER;
+  const selectedReason = findDeclineReason(reason);
+  const noteRequired = selectedReason?.noteRequired === true;
+  const noteTooShort =
+    noteRequired && trimmedNote.length < DECLINE_NOTE_MIN_LENGTH;
   const reasonError =
     submitted && !reason ? "Selecione o motivo da recusa." : undefined;
   const noteError =
-    submitted && isOther && trimmedNote.length < DECLINE_OTHER_NOTE_MIN_LENGTH
-      ? "Descreva o motivo da recusa."
+    submitted && noteTooShort
+      ? (selectedReason?.noteRequiredMessage ?? "Descreva o motivo da recusa.")
       : undefined;
 
   function reset() {
@@ -77,8 +82,7 @@ export function DeclineProposalDialog({
 
   async function handleConfirm() {
     setSubmitted(true);
-    if (!reason) return;
-    if (isOther && trimmedNote.length < DECLINE_OTHER_NOTE_MIN_LENGTH) return;
+    if (!reason || noteTooShort) return;
 
     await onConfirm({
       reason: reason as QuoteDeclineReason,
@@ -88,7 +92,16 @@ export function DeclineProposalDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent
+        className="flex max-h-[92vh] max-w-lg flex-col"
+        // O foco inicial iria para a busca e, no celular, o teclado cobriria a
+        // lista. O foco vai para o próprio diálogo.
+        ref={contentRef}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          contentRef.current?.focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Recusar proposta</DialogTitle>
           <DialogDescription>
@@ -96,20 +109,21 @@ export function DeclineProposalDialog({
             retomada. Informe o motivo.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <ChipField
-            name="declineReason"
-            label="Motivo"
-            required
-            options={DECLINE_REASON_OPTIONS}
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <DeclineReasonPicker
             value={reason}
             onChange={setReason}
             error={reasonError}
           />
           <TextareaField
             name="declineNote"
-            label={isOther ? "Descreva o motivo" : "Observação (opcional)"}
-            required={isOther}
+            label={
+              noteRequired
+                ? (selectedReason?.noteLabel ?? "Descreva o motivo")
+                : "Observação (opcional)"
+            }
+            required={noteRequired}
+            placeholder={selectedReason?.notePlaceholder}
             value={note}
             onChange={(value) =>
               setNote(value.slice(0, DECLINE_NOTE_MAX_LENGTH))
