@@ -26,13 +26,17 @@ import { OriginacaoPageFrame } from "@/features/originacao/components/Originacao
 import { SimulationDueDateField } from "@/features/originacao/components/simulacao/SimulationDueDateField";
 import { SimulationProductField } from "@/features/originacao/components/simulacao/SimulationProductField";
 import { SimulationResultCard } from "@/features/originacao/components/simulacao/SimulationResultCard";
-import { CREATE_QUOTE_BLOCKED_MESSAGE } from "@/features/originacao/constants/simulacao-list";
+import {
+  CREATE_QUOTE_BLOCKED_MESSAGE,
+  CREDIT_INELIGIBLE_MESSAGE,
+} from "@/features/originacao/constants/simulacao-list";
 import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
   AMOUNT_MIN,
   installmentOptionsForProduct,
   isSimulationConverted,
+  isSimulationCreditIneligible,
   simulationFormDefaultsFromSnapshot,
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
@@ -222,12 +226,19 @@ export function SimulacaoForm({
     persistedSimulation != null && !form.formState.isDirty && !ineligible
       ? persistedSimulation
       : null;
+  const creditIneligible =
+    freshSimulation != null && isSimulationCreditIneligible(freshSimulation);
   const canStartProposal =
-    canCreateQuote && freshSimulation != null && !converted;
+    canCreateQuote &&
+    freshSimulation != null &&
+    !converted &&
+    !creditIneligible;
 
   async function handleStartProposal() {
     if (!canStartProposal || !freshSimulation) {
-      if (createQuoteBlocked) {
+      if (creditIneligible) {
+        showToast(CREDIT_INELIGIBLE_MESSAGE, { variant: "destructive" });
+      } else if (createQuoteBlocked) {
         showToast(CREATE_QUOTE_BLOCKED_MESSAGE, { variant: "destructive" });
       }
       return;
@@ -410,6 +421,12 @@ export function SimulacaoForm({
 
           {freshSimulation ? (
             <SimulationResultCard simulation={freshSimulation} />
+          ) : null}
+
+          {creditIneligible && !converted ? (
+            <p className="rounded-2xl bg-destructive-bg px-4 py-3 text-sm text-destructive">
+              {CREDIT_INELIGIBLE_MESSAGE}
+            </p>
           ) : null}
 
           {createQuoteBlocked && !simulateBlocked && !converted ? (
