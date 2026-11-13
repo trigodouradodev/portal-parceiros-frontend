@@ -4,11 +4,16 @@ import { isAxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { useOutletContext } from "react-router-dom";
 import type { AppShellOutletContext } from "@/components/layout/shell-context";
-import type { QuoteDraftSimulationSnapshot } from "@/services/quotes/quotes.types";
+import type {
+  DeclineQuotePayload,
+  QuoteDraftSimulationSnapshot,
+} from "@/services/quotes/quotes.types";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Form } from "@/components/ui/form";
 import { useToast } from "@/contexts/toast/toast-context";
+import { DeclineProposalDialog } from "@/features/originacao/components/proposta/DeclineProposalDialog";
+import { useDeclineQuoteDraft } from "@/features/originacao/hooks/useDeclineQuoteDraft";
 import { OriginacaoTaskHeader } from "@/features/originacao/components/OriginacaoTaskHeader";
 import { OriginacaoTaskLayout } from "@/features/originacao/components/OriginacaoTaskLayout";
 import { ActivityIncomeSection } from "@/features/originacao/components/proposta/ActivityIncomeSection";
@@ -203,6 +208,8 @@ function ProposalWizard({
     );
   }, [documentationQuery.data, form]);
   const { showToast } = useToast();
+  const declineQuote = useDeclineQuoteDraft();
+  const [decliningOpen, setDecliningOpen] = useState(false);
   const { mutateAsync: saveRegistration, isPending: savingRegistration } =
     useSaveQuoteRegistration();
   const {
@@ -551,6 +558,21 @@ function ProposalWizard({
     ? { label: "Editar simulação", onClick: handleEditSimulation }
     : undefined;
 
+  async function handleDeclineConfirm(payload: DeclineQuotePayload) {
+    try {
+      await declineQuote.mutateAsync({ quoteId: proposal.id, payload });
+    } catch (err) {
+      showToast(
+        getApiErrorMessage(err, "Não foi possível recusar a proposta."),
+        { variant: "destructive" },
+      );
+      return;
+    }
+    setDecliningOpen(false);
+    showToast("Proposta recusada.");
+    onClose();
+  }
+
   function handleBlockedEmailOpenChange(open: boolean) {
     if (!open) setBlockedEmailField(null);
   }
@@ -637,8 +659,27 @@ function ProposalWizard({
                 : "Avançar"}
             </Button>
           </div>
+          {proposal.canDecline ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="pillSm"
+              className="mt-2 self-center text-destructive hover:bg-destructive-bg hover:text-destructive"
+              disabled={savingStep}
+              onClick={() => setDecliningOpen(true)}
+            >
+              Recusar proposta
+            </Button>
+          ) : null}
         </form>
       </Form>
+      <DeclineProposalDialog
+        open={decliningOpen}
+        onOpenChange={setDecliningOpen}
+        clientName={simulation.name}
+        pending={declineQuote.isPending}
+        onConfirm={handleDeclineConfirm}
+      />
       <ConfirmDialog
         open={renewalPrefillOpen}
         onOpenChange={setRenewalPrefillOpen}

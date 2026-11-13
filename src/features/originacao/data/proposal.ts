@@ -376,6 +376,8 @@ export interface ProposalSnapshot {
   status: QuoteStatus;
   /** Indica se o usuário autenticado pode editar (API `canEdit`). */
   canEdit: boolean;
+  /** Pode recusar a proposta: rascunho da Canal Digital do próprio parceiro (API `canDecline`). */
+  canDecline: boolean;
   simulation: ProposalSimulationSnapshot;
   step: number;
   stepValid: boolean[];
@@ -506,6 +508,7 @@ export function createProposalFromSimulation(
     updatedAt: createdAt,
     status: QuoteStatus.DRAFT,
     canEdit: true,
+    canDecline: false,
     simulation,
     step: 0,
     stepValid: Array(PROPOSAL_STEPS.length).fill(false),

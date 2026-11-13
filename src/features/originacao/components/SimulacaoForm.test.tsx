@@ -337,6 +337,32 @@ describe("SimulacaoForm", () => {
     ).toBeDisabled();
   });
 
+  it("blocks start proposal when the simulation is credit-ineligible", async () => {
+    const onStartProposal = vi.fn();
+
+    renderForm(
+      <SimulacaoForm
+        prefill={null}
+        editing={snapshot({ creditRiskBand: "ineligible" })}
+        hasList
+        onViewList={vi.fn()}
+        onStartProposal={onStartProposal}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "Simular novamente" }),
+      ).toBeEnabled();
+    });
+    expect(
+      screen.getByText(/Cliente não elegível pelo score de crédito/),
+    ).toBeInTheDocument();
+    const start = screen.getByRole("button", { name: "Iniciar proposta" });
+    expect(start).toBeDisabled();
+    expect(onStartProposal).not.toHaveBeenCalled();
+  });
+
   it("hides start proposal when the simulation already originated a quote", async () => {
     renderForm(
       <SimulacaoForm

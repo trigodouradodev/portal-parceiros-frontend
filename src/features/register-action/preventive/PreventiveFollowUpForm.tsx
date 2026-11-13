@@ -1,4 +1,7 @@
 import { useState } from "react";
+import type { OverdueReason } from "@/lib/overdue-reasons";
+import { requiresOverdueReason } from "@/lib/overdue-reasons";
+import { OverdueReasonField } from "@/features/register-action/components/OverdueReasonField";
 import { format } from "date-fns";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,10 +31,13 @@ import { getPreventiveOutcomes } from "@/features/register-action/preventive/con
 import { appendManualLocationAuditNote } from "@/features/register-action/preventive/constants/manual-location-reason";
 import { useVisitLocationCheck } from "@/features/register-action/preventive/hooks/useVisitLocationCheck";
 import { getWaTemplates } from "@/features/register-action/preventive/utils/wa-templates";
-import { buildPreventiveFollowUpPayload } from "@/features/register-action/utils/map-to-follow-up";
+import {
+  buildPreventiveFollowUpPayload,
+  mapPreventiveOutcomeToExpectedResult,
+} from "@/features/register-action/utils/map-to-follow-up";
 import { useCreateFollowUp } from "@/hooks/useCreateFollowUp";
 import { useToast } from "@/contexts/toast/toast-context";
-import { getApiErrorMessage } from "@/lib/api/errors";
+import { getTaskActionErrorMessage } from "@/lib/api/task-action-errors";
 import { getFirstName } from "@/lib/user-display";
 import { FollowUpParty } from "@/services/followup/followup.types";
 
@@ -79,6 +85,7 @@ export function PreventiveFollowUpForm({
   const [channel, setChannel] = useState<Channel | null>(null);
   const [outcome, setOutcome] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [overdueReason, setOverdueReason] = useState<OverdueReason>();
   const [paymentForecast, setPaymentForecast] = useState<Date | undefined>();
   const {
     status: locationStatus,
@@ -119,13 +126,20 @@ export function PreventiveFollowUpForm({
   const saving = createFollowUp.isPending;
   const requiresForecast = outcome === "delay";
   const requiresNote = outcome === "other";
+  const requiresReason = requiresOverdueReason(
+    mapPreventiveOutcomeToExpectedResult(outcome),
+  );
   const canSaveOutcome = !requiresForecast || Boolean(paymentForecast);
-  const canSave = canSaveOutcome && (!requiresNote || note.trim().length > 0);
+  const canSave =
+    canSaveOutcome &&
+    (!requiresReason || Boolean(overdueReason)) &&
+    (!requiresNote || note.trim().length > 0);
 
   function handleRecipientChange(party: FollowUpParty) {
     setRecipient(party);
     setChannel(null);
     setOutcome(null);
+    setOverdueReason(undefined);
     setNote("");
     setPaymentForecast(undefined);
     resetLocationCheck();
@@ -134,11 +148,13 @@ export function PreventiveFollowUpForm({
   function handleChannelChange(nextChannel: Channel) {
     setChannel(nextChannel);
     setOutcome(null);
+    setOverdueReason(undefined);
     setPaymentForecast(undefined);
     resetLocationCheck();
   }
 
   function handleOutcomeChange(nextOutcome: string) {
+    if (nextOutcome !== outcome) setOverdueReason(undefined);
     setOutcome(nextOutcome);
     if (nextOutcome !== "delay") setPaymentForecast(undefined);
   }
@@ -178,6 +194,7 @@ export function PreventiveFollowUpForm({
         channel,
         party: recipient,
         outcome,
+        overdueReason,
         note: noteWithAudit,
         paymentForecast:
           outcome === "delay" && paymentForecast
@@ -194,7 +211,7 @@ export function PreventiveFollowUpForm({
         status: outcome ?? undefined,
       });
     } catch (err) {
-      showToast(getApiErrorMessage(err, "Erro ao registrar contato."), {
+      showToast(getTaskActionErrorMessage(err, "Erro ao registrar contato."), {
         variant: "destructive",
       });
     }
@@ -337,13 +354,21 @@ export function PreventiveFollowUpForm({
                 : "Qual foi o resultado do contato?"
             }
             afterOptions={
-              requiresForecast ? (
-                <PaymentForecastField
-                  value={paymentForecast}
-                  onChange={setPaymentForecast}
-                  invalid={!paymentForecast}
-                />
-              ) : undefined
+              <>
+                {requiresForecast && (
+                  <PaymentForecastField
+                    value={paymentForecast}
+                    onChange={setPaymentForecast}
+                    invalid={!paymentForecast}
+                  />
+                )}
+                {requiresReason && (
+                  <OverdueReasonField
+                    value={overdueReason}
+                    onChange={setOverdueReason}
+                  />
+                )}
+              </>
             }
             note={{
               value: note,

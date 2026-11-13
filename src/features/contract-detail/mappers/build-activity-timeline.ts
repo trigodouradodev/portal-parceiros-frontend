@@ -45,7 +45,10 @@ function mapInteractionToStep(
   return {
     id: `interaction-${interaction.id}`,
     day: `#${index + 1}`,
-    label: getActivityInteractionResultLabel(interaction.result),
+    label: getActivityInteractionResultLabel(
+      interaction.result,
+      interaction.overdueReason,
+    ),
     status: "done",
     date: formatDateTime(interaction.createdAt),
     agent: interaction.author.name,

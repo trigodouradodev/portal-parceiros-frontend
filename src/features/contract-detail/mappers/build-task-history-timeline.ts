@@ -105,7 +105,10 @@ function mapTaskToStep(task: TaskHistoryItem): TimelineStep {
     note,
     tone,
     outcome: interaction?.result
-      ? getActivityInteractionResultLabel(interaction.result)
+      ? getActivityInteractionResultLabel(
+          interaction.result,
+          interaction.overdueReason,
+        )
       : undefined,
   };
 }

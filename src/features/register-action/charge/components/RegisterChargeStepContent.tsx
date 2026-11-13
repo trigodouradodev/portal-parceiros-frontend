@@ -1,8 +1,9 @@
-import type { ReactNode } from "react";
+import { requiresOverdueReason } from "@/lib/overdue-reasons";
 import { OutcomeOptionList } from "@/features/register-action";
 import type { useRegisterChargeActionFlow } from "@/features/register-action/charge/hooks/useRegisterChargeActionFlow";
 import { WhatsAppPanel } from "@/features/register-action/preventive/components";
 import type { ActivityInteractionResult } from "@/services/activities/activity.enums";
+import { OverdueReasonField } from "@/features/register-action/components/OverdueReasonField";
 import { ChargePhoneStep } from "./ChargePhoneStep";
 import { ChargeVisitStep } from "./ChargeVisitStep";
 import { ContactToneBadges } from "./ContactToneBadges";
@@ -28,6 +29,8 @@ export function RegisterChargeStepContent({
     recipientType,
     setRecipientType,
     outcome,
+    overdueReason,
+    setOverdueReason,
     note,
     setNote,
     outcomeDate,
@@ -113,16 +116,23 @@ export function RegisterChargeStepContent({
       noteHint = "Descreva o motivo nas observações para poder registrar.";
     }
 
-    let afterOptions: ReactNode;
-    if (dateKind && outcomeDate) {
-      afterOptions = (
-        <OutcomeDateSummary
-          kind={dateKind}
-          date={outcomeDate}
-          onChange={openOutcomeDateEditor}
-        />
-      );
-    }
+    const afterOptions = (
+      <>
+        {dateKind && outcomeDate && (
+          <OutcomeDateSummary
+            kind={dateKind}
+            date={outcomeDate}
+            onChange={openOutcomeDateEditor}
+          />
+        )}
+        {requiresOverdueReason(outcome) && (
+          <OverdueReasonField
+            value={overdueReason}
+            onChange={setOverdueReason}
+          />
+        )}
+      </>
+    );
 
     return (
       <OutcomeOptionList

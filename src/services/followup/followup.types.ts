@@ -1,3 +1,5 @@
+import type { OverdueReason } from "@/lib/overdue-reasons";
+
 /** Espelha portal-parceiros-backend/src/follow-up/enums/follow-up.enums.ts */
 
 export const FollowUpStatus = {
@@ -64,6 +66,7 @@ export type FollowUpExpectedResult =
   (typeof FollowUpExpectedResult)[keyof typeof FollowUpExpectedResult];
 
 export interface CreateFollowUpPayload {
+  overdueReason?: OverdueReason;
   contractId: string;
   installmentNumber?: number;
   status?: FollowUpStatus;
@@ -78,6 +81,7 @@ export interface CreateFollowUpPayload {
 }
 
 export interface FollowUpResponse {
+  overdue_reason?: string | null;
   id: string;
   contract_id: string;
   installment_number: number | null;

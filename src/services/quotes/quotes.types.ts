@@ -24,6 +24,8 @@ import type {
   PaymentPixType,
   QuoteAttachmentType,
   QuoteDraftStep,
+  QuoteDeclineReason,
+  QuoteOrigin,
   QuoteStatus,
   ResidenceDuration,
 } from "./quotes.enums";
@@ -305,6 +307,7 @@ export interface QuoteListItem {
   id: string;
   simulationId: string | null;
   status: QuoteStatus;
+  origin: QuoteOrigin;
   name: string;
   document: string;
   productId: string;
@@ -322,6 +325,8 @@ export interface QuoteListItem {
   consultant: QuoteConsultantSummary;
   completedSteps: QuoteDraftStep[];
   canEdit: boolean;
+  /** Rascunho da Canal Digital do próprio parceiro: pode ser recusado. */
+  canDecline: boolean;
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -337,6 +342,12 @@ export interface QuotesPagination {
 export interface QuotesPage {
   items: QuoteListItem[];
   pagination: QuotesPagination;
+}
+
+export interface DeclineQuotePayload {
+  reason: QuoteDeclineReason;
+  /** Complemento do motivo; obrigatório quando o motivo é "other". */
+  note?: string;
 }
 
 export interface ListQuotesQuery {
