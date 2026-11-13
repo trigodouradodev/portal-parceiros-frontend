@@ -188,19 +188,6 @@ describe("DeclineProposalDialog", () => {
     expect(screen.getByText("Observação (opcional)")).toBeInTheDocument();
   });
 
-  it("erro ao recusar mantém o que foi digitado, para tentar de novo", async () => {
-    const user = userEvent.setup();
-    const onConfirm = vi.fn().mockRejectedValue(new Error("falhou"));
-    renderDialog({ onConfirm });
-
-    await user.click(screen.getByRole("button", { name: "Cliente desistiu" }));
-    await user.type(screen.getByRole("textbox"), "Falou com o gerente");
-    await user.click(screen.getByRole("button", { name: "Recusar proposta" }));
-    await waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
-
-    expect(screen.getByRole("textbox")).toHaveValue("Falou com o gerente");
-  });
-
   it("cancelar fecha o diálogo", async () => {
     const user = userEvent.setup();
     const { onOpenChange } = renderDialog();

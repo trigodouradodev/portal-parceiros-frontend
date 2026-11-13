@@ -335,11 +335,13 @@ describe("PropostaPage — recusar proposta da Canal Digital", () => {
     expect(showToast).toHaveBeenCalledWith("Proposta recusada.");
   });
 
-  it("não sai da proposta quando a recusa falha", async () => {
+  it("preserva motivo e observação quando a recusa falha e permite tentar novamente", async () => {
     const user = userEvent.setup();
     const closeProposal = vi.fn();
     const proposal = digitalProposal();
-    declineDraft.mockRejectedValue(new Error("conflito"));
+    declineDraft
+      .mockRejectedValueOnce(new Error("conflito"))
+      .mockResolvedValueOnce({ status: "declined" });
     renderPage(
       originacaoValue({
         proposals: [proposal],
@@ -353,6 +355,7 @@ describe("PropostaPage — recusar proposta da Canal Digital", () => {
     await user.click(
       within(dialog).getByRole("button", { name: "Cliente desistiu" }),
     );
+    await user.type(within(dialog).getByRole("textbox"), "Falou com o gerente");
     await user.click(
       within(dialog).getByRole("button", { name: "Recusar proposta" }),
     );
@@ -365,5 +368,25 @@ describe("PropostaPage — recusar proposta da Canal Digital", () => {
     );
     expect(closeProposal).not.toHaveBeenCalled();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(within(dialog).getByRole("textbox")).toHaveValue(
+      "Falou com o gerente",
+    );
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Recusar proposta" }),
+    );
+
+    await waitFor(() => expect(closeProposal).toHaveBeenCalledTimes(1));
+    expect(declineDraft).toHaveBeenCalledTimes(2);
+    expect(declineDraft).toHaveBeenNthCalledWith(1, {
+      quoteId: proposal.id,
+      payload: { reason: "client_gave_up", note: "Falou com o gerente" },
+    });
+    expect(declineDraft).toHaveBeenNthCalledWith(2, {
+      quoteId: proposal.id,
+      payload: { reason: "client_gave_up", note: "Falou com o gerente" },
+    });
+    expect(showToast).toHaveBeenCalledWith("Proposta recusada.");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
