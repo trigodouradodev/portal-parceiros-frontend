@@ -84,6 +84,98 @@ describe("DeclineProposalDialog", () => {
     expect(screen.getAllByRole("radio", { checked: true })).toHaveLength(1);
   });
 
+  describe("teclado (padrão dos rádios)", () => {
+    const first = DECLINE_REASON_OPTIONS[0];
+    const second = DECLINE_REASON_OPTIONS[1];
+    const last = DECLINE_REASON_OPTIONS[DECLINE_REASON_OPTIONS.length - 1];
+
+    it("só uma opção entra na ordem do Tab: a primeira, sem seleção", () => {
+      renderDialog();
+
+      const radios = screen.getAllByRole("radio");
+      expect(radios.filter((r) => r.tabIndex === 0)).toHaveLength(1);
+      expect(radios[0]).toHaveAttribute("tabindex", "0");
+    });
+
+    it("com seleção, a opção selecionada é a que entra no Tab", async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.click(screen.getByRole("radio", { name: second.label }));
+
+      const stops = screen
+        .getAllByRole("radio")
+        .filter((r) => r.tabIndex === 0);
+      expect(stops).toHaveLength(1);
+      expect(stops[0]).toBe(screen.getByRole("radio", { name: second.label }));
+    });
+
+    it("seta para baixo e para cima movem o foco e a seleção", async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      screen.getByRole("radio", { name: first.label }).focus();
+      await user.keyboard("{ArrowDown}");
+
+      const next = screen.getByRole("radio", { name: second.label });
+      expect(next).toHaveFocus();
+      expect(next).toBeChecked();
+      expect(screen.getAllByRole("radio", { checked: true })).toHaveLength(1);
+
+      await user.keyboard("{ArrowUp}");
+      const previous = screen.getByRole("radio", { name: first.label });
+      expect(previous).toHaveFocus();
+      expect(previous).toBeChecked();
+    });
+
+    it("as setas dão a volta nas pontas, e Home/End vão ao primeiro/último", async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      screen.getByRole("radio", { name: first.label }).focus();
+      await user.keyboard("{ArrowUp}");
+      expect(screen.getByRole("radio", { name: last.label })).toHaveFocus();
+
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("radio", { name: first.label })).toHaveFocus();
+
+      await user.keyboard("{End}");
+      expect(screen.getByRole("radio", { name: last.label })).toBeChecked();
+      await user.keyboard("{Home}");
+      expect(screen.getByRole("radio", { name: first.label })).toBeChecked();
+    });
+
+    it("as setas andam só entre as opções que a busca deixou visíveis", async () => {
+      const user = userEvent.setup();
+      renderDialog();
+
+      await user.type(screen.getByRole("searchbox"), "contato");
+      const visible = screen.getAllByRole("radio");
+      expect(visible.length).toBeGreaterThan(1);
+      expect(visible.length).toBeLessThan(23);
+
+      visible[0].focus();
+      await user.keyboard("{ArrowUp}");
+      expect(visible[visible.length - 1]).toHaveFocus();
+      expect(visible[visible.length - 1]).toBeChecked();
+    });
+
+    it("a escolha feita pelas setas é a enviada", async () => {
+      const user = userEvent.setup();
+      const { onConfirm } = renderDialog();
+
+      screen.getByRole("radio", { name: first.label }).focus();
+      await user.keyboard("{ArrowDown}");
+      await user.click(
+        screen.getByRole("button", { name: "Recusar proposta" }),
+      );
+
+      await waitFor(() =>
+        expect(onConfirm).toHaveBeenCalledWith({ reason: second.value }),
+      );
+    });
+  });
+
   it("busca por nome ou explicação, sem diferenciar acento, e esconde grupos vazios", async () => {
     const user = userEvent.setup();
     renderDialog();

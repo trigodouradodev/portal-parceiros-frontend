@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { useId, useMemo, useState } from "react";
+import { type KeyboardEvent, useId, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { FieldErrorMessage, FieldLabel } from "@/components/ui/field-hint";
 import {
@@ -30,6 +30,7 @@ export function DeclineReasonPicker({
 }: DeclineReasonPickerProps) {
   const [search, setSearch] = useState("");
   const baseId = useId();
+  const optionRefs = useRef(new Map<string, HTMLButtonElement>());
 
   const groups = useMemo<DeclineReasonGroup[]>(() => {
     const query = normalizeForSearch(search.trim());
@@ -43,6 +44,50 @@ export function DeclineReasonPicker({
       ),
     })).filter((group) => group.options.length > 0);
   }, [search]);
+
+  // Padrão de teclado dos rádios (W3C APG): só uma opção entra na ordem do Tab
+  // (a selecionada ou, sem seleção, a primeira visível) e as setas movem o
+  // foco e a seleção. Sem isso o Tab percorreria as 23 opções uma a uma.
+  const visibleOptions = useMemo(
+    () => groups.flatMap((group) => group.options),
+    [groups],
+  );
+  const tabStopValue = visibleOptions.some((option) => option.value === value)
+    ? value
+    : visibleOptions[0]?.value;
+
+  function focusAndSelect(index: number) {
+    const next = visibleOptions[index];
+    if (!next) return;
+    optionRefs.current.get(next.value)?.focus();
+    onChange(next.value);
+  }
+
+  function handleOptionKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) {
+    const last = visibleOptions.length - 1;
+    switch (event.key) {
+      case "ArrowDown":
+      case "ArrowRight":
+        focusAndSelect(index === last ? 0 : index + 1);
+        break;
+      case "ArrowUp":
+      case "ArrowLeft":
+        focusAndSelect(index === 0 ? last : index - 1);
+        break;
+      case "Home":
+        focusAndSelect(0);
+        break;
+      case "End":
+        focusAndSelect(last);
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -98,12 +143,26 @@ export function DeclineReasonPicker({
                 return (
                   <button
                     key={option.value}
+                    ref={(element) => {
+                      if (element)
+                        optionRefs.current.set(option.value, element);
+                      else optionRefs.current.delete(option.value);
+                    }}
                     type="button"
                     role="radio"
                     aria-checked={selected}
                     aria-labelledby={labelId}
                     aria-describedby={descriptionId}
+                    tabIndex={option.value === tabStopValue ? 0 : -1}
                     onClick={() => onChange(option.value)}
+                    onKeyDown={(event) =>
+                      handleOptionKeyDown(
+                        event,
+                        visibleOptions.findIndex(
+                          (item) => item.value === option.value,
+                        ),
+                      )
+                    }
                     className={cn(
                       "flex items-start gap-3 rounded-xl border-2 px-3 py-2.5 text-left transition-colors",
                       selected
