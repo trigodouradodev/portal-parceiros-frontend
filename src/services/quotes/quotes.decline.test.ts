@@ -39,7 +39,7 @@ describe("quotesService.declineDraft", () => {
 
     await expect(
       quotesService.declineDraft("quote-1", {
-        reason: QuoteDeclineReason.NO_CONTACT,
+        reason: QuoteDeclineReason.NO_RESPONSE,
       }),
     ).rejects.toThrow("conflito");
   });
