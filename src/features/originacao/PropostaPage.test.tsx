@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AxiosError, type AxiosResponse } from "axios";
 import type { ReactNode } from "react";
@@ -51,6 +51,12 @@ vi.mock(
     scrollToField: vi.fn(),
   }),
 );
+
+const declineDraft = vi.hoisted(() => vi.fn());
+vi.mock("@/features/originacao/hooks/useDeclineQuoteDraft", () => ({
+  useDeclineQuoteDraft: () => ({ mutateAsync: declineDraft, isPending: false }),
+}));
+
 // Hooks de passos que não participam do envio: só precisam existir.
 const idleMutation = () => ({ mutateAsync: vi.fn(), isPending: false });
 vi.mock("@/features/originacao/hooks/useSaveQuoteRegistration", () => ({
@@ -449,5 +455,126 @@ describe("PropostaPage — editar simulação (AUREA-701)", () => {
     expect(
       screen.queryByText("Tela de edição da simulação"),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("PropostaPage — recusar proposta da Canal Digital", () => {
+  beforeEach(mockPartnerHooks);
+
+  function digitalProposal() {
+    return lastStepProposal({ canDecline: true });
+  }
+
+  it("mostra Recusar proposta só quando o parceiro pode recusar", () => {
+    const withoutPermission = lastStepProposal({ canDecline: false });
+    const { unmount } = renderPage(
+      originacaoValue({
+        proposals: [withoutPermission],
+        openProposalId: withoutPermission.id,
+      }),
+    );
+    expect(
+      screen.queryByRole("button", { name: "Recusar proposta" }),
+    ).not.toBeInTheDocument();
+    unmount();
+
+    const proposal = digitalProposal();
+    renderPage(
+      originacaoValue({ proposals: [proposal], openProposalId: proposal.id }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Recusar proposta" }),
+    ).toBeInTheDocument();
+  });
+
+  it("recusa com o motivo, avisa e volta para a lista", async () => {
+    const user = userEvent.setup();
+    const closeProposal = vi.fn();
+    const proposal = digitalProposal();
+    declineDraft.mockResolvedValue({ status: "declined" });
+    renderPage(
+      originacaoValue({
+        proposals: [proposal],
+        openProposalId: proposal.id,
+        closeProposal,
+      }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Recusar proposta" }));
+    const dialog = await screen.findByRole("dialog", {
+      name: "Recusar proposta",
+    });
+    await user.click(
+      within(dialog).getByRole("radio", { name: "Cadastro duplicado" }),
+    );
+    await user.click(
+      within(dialog).getByRole("button", { name: "Recusar proposta" }),
+    );
+
+    await waitFor(() =>
+      expect(declineDraft).toHaveBeenCalledWith({
+        quoteId: proposal.id,
+        payload: { reason: "duplicate_registration" },
+      }),
+    );
+    await waitFor(() => expect(closeProposal).toHaveBeenCalled());
+    expect(showToast).toHaveBeenCalledWith("Proposta recusada.");
+  });
+
+  it("preserva motivo e observação quando a recusa falha e permite tentar novamente", async () => {
+    const user = userEvent.setup();
+    const closeProposal = vi.fn();
+    const proposal = digitalProposal();
+    declineDraft
+      .mockRejectedValueOnce(new Error("conflito"))
+      .mockResolvedValueOnce({ status: "declined" });
+    renderPage(
+      originacaoValue({
+        proposals: [proposal],
+        openProposalId: proposal.id,
+        closeProposal,
+      }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Recusar proposta" }));
+    const dialog = await screen.findByRole("dialog");
+    await user.click(
+      within(dialog).getByRole("radio", {
+        name: "Desistiu sem informar o motivo",
+      }),
+    );
+    await user.type(within(dialog).getByRole("textbox"), "Falou com o gerente");
+    await user.click(
+      within(dialog).getByRole("button", { name: "Recusar proposta" }),
+    );
+
+    await waitFor(() =>
+      expect(showToast).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({ variant: "destructive" }),
+      ),
+    );
+    expect(closeProposal).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(within(dialog).getByRole("textbox")).toHaveValue(
+      "Falou com o gerente",
+    );
+
+    await user.click(
+      within(dialog).getByRole("button", { name: "Recusar proposta" }),
+    );
+
+    await waitFor(() => expect(closeProposal).toHaveBeenCalledTimes(1));
+    expect(declineDraft).toHaveBeenCalledTimes(2);
+    expect(declineDraft).toHaveBeenNthCalledWith(1, {
+      quoteId: proposal.id,
+      payload: { reason: "gave_up_no_reason", note: "Falou com o gerente" },
+    });
+    expect(declineDraft).toHaveBeenNthCalledWith(2, {
+      quoteId: proposal.id,
+      payload: { reason: "gave_up_no_reason", note: "Falou com o gerente" },
+    });
+    expect(showToast).toHaveBeenCalledWith("Proposta recusada.");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

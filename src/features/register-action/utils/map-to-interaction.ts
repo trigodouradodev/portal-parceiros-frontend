@@ -5,6 +5,8 @@ import {
   ActivityTaskType,
 } from "@/services/activities/activity.enums";
 import type { RegisterInteractionPayload } from "@/services/activities/activities.types";
+import type { OverdueReason } from "@/lib/overdue-reasons";
+import { requiresOverdueReason } from "@/lib/overdue-reasons";
 import type { PreventiveContactType } from "@/contexts/action/action-context";
 import { ActivityChannel } from "@/services/dashboard/dashboard.types";
 
@@ -39,6 +41,7 @@ export function mapTaskChannelToActivityTaskType(
 
 export function buildV2RegisterInteractionPayload(params: {
   result: ActivityInteractionResult;
+  overdueReason?: OverdueReason;
   recipientType: ActivityRecipientType;
   contactType?: PreventiveContactType;
   taskChannel?: ActivityChannel;
@@ -59,6 +62,10 @@ export function buildV2RegisterInteractionPayload(params: {
     result: params.result,
     observation: params.note || undefined,
   };
+
+  if (requiresOverdueReason(params.result) && params.overdueReason) {
+    payload.overdueReason = params.overdueReason;
+  }
 
   if (
     params.result === ActivityInteractionResult.PAYMENT_PROMISE &&

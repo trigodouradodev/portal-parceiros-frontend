@@ -1,4 +1,5 @@
 import type { TimelineStep } from "@/features/contract-detail/types";
+import { getOverdueReasonLabel } from "@/lib/overdue-reasons";
 import { formatDate, formatDateTime } from "@/lib/format/date";
 import type { FollowUpHistoryItem } from "@/services/dashboard/dashboard.types";
 import {
@@ -23,6 +24,12 @@ function buildFollowUpNote(followUp: FollowUpHistoryItem): string | undefined {
   if (followUp.paymentForecast) {
     parts.push(
       `Previsão de pagamento: ${formatDate(followUp.paymentForecast)}`,
+    );
+  }
+
+  if (followUp.overdueReason) {
+    parts.push(
+      `Motivo do atraso: ${getOverdueReasonLabel(followUp.overdueReason)}`,
     );
   }
 

@@ -1,4 +1,8 @@
 import { ActivityInteractionResult } from "./activity.enums";
+import {
+  getOverdueReasonLabel,
+  requiresOverdueReason,
+} from "@/lib/overdue-reasons";
 
 const ACTIVITY_INTERACTION_RESULT_LABELS: Record<
   ActivityInteractionResult,
@@ -49,8 +53,14 @@ function normalizeInteractionResult(
   return LEGACY_RESULT_ALIASES[normalized] ?? null;
 }
 
-export function getActivityInteractionResultLabel(result: string): string {
+export function getActivityInteractionResultLabel(
+  result: string,
+  overdueReason?: string,
+): string {
   const canonical = normalizeInteractionResult(result);
+  if (canonical && requiresOverdueReason(canonical) && overdueReason) {
+    return `${ACTIVITY_INTERACTION_RESULT_LABELS[canonical]} — ${getOverdueReasonLabel(overdueReason)}`;
+  }
   if (canonical) {
     return ACTIVITY_INTERACTION_RESULT_LABELS[canonical];
   }

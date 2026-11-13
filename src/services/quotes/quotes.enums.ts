@@ -16,8 +16,46 @@ export const QuoteStatus = {
   AUTO_REJECTED: "auto_rejected",
   REJECTED: "rejected",
   FAILED: "failed",
+  /** Rascunho da Canal Digital recusado pelo parceiro responsável. */
+  DECLINED: "declined",
 } as const;
 export type QuoteStatus = (typeof QuoteStatus)[keyof typeof QuoteStatus];
+
+/** De onde a proposta nasceu (`quotes.origin`). */
+export const QuoteOrigin = {
+  COMMERCIAL_TEAM: "time_comercial",
+  DIGITAL_CHANNEL: "canal_digital",
+} as const;
+export type QuoteOrigin = (typeof QuoteOrigin)[keyof typeof QuoteOrigin];
+
+/** Motivo da recusa de um rascunho da Canal Digital. */
+export const QuoteDeclineReason = {
+  NO_RESPONSE: "no_response",
+  INVALID_CONTACT: "invalid_contact",
+  DOES_NOT_RECOGNIZE_REQUEST: "does_not_recognize_request",
+  DUPLICATE_REGISTRATION: "duplicate_registration",
+  OUTSIDE_SERVICE_AREA: "outside_service_area",
+  PERSONAL_PURPOSE_CREDIT: "personal_purpose_credit",
+  PRODUCT_CRITERIA_NOT_MET: "product_criteria_not_met",
+  DOCUMENTS_NOT_SENT: "documents_not_sent",
+  INCOME_NOT_PROVEN: "income_not_proven",
+  NO_GUARANTOR: "no_guarantor",
+  DECLINED_SITE_VISIT: "declined_site_visit",
+  INTEREST_RATE_NOT_ACCEPTED: "interest_rate_not_accepted",
+  APPROVED_AMOUNT_INSUFFICIENT: "approved_amount_insufficient",
+  INSTALLMENT_OVER_BUDGET: "installment_over_budget",
+  PAYMENT_TERM_UNSUITABLE: "payment_term_unsuitable",
+  RELEASE_TIME_UNSUITABLE: "release_time_unsuitable",
+  HIRED_ANOTHER_INSTITUTION: "hired_another_institution",
+  NO_LONGER_NEEDS_CREDIT: "no_longer_needs_credit",
+  POSTPONED: "postponed",
+  INSECURITY_ABOUT_COMPANY: "insecurity_about_company",
+  GAVE_UP_NO_REASON: "gave_up_no_reason",
+  CREDIT_NOT_APPROVED: "credit_not_approved",
+  OTHER: "other",
+} as const;
+export type QuoteDeclineReason =
+  (typeof QuoteDeclineReason)[keyof typeof QuoteDeclineReason];
 
 const QUOTE_STATUS_VALUES = new Set<string>(Object.values(QuoteStatus));
 

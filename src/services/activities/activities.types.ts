@@ -1,3 +1,4 @@
+import type { OverdueReason } from "@/lib/overdue-reasons";
 import type {
   ActivityInteractionChannel,
   ActivityInteractionResult,
@@ -16,6 +17,7 @@ export interface InteractionGeolocation {
 }
 
 export interface RegisterInteractionPayload {
+  overdueReason?: OverdueReason;
   channel: ActivityInteractionChannel;
   recipientType: ActivityRecipientType;
   result: ActivityInteractionResult;
@@ -37,6 +39,7 @@ export interface RegisterInteractionPayload {
 }
 
 export interface ActivityInteractionResponse {
+  overdueReason?: string;
   id: string;
   taskId: string;
   installmentId: string;
@@ -97,6 +100,7 @@ export interface QueueInstallment {
 }
 
 export interface QueueLastInteraction {
+  overdueReason?: string;
   result: ActivityInteractionResult;
   channel: ActivityInteractionChannel;
   createdAt: string;

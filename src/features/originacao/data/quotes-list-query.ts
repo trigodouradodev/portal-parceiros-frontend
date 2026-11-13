@@ -23,6 +23,7 @@ const QUOTE_LIST_STATUS_VALUES: QuoteStatus[] = [
   QuoteStatus.FAILED,
   QuoteStatus.APPROVED,
   QuoteStatus.REJECTED,
+  QuoteStatus.DECLINED,
 ];
 
 export const QUOTE_LIST_STATUS_OPTIONS: SelectOption[] = [

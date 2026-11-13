@@ -1,6 +1,9 @@
 import type { ProductOption } from "@/services/products/products.types";
 import type { SimulationSnapshot } from "@/features/originacao/types";
-import { SimulationStatus } from "@/services/origination/origination.types";
+import {
+  CreditRiskBand,
+  SimulationStatus,
+} from "@/services/origination/origination.types";
 import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
 import { formatCpf } from "@/lib/format/tax-id";
 
@@ -108,6 +111,13 @@ export function dueDayFromIsoDate(isoDate: string): number {
 
 export function formatCreatedAtPtBr(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR");
+}
+
+/** Score do Serasa abaixo do mínimo: reprovação automática, sem proposta. */
+export function isSimulationCreditIneligible(
+  snapshot: Pick<SimulationSnapshot, "creditRiskBand">,
+): boolean {
+  return snapshot.creditRiskBand === CreditRiskBand.INELIGIBLE;
 }
 
 export function isSimulationConverted(

@@ -5,7 +5,7 @@ import type { ReactElement } from "react";
 import { ProposalList } from "@/features/originacao/components/proposta/ProposalList";
 import { quotesService } from "@/services/quotes/quotes.service";
 import type { QuoteListItem } from "@/services/quotes/quotes.types";
-import { QuoteStatus } from "@/services/quotes/quotes.enums";
+import { QuoteOrigin, QuoteStatus } from "@/services/quotes/quotes.enums";
 import { renderWithProviders } from "@/test/render";
 
 vi.mock("@/services/quotes/quotes.service", async () => {
@@ -17,17 +17,26 @@ vi.mock("@/services/quotes/quotes.service", async () => {
     quotesService: {
       ...actual.quotesService,
       list: vi.fn(),
+      declineDraft: vi.fn(),
     },
   };
 });
 
+const { showToast } = vi.hoisted(() => ({ showToast: vi.fn() }));
+
+vi.mock("@/contexts/toast/toast-context", () => ({
+  useToast: () => ({ showToast }),
+}));
+
 const list = vi.mocked(quotesService.list);
+const declineDraft = vi.mocked(quotesService.declineDraft);
 
 function item(overrides: Partial<QuoteListItem> = {}): QuoteListItem {
   return {
     id: "quote-1",
     simulationId: "sim-1",
     status: QuoteStatus.DRAFT,
+    origin: QuoteOrigin.COMMERCIAL_TEAM,
     name: "Maria Silva",
     document: "52998224725",
     productId: "prod-1",
@@ -40,6 +49,7 @@ function item(overrides: Partial<QuoteListItem> = {}): QuoteListItem {
     consultant: { id: "user-1", name: "Parceiro" },
     completedSteps: [],
     canEdit: true,
+    canDecline: false,
     createdAt: "2026-09-03T12:00:00.000Z",
     updatedAt: "2026-09-03T12:00:00.000Z",
     ...overrides,
@@ -71,6 +81,8 @@ function renderList(ui: ReactElement) {
 describe("ProposalList", () => {
   beforeEach(() => {
     list.mockReset();
+    declineDraft.mockReset();
+    showToast.mockReset();
     vi.stubEnv("VITE_BACKOFFICE_URL", "https://backoffice.example.com");
     vi.spyOn(window, "open").mockImplementation(() => null);
   });
@@ -320,5 +332,149 @@ describe("ProposalList", () => {
     );
     expect(screen.getByText("Aprovada")).toHaveClass("bg-success-bg");
     expect(screen.getByText("Rejeitada")).toHaveClass("bg-destructive");
+  });
+
+  describe("selo Canal Digital", () => {
+    it("mostra o selo ao lado do status só nas propostas da Canal Digital", async () => {
+      list.mockResolvedValue(
+        pageOf([
+          item({
+            id: "digital",
+            name: "Ana Digital",
+            origin: QuoteOrigin.DIGITAL_CHANNEL,
+          }),
+          item({ id: "comercial", name: "Bruno Comercial" }),
+        ]),
+      );
+
+      renderList(<ProposalList onOpen={vi.fn()} />);
+
+      await screen.findByText("Ana Digital");
+      expect(screen.getAllByText("Canal Digital")).toHaveLength(1);
+      expect(screen.getAllByText("Rascunho")).toHaveLength(2);
+    });
+
+    it("o selo acompanha qualquer status, inclusive Recusada", async () => {
+      list.mockResolvedValue(
+        pageOf([
+          item({
+            status: QuoteStatus.DECLINED,
+            origin: QuoteOrigin.DIGITAL_CHANNEL,
+            canEdit: false,
+          }),
+        ]),
+      );
+
+      renderList(<ProposalList onOpen={vi.fn()} />);
+
+      expect(await screen.findByText("Recusada")).toBeInTheDocument();
+      expect(screen.getByText("Canal Digital")).toBeInTheDocument();
+    });
+  });
+
+  describe("recusar proposta da Canal Digital", () => {
+    const digitalDraft = () => item({ canDecline: true });
+
+    it("mostra Recusar proposta só no rascunho que o parceiro pode recusar", async () => {
+      list.mockResolvedValue(
+        pageOf([
+          item({ id: "digital", name: "Ana Digital", canDecline: true }),
+          item({ id: "comercial", name: "Bruno Comercial", canDecline: false }),
+        ]),
+      );
+
+      renderList(<ProposalList onOpen={vi.fn()} />);
+
+      await screen.findByText("Ana Digital");
+      expect(
+        screen.getAllByRole("button", { name: "Recusar proposta" }),
+      ).toHaveLength(1);
+    });
+
+    it("recusa com o motivo, avisa e recarrega a lista", async () => {
+      const user = userEvent.setup();
+      list.mockResolvedValue(pageOf([digitalDraft()]));
+      declineDraft.mockResolvedValue({
+        id: "quote-1",
+        status: QuoteStatus.DECLINED,
+        updatedAt: "2026-11-10T12:00:00.000Z",
+      });
+
+      renderList(<ProposalList onOpen={vi.fn()} />);
+      await user.click(
+        await screen.findByRole("button", { name: "Recusar proposta" }),
+      );
+      const dialog = await screen.findByRole("dialog", {
+        name: "Recusar proposta",
+      });
+      await user.click(
+        within(dialog).getByRole("radio", { name: "Fora da região atendida" }),
+      );
+      await user.click(
+        within(dialog).getByRole("button", { name: "Recusar proposta" }),
+      );
+
+      await waitFor(() =>
+        expect(declineDraft).toHaveBeenCalledWith("quote-1", {
+          reason: "outside_service_area",
+        }),
+      );
+      await waitFor(() =>
+        expect(showToast).toHaveBeenCalledWith("Proposta recusada."),
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      );
+      await waitFor(() => expect(list.mock.calls.length).toBeGreaterThan(1));
+    });
+
+    it("mantém o diálogo aberto e avisa quando a recusa falha", async () => {
+      const user = userEvent.setup();
+      list.mockResolvedValue(pageOf([digitalDraft()]));
+      declineDraft.mockRejectedValue(new Error("falhou"));
+
+      renderList(<ProposalList onOpen={vi.fn()} />);
+      await user.click(
+        await screen.findByRole("button", { name: "Recusar proposta" }),
+      );
+      const dialog = await screen.findByRole("dialog");
+      await user.click(
+        within(dialog).getByRole("radio", {
+          name: "Desistiu sem informar o motivo",
+        }),
+      );
+      await user.click(
+        within(dialog).getByRole("button", { name: "Recusar proposta" }),
+      );
+
+      await waitFor(() =>
+        expect(showToast).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.objectContaining({ variant: "destructive" }),
+        ),
+      );
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    it("proposta recusada aparece como Recusada, sem nenhuma ação", async () => {
+      list.mockResolvedValue(
+        pageOf([
+          item({
+            id: "declined",
+            status: QuoteStatus.DECLINED,
+            canEdit: false,
+            canDecline: false,
+          }),
+        ]),
+      );
+
+      renderList(<ProposalList onOpen={vi.fn()} />);
+
+      expect(await screen.findByText("Recusada")).toHaveClass("bg-destructive");
+      expect(screen.queryByRole("button", { name: "Ver proposta" })).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: "Recusar proposta" }),
+      ).toBeNull();
+    });
   });
 });

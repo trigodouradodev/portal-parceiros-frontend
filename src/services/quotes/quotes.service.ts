@@ -1,6 +1,7 @@
 import { api } from "@/lib/api/axios";
 import type {
   CreateDraftQuotePayload,
+  DeclineQuotePayload,
   ListQuotesQuery,
   QuoteAddressSnapshot,
   QuoteAttachmentSnapshot,
@@ -226,6 +227,18 @@ export const quotesService = {
   async submitDraft(quoteId: string): Promise<QuoteStatusResponse> {
     const { data } = await api.put<QuoteStatusResponse>(
       `/quotes/draft/${quoteId}/submit`,
+    );
+    return data;
+  },
+
+  /** PUT /quotes/draft/:quoteId/decline — recusa rascunho da Canal Digital. */
+  async declineDraft(
+    quoteId: string,
+    payload: DeclineQuotePayload,
+  ): Promise<QuoteStatusResponse> {
+    const { data } = await api.put<QuoteStatusResponse>(
+      `/quotes/draft/${quoteId}/decline`,
+      payload,
     );
     return data;
   },

@@ -6,6 +6,9 @@ import { PARTNER_ORIGINATION_RESTRICTED_MESSAGE } from "@/lib/partner-restrictio
 export const CREATE_QUOTE_BLOCKED_MESSAGE =
   "Você possui ações de cobrança pendentes que impedem iniciar uma proposta.";
 
+export const CREDIT_INELIGIBLE_MESSAGE =
+  "Cliente não elegível pelo score de crédito (reprovação automática): não é possível gerar proposta.";
+
 /**
  * Motivo de "Iniciar proposta" estar bloqueado: restrição de originação do
  * parceiro (AUREA-590) ou pendência de cobrança.

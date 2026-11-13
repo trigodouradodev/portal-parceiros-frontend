@@ -19,6 +19,7 @@ import {
   MaritalStatus,
   PaymentPixType,
   QuoteDraftStep,
+  QuoteOrigin,
   QuoteStatus,
   ResidenceDuration,
 } from "@/services/quotes/quotes.enums";
@@ -30,7 +31,9 @@ function baseDetail(overrides: Partial<QuoteDetail> = {}): QuoteDetail {
     simulationId: "sim-1",
     partyId: null,
     status: QuoteStatus.DRAFT,
+    origin: QuoteOrigin.COMMERCIAL_TEAM,
     canEdit: true,
+    canDecline: false,
     consultant: { id: "user-1", name: "Parceiro" },
     completedSteps: [QuoteDraftStep.REGISTRATION, QuoteDraftStep.INCOME],
     createdAt: "2026-09-03T12:00:00.000Z",
