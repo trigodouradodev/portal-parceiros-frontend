@@ -35,6 +35,45 @@ jobs:
       - name: Build
         run: npm run build
 
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:ci 2>&1 | tee test-output.txt
+
+      - name: Publish test summary
+        if: always()
+        shell: bash
+        run: |
+          if [ ! -f test-output.txt ]; then
+            echo 'Testes não chegaram a rodar.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          {
+            echo '## Testes e cobertura'
+            echo ''
+            echo '```'
+            tail -n 25 test-output.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   validate-pr:
     name: Validate PR title and description
     runs-on: ubuntu-latest
