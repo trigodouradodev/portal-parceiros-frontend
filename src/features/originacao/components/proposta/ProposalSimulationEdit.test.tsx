@@ -8,7 +8,13 @@ import {
   createProposalFromSimulation,
   type ProposalSnapshot,
 } from "@/features/originacao/data/proposal";
-import { toIsoDate } from "@/features/originacao/data/simulacao";
+import {
+  businessToday,
+  FIRST_INSTALLMENT_MAX_DAYS,
+  FIRST_INSTALLMENT_MIN_DAYS,
+  isAllowedDueDate,
+  toIsoDate,
+} from "@/features/originacao/data/simulacao";
 import { quotesService } from "@/services/quotes/quotes.service";
 import { renderWithProviders } from "@/test/render";
 import type { QuoteDraftSimulationSnapshot } from "@/services/quotes/quotes.types";
@@ -56,22 +62,33 @@ vi.mock("@/services/quotes/quotes.service", async () => {
 const updateDraftSimulation = vi.mocked(quotesService.updateDraftSimulation);
 const showToast = vi.fn();
 
-/** Próximo dia 5/10/15/20 dentro da janela da primeira parcela. */
+/** Primeiro dia de 1 a 20 dentro da janela da primeira parcela (hoje + 20 a + 45). */
 function allowedDueDate(): string {
-  const date = new Date();
-  for (let offset = 1; offset <= 45; offset += 1) {
+  const today = businessToday();
+  for (
+    let offset = FIRST_INSTALLMENT_MIN_DAYS;
+    offset <= FIRST_INSTALLMENT_MAX_DAYS;
+    offset += 1
+  ) {
     const candidate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate() + offset,
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + offset,
     );
-    if ([5, 10, 15, 20].includes(candidate.getDate()))
-      return toIsoDate(candidate);
+    if (isAllowedDueDate(candidate)) return toIsoDate(candidate);
   }
   throw new Error("sem data válida na janela");
 }
 
-function buildProposal(): ProposalSnapshot {
+/** Vencimento de um rascunho antigo: a menos de 20 dias, num dia que a regra nova recusaria. */
+function legacyDueDate(): string {
+  const today = businessToday();
+  return toIsoDate(
+    new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6),
+  );
+}
+
+function buildProposal(dueDate = allowedDueDate()): ProposalSnapshot {
   return createProposalFromSimulation(
     {
       id: "sim-1",
@@ -86,7 +103,7 @@ function buildProposal(): ProposalSnapshot {
       productName: "CRÉDITO PESSOAL",
       amount: 5000,
       installments: 10,
-      firstInstallmentDate: allowedDueDate(),
+      firstInstallmentDate: dueDate,
       installmentAmount: 597.88,
       interestRate: 0.0339,
     },
@@ -112,6 +129,7 @@ const updated: QuoteDraftSimulationSnapshot = {
 function renderEdit(props: {
   onCancel?: () => void;
   onSaved?: (update: QuoteDraftSimulationSnapshot) => void;
+  dueDate?: string;
 }) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -120,7 +138,7 @@ function renderEdit(props: {
     <QueryClientProvider client={client}>
       <ToastContext.Provider value={{ showToast }}>
         <ProposalSimulationEdit
-          proposal={buildProposal()}
+          proposal={buildProposal(props.dueDate)}
           onCancel={props.onCancel ?? vi.fn()}
           onSaved={props.onSaved ?? vi.fn()}
         />
@@ -203,6 +221,25 @@ describe("ProposalSimulationEdit (AUREA-701)", () => {
     });
     expect(showToast).toHaveBeenCalledWith(
       expect.stringContaining("Simulação atualizada"),
+    );
+  });
+
+  it("rascunho antigo com vencimento a menos de 20 dias: mudar só o prazo salva com a mesma data (AUREA-721)", async () => {
+    const user = userEvent.setup();
+    updateDraftSimulation.mockResolvedValue(updated);
+    const onSaved = vi.fn();
+    const stored = legacyDueDate();
+    renderEdit({ onSaved, dueDate: stored });
+
+    await user.click(screen.getByText("12x"));
+    await user.click(
+      screen.getByRole("button", { name: "Salvar e recalcular" }),
+    );
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(updated));
+    expect(updateDraftSimulation).toHaveBeenCalledWith(
+      "quote-1",
+      expect.objectContaining({ firstInstallmentDate: stored }),
     );
   });
 

@@ -2,9 +2,10 @@ import { z } from "zod";
 import {
   AMOUNT_MAX,
   AMOUNT_MIN,
-  FIRST_INSTALLMENT_MAX_DAYS,
+  firstInstallmentRuleMessage,
   isAllowedDueDate,
   isDueDateInWindow,
+  isSameCalendarDay,
 } from "@/features/originacao/data/simulacao";
 import {
   CLIENT_BIRTH_DATE_MESSAGE,
@@ -16,8 +17,14 @@ import { isValidCpf } from "@/lib/validation/cpf";
 export function createSimulationSchema(options: {
   installmentOptions: number[];
   today: Date;
+  /**
+   * Só na edição de um rascunho: a data hoje gravada. Se o parceiro não a
+   * trocar, a regra nova da data não se aplica (a proposta antiga segue
+   * editável); só não pode estar no passado, como antes.
+   */
+  storedDueDate?: Date;
 }) {
-  const { installmentOptions, today } = options;
+  const { installmentOptions, today, storedDueDate } = options;
   const installmentMin = installmentOptions[0];
   const installmentMax = installmentOptions[installmentOptions.length - 1];
 
@@ -59,33 +66,21 @@ export function createSimulationSchema(options: {
     dueDate: z
       .date({ error: "Informe a data de vencimento" })
       .superRefine((date, ctx) => {
-        if (!isAllowedDueDate(date)) {
-          ctx.addIssue({
-            code: "custom",
-            message: "A primeira parcela deve cair no dia 5, 10, 15 ou 20.",
-          });
+        if (storedDueDate && isSameCalendarDay(date, storedDueDate)) {
+          if (date.getTime() < today.getTime()) {
+            ctx.addIssue({
+              code: "custom",
+              message: "A data da primeira parcela deve ser hoje ou futura.",
+            });
+          }
           return;
         }
 
-        if (isDueDateInWindow(date, today)) return;
-
-        const start = new Date(
-          today.getFullYear(),
-          today.getMonth(),
-          today.getDate(),
-        ).getTime();
-        const value = new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-        ).getTime();
+        if (isAllowedDueDate(date) && isDueDateInWindow(date, today)) return;
 
         ctx.addIssue({
           code: "custom",
-          message:
-            value < start
-              ? "A data da primeira parcela deve ser hoje ou futura."
-              : `A primeira parcela deve estar em até ${FIRST_INSTALLMENT_MAX_DAYS} dias.`,
+          message: firstInstallmentRuleMessage(today),
         });
       }),
   });
@@ -95,6 +90,7 @@ export function createSimulationSchema(options: {
 export function createDraftSimulationSchema(options: {
   installmentOptions: number[];
   today: Date;
+  storedDueDate?: Date;
 }) {
   return createSimulationSchema(options).pick({
     product: true,
