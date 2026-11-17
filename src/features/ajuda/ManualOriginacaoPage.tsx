@@ -616,10 +616,11 @@ export function ManualOriginacaoPage() {
 
               <StepCard number={5} title="Escolha o melhor dia de vencimento">
                 <p>
-                  Toque em <strong>Selecionar data</strong>. O vencimento é
-                  sempre no dia <strong>5, 10, 15 ou 20</strong>, dentro de até
-                  45 dias a partir de hoje. Os outros dias ficam bloqueados no
-                  calendário. Escolha e toque em <strong>Confirmar</strong>.
+                  Toque em <strong>Selecionar data</strong>. O vencimento pode
+                  ser em qualquer dia de <strong>1 a 20</strong> do mês, de{" "}
+                  <strong>20 a 45 dias</strong> a partir de hoje. As outras
+                  datas ficam bloqueadas no calendário. Escolha e toque em{" "}
+                  <strong>Confirmar</strong>.
                 </p>
                 <PhoneShot
                   src={img06SimulacaoVencimento}

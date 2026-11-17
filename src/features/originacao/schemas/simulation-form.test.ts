@@ -14,7 +14,7 @@ function validValues() {
     product: productId,
     amount: 5000,
     installments: 10,
-    dueDate: new Date(2026, 8, 10),
+    dueDate: new Date(2026, 8, 15),
   };
 }
 
@@ -73,42 +73,83 @@ describe("createSimulationSchema", () => {
     }
   });
 
-  it("rejects a due date that is not 5, 10, 15 or 20", () => {
-    const result = schema.safeParse({
-      ...validValues(),
-      dueDate: new Date(2026, 8, 11),
-    });
+  // Hoje = 26/08/2026: janela de 15/09 a 10/10.
+  const WINDOW_MESSAGE =
+    "A primeira parcela deve cair entre 15/09/2026 e 10/10/2026, em um dia de 1 a 20 do mês.";
+
+  it.each([
+    ["the first accepted day (today + 20)", new Date(2026, 8, 15)],
+    ["the last accepted day (today + 45)", new Date(2026, 9, 10)],
+    ["day 20 inside the window", new Date(2026, 8, 20)],
+    ["day 1 inside the window", new Date(2026, 9, 1)],
+  ])("accepts %s", (_name, dueDate) => {
+    expect(schema.safeParse({ ...validValues(), dueDate }).success).toBe(true);
+  });
+
+  it.each([
+    ["before the minimum (today + 19)", new Date(2026, 8, 14)],
+    ["today", new Date(2026, 7, 26)],
+    ["a past date", new Date(2026, 7, 20)],
+    ["after the maximum (today + 46)", new Date(2026, 9, 11)],
+    ["day 21 inside the window", new Date(2026, 8, 21)],
+    ["day 31 inside the window", new Date(2026, 8, 30)],
+  ])("rejects %s with the window in the message", (_name, dueDate) => {
+    const result = schema.safeParse({ ...validValues(), dueDate });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe(
-        "A primeira parcela deve cair no dia 5, 10, 15 ou 20.",
-      );
+      expect(result.error.issues[0]?.message).toBe(WINDOW_MESSAGE);
     }
   });
 
-  it("rejects a due date before today", () => {
-    const result = schema.safeParse({
-      ...validValues(),
-      dueDate: new Date(2026, 7, 20),
-    });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe(
-        "A data da primeira parcela deve ser hoje ou futura.",
-      );
-    }
-  });
+  describe("editing an old draft (stored due date)", () => {
+    const draftSchema = (storedDueDate: Date) =>
+      createSimulationSchema({
+        installmentOptions: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        today,
+        storedDueDate,
+      });
 
-  it("rejects a due date after D+45", () => {
-    const result = schema.safeParse({
-      ...validValues(),
-      dueDate: new Date(2026, 9, 15),
+    it("keeps an unchanged date that is under the new minimum", () => {
+      const stored = new Date(2026, 8, 10); // today + 15, day 10
+      const result = draftSchema(stored).safeParse({
+        ...validValues(),
+        dueDate: stored,
+      });
+      expect(result.success).toBe(true);
     });
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe(
-        "A primeira parcela deve estar em até 45 dias.",
-      );
-    }
+
+    it("keeps an unchanged date on a day the new rule would reject", () => {
+      const stored = new Date(2026, 8, 25); // day 25
+      const result = draftSchema(stored).safeParse({
+        ...validValues(),
+        dueDate: stored,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("still rejects an unchanged date that is already in the past", () => {
+      const stored = new Date(2026, 7, 20);
+      const result = draftSchema(stored).safeParse({
+        ...validValues(),
+        dueDate: stored,
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0]?.message).toBe(
+          "A data da primeira parcela deve ser hoje ou futura.",
+        );
+      }
+    });
+
+    it("applies the new rule to a changed date", () => {
+      const result = draftSchema(new Date(2026, 8, 10)).safeParse({
+        ...validValues(),
+        dueDate: new Date(2026, 8, 12),
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0]?.message).toBe(WINDOW_MESSAGE);
+      }
+    });
   });
 });

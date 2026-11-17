@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { startOfDay } from "date-fns";
 import { Loader2, XCircle } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -17,6 +16,8 @@ import type { ProposalSnapshot } from "@/features/originacao/data/proposal";
 import {
   AMOUNT_MAX,
   AMOUNT_MIN,
+  businessToday,
+  fromIsoDate,
   installmentOptionsForProduct,
   simulationFormDefaultsFromSnapshot,
   toIsoDate,
@@ -53,7 +54,13 @@ export function ProposalSimulationEdit({
   const productsQuery = useProducts();
   const updateSimulation = useUpdateDraftSimulation(proposal.id);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [today] = useState(() => startOfDay(new Date()));
+  const [today] = useState(() => businessToday());
+  // A regra nova da data (AUREA-721) só vale se o parceiro trocar a data: o
+  // rascunho antigo continua editável (valor, prazo, produto) com a que tem.
+  const storedDueDate = useMemo(
+    () => fromIsoDate(simulation.firstInstallmentDate),
+    [simulation.firstInstallmentDate],
+  );
 
   const products = useMemo(
     () =>
@@ -64,6 +71,7 @@ export function ProposalSimulationEdit({
   const constraintsRef = useRef({
     installmentOptions: installmentOptionsForProduct(null),
     today,
+    storedDueDate,
   });
   const form = useForm<DraftSimulationFormValues>({
     resolver: (values, context, options) =>
@@ -85,8 +93,8 @@ export function ProposalSimulationEdit({
   );
 
   useEffect(() => {
-    constraintsRef.current = { installmentOptions, today };
-  }, [installmentOptions, today]);
+    constraintsRef.current = { installmentOptions, today, storedDueDate };
+  }, [installmentOptions, today, storedDueDate]);
 
   const installments = useWatch({
     control: form.control,
