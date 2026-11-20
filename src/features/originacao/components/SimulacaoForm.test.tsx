@@ -5,7 +5,10 @@ import type { ReactElement } from "react";
 import { ToastProvider } from "@/contexts/toast/ToastContext";
 import { SimulacaoForm } from "@/features/originacao/components/SimulacaoForm";
 import {
-  ALLOWED_DUE_DAYS,
+  businessToday,
+  FIRST_INSTALLMENT_MAX_DAYS,
+  FIRST_INSTALLMENT_MIN_DAYS,
+  isAllowedDueDate,
   toIsoDate,
 } from "@/features/originacao/data/simulacao";
 import type { SimulationSnapshot } from "@/features/originacao/types";
@@ -75,12 +78,15 @@ const findFormDataByCpf = vi.mocked(partiesService.findFormDataByCpf);
 const simulate = vi.mocked(originationService.simulate);
 
 function nextAllowedDueIso() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  for (let offset = 0; offset <= 45; offset += 1) {
+  const today = businessToday();
+  for (
+    let offset = FIRST_INSTALLMENT_MIN_DAYS;
+    offset <= FIRST_INSTALLMENT_MAX_DAYS;
+    offset += 1
+  ) {
     const date = new Date(today);
     date.setDate(today.getDate() + offset);
-    if (ALLOWED_DUE_DAYS.includes(date.getDate())) {
+    if (isAllowedDueDate(date)) {
       return toIsoDate(date);
     }
   }

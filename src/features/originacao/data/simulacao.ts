@@ -7,10 +7,16 @@ import {
 import { formatPartyTelephone } from "@/features/originacao/mappers/map-party-to-guarantor";
 import { formatCpf } from "@/lib/format/tax-id";
 
-export const ALLOWED_DUE_DAYS = [5, 10, 15, 20];
-
-/** D+45: first installment due date cannot exceed this window from today. */
+/**
+ * Regra da data da 1ª parcela (AUREA-721): dia de 1 a 20 do mês, entre MIN e MAX
+ * dias depois de hoje (limites inclusivos). Espelha o backend.
+ */
+export const FIRST_INSTALLMENT_MIN_DAYS = 20;
 export const FIRST_INSTALLMENT_MAX_DAYS = 45;
+export const FIRST_INSTALLMENT_MAX_DAY_OF_MONTH = 20;
+
+/** O "hoje" do negócio é o de Brasília, o mesmo que o backend usa. */
+const BUSINESS_TIME_ZONE = "America/Sao_Paulo";
 
 export const AMOUNT_MIN = 500;
 export const AMOUNT_MAX = 30_000;
@@ -23,23 +29,71 @@ function startOfLocalDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-export function isAllowedDueDate(date: Date): boolean {
-  return ALLOWED_DUE_DAYS.includes(date.getDate());
+/**
+ * Hoje em Brasília como data local à meia-noite, para o calendário e o schema
+ * contarem o mesmo dia que o backend, em qualquer fuso do navegador.
+ */
+export function businessToday(now: Date = new Date()): Date {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: BUSINESS_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .format(now)
+    .split("-")
+    .map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
 }
 
-/** Inclusive window: today .. today + maxDays, compared as local calendar dates. */
-export function isDueDateInWindow(
-  date: Date,
-  today: Date,
-  maxDays = FIRST_INSTALLMENT_MAX_DAYS,
-): boolean {
+export function isAllowedDueDate(date: Date): boolean {
+  const day = date.getDate();
+  return day >= 1 && day <= FIRST_INSTALLMENT_MAX_DAY_OF_MONTH;
+}
+
+/** Primeira e última data aceitas a partir de `today` (inclusivas). */
+export function firstInstallmentWindow(today: Date): {
+  earliest: Date;
+  latest: Date;
+} {
+  const base = startOfLocalDay(today);
+  return {
+    earliest: new Date(
+      base.getFullYear(),
+      base.getMonth(),
+      base.getDate() + FIRST_INSTALLMENT_MIN_DAYS,
+    ),
+    latest: new Date(
+      base.getFullYear(),
+      base.getMonth(),
+      base.getDate() + FIRST_INSTALLMENT_MAX_DAYS,
+    ),
+  };
+}
+
+/** Inclusive window: today + MIN .. today + MAX, as local calendar dates. */
+export function isDueDateInWindow(date: Date, today: Date): boolean {
   const value = startOfLocalDay(date).getTime();
-  const start = startOfLocalDay(today).getTime();
-  if (value < start) return false;
-  const limit = startOfLocalDay(
-    new Date(today.getFullYear(), today.getMonth(), today.getDate() + maxDays),
-  ).getTime();
-  return value <= limit;
+  const { earliest, latest } = firstInstallmentWindow(today);
+  return value >= earliest.getTime() && value <= latest.getTime();
+}
+
+export function isSameCalendarDay(a: Date, b: Date): boolean {
+  return startOfLocalDay(a).getTime() === startOfLocalDay(b).getTime();
+}
+
+function formatDueDateBr(date: Date): string {
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+/** Mesma mensagem do backend, com a janela de hoje. */
+export function firstInstallmentRuleMessage(today: Date): string {
+  const { earliest, latest } = firstInstallmentWindow(today);
+  return `A primeira parcela deve cair entre ${formatDueDateBr(earliest)} e ${formatDueDateBr(latest)}, em um dia de 1 a ${FIRST_INSTALLMENT_MAX_DAY_OF_MONTH} do mês.`;
 }
 
 /** Local YYYY-MM-DD, without UTC shift. */

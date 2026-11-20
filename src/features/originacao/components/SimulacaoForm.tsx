@@ -14,7 +14,6 @@ import {
   User,
   XCircle,
 } from "lucide-react";
-import { startOfDay } from "date-fns";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ChipField } from "@/components/ui/chip-field";
@@ -34,6 +33,7 @@ import {
   AMOUNT_DEFAULT,
   AMOUNT_MAX,
   AMOUNT_MIN,
+  businessToday,
   installmentOptionsForProduct,
   isSimulationConverted,
   isSimulationCreditIneligible,
@@ -113,7 +113,7 @@ export function SimulacaoForm({
   const converted =
     persistedSimulation != null && isSimulationConverted(persistedSimulation);
 
-  const [today] = useState(() => startOfDay(new Date()));
+  const [today] = useState(() => businessToday());
   const constraintsRef = useRef({
     installmentOptions: installmentOptionsForProduct(null),
     today,

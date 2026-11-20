@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { CalendarDays } from "lucide-react";
-import { addDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -20,8 +19,12 @@ import {
 } from "@/components/ui/field-hint";
 import { FormField } from "@/components/ui/form";
 import {
+  FIRST_INSTALLMENT_MAX_DAY_OF_MONTH,
   FIRST_INSTALLMENT_MAX_DAYS,
+  FIRST_INSTALLMENT_MIN_DAYS,
+  firstInstallmentWindow,
   isAllowedDueDate,
+  isDueDateInWindow,
 } from "@/features/originacao/data/simulacao";
 import type { SimulationFormValues } from "@/features/originacao/schemas/simulation-form";
 
@@ -34,7 +37,13 @@ export function SimulationDueDateField({ today }: SimulationDueDateFieldProps) {
   const dueDate = watch("dueDate");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draftDueDate, setDraftDueDate] = useState<Date | undefined>(undefined);
-  const dueDateLimit = addDays(today, FIRST_INSTALLMENT_MAX_DAYS);
+  const { earliest, latest } = firstInstallmentWindow(today);
+  // Abre o calendário no mês da data escolhida, se ela vale; senão, no primeiro
+  // mês com datas disponíveis.
+  const calendarMonth =
+    draftDueDate && isDueDateInWindow(draftDueDate, today)
+      ? draftDueDate
+      : earliest;
 
   function openDialog() {
     setDraftDueDate(dueDate);
@@ -62,9 +71,9 @@ export function SimulationDueDateField({ today }: SimulationDueDateFieldProps) {
           >
             <FieldLabel required>Melhor dia de vencimento</FieldLabel>
             <FieldHint>
-              Vencimento sempre no dia 5, 10, 15 ou 20, dentro de uma janela de
-              até {FIRST_INSTALLMENT_MAX_DAYS} dias (D+
-              {FIRST_INSTALLMENT_MAX_DAYS}) a partir de hoje.
+              Vencimento em um dia de 1 a {FIRST_INSTALLMENT_MAX_DAY_OF_MONTH},
+              de {FIRST_INSTALLMENT_MIN_DAYS} a {FIRST_INSTALLMENT_MAX_DAYS}{" "}
+              dias a partir de hoje.
             </FieldHint>
             <button
               type="button"
@@ -101,8 +110,9 @@ export function SimulationDueDateField({ today }: SimulationDueDateFieldProps) {
           <DialogHeader>
             <DialogTitle>Selecionar o dia de vencimento</DialogTitle>
             <DialogDescription>
-              Sempre no dia 5, 10, 15 ou 20, dentro de uma janela de até{" "}
-              {FIRST_INSTALLMENT_MAX_DAYS} dias a partir de hoje.
+              Em um dia de 1 a {FIRST_INSTALLMENT_MAX_DAY_OF_MONTH}, de{" "}
+              {FIRST_INSTALLMENT_MIN_DAYS} a {FIRST_INSTALLMENT_MAX_DAYS} dias a
+              partir de hoje.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-center">
@@ -110,9 +120,10 @@ export function SimulationDueDateField({ today }: SimulationDueDateFieldProps) {
               mode="single"
               selected={draftDueDate}
               onSelect={setDraftDueDate}
+              defaultMonth={calendarMonth}
               disabled={[
-                { before: today },
-                { after: dueDateLimit },
+                { before: earliest },
+                { after: latest },
                 (date) => !isAllowedDueDate(date),
               ]}
               className="rounded-lg border"
